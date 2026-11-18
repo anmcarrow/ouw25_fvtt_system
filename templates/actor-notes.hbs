@@ -1,0 +1,18 @@
+<section class="ouw25-notes">
+  <h2>{{localize actorTypeLabel}}</h2>
+  <label>
+    {{localize "OUW25.Notes"}}
+    <textarea name="system.notes" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
+  </label>
+  {{#if editable}}
+    <button type="submit">{{localize "OUW25.Save"}}</button>
+  {{/if}}
+  {{#if showCollision}}
+    <fieldset class="ouw25-collision">
+      <legend>{{localize "OUW25.Collision.Title"}}</legend>
+      <label>{{localize "OUW25.Collision.Dice"}} <input type="number" min="4" max="100" step="1" value="4" data-dice></label>
+      <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
+      <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
+    </fieldset>
+  {{/if}}
+</section>

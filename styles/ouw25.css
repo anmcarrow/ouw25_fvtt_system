@@ -1,0 +1,9 @@
+.ouw25 .ouw25-notes {
+  padding: 1rem;
+}
+
+.ouw25 .ouw25-notes textarea {
+  display: block;
+  width: 100%;
+  margin-block: 0.5rem;
+}

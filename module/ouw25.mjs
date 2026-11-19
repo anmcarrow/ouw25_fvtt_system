@@ -84,7 +84,7 @@ function hasUnsavedVoyageInputs(target, system) {
     if (!input || input.disabled) return false;
     if (input.value === "") return true;
     const value = input.type === "checkbox" ? input.checked
-      : input.type === "number" ? Number(input.value) : input.value;
+      : typeof system[field] === "number" ? Number(input.value) : input.value;
     return value !== system[field];
   });
 }

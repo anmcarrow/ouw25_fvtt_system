@@ -443,6 +443,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         }))
       });
       const data = await foundry.applications.api.DialogV2.input({
+        classes: ["ouw25"],
         window: { title: game.i18n.localize(item ? "OUW25.Debt.Edit" : `${key}.Add`) },
         content, rejectClose: false, ok: { label: game.i18n.localize("OUW25.Save") }
       });
@@ -488,6 +489,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         choices: traitChoices(kind, previous ?? "unset", true)
       });
       const data = await foundry.applications.api.DialogV2.input({
+        classes: ["ouw25"],
         window: { title: i18n.localize(id ? "OUW25.Debt.Edit" : `OUW25.Trait.${kind}.Add`) },
         content, rejectClose: false, ok: { label: i18n.localize("OUW25.Save") }
       });

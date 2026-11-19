@@ -1,12 +1,13 @@
 .ouw25 .ouw25-notes {
   --ouw25-color-ink: #370f00;
   --ouw25-color-accent: #2a0e06;
-  --ouw25-color-accent-soft: rgba(42, 14, 6, 0.7);
+  --ouw25-color-accent-soft: #4a2118;
   --ouw25-color-danger: #b3261e;
   --ouw25-color-warning: #690098;
   --ouw25-color-accent-calm: #133e61;
   --ouw25-color-paper: #f3efe3;
-  --ouw25-field-background: rgba(255, 248, 238, 0.7);
+  --ouw25-color-surface: #fff8ee;
+  --ouw25-field-background: var(--ouw25-color-surface);
   --ouw25-accent-gradient: linear-gradient(
     to right,
     #edcd79 0%,
@@ -22,6 +23,7 @@
     rgba(237, 189, 121, 0.7) 100%
   );
   box-sizing: border-box;
+  color-scheme: light;
   color: var(--ouw25-color-ink);
   background-color: var(--ouw25-color-paper);
   background-image: url("./images/sheet_bgr.webp");
@@ -34,6 +36,10 @@
   overflow: auto;
 }
 
+.ouw25 .ouw25-notes * {
+  color: inherit;
+}
+
 .ouw25 .ouw25-sheet-heading {
   display: flex;
   flex-wrap: wrap;
@@ -41,6 +47,7 @@
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+  background-color: var(--ouw25-color-surface);
   padding-block-end: 0.35rem;
   border-block-end: 2px solid transparent;
   border-image: var(--ouw25-accent-gradient) 1;
@@ -75,8 +82,9 @@
   min-width: 0;
 }
 
-.ouw25 .ouw25-sheet-column > fieldset {
-  background-color: rgba(255, 248, 238, 0.45);
+.ouw25 .ouw25-notes fieldset {
+  color: var(--ouw25-color-ink);
+  background-color: var(--ouw25-color-surface);
   border: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   min-inline-size: 0;
@@ -99,6 +107,11 @@
   accent-color: var(--ouw25-color-accent);
 }
 
+.ouw25 .ouw25-notes option {
+  color: var(--ouw25-color-ink);
+  background-color: var(--ouw25-color-surface);
+}
+
 .ouw25 .ouw25-notes button {
   color: #fff8ee;
   background-color: var(--ouw25-color-accent);
@@ -108,6 +121,12 @@
 
 .ouw25 .ouw25-notes button:hover:not(:disabled) {
   background-color: var(--ouw25-color-accent-soft);
+}
+
+.ouw25 .ouw25-notes button:disabled {
+  color: var(--ouw25-color-ink);
+  background-color: var(--ouw25-color-paper);
+  opacity: 1;
 }
 
 .ouw25 .ouw25-notes :is(input, select, textarea, button):focus-visible {

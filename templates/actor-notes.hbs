@@ -34,20 +34,36 @@
       <legend>{{localize "OUW25.Debt.Title"}}</legend>
       <p>{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
       {{#each ledger.groups}}
-        <h3>{{localize label}}</h3>
-        <ul>
-          {{#each entries}}
-            <li>
-              <strong>{{name}}</strong>{{#if location}} · {{location}}{{/if}} · {{amount}} {{localize "OUW25.Finance.Currency"}}
+        <table class="ouw25-debt-table">
+          <caption>{{localize label}}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
+              <th scope="col">{{localize "OUW25.Debt.Location"}}</th>
+              <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Debt.Amount"}}</th>
               {{#if @root.editable}}
-                <button type="button" data-action="editDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                <button type="button" data-action="deleteDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                <th scope="col">{{localize "OUW25.Debt.Actions"}}</th>
               {{/if}}
-            </li>
-          {{else}}
-            <li>{{localize "OUW25.Debt.Empty"}}</li>
-          {{/each}}
-        </ul>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each entries}}
+              <tr>
+                <th scope="row">{{name}}</th>
+                <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
+                <td class="ouw25-debt-amount">{{amount}}</td>
+                {{#if @root.editable}}
+                  <td class="ouw25-debt-actions">
+                    <button type="button" data-action="editDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                    <button type="button" data-action="deleteDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                  </td>
+                {{/if}}
+              </tr>
+            {{else}}
+              <tr><td colspan="{{#if @root.editable}}4{{else}}3{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
+            {{/each}}
+          </tbody>
+        </table>
       {{/each}}
       {{#if editable}}<button type="button" data-action="editDebt">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
     </fieldset>

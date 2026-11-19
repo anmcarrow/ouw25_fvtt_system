@@ -7,3 +7,25 @@
   width: 100%;
   margin-block: 0.5rem;
 }
+
+.ouw25 .ouw25-debt-table caption {
+  font-weight: bold;
+  text-align: start;
+}
+
+.ouw25 .ouw25-debt-table :is(th, td) {
+  overflow-wrap: anywhere;
+}
+
+.ouw25 .ouw25-debt-table th {
+  text-align: start;
+}
+
+.ouw25 .ouw25-debt-table .ouw25-debt-amount {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.ouw25 .ouw25-debt-table .ouw25-debt-actions button {
+  width: 100%;
+}

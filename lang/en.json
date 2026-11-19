@@ -18,6 +18,8 @@
       "Direction": "Direction",
       "Counterparty": "Who",
       "Location": "Where",
+      "NoLocation": "Not specified",
+      "Actions": "Actions",
       "Amount": "Amount, og.",
       "Empty": "No records",
       "Add": "Add debt record",

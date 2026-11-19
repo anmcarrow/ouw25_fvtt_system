@@ -40,8 +40,12 @@
           {{/each}}
         </select>
       </label>
+      {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
+      {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
       {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="specialty">{{localize "OUW25.Creation.RollSpecialty"}}</button>
+        {{#if condition.specialtyFormula}}
+          <button type="button" data-action="rollCreation" data-creation="specialty">{{localize "OUW25.Creation.RollSpecialty" formula=condition.specialtyFormula}}</button>
+        {{/if}}
       {{/if}}
       {{#if condition.specialtyHelp}}<p>{{localize condition.specialtyHelp}}</p>{{/if}}
       <label>

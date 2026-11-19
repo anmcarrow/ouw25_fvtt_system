@@ -15,7 +15,10 @@ test("the built package registers models and an editable notes sheet for its dec
     data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {} } },
     applications: {
       api: { HandlebarsApplicationMixin: base => base },
-      sheets: { ActorSheetV2: class { async _prepareContext() { return {}; } } }
+      sheets: { ActorSheetV2: class {
+        async _prepareContext() { return {}; }
+        async _processSubmitData(_event, _form, data) { return data; }
+      } }
     },
     documents: { collections: { Actors: { registerSheet: (...args) => registration.push(args) } } }
   };
@@ -46,7 +49,8 @@ test("the built package registers models and an editable notes sheet for its dec
         pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null,
         condition: merchant ? { specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === "medic"
-        })), specialtyHelp: "OUW25.Specialty.Help.medic", pasts: MERCHANT_PASTS.map(value => ({
+        })), specialtyHelp: "OUW25.Specialty.Help.medic", specialtyConflict: false,
+        specialtyRestriction: null, specialtyFormula: "1d4", pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === "unset"
         })), showFragile: false, fragile: false, luck: 0, canSpend: false, canAdd: true, wounds: [
           { slot: 1, marked: true, lethal: false }, { slot: 2, marked: false, lethal: false },
@@ -72,6 +76,18 @@ test("the built package registers models and an editable notes sheet for its dec
       await changeLuck("spend");
       assert.equal(sheet.actor.system.luck, 0);
       assert.equal(updates, 2);
+      const warnings = [];
+      globalThis.ui = { notifications: { warn: message => warnings.push(message) } };
+      globalThis.game = { i18n: { localize: key => key } };
+      const submit = system => sheet._processSubmitData(null, null, { system });
+      assert.deepEqual(await submit({ past: "savage", specialty: "navigator" }), {});
+      assert.equal(warnings.pop(), "OUW25.Specialty.Restriction.savage");
+      assert.deepEqual(await submit({ past: "hard_worker", specialty: "navigator" }), {
+        system: { past: "hard_worker", specialty: "navigator" }
+      });
+      assert.deepEqual(await submit({ past: "hard_worker", specialty: "medic" }), {
+        system: { past: "hard_worker", specialty: "medic" }
+      });
       for (const [past, fragile, threshold] of [
         ["hard_worker", false, 4], ["artist", false, 2], ["deprived", false, 3],
         ["deprived", true, 2], ["veteran", true, 3], ["hard_worker", true, 4]
@@ -105,6 +121,9 @@ test("creation rolls map to the pilot background table and apply starting-money 
   assert.deepEqual([1, 2, 3, 4].map(specialtyFromRoll), ["quartermaster", "navigator", "medic", "mechanic"]);
   assert.throws(() => specialtyFromRoll(0), RangeError);
   assert.throws(() => specialtyFromRoll(5), RangeError);
+  assert.deepEqual([1, 2].map(total => specialtyFromRoll(total, "hard_worker")), ["navigator", "mechanic"]);
+  assert.throws(() => specialtyFromRoll(3, "hard_worker"), RangeError);
+  assert.equal(specialtyFromRoll(1, "savage"), "medic");
   assert.equal(pastFromRoll(3), "veteran");
   assert.equal(pastFromRoll(6), "deprived");
   assert.equal(pastFromRoll(18), "slave");

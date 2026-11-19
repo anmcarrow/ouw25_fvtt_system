@@ -5,9 +5,20 @@ export const MERCHANT_PASTS = [
 
 export const MERCHANT_SPECIALTIES = ["unset", "quartermaster", "navigator", "medic", "mechanic"];
 
-export function specialtyFromRoll(total) {
-  if (!Number.isInteger(total) || total < 1 || total > 4) throw new RangeError("Invalid 1d4 total");
-  return MERCHANT_SPECIALTIES[total];
+export function availableSpecialties(past) {
+  if (past === "savage") return ["medic"];
+  if (past === "hard_worker") return ["navigator", "mechanic"];
+  return MERCHANT_SPECIALTIES.slice(1);
+}
+
+export function isSpecialtyAllowed(specialty, past) {
+  return specialty === "unset" || availableSpecialties(past).includes(specialty);
+}
+
+export function specialtyFromRoll(total, past) {
+  const choices = availableSpecialties(past);
+  if (!Number.isInteger(total) || total < 1 || total > choices.length) throw new RangeError("Invalid specialty roll");
+  return choices[total - 1];
 }
 
 export function lethalWoundSlot(past, fragile) {

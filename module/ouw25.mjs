@@ -1,14 +1,14 @@
 import { parseCollisionInput, resolveCollision } from "./collision.mjs";
 import { pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
-import { MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
+import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
-  ["specialty", { key: "Specialty", formula: "1d4", resolve: specialtyFromRoll, labels: "OUW25.Specialty" }],
-  ["pocketMoney", { key: "Money", formula: "4d6", resolve: startingPocketMoney }]
+  ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
+  ["pocketMoney", { key: "Money", formula: "4d6", resolve: startingPocketMoney, usesPast: true }]
 ]);
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -72,6 +72,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const merchant = type === "merchant";
     const pension = merchant ? pensionProgress(system.pensionBalance) : null;
     const lethal = merchant ? lethalWoundSlot(system.past, system.fragile) : null;
+    const specialtyCount = merchant ? availableSpecialties(system.past).length : 0;
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
@@ -86,6 +87,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty
         })),
         specialtyHelp: system.specialty === "unset" ? null : `OUW25.Specialty.Help.${system.specialty}`,
+        specialtyConflict: !isSpecialtyAllowed(system.specialty, system.past),
+        specialtyRestriction: specialtyCount < 4 ? `OUW25.Specialty.Restriction.${system.past}` : null,
+        specialtyFormula: specialtyCount > 1 ? `1d${specialtyCount}` : null,
         pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === system.past
         })),
@@ -99,29 +103,42 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     };
   }
 
+  async _processSubmitData(event, form, submitData, options) {
+    const { type, system } = this.actor;
+    const { specialty = system.specialty, past = system.past } = submitData.system ?? {};
+    if (type === "merchant" && specialty !== system.specialty && !isSpecialtyAllowed(specialty, past)) {
+      ui.notifications.warn(game.i18n.localize(`OUW25.Specialty.Restriction.${past}`));
+      return {};
+    }
+    return super._processSubmitData(event, form, submitData, options);
+  }
+
   static async rollCreation(event, target) {
     const actor = this.actor;
     if (!this.isEditable || actor.type !== "merchant" || this.#creationRollPending) return;
     const field = target.dataset.creation;
     const config = CREATION_ROLLS.get(field);
     if (!config) return;
-    const { key, formula, resolve, labels } = config;
+    const { key, resolve, labels, usesPast } = config;
     const previous = actor.system[field];
     const { past } = actor.system;
+    const specialtyCount = field === "specialty" ? availableSpecialties(past).length : 0;
+    if (specialtyCount === 1) return;
+    const formula = config.formula ?? `1d${specialtyCount}`;
     const { i18n } = game;
     this.#creationRollPending = true;
     target.disabled = true;
     try {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
-        window: { title: i18n.localize(`OUW25.Creation.Roll${key}`) },
-        content: `<p>${i18n.localize(`OUW25.Creation.Confirm${key}`)}</p>`,
+        window: { title: i18n.format(`OUW25.Creation.Roll${key}`, { formula }) },
+        content: `<p>${i18n.format(`OUW25.Creation.Confirm${key}`, { formula })}</p>`,
         rejectClose: false
       });
       if (!confirmed || !this.isEditable) return;
       const { Roll } = foundry.dice;
       const roll = await new Roll(formula).evaluate({ allowInteractive: false });
       if (!this.isEditable) return;
-      if (actor.system[field] !== previous || (field === "pocketMoney" && actor.system.past !== past)) {
+      if (actor.system[field] !== previous || (usesPast && actor.system.past !== past)) {
         ui.notifications.warn(i18n.localize("OUW25.Creation.Changed"));
         return;
       }

@@ -51,6 +51,11 @@
       "navigator": "Navigator",
       "medic": "Medic",
       "mechanic": "Mechanic",
+      "Conflict": "The saved specialty does not match the selected past.",
+      "Restriction": {
+        "savage": "A Savage can only be a medic.",
+        "hard_worker": "A Hard Worker can only be a navigator or a mechanic."
+      },
       "Help": {
         "quartermaster": "Handles supplies, budgets, contracts and receiving goods.",
         "navigator": "Plans routes and navigates using charts and reference guides.",
@@ -59,8 +64,8 @@
       }
     },
     "Creation": {
-      "RollSpecialty": "Roll specialty (1d4)",
-      "ConfirmSpecialty": "Replace the saved specialty with a 1d4 roll? Save any other edits before rolling.",
+      "RollSpecialty": "Roll specialty ({formula})",
+      "ConfirmSpecialty": "Replace the saved specialty with a {formula} roll? Save any other edits before rolling.",
       "ResultSpecialty": "Random specialty: {result}.",
       "RollPast": "Roll significant past (3d6)",
       "ConfirmPast": "Replace the saved significant past with a 3d6 roll? Save any other edits before rolling.",

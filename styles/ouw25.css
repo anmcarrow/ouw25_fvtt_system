@@ -49,12 +49,18 @@
   margin-block: 0.5rem;
 }
 
-.ouw25 :is(.ouw25-ship, .ouw25-ship-qualities) label {
+.ouw25 :is(.ouw25-ship, .ouw25-ship-qualities, .ouw25-ship-gear) label {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   align-items: center;
   gap: 0.5rem;
   margin-block: 0.25rem;
+}
+
+.ouw25 .ouw25-ship-damage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem 0.5rem;
 }
 
 .ouw25 .ouw25-debt-table caption {

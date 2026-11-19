@@ -5,6 +5,7 @@ import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, special
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
 import { HOLD_BONUSES, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots } from "./ship.mjs";
+import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
@@ -79,7 +80,7 @@ class MerchantModel extends NotesModel {
 
 class CooperativeModel extends NotesModel {
   static defineSchema() {
-    const { NumberField, StringField } = foundry.data.fields;
+    const { BooleanField, NumberField, StringField } = foundry.data.fields;
     const fields = {
       ...super.defineSchema(), budget: counterField(), shipName: new StringField({ initial: "" }),
       cargoLoad: counterField(), fuelStock: resourceField(10), provisionsStock: resourceField(10),
@@ -95,6 +96,12 @@ class CooperativeModel extends NotesModel {
     for (const [kind, choices] of Object.entries(SHIP_QUALITIES)) {
       for (const slot of SHIP_QUALITY_SLOTS) {
         fields[`${kind}${slot}`] = new StringField({ initial: "none", choices });
+      }
+      for (const slot of SHIP_GEAR_SLOTS) {
+        fields[`gear${slot}`] = new StringField({ initial: "none", choices: SHIP_GEAR_CHOICES });
+      }
+      for (const slot of SHIP_DAMAGE_SLOTS) {
+        fields[`damage${slot}`] = new BooleanField({ initial: false });
       }
     }
     return fields;
@@ -221,6 +228,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         value, label: `${labelPrefix}.${value}`, selected: slot.value === value
       }))
     }));
+    const gears = ship && SHIP_GEAR_SLOTS.map(number => {
+      const field = `gear${number}`;
+      return { number, field, value: system[field] ?? "none" };
+    });
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
@@ -235,6 +246,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: slotChoices(ship.mounts, MOUNT_CHOICES, "OUW25.Ship.MountChoices"),
         compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices"),
+        gear: slotChoices(gears, SHIP_GEAR_CHOICES, "OUW25.ShipGear.Names"),
+        gearHelp: [...new Set(gears.map(({ value }) => value))].filter(value => value !== "none")
+          .map(value => `OUW25.ShipGear.Help.${value}`),
+        condition: shipCondition(system),
         qualities: Object.entries(SHIP_QUALITIES).map(([kind, choices]) => {
           const slots = shipQualitySlots(system, kind);
           const selected = slots.map(({ value }) => value).filter(value => value !== "none");

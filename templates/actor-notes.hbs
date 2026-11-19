@@ -231,6 +231,43 @@
   {{/if}}
     {{> ouw25-journal}}
     </div>
+    <div class="ouw25-sheet-column">
+      <fieldset class="ouw25-ship-gear">
+        <legend>{{localize "OUW25.ShipGear.Title"}}</legend>
+        {{#each ship.gear}}
+          <label>
+            {{localize "OUW25.ShipGear.Slot" number=number}}
+            <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
+              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+            </select>
+          </label>
+        {{/each}}
+        {{#if ship.gearHelp}}
+          <ul>
+            {{#each ship.gearHelp}}
+              <li>{{localize this}}</li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </fieldset>
+      <fieldset class="ouw25-ship-condition">
+        <legend>{{localize "OUW25.ShipCondition.Title"}}</legend>
+        <p>{{localize "OUW25.ShipCondition.Durability" damaged=ship.condition.damaged durability=ship.condition.durability}}</p>
+        <div class="ouw25-ship-damage">
+          {{#each ship.condition.slots}}
+            <label>
+              <input type="checkbox" name="system.damage{{number}}" {{checked marked}} {{#unless @root.editable}}disabled{{/unless}}>
+              {{#if beyondLimit}}
+                {{localize "OUW25.ShipCondition.BeyondLimit" number=number}}
+              {{else}}
+                {{localize "OUW25.ShipCondition.Damage" number=number}}
+              {{/if}}
+            </label>
+          {{/each}}
+        </div>
+        {{#if ship.condition.overLimit}}<p role="status">{{localize "OUW25.ShipCondition.OverLimit"}}</p>{{/if}}
+      </fieldset>
+    </div>
   {{else}}
     <div class="ouw25-sheet-column">
     {{> ouw25-finances}}

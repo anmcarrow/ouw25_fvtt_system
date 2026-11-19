@@ -9,6 +9,9 @@ export const SHIP_QUALITIES = {
   flaw: ["none", "clumsy", "cursed", "worn_hull", "worn_engine", "stolen", "vermin"]
 };
 export const HOLD_BONUSES = [0, 100, 200, 300, 400, 500, 600];
+export const SHIP_GEAR_CHOICES = ["none", "sandshoes", "tow"];
+export const SHIP_GEAR_SLOTS = [1, 2];
+export const SHIP_DAMAGE_SLOTS = Array.from({ length: MAX_SHIP_CLASS + 5 }, (_, i) => i + 1);
 
 export function shipQualitySlots(ship, kind) {
   return SHIP_QUALITY_SLOTS.map(number => {
@@ -24,6 +27,19 @@ export function shipHold(ship, listedVolume, compartmentSpace) {
   const occupied = cargoLoad + listedVolume + fuelStock + Math.ceil(provisionsStock / 18) + compartmentSpace;
   const free = capacity - occupied;
   return { capacity, occupied, nearFull: free >= 0 && free <= 100, overloaded: free < 0 };
+}
+
+export function shipCondition(ship) {
+  const strongHull = shipQualitySlots(ship, "merit").some(({ value }) => value === "strong_hull");
+  const durability = ship.shipClass + 3 + (strongHull ? 2 : 0);
+  const slots = SHIP_DAMAGE_SLOTS.map(number => ({
+    number, marked: Boolean(ship[`damage${number}`]), beyondLimit: number > durability
+  }));
+  const damaged = slots.filter(({ marked }) => marked).length;
+  return {
+    durability, damaged, overLimit: damaged > durability,
+    slots: slots.filter(({ marked, beyondLimit }) => marked || !beyondLimit)
+  };
 }
 
 export function shipConfiguration(ship) {

@@ -119,6 +119,22 @@
         "notoriety": "A bad reputation draws attention and invites trouble."
       }
     },
+    "ShipGear": {
+      "Title": "Fixed equipment",
+      "Slot": "Equipment {number}",
+      "Names": { "none": "—", "sandshoes": "Sand shoes", "tow": "Towing rig" },
+      "Help": {
+        "sandshoes": "Sand shoes let the ship free itself from shallow ground.",
+        "tow": "The towing rig lets the ship tow floating objects."
+      }
+    },
+    "ShipCondition": {
+      "Title": "Damage",
+      "Durability": "Damage: {damaged} / {durability} (durability)",
+      "Damage": "Damage {number}",
+      "BeyondLimit": "Damage {number} (beyond the track)",
+      "OverLimit": "Damage exceeds the ship's durability."
+    },
     "ShipQuality": {
       "merit": { "Title": "Ship merits", "Slot": "Merit {number}" },
       "flaw": { "Title": "Ship flaws", "Slot": "Flaw {number}" },

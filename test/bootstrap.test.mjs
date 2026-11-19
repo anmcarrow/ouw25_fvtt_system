@@ -285,6 +285,22 @@ test("a spacious hold applies the saved bonus once and only while selected", asy
   assert.equal(shipHold({ ...expanded, holdBonus: 150 }, 0, 0).capacity, 1600);
 });
 
+test("a reinforced hull adds two durability once; marked damage stays repairable after removing it", async () => {
+  const { shipCondition } = await import(new URL("module/ship.mjs", dist));
+  const ship = { shipClass: 0, damage1: true, damage2: true, damage3: true, damage5: true };
+  const reinforced = shipCondition({ ...ship, merit1: "strong_hull", merit2: "strong_hull" });
+  assert.equal(reinforced.durability, 5);
+  assert.equal(reinforced.overLimit, false);
+  assert.deepEqual(reinforced.slots.map(({ number }) => number), [1, 2, 3, 4, 5]);
+  const bare = shipCondition(ship);
+  assert.equal(bare.damaged, 4);
+  assert.equal(bare.overLimit, true);
+  assert.deepEqual(bare.slots.at(-1), { number: 5, marked: true, beyondLimit: true });
+  assert.equal(bare.slots.length, 4);
+  assert.equal(shipCondition({ shipClass: 0, damage3: true }).overLimit, false);
+  assert.equal(shipCondition({ shipClass: 6, merit4: "strong_hull" }).slots.at(-1).number, 11);
+});
+
 test("debt totals stay separate and exact beyond the safe integer range", async () => {
   const { debtTotals } = await import(new URL("module/finance.mjs", dist));
   assert.deepEqual(debtTotals([

@@ -26,6 +26,29 @@
       </div>
     {{/if}}
   </fieldset>
+  {{#if condition}}
+    <fieldset class="ouw25-condition">
+      <legend>{{localize "OUW25.Condition.Title"}}</legend>
+      <p>{{localize "OUW25.Condition.Luck" count=condition.luck}}</p>
+      <p>{{localize "OUW25.Condition.LuckHelp"}}</p>
+      {{#if editable}}
+        <button type="button" data-action="changeLuck" data-luck="add" {{#unless condition.canAdd}}disabled{{/unless}}>{{localize "OUW25.Condition.AddLuck"}}</button>
+        <button type="button" data-action="changeLuck" data-luck="spend" {{#unless condition.canSpend}}disabled{{/unless}}>{{localize "OUW25.Condition.SpendLuck"}}</button>
+      {{/if}}
+      <div>
+        {{#each condition.wounds}}
+          <label>
+            <input type="checkbox" name="system.wound{{slot}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
+            {{#if lethal}}
+              {{localize "OUW25.Condition.LethalWound" slot=slot}}
+            {{else}}
+              {{localize "OUW25.Condition.Wound" slot=slot}}
+            {{/if}}
+          </label>
+        {{/each}}
+      </div>
+    </fieldset>
+  {{/if}}
   <label>
     {{localize "OUW25.Notes"}}
     <textarea name="system.notes" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>

@@ -2,6 +2,7 @@ import { parseCollisionInput, resolveCollision } from "./collision.mjs";
 import { pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 
 const SYSTEM_ID = "ouw25";
+const WOUND_SLOTS = [1, 2, 3];
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
@@ -13,31 +14,40 @@ class NotesModel extends foundry.abstract.TypeDataModel {
   }
 }
 
-function moneyField() {
+function counterField(initial = 0) {
   return new foundry.data.fields.NumberField({
-    required: true, nullable: false, initial: 0, integer: true, min: 0, max: Number.MAX_SAFE_INTEGER
+    required: true, nullable: false, initial, integer: true, min: 0, max: Number.MAX_SAFE_INTEGER
   });
 }
 
 class MerchantModel extends NotesModel {
   static defineSchema() {
-    return { ...super.defineSchema(), pocketMoney: moneyField(), pensionBalance: moneyField() };
+    const wounds = Object.fromEntries(WOUND_SLOTS.map(slot => [
+      `wound${slot}`, new foundry.data.fields.BooleanField({ initial: false })
+    ]));
+    return { ...super.defineSchema(), pocketMoney: counterField(), pensionBalance: counterField(),
+      luck: counterField(1), ...wounds };
   }
 }
 
 class CooperativeModel extends NotesModel {
   static defineSchema() {
-    return { ...super.defineSchema(), budget: moneyField() };
+    return { ...super.defineSchema(), budget: counterField() };
   }
 }
 
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
+  #luckPending = false;
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
     position: { width: 540 },
-    actions: { rollCollision: Ouw25ActorSheet.rollCollision, depositPension: Ouw25ActorSheet.depositPension }
+    actions: {
+      rollCollision: Ouw25ActorSheet.rollCollision,
+      depositPension: Ouw25ActorSheet.depositPension,
+      changeLuck: Ouw25ActorSheet.changeLuck
+    }
   };
 
   static PARTS = {
@@ -56,8 +66,29 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       showCollision: this.isEditable && merchant,
       money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
-      pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null }
+      pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },
+      condition: merchant ? {
+        luck: system.luck,
+        canSpend: system.luck > 0,
+        canAdd: system.luck < Number.MAX_SAFE_INTEGER,
+        wounds: WOUND_SLOTS.map(slot => ({ slot, marked: system[`wound${slot}`], lethal: slot === 3 }))
+      } : null
     };
+  }
+
+  static async changeLuck(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "merchant" || this.#luckPending) return;
+    const direction = target.dataset.luck;
+    if (direction !== "add" && direction !== "spend") return;
+    const luck = actor.system.luck + (direction === "add" ? 1 : -1);
+    if (luck < 0 || !Number.isSafeInteger(luck)) return;
+    this.#luckPending = true;
+    try {
+      await actor.update({ "system.luck": luck });
+    } finally {
+      this.#luckPending = false;
+    }
   }
 
   static async depositPension(event, target) {

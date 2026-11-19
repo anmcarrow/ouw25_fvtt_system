@@ -23,6 +23,15 @@
       "ConfirmDeposit": "Deposit {amount} og. into the pension account? No other account will be debited.",
       "InvalidDeposit": "Enter a positive whole amount within the supported balance range."
     },
+    "Condition": {
+      "Title": "Luck and wounds",
+      "Luck": "Luck marks: {count}",
+      "LuckHelp": "Spend one mark to guarantee success or prevent a wound. Record the effect manually.",
+      "AddLuck": "Add luck mark",
+      "SpendLuck": "Spend luck mark",
+      "Wound": "Wound {slot}",
+      "LethalWound": "Wound {slot} (lethal)"
+    },
     "Collision": {
       "Title": "(Un)Luck Check",
       "Dice": "Dice",

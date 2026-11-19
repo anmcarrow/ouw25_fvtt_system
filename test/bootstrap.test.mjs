@@ -12,7 +12,7 @@ test("the built package registers models and an editable notes sheet for its dec
   globalThis.CONFIG = { Actor: { dataModels: {} } };
   globalThis.foundry = {
     abstract: { TypeDataModel: class {} },
-    data: { fields: { StringField: class {}, NumberField: class {} } },
+    data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {} } },
     applications: {
       api: { HandlebarsApplicationMixin: base => base },
       sheets: { ActorSheetV2: class { async _prepareContext() { return {}; } } }
@@ -33,7 +33,8 @@ test("the built package registers models and an editable notes sheet for its dec
     assert.ok(CONFIG.Actor.dataModels[type].defineSchema().notes);
     const sheet = new Sheet();
     const merchant = type === "merchant";
-    sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005 } };
+    sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
+      luck: 0, wound1: true, wound2: false, wound3: false } };
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       assert.deepEqual(await sheet._prepareContext({}), {
@@ -41,10 +42,32 @@ test("the built package registers models and an editable notes sheet for its dec
         showCollision: editable && merchant,
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
-        pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null
+        pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null,
+        condition: merchant ? { luck: 0, canSpend: false, canAdd: true, wounds: [
+          { slot: 1, marked: true, lethal: false }, { slot: 2, marked: false, lethal: false },
+          { slot: 3, marked: false, lethal: true }
+        ] } : null
       });
 
     }
+    let updates = 0;
+    sheet.actor.update = async data => {
+      updates++;
+      sheet.actor.system.luck = data["system.luck"];
+    };
+    const changeLuck = direction => Sheet.DEFAULT_OPTIONS.actions.changeLuck.call(sheet, null, { dataset: { luck: direction } });
+    await changeLuck("add");
+    assert.equal(updates, 0);
+    sheet.isEditable = true;
+    await changeLuck("spend");
+    assert.equal(updates, 0);
+    await changeLuck("add");
+    if (merchant) {
+      assert.equal(sheet.actor.system.luck, 1);
+      await changeLuck("spend");
+      assert.equal(sheet.actor.system.luck, 0);
+      assert.equal(updates, 2);
+    } else assert.equal(updates, 0);
   }
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));

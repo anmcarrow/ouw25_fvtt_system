@@ -29,6 +29,20 @@
   {{#if condition}}
     <fieldset class="ouw25-condition">
       <legend>{{localize "OUW25.Condition.Title"}}</legend>
+      <label>
+        {{localize "OUW25.Past.Title"}}
+        <select name="system.past" {{#unless editable}}disabled{{/unless}}>
+          {{#each condition.pasts}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
+          {{/each}}
+        </select>
+      </label>
+      {{#if condition.showFragile}}
+        <label>
+          <input type="checkbox" name="system.fragile" {{checked condition.fragile}} {{#unless editable}}disabled{{/unless}}>
+          {{localize "OUW25.Past.Fragile"}}
+        </label>
+      {{/if}}
       <p>{{localize "OUW25.Condition.Luck" count=condition.luck}}</p>
       <p>{{localize "OUW25.Condition.LuckHelp"}}</p>
       {{#if editable}}

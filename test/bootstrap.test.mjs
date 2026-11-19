@@ -21,6 +21,7 @@ test("the built package registers models and an editable notes sheet for its dec
   };
 
   await import(new URL(manifest.esmodules[0], dist));
+  const { MERCHANT_PASTS } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   const [[id, Sheet, options]] = registration;
   assert.equal(id, manifest.id);
@@ -34,7 +35,7 @@ test("the built package registers models and an editable notes sheet for its dec
     const sheet = new Sheet();
     const merchant = type === "merchant";
     sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
-      luck: 0, wound1: true, wound2: false, wound3: false } };
+      luck: 0, past: "unset", fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       assert.deepEqual(await sheet._prepareContext({}), {
@@ -43,7 +44,9 @@ test("the built package registers models and an editable notes sheet for its dec
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
         pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null,
-        condition: merchant ? { luck: 0, canSpend: false, canAdd: true, wounds: [
+        condition: merchant ? { pasts: MERCHANT_PASTS.map(value => ({
+          value, label: `OUW25.Past.${value}`, selected: value === "unset"
+        })), showFragile: false, fragile: false, luck: 0, canSpend: false, canAdd: true, wounds: [
           { slot: 1, marked: true, lethal: false }, { slot: 2, marked: false, lethal: false },
           { slot: 3, marked: false, lethal: true }
         ] } : null
@@ -67,6 +70,17 @@ test("the built package registers models and an editable notes sheet for its dec
       await changeLuck("spend");
       assert.equal(sheet.actor.system.luck, 0);
       assert.equal(updates, 2);
+      for (const [past, fragile, threshold] of [
+        ["hard_worker", false, 4], ["artist", false, 2], ["deprived", false, 3],
+        ["deprived", true, 2], ["veteran", true, 3], ["hard_worker", true, 4]
+      ]) {
+        Object.assign(sheet.actor.system, { past, fragile });
+        const { condition } = await sheet._prepareContext({});
+        assert.equal(condition.showFragile, past === "deprived");
+        assert.equal(condition.wounds.length, threshold);
+        assert.deepEqual(condition.wounds.filter(wound => wound.lethal).map(wound => wound.slot), [threshold]);
+        if (threshold === 4) assert.equal(condition.wounds[3].marked, true);
+      }
     } else assert.equal(updates, 0);
   }
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]

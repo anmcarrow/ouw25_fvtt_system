@@ -23,6 +23,27 @@
       "ConfirmDeposit": "Deposit {amount} og. into the pension account? No other account will be debited.",
       "InvalidDeposit": "Enter a positive whole amount within the supported balance range."
     },
+    "Past": {
+      "Title": "Significant past",
+      "unset": "— Not selected —",
+      "veteran": "Veteran",
+      "seeker": "Seeker",
+      "colonist": "Colonist",
+      "deprived": "Deprived",
+      "savage": "Savage",
+      "reconstructed": "Reconstructed",
+      "remnant": "Remnant",
+      "augur": "Augur",
+      "gambler": "Gambler",
+      "champion": "Champion",
+      "writer": "Scribbler",
+      "artist": "Artist",
+      "hard_worker": "Hard Worker",
+      "sleeper": "Sleeper",
+      "defect": "Defect",
+      "slave": "Bondservant",
+      "Fragile": "Fragility selected (second wound is lethal)"
+    },
     "Condition": {
       "Title": "Luck and wounds",
       "Luck": "Luck marks: {count}",

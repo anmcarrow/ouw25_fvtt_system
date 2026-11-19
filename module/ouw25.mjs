@@ -1,8 +1,9 @@
 import { parseCollisionInput, resolveCollision } from "./collision.mjs";
 import { pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
+import { lethalWoundSlot, MERCHANT_PASTS } from "./merchant.mjs";
 
 const SYSTEM_ID = "ouw25";
-const WOUND_SLOTS = [1, 2, 3];
+const WOUND_SLOTS = [1, 2, 3, 4];
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
@@ -26,7 +27,10 @@ class MerchantModel extends NotesModel {
       `wound${slot}`, new foundry.data.fields.BooleanField({ initial: false })
     ]));
     return { ...super.defineSchema(), pocketMoney: counterField(), pensionBalance: counterField(),
-      luck: counterField(1), ...wounds };
+      luck: counterField(1),
+      past: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_PASTS }),
+      fragile: new foundry.data.fields.BooleanField({ initial: false }),
+      ...wounds };
   }
 }
 
@@ -58,6 +62,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const { type, system } = this.actor;
     const merchant = type === "merchant";
     const pension = merchant ? pensionProgress(system.pensionBalance) : null;
+    const lethal = merchant ? lethalWoundSlot(system.past, system.fragile) : null;
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
@@ -68,10 +73,15 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
       pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },
       condition: merchant ? {
+        pasts: MERCHANT_PASTS.map(value => ({
+          value, label: `OUW25.Past.${value}`, selected: value === system.past
+        })),
+        showFragile: system.past === "deprived",
+        fragile: system.fragile,
         luck: system.luck,
         canSpend: system.luck > 0,
         canAdd: system.luck < Number.MAX_SAFE_INTEGER,
-        wounds: WOUND_SLOTS.map(slot => ({ slot, marked: system[`wound${slot}`], lethal: slot === 3 }))
+        wounds: WOUND_SLOTS.slice(0, lethal).map(slot => ({ slot, marked: system[`wound${slot}`], lethal: slot === lethal }))
       } : null
     };
   }

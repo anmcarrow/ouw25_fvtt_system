@@ -9,7 +9,7 @@ test("the built package registers models and an editable notes sheet for its dec
   const types = Object.keys(manifest.documentTypes.Actor);
   const registration = [];
   globalThis.Hooks = { once(event, callback) { if (event === "init") callback(); } };
-  globalThis.CONFIG = { Actor: { dataModels: {} } };
+  globalThis.CONFIG = { Actor: { dataModels: {} }, Item: { dataModels: {} } };
   globalThis.foundry = {
     abstract: { TypeDataModel: class {} },
     data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {} } },
@@ -26,6 +26,7 @@ test("the built package registers models and an editable notes sheet for its dec
   await import(new URL(manifest.esmodules[0], dist));
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
+  assert.deepEqual(Object.keys(CONFIG.Item.dataModels), Object.keys(manifest.documentTypes.Item));
   const [[id, Sheet, options]] = registration;
   assert.equal(id, manifest.id);
   assert.deepEqual(options.types, types);
@@ -39,6 +40,9 @@ test("the built package registers models and an editable notes sheet for its dec
     const merchant = type === "merchant";
     sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
       luck: 0, specialty: "medic", past: "unset", fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
+    sheet.actor.items = [{ type: "debt", id: "debt-1", name: "Creditor", system: {
+      direction: "payable", amount: 12, location: "Port"
+    } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       assert.deepEqual(await sheet._prepareContext({}), {
@@ -47,6 +51,10 @@ test("the built package registers models and an editable notes sheet for its dec
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
         pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null,
+        ledger: merchant ? { totals: { payable: "12", receivable: "0" }, groups: [
+          { label: "OUW25.Debt.payable", entries: [{ id: "debt-1", name: "Creditor", amount: 12, location: "Port" }] },
+          { label: "OUW25.Debt.receivable", entries: [] }
+        ] } : null,
         condition: merchant ? { specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === "medic"
         })), specialtyHelp: "OUW25.Specialty.Help.medic", specialtyConflict: false,
@@ -132,6 +140,14 @@ test("creation rolls map to the pilot background table and apply starting-money 
   assert.equal(startingPocketMoney(14, "veteran"), 140);
   assert.equal(startingPocketMoney(14, "deprived"), 700);
   assert.equal(startingPocketMoney(14, "slave"), 0);
+});
+
+test("debt totals stay separate and exact beyond the safe integer range", async () => {
+  const { debtTotals } = await import(new URL("module/finance.mjs", dist));
+  assert.deepEqual(debtTotals([
+    { direction: "payable", amount: Number.MAX_SAFE_INTEGER }, { direction: "receivable", amount: 25 },
+    { direction: "payable", amount: 6 }
+  ]), { payable: "9007199254740997", receivable: "25" });
 });
 
 test("pension deposits advance leave thresholds without rounding or overflowing", async () => {

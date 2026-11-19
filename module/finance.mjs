@@ -1,6 +1,14 @@
 const LEAVE_THRESHOLD = 30_000;
 const MAX_LEAVES = 8;
 
+export const DEBT_DIRECTIONS = ["payable", "receivable"];
+
+export function debtTotals(records) {
+  const totals = { payable: 0n, receivable: 0n };
+  for (const { direction, amount } of records) totals[direction] += BigInt(amount);
+  return { payable: String(totals.payable), receivable: String(totals.receivable) };
+}
+
 export function pensionProgress(balance) {
   const leaves = Math.min(MAX_LEAVES, Math.floor(balance / LEAVE_THRESHOLD));
   return {

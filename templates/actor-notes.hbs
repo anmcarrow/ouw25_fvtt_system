@@ -29,6 +29,29 @@
       </div>
     {{/if}}
   </fieldset>
+  {{#if ledger}}
+    <fieldset class="ouw25-ledger">
+      <legend>{{localize "OUW25.Debt.Title"}}</legend>
+      <p>{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
+      {{#each ledger.groups}}
+        <h3>{{localize label}}</h3>
+        <ul>
+          {{#each entries}}
+            <li>
+              <strong>{{name}}</strong>{{#if location}} · {{location}}{{/if}} · {{amount}} {{localize "OUW25.Finance.Currency"}}
+              {{#if @root.editable}}
+                <button type="button" data-action="editDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                <button type="button" data-action="deleteDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+              {{/if}}
+            </li>
+          {{else}}
+            <li>{{localize "OUW25.Debt.Empty"}}</li>
+          {{/each}}
+        </ul>
+      {{/each}}
+      {{#if editable}}<button type="button" data-action="editDebt">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
+    </fieldset>
+  {{/if}}
   {{#if condition}}
     <fieldset class="ouw25-condition">
       <legend>{{localize "OUW25.Condition.Title"}}</legend>

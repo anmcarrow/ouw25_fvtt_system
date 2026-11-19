@@ -3,12 +3,29 @@
     "Actor": {
       "merchant": "Merchant",
       "cooperative": "Cooperative"
-    }
+    },
+    "Item": { "debt": "Debt record" }
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Debt": {
+      "Title": "Personal debts",
+      "payable": "I owe",
+      "receivable": "Owed to me",
+      "Totals": "I owe: {payable} og. · Owed to me: {receivable} og.",
+      "Direction": "Direction",
+      "Counterparty": "Who",
+      "Location": "Where",
+      "Amount": "Amount, og.",
+      "Empty": "No records",
+      "Add": "Add debt record",
+      "Edit": "Edit",
+      "Delete": "Delete",
+      "ConfirmDelete": "Delete this debt record? This does not move any money.",
+      "Invalid": "Enter a counterparty and a non-negative whole amount."
+    },
     "Finance": {
       "Title": "Money",
       "Currency": "og.",

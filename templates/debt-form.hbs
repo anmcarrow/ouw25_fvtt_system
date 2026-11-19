@@ -1,0 +1,20 @@
+<div class="form-group">
+  <label for="{{rootId}}-direction">{{localize "OUW25.Debt.Direction"}}</label>
+  <select id="{{rootId}}-direction" name="direction">
+    {{#each directions}}
+      <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
+    {{/each}}
+  </select>
+</div>
+<div class="form-group">
+  <label for="{{rootId}}-name">{{localize "OUW25.Debt.Counterparty"}}</label>
+  <input id="{{rootId}}-name" name="name" type="text" value="{{name}}" required>
+</div>
+<div class="form-group">
+  <label for="{{rootId}}-location">{{localize "OUW25.Debt.Location"}}</label>
+  <input id="{{rootId}}-location" name="location" type="text" value="{{location}}">
+</div>
+<div class="form-group">
+  <label for="{{rootId}}-amount">{{localize "OUW25.Debt.Amount"}}</label>
+  <input id="{{rootId}}-amount" name="amount" type="number" value="{{amount}}" min="0" max="9007199254740991" step="1" required>
+</div>

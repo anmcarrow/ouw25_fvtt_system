@@ -1,5 +1,5 @@
 import { parseCollisionInput, resolveCollision } from "./collision.mjs";
-import { pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
+import { DEBT_DIRECTIONS, debtTotals, pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 
@@ -47,10 +47,22 @@ class CooperativeModel extends NotesModel {
   }
 }
 
+class DebtModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    const { StringField } = foundry.data.fields;
+    return {
+      direction: new StringField({ initial: "payable", choices: DEBT_DIRECTIONS }),
+      location: new StringField({ initial: "" }),
+      amount: counterField()
+    };
+  }
+}
+
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
   #luckPending = false;
   #creationRollPending = false;
+  #debtPending = false;
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
@@ -59,7 +71,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       rollCollision: Ouw25ActorSheet.rollCollision,
       depositPension: Ouw25ActorSheet.depositPension,
       changeLuck: Ouw25ActorSheet.changeLuck,
-      rollCreation: Ouw25ActorSheet.rollCreation
+      rollCreation: Ouw25ActorSheet.rollCreation,
+      editDebt: Ouw25ActorSheet.editDebt,
+      deleteDebt: Ouw25ActorSheet.deleteDebt
     }
   };
 
@@ -73,6 +87,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const pension = merchant ? pensionProgress(system.pensionBalance) : null;
     const lethal = merchant ? lethalWoundSlot(system.past, system.fragile) : null;
     const specialtyCount = merchant ? availableSpecialties(system.past).length : 0;
+    const debts = merchant ? this.actor.items.filter(item => item.type === "debt") : [];
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
@@ -82,6 +97,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
       pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },
+      ledger: merchant ? { totals: debtTotals(debts.map(item => item.system)), groups: DEBT_DIRECTIONS.map(direction => ({
+        label: `OUW25.Debt.${direction}`,
+        entries: debts.filter(item => item.system.direction === direction).map(item => ({
+          id: item.id, name: item.name, location: item.system.location, amount: item.system.amount
+        }))
+      })) } : null,
       condition: merchant ? {
         specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty
@@ -101,6 +122,60 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         wounds: WOUND_SLOTS.slice(0, lethal).map(slot => ({ slot, marked: system[`wound${slot}`], lethal: slot === lethal }))
       } : null
     };
+  }
+
+  static async editDebt(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "merchant" || this.#debtPending) return;
+    const id = target.dataset.debtId;
+    const item = id ? actor.items.get(id) : null;
+    if (id && item?.type !== "debt") return;
+    this.#debtPending = true;
+    try {
+      const direction = item?.system.direction ?? "payable";
+      const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/debt-form.hbs`, {
+        rootId: `ouw25-debt-${foundry.utils.randomID()}`,
+        name: item?.name ?? "", location: item?.system.location ?? "", amount: item?.system.amount ?? 0,
+        directions: DEBT_DIRECTIONS.map(value => ({
+          value, label: `OUW25.Debt.${value}`, selected: value === direction
+        }))
+      });
+      const data = await foundry.applications.api.DialogV2.input({
+        window: { title: game.i18n.localize(item ? "OUW25.Debt.Edit" : "OUW25.Debt.Add") },
+        content, rejectClose: false, ok: { label: game.i18n.localize("OUW25.Save") }
+      });
+      if (!data || !this.isEditable || (id && actor.items.get(id)?.type !== "debt")) return;
+      const name = String(data.name ?? "").trim();
+      const amount = String(data.amount ?? "").trim() ? Number(data.amount) : NaN;
+      if (!name || !DEBT_DIRECTIONS.includes(data.direction) || !Number.isSafeInteger(amount) || amount < 0) {
+        ui.notifications.warn(game.i18n.localize("OUW25.Debt.Invalid"));
+        return;
+      }
+      const system = { direction: data.direction, location: String(data.location ?? "").trim(), amount };
+      if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name, system }]);
+      else await actor.createEmbeddedDocuments("Item", [{ type: "debt", name, system }]);
+    } finally {
+      this.#debtPending = false;
+    }
+  }
+
+  static async deleteDebt(event, target) {
+    const actor = this.actor;
+    const id = target.dataset.debtId;
+    if (!this.isEditable || actor.type !== "merchant" || this.#debtPending || actor.items.get(id)?.type !== "debt") return;
+    this.#debtPending = true;
+    try {
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: game.i18n.localize("OUW25.Debt.Delete") },
+        content: `<p>${game.i18n.localize("OUW25.Debt.ConfirmDelete")}</p>`,
+        rejectClose: false
+      });
+      if (confirmed && this.isEditable && actor.items.get(id)?.type === "debt") {
+        await actor.deleteEmbeddedDocuments("Item", [id]);
+      }
+    } finally {
+      this.#debtPending = false;
+    }
   }
 
   async _processSubmitData(event, form, submitData, options) {
@@ -234,6 +309,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 Hooks.once("init", () => {
   const models = { merchant: MerchantModel, cooperative: CooperativeModel };
   Object.assign(CONFIG.Actor.dataModels, models);
+  CONFIG.Item.dataModels.debt = DebtModel;
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, Ouw25ActorSheet, {
     types: Object.keys(models),
     makeDefault: true,

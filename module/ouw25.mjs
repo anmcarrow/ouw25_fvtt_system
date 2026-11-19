@@ -1,4 +1,5 @@
 import { parseCollisionInput, resolveCollision } from "./collision.mjs";
+import { pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 
 const SYSTEM_ID = "ouw25";
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -12,14 +13,31 @@ class NotesModel extends foundry.abstract.TypeDataModel {
   }
 }
 
-class MerchantModel extends NotesModel {}
-class CooperativeModel extends NotesModel {}
+function moneyField() {
+  return new foundry.data.fields.NumberField({
+    required: true, nullable: false, initial: 0, integer: true, min: 0, max: Number.MAX_SAFE_INTEGER
+  });
+}
+
+class MerchantModel extends NotesModel {
+  static defineSchema() {
+    return { ...super.defineSchema(), pocketMoney: moneyField(), pensionBalance: moneyField() };
+  }
+}
+
+class CooperativeModel extends NotesModel {
+  static defineSchema() {
+    return { ...super.defineSchema(), budget: moneyField() };
+  }
+}
 
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
+  #depositPending = false;
+
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
     position: { width: 540 },
-    actions: { rollCollision: Ouw25ActorSheet.rollCollision }
+    actions: { rollCollision: Ouw25ActorSheet.rollCollision, depositPension: Ouw25ActorSheet.depositPension }
   };
 
   static PARTS = {
@@ -27,13 +45,47 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   };
 
   async _prepareContext(options) {
+    const { type, system } = this.actor;
+    const merchant = type === "merchant";
+    const pension = merchant ? pensionProgress(system.pensionBalance) : null;
     return {
       ...await super._prepareContext(options),
-      notes: this.actor.system.notes,
-      actorTypeLabel: `TYPES.Actor.${this.actor.type}`,
+      notes: system.notes,
+      actorTypeLabel: `TYPES.Actor.${type}`,
       editable: this.isEditable,
-      showCollision: this.isEditable && this.actor.type === "merchant"
+      showCollision: this.isEditable && merchant,
+      money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
+        : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
+      pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null }
     };
+  }
+
+  static async depositPension(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "merchant" || this.#depositPending) return;
+    const input = target.closest(".ouw25-pension").querySelector("[data-deposit]");
+    const amount = input.value;
+    const i18n = game.i18n;
+    this.#depositPending = true;
+    target.disabled = true;
+    try {
+      pensionBalanceAfterDeposit(actor.system.pensionBalance, amount);
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: i18n.localize("OUW25.Finance.Deposit") },
+        content: `<p>${i18n.format("OUW25.Finance.ConfirmDeposit", { amount: Number(amount) })}</p>`,
+        rejectClose: false
+      });
+      if (!confirmed || !this.isEditable) return;
+      const pensionBalance = pensionBalanceAfterDeposit(actor.system.pensionBalance, amount);
+      await actor.update({ "system.pensionBalance": pensionBalance });
+      input.value = "";
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      ui.notifications.warn(i18n.localize("OUW25.Finance.InvalidDeposit"));
+    } finally {
+      target.disabled = false;
+      this.#depositPending = false;
+    }
   }
 
   static async rollCollision(event, target) {

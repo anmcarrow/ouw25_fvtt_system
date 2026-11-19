@@ -1,5 +1,31 @@
 <section class="ouw25-notes">
   <h2>{{localize actorTypeLabel}}</h2>
+  <fieldset>
+    <legend>{{localize "OUW25.Finance.Title"}}</legend>
+    <label>
+      {{localize money.label}}
+      <input type="number" name="system.{{money.field}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
+      {{localize "OUW25.Finance.Currency"}}
+    </label>
+    {{#if pension}}
+      <div class="ouw25-pension">
+        <p>{{localize "OUW25.Finance.PensionBalance" balance=pension.balance}}</p>
+        <p>{{localize "OUW25.Finance.Leaves" leaves=pension.leaves}}</p>
+        {{#if pension.complete}}
+          <p>{{localize "OUW25.Finance.ContractComplete"}}</p>
+        {{else}}
+          <p>{{localize "OUW25.Finance.UntilNext" amount=pension.untilNext}}</p>
+        {{/if}}
+        {{#if editable}}
+          <label>
+            {{localize "OUW25.Finance.DepositAmount"}}
+            <input type="number" step="any" inputmode="numeric" data-deposit>
+          </label>
+          <button type="button" data-action="depositPension">{{localize "OUW25.Finance.Deposit"}}</button>
+        {{/if}}
+      </div>
+    {{/if}}
+  </fieldset>
   <label>
     {{localize "OUW25.Notes"}}
     <textarea name="system.notes" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>

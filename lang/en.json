@@ -9,6 +9,20 @@
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Finance": {
+      "Title": "Money",
+      "Currency": "og.",
+      "PocketMoney": "Pocket money",
+      "Budget": "Budget",
+      "PensionBalance": "Pension balance: {balance} og.",
+      "Leaves": "Periods of leave earned: {leaves}.",
+      "UntilNext": "Until the next leave: {amount} og.",
+      "ContractComplete": "You can complete your free trader contract.",
+      "DepositAmount": "Deposit amount, og.",
+      "Deposit": "Make pension deposit",
+      "ConfirmDeposit": "Deposit {amount} og. into the pension account? No other account will be debited.",
+      "InvalidDeposit": "Enter a positive whole amount within the supported balance range."
+    },
     "Collision": {
       "Title": "(Un)Luck Check",
       "Dice": "Dice",

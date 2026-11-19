@@ -12,7 +12,7 @@ test("the built package registers models and an editable notes sheet for its dec
   globalThis.CONFIG = { Actor: { dataModels: {} } };
   globalThis.foundry = {
     abstract: { TypeDataModel: class {} },
-    data: { fields: { StringField: class {} } },
+    data: { fields: { StringField: class {}, NumberField: class {} } },
     applications: {
       api: { HandlebarsApplicationMixin: base => base },
       sheets: { ActorSheetV2: class { async _prepareContext() { return {}; } } }
@@ -32,12 +32,16 @@ test("the built package registers models and an editable notes sheet for its dec
   for (const type of types) {
     assert.ok(CONFIG.Actor.dataModels[type].defineSchema().notes);
     const sheet = new Sheet();
-    sheet.actor = { type, system: { notes: "test note" } };
+    const merchant = type === "merchant";
+    sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005 } };
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       assert.deepEqual(await sheet._prepareContext({}), {
         notes: "test note", actorTypeLabel: `TYPES.Actor.${type}`, editable,
-        showCollision: editable && type === "merchant"
+        showCollision: editable && merchant,
+        money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
+          : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
+        pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null
       });
 
     }
@@ -55,6 +59,19 @@ test("collision distinguishes outcomes after deductions", async () => {
   for (const [deduction, remaining, outcome] of [[0, 2, "Success"], [1, 1, "Partial"], [3, -1, "Failure"]]) {
     assert.deepEqual(resolveCollision(dice, deduction), { remaining, outcome });
   }
+});
+
+test("pension deposits advance leave thresholds without rounding or overflowing", async () => {
+  const { pensionBalanceAfterDeposit, pensionProgress } = await import(new URL("module/finance.mjs", dist));
+  assert.deepEqual(pensionProgress(29_999), { leaves: 0, untilNext: 1 });
+  const balance = pensionBalanceAfterDeposit(29_999, "1");
+  assert.deepEqual(pensionProgress(balance), { leaves: 1, untilNext: 30_000 });
+  assert.deepEqual(pensionProgress(240_000), { leaves: 8, untilNext: null });
+  assert.deepEqual(pensionProgress(270_000), { leaves: 8, untilNext: null });
+  for (const invalid of ["", "0", "-1", "1.5", "1e2", "9007199254740992"]) {
+    assert.throws(() => pensionBalanceAfterDeposit(0, invalid), RangeError);
+  }
+  assert.throws(() => pensionBalanceAfterDeposit(Number.MAX_SAFE_INTEGER, "1"), RangeError);
 });
 
 test("the English fallback covers the Russian sheet labels and roll result placeholders", async () => {

@@ -21,7 +21,7 @@ test("the built package registers models and an editable notes sheet for its dec
   };
 
   await import(new URL(manifest.esmodules[0], dist));
-  const { MERCHANT_PASTS } = await import(new URL("module/merchant.mjs", dist));
+  const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   const [[id, Sheet, options]] = registration;
   assert.equal(id, manifest.id);
@@ -35,7 +35,7 @@ test("the built package registers models and an editable notes sheet for its dec
     const sheet = new Sheet();
     const merchant = type === "merchant";
     sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
-      luck: 0, past: "unset", fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
+      luck: 0, specialty: "medic", past: "unset", fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       assert.deepEqual(await sheet._prepareContext({}), {
@@ -44,7 +44,9 @@ test("the built package registers models and an editable notes sheet for its dec
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
         pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null,
-        condition: merchant ? { pasts: MERCHANT_PASTS.map(value => ({
+        condition: merchant ? { specialties: MERCHANT_SPECIALTIES.map(value => ({
+          value, label: `OUW25.Specialty.${value}`, selected: value === "medic"
+        })), specialtyHelp: "OUW25.Specialty.Help.medic", pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === "unset"
         })), showFragile: false, fragile: false, luck: 0, canSpend: false, canAdd: true, wounds: [
           { slot: 1, marked: true, lethal: false }, { slot: 2, marked: false, lethal: false },
@@ -99,7 +101,10 @@ test("collision distinguishes outcomes after deductions", async () => {
 });
 
 test("creation rolls map to the pilot background table and apply starting-money exceptions", async () => {
-  const { pastFromRoll, startingPocketMoney } = await import(new URL("module/merchant.mjs", dist));
+  const { pastFromRoll, specialtyFromRoll, startingPocketMoney } = await import(new URL("module/merchant.mjs", dist));
+  assert.deepEqual([1, 2, 3, 4].map(specialtyFromRoll), ["quartermaster", "navigator", "medic", "mechanic"]);
+  assert.throws(() => specialtyFromRoll(0), RangeError);
+  assert.throws(() => specialtyFromRoll(5), RangeError);
   assert.equal(pastFromRoll(3), "veteran");
   assert.equal(pastFromRoll(6), "deprived");
   assert.equal(pastFromRoll(18), "slave");

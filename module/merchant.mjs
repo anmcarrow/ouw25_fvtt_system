@@ -3,6 +3,13 @@ export const MERCHANT_PASTS = [
   "augur", "gambler", "champion", "writer", "artist", "hard_worker", "sleeper", "defect", "slave"
 ];
 
+export const MERCHANT_SPECIALTIES = ["unset", "quartermaster", "navigator", "medic", "mechanic"];
+
+export function specialtyFromRoll(total) {
+  if (!Number.isInteger(total) || total < 1 || total > 4) throw new RangeError("Invalid 1d4 total");
+  return MERCHANT_SPECIALTIES[total];
+}
+
 export function lethalWoundSlot(past, fragile) {
   if (past === "artist" || (past === "deprived" && fragile)) return 2;
   return past === "hard_worker" ? 4 : 3;

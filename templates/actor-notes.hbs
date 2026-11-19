@@ -33,6 +33,18 @@
     <fieldset class="ouw25-condition">
       <legend>{{localize "OUW25.Condition.Title"}}</legend>
       <label>
+        {{localize "OUW25.Specialty.Title"}}
+        <select name="system.specialty" {{#unless editable}}disabled{{/unless}}>
+          {{#each condition.specialties}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
+          {{/each}}
+        </select>
+      </label>
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="specialty">{{localize "OUW25.Creation.RollSpecialty"}}</button>
+      {{/if}}
+      {{#if condition.specialtyHelp}}<p>{{localize condition.specialtyHelp}}</p>{{/if}}
+      <label>
         {{localize "OUW25.Past.Title"}}
         <select name="system.past" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.pasts}}

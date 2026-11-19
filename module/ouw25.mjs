@@ -1,9 +1,15 @@
 import { parseCollisionInput, resolveCollision } from "./collision.mjs";
 import { pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
+import { MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
+const CREATION_ROLLS = new Map([
+  ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
+  ["specialty", { key: "Specialty", formula: "1d4", resolve: specialtyFromRoll, labels: "OUW25.Specialty" }],
+  ["pocketMoney", { key: "Money", formula: "4d6", resolve: startingPocketMoney }]
+]);
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
@@ -28,6 +34,7 @@ class MerchantModel extends NotesModel {
     ]));
     return { ...super.defineSchema(), pocketMoney: counterField(), pensionBalance: counterField(),
       luck: counterField(1),
+      specialty: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_SPECIALTIES }),
       past: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_PASTS }),
       fragile: new foundry.data.fields.BooleanField({ initial: false }),
       ...wounds };
@@ -75,6 +82,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
       pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },
       condition: merchant ? {
+        specialties: MERCHANT_SPECIALTIES.map(value => ({
+          value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty
+        })),
+        specialtyHelp: system.specialty === "unset" ? null : `OUW25.Specialty.Help.${system.specialty}`,
         pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === system.past
         })),
@@ -92,10 +103,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const actor = this.actor;
     if (!this.isEditable || actor.type !== "merchant" || this.#creationRollPending) return;
     const field = target.dataset.creation;
-    if (field !== "past" && field !== "pocketMoney") return;
-    const isPast = field === "past";
-    const { past, pocketMoney } = actor.system;
-    const key = isPast ? "Past" : "Money";
+    const config = CREATION_ROLLS.get(field);
+    if (!config) return;
+    const { key, formula, resolve, labels } = config;
+    const previous = actor.system[field];
+    const { past } = actor.system;
     const { i18n } = game;
     this.#creationRollPending = true;
     target.disabled = true;
@@ -107,15 +119,15 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       });
       if (!confirmed || !this.isEditable) return;
       const { Roll } = foundry.dice;
-      const roll = await new Roll(isPast ? "3d6" : "4d6").evaluate({ allowInteractive: false });
+      const roll = await new Roll(formula).evaluate({ allowInteractive: false });
       if (!this.isEditable) return;
-      if (actor.system.past !== past || (!isPast && actor.system.pocketMoney !== pocketMoney)) {
+      if (actor.system[field] !== previous || (field === "pocketMoney" && actor.system.past !== past)) {
         ui.notifications.warn(i18n.localize("OUW25.Creation.Changed"));
         return;
       }
-      const value = isPast ? pastFromRoll(roll.total) : startingPocketMoney(roll.total, past);
+      const value = resolve(roll.total, past);
       await actor.update({ [`system.${field}`]: value });
-      const result = isPast ? i18n.localize(`OUW25.Past.${value}`) : value;
+      const result = labels ? i18n.localize(`${labels}.${value}`) : value;
       await roll.toMessage({
         speaker: foundry.documents.ChatMessage.getSpeaker({ actor }),
         flavor: i18n.format(`OUW25.Creation.Result${key}`, { result })

@@ -44,7 +44,24 @@
       "slave": "Bondservant",
       "Fragile": "Fragility selected (second wound is lethal)"
     },
+    "Specialty": {
+      "Title": "Specialty",
+      "unset": "— Not selected —",
+      "quartermaster": "Quartermaster",
+      "navigator": "Navigator",
+      "medic": "Medic",
+      "mechanic": "Mechanic",
+      "Help": {
+        "quartermaster": "Handles supplies, budgets, contracts and receiving goods.",
+        "navigator": "Plans routes and navigates using charts and reference guides.",
+        "medic": "Treats the crew and deals with stress and poisoning.",
+        "mechanic": "Works with engines and equipment, and handles repairs."
+      }
+    },
     "Creation": {
+      "RollSpecialty": "Roll specialty (1d4)",
+      "ConfirmSpecialty": "Replace the saved specialty with a 1d4 roll? Save any other edits before rolling.",
+      "ResultSpecialty": "Random specialty: {result}.",
       "RollPast": "Roll significant past (3d6)",
       "ConfirmPast": "Replace the saved significant past with a 3d6 roll? Save any other edits before rolling.",
       "ResultPast": "Random significant past: {result}.",

@@ -9,15 +9,21 @@
 </div>
 {{/if}}
 <div class="form-group">
-  <label for="{{rootId}}-name">{{#if possession}}{{localize "OUW25.Possession.Description"}}{{else}}{{localize "OUW25.Debt.Counterparty"}}{{/if}}</label>
+  <label for="{{rootId}}-name">{{localize nameLabel}}</label>
   <input id="{{rootId}}-name" name="name" type="text" value="{{name}}" required>
 </div>
 {{#unless possession}}
 <div class="form-group">
-  <label for="{{rootId}}-location">{{localize "OUW25.Debt.Location"}}</label>
+  <label for="{{rootId}}-location">{{localize locationLabel}}</label>
   <input id="{{rootId}}-location" name="location" type="text" value="{{location}}">
 </div>
 {{/unless}}
+{{#if contract}}
+  <div class="form-group">
+    <label for="{{rootId}}-deadline">{{localize "OUW25.Contract.Deadline"}}</label>
+    <input id="{{rootId}}-deadline" name="deadline" type="text" value="{{deadline}}">
+  </div>
+{{/if}}
 {{#if hasAmount}}
   <div class="form-group">
     <label for="{{rootId}}-amount">{{localize amountLabel}}</label>

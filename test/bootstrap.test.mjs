@@ -57,12 +57,17 @@ test("the built package registers models and an editable notes sheet for its dec
     } },
     { type: "contact", id: "contact-2", name: "Broker", system: {
       location: "Harbor", reason: "", amount: 2
+    } },
+    { type: "contract", id: "contract-1", name: "Deliver supplies", system: {
+      location: "Harbor", deadline: "Before the next tide", amount: 45
     } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, identity, pastMoves, contacts, ...context } = await sheet._prepareContext({});
+      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, ...context } = await sheet._prepareContext({});
+      assert.equal(showContracts, !merchant);
       assert.equal(pastMoves, null);
       if (merchant) {
+        assert.equal(contracts, null);
         assert.equal(contacts, null);
         assert.equal(ship, null);
         assert.equal(identity.name, "Original");
@@ -77,6 +82,9 @@ test("the built package registers models and an editable notes sheet for its dec
           id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
         }]);
       } else {
+        assert.deepEqual(contracts, [{
+          id: "contract-1", name: "Deliver supplies", location: "Harbor", deadline: "Before the next tide", amount: 45
+        }]);
         assert.equal(contacts.total, "9007199254740993");
         assert.deepEqual(contacts.entries.map(({ id }) => id), ["contact-1", "contact-2"]);
         assert.equal(contacts.entries[0].reason, "Ally");

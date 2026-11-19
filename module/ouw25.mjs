@@ -15,8 +15,10 @@ const RECORD_LABELS = new Map([
   ["relationship", "OUW25.Relationship"],
   ["possession", "OUW25.Possession"],
   ["trait", "OUW25.Trait"],
-  ["contact", "OUW25.Contact"]
+  ["contact", "OUW25.Contact"],
+  ["contract", "OUW25.Contract"]
 ]);
+const COOPERATIVE_RECORDS = new Set(["contact", "contract"]);
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
   ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
@@ -117,6 +119,13 @@ class ContactModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+class ContractModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    const { StringField } = foundry.data.fields;
+    return { location: new StringField({ initial: "" }), deadline: new StringField({ initial: "" }), amount: counterField() };
+  }
+}
+
 class TraitModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return { code: new foundry.data.fields.StringField({
@@ -198,6 +207,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         entries: contacts,
         total: String(contacts.reduce((total, { amount }) => total + BigInt(amount), 0n))
       },
+      contracts: type === "cooperative" ? this.actor.items.filter(item => item.type === "contract").map(item => ({
+        id: item.id, name: item.name, location: item.system.location, deadline: item.system.deadline, amount: item.system.amount
+      })) : null,
+      showContracts: type === "cooperative",
       money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
       pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },
@@ -263,13 +276,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const actor = this.actor;
     const { recordId: id, recordType: type } = target.dataset;
     const contact = type === "contact";
-    if (!this.isEditable || actor.type !== (contact ? "cooperative" : "merchant") || this.#recordPending) return;
+    const contract = type === "contract";
+    if (!this.isEditable || actor.type !== (COOPERATIVE_RECORDS.has(type) ? "cooperative" : "merchant") || this.#recordPending) return;
     const key = RECORD_LABELS.get(type);
     if (!key || type === "trait") return;
     const debt = type === "debt";
     const possession = type === "possession";
     const directions = debt ? DEBT_DIRECTIONS : type === "relationship" ? RELATION_KINDS : [];
-    const hasAmount = debt || possession || contact;
+    const hasAmount = debt || possession || contact || contract;
     const item = id ? actor.items.get(id) : null;
     if (id && item?.type !== type) return;
     this.#recordPending = true;
@@ -277,10 +291,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const direction = item?.system.direction ?? directions[0];
       const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/record-form.hbs`, {
         rootId: `ouw25-record-${foundry.utils.randomID()}`,
-        possession, hasAmount, hasReason: type === "relationship" || contact, directionLabel: `${key}.Direction`,
-        amountLabel: contact ? `${key}.Debt` : possession ? `${key}.Cost` : "OUW25.Debt.Amount",
+        possession, contract, hasAmount, hasReason: type === "relationship" || contact, directionLabel: `${key}.Direction`,
+        nameLabel: contract ? `${key}.Subject` : possession ? `${key}.Description` : "OUW25.Debt.Counterparty",
+        locationLabel: contract ? `${key}.Destination` : "OUW25.Debt.Location",
+        amountLabel: contact ? `${key}.Debt` : possession || contract ? `${key}.Cost` : "OUW25.Debt.Amount",
         reasonLabel: contact ? `${key}.Relation` : "OUW25.Relationship.Reason", reason: item?.system.reason ?? "",
         name: item?.name ?? "", location: item?.system.location ?? "", amount: item?.system.amount ?? 0,
+        deadline: item?.system.deadline ?? "",
         directions: directions.map(value => ({
           value, label: `${key}.${value}`, selected: value === direction
         }))
@@ -302,6 +319,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (directions.length) system.direction = data.direction;
       if (hasAmount) system.amount = amount;
       if (type === "relationship" || contact) system.reason = String(data.reason ?? "").trim();
+      if (contract) system.deadline = String(data.deadline ?? "").trim();
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name, system }]);
       else await actor.createEmbeddedDocuments("Item", [{ type, name, system }]);
     } finally {
@@ -348,7 +366,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   static async deleteRecord(event, target) {
     const actor = this.actor;
     const { recordId: id, recordType: type } = target.dataset;
-    if (!this.isEditable || actor.type !== (type === "contact" ? "cooperative" : "merchant") || this.#recordPending) return;
+    if (!this.isEditable || actor.type !== (COOPERATIVE_RECORDS.has(type) ? "cooperative" : "merchant") || this.#recordPending) return;
     const key = RECORD_LABELS.get(type);
     if (!key || actor.items.get(id)?.type !== type) return;
     this.#recordPending = true;
@@ -571,6 +589,7 @@ Hooks.once("init", () => {
   CONFIG.Item.dataModels.possession = PossessionModel;
   CONFIG.Item.dataModels.trait = TraitModel;
   CONFIG.Item.dataModels.contact = ContactModel;
+  CONFIG.Item.dataModels.contract = ContractModel;
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, Ouw25ActorSheet, {
     types: Object.keys(models),
     makeDefault: true,

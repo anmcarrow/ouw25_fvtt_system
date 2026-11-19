@@ -98,6 +98,41 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contact">{{localize "OUW25.Contact.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+  {{#if showContracts}}
+    <fieldset class="ouw25-contracts">
+      <legend>{{localize "OUW25.Contract.Title"}}</legend>
+      <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contract.Title"}}">
+        <thead>
+          <tr>
+            <th scope="col">{{localize "OUW25.Contract.Subject"}}</th>
+            <th scope="col">{{localize "OUW25.Contract.Destination"}}</th>
+            <th scope="col">{{localize "OUW25.Contract.Deadline"}}</th>
+            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Contract.Cost"}}</th>
+            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each contracts}}
+            <tr>
+              <td>{{name}}</td>
+              <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
+              <td>{{#if deadline}}{{deadline}}{{else}}—{{/if}}</td>
+              <td class="ouw25-debt-amount">{{amount}}</td>
+              {{#if @root.editable}}
+                <td class="ouw25-debt-actions">
+                  <button type="button" data-action="editRecord" data-record-type="contract" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                  <button type="button" data-action="deleteRecord" data-record-type="contract" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                </td>
+              {{/if}}
+            </tr>
+          {{else}}
+            <tr><td colspan="{{#if editable}}5{{else}}4{{/if}}">{{localize "OUW25.Contract.Empty"}}</td></tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contract">{{localize "OUW25.Contract.Add"}}</button>{{/if}}
+    </fieldset>
+  {{/if}}
   {{#if ledger}}
     <fieldset class="ouw25-ledger">
       <legend>{{localize "OUW25.Debt.Title"}}</legend>

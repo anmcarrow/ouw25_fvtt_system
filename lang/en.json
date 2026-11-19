@@ -4,12 +4,23 @@
       "merchant": "Merchant",
       "cooperative": "Cooperative"
     },
-    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait", "contact": "Cooperative contact" }
+    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait", "contact": "Cooperative contact", "contract": "Cooperative contract" }
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Contract": {
+      "Title": "Contracts",
+      "Subject": "What",
+      "Destination": "Where to",
+      "Deadline": "When",
+      "Cost": "Value, og.",
+      "Add": "Add contract",
+      "Empty": "No contracts yet.",
+      "Invalid": "Enter a contract subject and a nonnegative whole value.",
+      "ConfirmDelete": "Delete this contract record?"
+    },
     "Contact": {
       "Title": "Contacts",
       "Add": "Add contact",

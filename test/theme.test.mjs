@@ -44,12 +44,15 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   assert.match(styles, /\.ouw25 \.ouw25-sheet-heading\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\)/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes fieldset\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\);[^}]*margin-block:\s*0\.25rem;[^}]*padding:\s*0\.5rem;/s);
   assert.match(styles, /--ouw25-field-background:\s*var\(--ouw25-color-surface\);/);
+  assert.match(styles, /--color-select-option-bg:\s*var\(--ouw25-color-surface\);/);
+  assert.match(styles, /body\.game \.app\.ouw25 \.ouw25-notes option\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background-color:\s*var\(--ouw25-color-surface\);/s);
+  assert.match(styles, /\.ouw25 \.ouw25-notes :is\(input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\):not\(\[type="hidden"\]\), select, textarea\)\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background-color:\s*var\(--ouw25-field-background\);/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes \.ouw25-debt-table thead,\s*\.ouw25 \.ouw25-notes \.ouw25-debt-table tfoot\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background:\s*var\(--ouw25-color-surface\);[^}]*text-shadow:\s*none;/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-color-paper\);/);
   assert.match(styles, /\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody tr:nth-child\(odd\)\s*\{\s*background-color:\s*var\(--ouw25-color-surface\);/);
-  assert.match(styles, /\.ouw25 \.ouw25-notes button,\s*\.ouw25 \.dialog-content button\s*\{(?=[^}]*margin-block:\s*0\.25rem;)(?=[^}]*padding:\s*0\.45rem 0\.7rem;)(?=[^}]*background:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*color:\s*#fff8ee;)[^}]*\}/s);
-  assert.match(styles, /\.ouw25 \.ouw25-notes button:disabled,\s*\.ouw25 \.dialog-content button:disabled\s*\{[^}]*background:\s*var\(--ouw25-color-paper\);[^}]*color:\s*var\(--ouw25-color-ink\);/s);
-  assert.match(styles, /\.ouw25 \.dialog-content \.form-group\s*\{[^}]*margin-block:\s*0\.5rem;/s);
+  assert.match(styles, /body\.game \.app\.ouw25 \.ouw25-notes button,\s*body\.game \.app\.ouw25 \.dialog-content button,\s*body\.game \.app\.ouw25 \.form-footer button\s*\{(?=[^}]*margin-block:\s*0\.25rem;)(?=[^}]*padding:\s*0\.45rem 0\.7rem;)(?=[^}]*background:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*color:\s*#fff8ee;)[^}]*\}/s);
+  assert.match(styles, /body\.game \.app\.ouw25 \.ouw25-notes button:disabled,\s*body\.game \.app\.ouw25 \.dialog-content button:disabled,\s*body\.game \.app\.ouw25 \.form-footer button:disabled\s*\{[^}]*background:\s*var\(--ouw25-color-paper\);[^}]*color:\s*var\(--ouw25-color-ink\);/s);
+  assert.match(styles, /body\.game \.app\.ouw25 \.dialog-content \.form-group\s*\{[^}]*margin-block:\s*0\.5rem;/s);
   assert.match(styles, /\.ouw25 \.dialog-content\s*\{[^}]*background:\s*var\(--ouw25-color-paper\);/s);
   assert.equal((module.match(/DialogV2\.input\(\{\s*classes:\s*\["ouw25"\]/g) ?? []).length, 2);
 

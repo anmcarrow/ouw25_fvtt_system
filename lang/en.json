@@ -142,6 +142,7 @@
       "CrewBand": { "above-half": "above half crew", "half": "half crew", "below-half": "below half crew" },
       "CrewOverCapacity": "Crew exceeds the ship's capacity.",
       "ForcedMode": "Forced mode",
+      "ForcedCheck": "Resolve the mechanic's check before enabling this mode; the check is not automated yet.",
       "IlluminationMode": "Illumination mode",
       "Unrest": "Sea unrest",
       "TravelRates": "Speed: {speed}; per sector — fuel {fuel}, provisions {provisions}; unrest +{unrest}.",

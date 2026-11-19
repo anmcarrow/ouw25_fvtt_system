@@ -62,6 +62,42 @@
       {{/each}}
     </fieldset>
   {{/if}}
+  {{#if contacts}}
+    <fieldset class="ouw25-contacts">
+      <legend>{{localize "OUW25.Contact.Title"}}</legend>
+      <p>{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>
+      <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contact.Title"}}">
+        <thead>
+          <tr>
+            <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
+            <th scope="col">{{localize "OUW25.Debt.Location"}}</th>
+            <th scope="col">{{localize "OUW25.Contact.Relation"}}</th>
+            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Contact.Debt"}}</th>
+            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each contacts.entries}}
+            <tr>
+              <td>{{name}}</td>
+              <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
+              <td>{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
+              <td class="ouw25-debt-amount">{{amount}}</td>
+              {{#if @root.editable}}
+                <td class="ouw25-debt-actions">
+                  <button type="button" data-action="editRecord" data-record-type="contact" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                  <button type="button" data-action="deleteRecord" data-record-type="contact" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                </td>
+              {{/if}}
+            </tr>
+          {{else}}
+            <tr><td colspan="{{#if editable}}5{{else}}4{{/if}}">{{localize "OUW25.Contact.Empty"}}</td></tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contact">{{localize "OUW25.Contact.Add"}}</button>{{/if}}
+    </fieldset>
+  {{/if}}
   {{#if ledger}}
     <fieldset class="ouw25-ledger">
       <legend>{{localize "OUW25.Debt.Title"}}</legend>

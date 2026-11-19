@@ -1,4 +1,4 @@
-{{#unless possession}}
+{{#if directions}}
 <div class="form-group">
   <label for="{{rootId}}-direction">{{localize directionLabel}}</label>
   <select id="{{rootId}}-direction" name="direction">
@@ -7,7 +7,7 @@
     {{/each}}
   </select>
 </div>
-{{/unless}}
+{{/if}}
 <div class="form-group">
   <label for="{{rootId}}-name">{{#if possession}}{{localize "OUW25.Possession.Description"}}{{else}}{{localize "OUW25.Debt.Counterparty"}}{{/if}}</label>
   <input id="{{rootId}}-name" name="name" type="text" value="{{name}}" required>
@@ -23,9 +23,10 @@
     <label for="{{rootId}}-amount">{{localize amountLabel}}</label>
     <input id="{{rootId}}-amount" name="amount" type="number" value="{{amount}}" min="0" max="9007199254740991" step="1" required>
   </div>
-{{else}}
+{{/if}}
+{{#if hasReason}}
   <div class="form-group">
-    <label for="{{rootId}}-reason">{{localize "OUW25.Relationship.Reason"}}</label>
+    <label for="{{rootId}}-reason">{{localize reasonLabel}}</label>
     <input id="{{rootId}}-reason" name="reason" type="text" value="{{reason}}">
   </div>
 {{/if}}

@@ -51,12 +51,19 @@ test("the built package registers models and an editable notes sheet for its dec
     } }, { type: "relationship", id: "friend-1", name: "Friend", system: {
       direction: "friend", location: "Harbor", reason: "Rescue"
     } }, { type: "possession", id: "gear-1", name: "Lantern", system: { amount: 0 } },
-    { type: "trait", id: "trait-1", system: { code: "greedy" } }];
+    { type: "trait", id: "trait-1", system: { code: "greedy" } },
+    { type: "contact", id: "contact-1", name: "Dockmaster", system: {
+      location: "", reason: "Ally", amount: Number.MAX_SAFE_INTEGER
+    } },
+    { type: "contact", id: "contact-2", name: "Broker", system: {
+      location: "Harbor", reason: "", amount: 2
+    } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, identity, pastMoves, ...context } = await sheet._prepareContext({});
+      const { ship, traits, identity, pastMoves, contacts, ...context } = await sheet._prepareContext({});
       assert.equal(pastMoves, null);
       if (merchant) {
+        assert.equal(contacts, null);
         assert.equal(ship, null);
         assert.equal(identity.name, "Original");
         assert.equal(identity.dream, "Custom dream");
@@ -70,6 +77,9 @@ test("the built package registers models and an editable notes sheet for its dec
           id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
         }]);
       } else {
+        assert.equal(contacts.total, "9007199254740993");
+        assert.deepEqual(contacts.entries.map(({ id }) => id), ["contact-1", "contact-2"]);
+        assert.equal(contacts.entries[0].reason, "Ally");
         assert.equal(traits, null);
         assert.equal(identity, null);
         assert.equal(ship.freeMounts, 2);

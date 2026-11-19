@@ -4,12 +4,22 @@
       "merchant": "Merchant",
       "cooperative": "Cooperative"
     },
-    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait" }
+    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait", "contact": "Cooperative contact" }
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Contact": {
+      "Title": "Contacts",
+      "Add": "Add contact",
+      "Relation": "Relationship",
+      "Debt": "Debt, og.",
+      "Total": "Cooperative debts: {amount} og.",
+      "Empty": "No contacts yet.",
+      "Invalid": "Enter a contact name and a nonnegative whole debt amount.",
+      "ConfirmDelete": "Delete this contact and their debt entry?"
+    },
     "Trait": {
       "Choice": "Trait",
       "Invalid": "Choose a trait from the list.",

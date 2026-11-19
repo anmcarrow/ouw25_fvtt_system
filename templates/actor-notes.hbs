@@ -168,6 +168,37 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="possession">{{localize "OUW25.Possession.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+  {{#if identity}}
+    <fieldset class="ouw25-identity">
+      <legend>{{localize "OUW25.Identity.Title"}}</legend>
+      <label>
+        {{localize "OUW25.Identity.Name"}}
+        <input type="text" name="name" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
+      </label>
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="name">{{localize "OUW25.Creation.RollName"}}</button>
+      {{/if}}
+      <label>
+        {{localize "OUW25.Identity.Dream"}}
+        <textarea name="system.dream" rows="2" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
+      </label>
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="dream">{{localize "OUW25.Creation.RollDream"}}</button>
+      {{/if}}
+      <label>
+        {{localize "OUW25.Identity.HiringTitle"}}
+        <select name="system.hiring" {{#unless editable}}disabled{{/unless}}>
+          {{#each identity.hiring}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
+          {{/each}}
+        </select>
+      </label>
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="hiring">{{localize "OUW25.Creation.RollHiring"}}</button>
+      {{/if}}
+      {{#if identity.hiringHelp}}<p>{{localize identity.hiringHelp}}</p>{{/if}}
+    </fieldset>
+  {{/if}}
   {{#if condition}}
     <fieldset class="ouw25-condition">
       <legend>{{localize "OUW25.Condition.Title"}}</legend>

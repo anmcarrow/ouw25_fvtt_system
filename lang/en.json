@@ -198,7 +198,61 @@
         "mechanic": "Works with engines and equipment, and handles repairs."
       }
     },
+    "Identity": {
+      "Title": "Character details",
+      "Name": "Given name and surname",
+      "Dream": "Big dream",
+      "HiringTitle": "Hiring story",
+      "Dreams": {
+        "1": "Have a glass of wine at the best establishment in each of 6d6 ports.",
+        "2": "Buy a cozy boarding house in a quiet suburb of the capital.",
+        "3": "Win the Grand Regatta.",
+        "4": "Fly over the sea like a moth.",
+        "5": "Find and bury the remains of your missing sister.",
+        "6": "Find the lost capital of Va’ro Rokhe.",
+        "7": "Live to see the peoples of the sea finally reconcile.",
+        "8": "Overthrow Her Majesty’s corrupt regime.",
+        "9": "Recover the forgotten details of your childhood.",
+        "10": "Write a great book about the sea, people, and everything else."
+      },
+      "Hiring": {
+        "unset": "— Choose —",
+        "dance": "Dancing at the interview",
+        "tale": "A monstrous tall tale",
+        "bar": "A trip to the bar",
+        "checkers": "Checkers for the contract",
+        "pitiful": "A pitiful sight",
+        "letters": "Letters of recommendation",
+        "bomb": "A homemade bomb",
+        "punctual": "The only one who was on time",
+        "kerwetka": "A pet kerwetka",
+        "ate": "A paperweight washed down with glass cleaner",
+        "charming": "Irresistible charm"
+      },
+      "HiringHelp": {
+        "dance": "The Cooperative pays half price at dance halls.",
+        "tale": "Once every three sessions, you can sell a tall tale for d6 × 1,000 og.",
+        "bar": "No hangovers or penalties for visiting drug dens.",
+        "checkers": "You get one extra die when gambling.",
+        "pitiful": "Once every two sessions in a major port, you can coax d6 × 500 og. out of a fund.",
+        "letters": "You are a skilled forger of handwriting and seals.",
+        "bomb": "You always have an advantage when bluffing.",
+        "punctual": "You have an advantage when setting someone up.",
+        "kerwetka": "Your pet kerwetka of noble pedigree is always with you.",
+        "ate": "Poisons affect you only half the time.",
+        "charming": "You can tell jokes and, if luck favors you, hypnotize people."
+      }
+    },
     "Creation": {
+      "RollName": "Roll given name and surname (2d15)",
+      "ConfirmName": "Replace the saved name using two independent d15 rolls? Save any other edits before rolling.",
+      "ResultName": "Random given name and surname: {result}.",
+      "RollDream": "Roll big dream (1d10)",
+      "ConfirmDream": "Replace the saved dream with a 1d10 roll? Save any other edits before rolling.",
+      "ResultDream": "Big dream: {result}",
+      "RollHiring": "Roll hiring story (1d11)",
+      "ConfirmHiring": "Replace the saved hiring story with a 1d11 roll? Save any other edits before rolling.",
+      "ResultHiring": "Hiring story: {result}.",
       "RollTrait": "Roll 3d6",
       "ConfirmTrait": "Replace this trait with the result of a {formula} roll?",
       "ResultTrait": "Merchant trait: {result}",

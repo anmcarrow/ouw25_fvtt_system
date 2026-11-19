@@ -38,7 +38,8 @@ test("the built package registers models and an editable notes sheet for its dec
     assert.ok(CONFIG.Actor.dataModels[type].defineSchema().notes);
     const sheet = new Sheet();
     const merchant = type === "merchant";
-    sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
+    sheet.actor = { type, name: "Original", system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
+      dream: "Custom dream", hiring: "checkers",
       luck: 0, specialty: "medic", past: "unset", merit: "strong", flaw: "unset",
       fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
     if (!merchant) Object.assign(sheet.actor.system, {
@@ -53,9 +54,13 @@ test("the built package registers models and an editable notes sheet for its dec
     { type: "trait", id: "trait-1", system: { code: "greedy" } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, ...context } = await sheet._prepareContext({});
+      const { ship, traits, identity, ...context } = await sheet._prepareContext({});
       if (merchant) {
         assert.equal(ship, null);
+        assert.equal(identity.name, "Original");
+        assert.equal(identity.dream, "Custom dream");
+        assert.equal(identity.hiring.find(choice => choice.selected).value, "checkers");
+        assert.equal(identity.hiringHelp, "OUW25.Identity.HiringHelp.checkers");
         const [merit, flaw] = traits;
         assert.equal(merit.choices.find(choice => choice.selected).value, "strong");
         assert.equal(merit.help, "OUW25.Trait.Help.strong");
@@ -65,6 +70,7 @@ test("the built package registers models and an editable notes sheet for its dec
         }]);
       } else {
         assert.equal(traits, null);
+        assert.equal(identity, null);
         assert.equal(ship.freeMounts, 2);
         assert.equal(ship.compartmentSpace, 420);
         assert.equal(ship.mounts[0].choices.find(choice => choice.selected).value, "none");
@@ -140,6 +146,17 @@ test("the built package registers models and an editable notes sheet for its dec
   }
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));
+});
+
+test("identity rolls use independent name indices and preserve the Roll20 table boundaries", async () => {
+  const { dreamFromRoll, hiringFromRoll, merchantNameFromRolls } = await import(new URL("module/merchant.mjs", dist));
+  assert.equal(merchantNameFromRolls(1, 15), "Абгейл Бррлин");
+  assert.equal(merchantNameFromRolls(15, 1), "Афн Глоф");
+  assert.throws(() => merchantNameFromRolls(1, 16), RangeError);
+  assert.throws(() => dreamFromRoll(11), RangeError);
+  assert.equal(hiringFromRoll(1), "dance");
+  assert.equal(hiringFromRoll(11), "charming");
+  assert.throws(() => hiringFromRoll(0), RangeError);
 });
 
 test("trait rolls follow the Roll20 ranges and have localized names and help", async () => {

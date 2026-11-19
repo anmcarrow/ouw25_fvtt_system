@@ -5,6 +5,36 @@ export const MERCHANT_PASTS = [
 
 export const MERCHANT_SPECIALTIES = ["unset", "quartermaster", "navigator", "medic", "mechanic"];
 
+export const MERCHANT_HIRING = [
+  "unset", "dance", "tale", "bar", "checkers", "pitiful", "letters", "bomb", "punctual", "kerwetka", "ate", "charming"
+];
+
+const GIVEN_NAMES = [
+  "Абгейл", "Апстам", "Крун", "Рргина", "Уррн", "Алррн", "Диллс", "Кнни",
+  "Пллис", "Пттр", "Гйдрр", "Кэдок", "Флетт", "Рртис", "Афн"
+];
+const SURNAMES = [
+  "Глоф", "Глох", "Нинбррн", "Эйк", "Манч", "Хим", "Акром", "Соррк",
+  "Йббни", "Инвтн", "Лигор", "Пьерс", "Йлл", "Матон", "Бррлин"
+];
+
+function validateFace(value, max) {
+  if (!Number.isInteger(value) || value < 1 || value > max) throw new RangeError(`Invalid d${max} result`);
+  return value;
+}
+
+export function merchantNameFromRolls(given, surname) {
+  return `${GIVEN_NAMES[validateFace(given, 15) - 1]} ${SURNAMES[validateFace(surname, 15) - 1]}`;
+}
+
+export function dreamFromRoll(total) {
+  return validateFace(total, 10);
+}
+
+export function hiringFromRoll(total) {
+  return MERCHANT_HIRING[validateFace(total, 11)];
+}
+
 export function availableSpecialties(past) {
   if (past === "savage") return ["medic"];
   if (past === "hard_worker") return ["navigator", "mechanic"];

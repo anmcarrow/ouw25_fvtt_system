@@ -2,6 +2,7 @@ import { parseCollisionInput, resolveCollision } from "./collision.mjs";
 import { DEBT_DIRECTIONS, debtTotals, pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
+import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 
@@ -17,7 +18,11 @@ const RECORD_LABELS = new Map([
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
   ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
-  ["pocketMoney", { key: "Money", formula: "4d6", resolve: startingPocketMoney, usesPast: true }]
+  ["pocketMoney", { key: "Money", formula: "4d6", resolve: startingPocketMoney, usesPast: true }],
+  ["dream", { key: "Dream", formula: "1d10", resolve: dreamFromRoll, labels: "OUW25.Identity.Dreams", storeLabel: true }],
+  ["hiring", { key: "Hiring", formula: "1d11", resolve: hiringFromRoll, labels: "OUW25.Identity.Hiring" }],
+  ["name", { key: "Name", formula: "2d15", actorName: true,
+    resolve: (_total, _past, roll) => merchantNameFromRolls(...roll.dice[0].results.map(die => die.result)) }]
 ]);
 for (const kind of Object.keys(MERCHANT_TRAITS)) {
   CREATION_ROLLS.set(kind, {
@@ -53,6 +58,8 @@ class MerchantModel extends NotesModel {
       past: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_PASTS }),
       merit: new StringField({ initial: "unset", choices: ["unset", ...MERCHANT_TRAITS.merit] }),
       flaw: new StringField({ initial: "unset", choices: ["unset", ...MERCHANT_TRAITS.flaw] }),
+      dream: new StringField({ initial: "" }),
+      hiring: new StringField({ initial: "unset", choices: MERCHANT_HIRING }),
       fragile: new foundry.data.fields.BooleanField({ initial: false }),
       ...wounds };
   }
@@ -187,6 +194,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         entries: this.actor.items.filter(item => item.type === "possession").map(item => ({
           id: item.id, name: item.name, amount: item.system.amount
         }))
+      } : null,
+      identity: merchant ? {
+        name: this.actor.name, dream: system.dream,
+        hiring: MERCHANT_HIRING.map(value => ({
+          value, label: `OUW25.Identity.Hiring.${value}`, selected: value === (system.hiring ?? "unset")
+        })),
+        hiringHelp: system.hiring && system.hiring !== "unset" ? `OUW25.Identity.HiringHelp.${system.hiring}` : null
       } : null,
       traits: merchant ? Object.entries(MERCHANT_TRAITS).map(([kind, codes]) => ({
         kind, label: `OUW25.Trait.${kind}.Title`, primary: `OUW25.Trait.${kind}.Primary`,
@@ -340,8 +354,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const item = id ? actor.items.get(id) : null;
     if (id && (!Object.hasOwn(MERCHANT_TRAITS, field) || item?.type !== "trait"
       || !MERCHANT_TRAITS[field].includes(item.system.code))) return;
-    const { key, resolve, labels, usesPast } = config;
-    const currentValue = () => id ? actor.items.get(id)?.system.code : actor.system[field];
+    const { key, resolve, labels, usesPast, actorName, storeLabel } = config;
+    const currentValue = () => id ? actor.items.get(id)?.system.code : actorName ? actor.name : actor.system[field];
     const previous = currentValue();
     const { past } = actor.system;
     const specialtyCount = field === "specialty" ? availableSpecialties(past).length : 0;
@@ -364,10 +378,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         ui.notifications.warn(i18n.localize("OUW25.Creation.Changed"));
         return;
       }
-      const value = resolve(roll.total, past);
+      const value = resolve(roll.total, past, roll);
       const result = labels ? i18n.localize(`${labels}.${value}`) : value;
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name: result, "system.code": value }]);
-      else await actor.update({ [`system.${field}`]: value });
+      else if (actorName) await actor.update({ name: value });
+      else await actor.update({ [`system.${field}`]: storeLabel ? result : value });
       await roll.toMessage({
         speaker: foundry.documents.ChatMessage.getSpeaker({ actor }),
         flavor: i18n.format(`OUW25.Creation.Result${key}`, { result })

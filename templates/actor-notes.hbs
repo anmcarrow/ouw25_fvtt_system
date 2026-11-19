@@ -52,6 +52,24 @@
         </label>
       {{/each}}
       <p>{{localize "OUW25.Ship.CompartmentSpace" volume=ship.compartmentSpace}}</p>
+      <label>
+        {{localize "OUW25.Ship.CargoLoad"}}
+        <input type="number" name="system.cargoLoad" min="0" max="9007199254740991" step="1" value="{{ship.cargoLoad}}" required {{#unless editable}}readonly{{/unless}}>
+      </label>
+      <label>
+        {{localize "OUW25.Ship.FuelStock"}}
+        <input type="number" name="system.fuelStock" min="0" max="9007199254740991" step="any" value="{{ship.fuelStock}}" required {{#unless editable}}readonly{{/unless}}>
+      </label>
+      <label>
+        {{localize "OUW25.Ship.ProvisionsStock"}}
+        <input type="number" name="system.provisionsStock" min="0" max="9007199254740991" step="any" value="{{ship.provisionsStock}}" required {{#unless editable}}readonly{{/unless}}>
+      </label>
+      <p>{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}</p>
+      {{#if ship.hold.overloaded}}
+        <p role="status">{{localize "OUW25.Ship.Overloaded"}}</p>
+      {{else if ship.hold.nearFull}}
+        <p role="status">{{localize "OUW25.Ship.NearFull"}}</p>
+      {{/if}}
       {{#each ship.compartments}}
         <label>
           {{localize "OUW25.Ship.Compartment" number=number}}

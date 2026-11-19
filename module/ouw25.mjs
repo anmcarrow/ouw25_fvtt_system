@@ -3,7 +3,7 @@ import { DEBT_DIRECTIONS, debtTotals, pensionBalanceAfterDeposit, pensionProgres
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
-import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration } from "./ship.mjs";
+import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
@@ -51,6 +51,12 @@ function counterField(initial = 0) {
   });
 }
 
+function resourceField(initial = 0) {
+  return new foundry.data.fields.NumberField({
+    required: true, nullable: false, initial, min: 0, max: Number.MAX_SAFE_INTEGER
+  });
+}
+
 class MerchantModel extends NotesModel {
   static defineSchema() {
     const { StringField } = foundry.data.fields;
@@ -75,6 +81,7 @@ class CooperativeModel extends NotesModel {
     const { NumberField, StringField } = foundry.data.fields;
     const fields = {
       ...super.defineSchema(), budget: counterField(), shipName: new StringField({ initial: "" }),
+      cargoLoad: counterField(), fuelStock: resourceField(10), provisionsStock: resourceField(10),
       shipClass: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: MAX_SHIP_CLASS })
     };
     for (let slot = 1; slot <= SHIP_SLOT_COUNT; slot++) {
@@ -131,9 +138,7 @@ class CargoModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       quantity: counterField(),
-      volume: new foundry.data.fields.NumberField({
-        required: true, nullable: false, initial: 0, min: 0, max: Number.MAX_SAFE_INTEGER
-      })
+      volume: resourceField()
     };
   }
 }
@@ -200,6 +205,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const cargo = ship ? this.actor.items.filter(item => item.type === "cargo").map(item => ({
       id: item.id, name: item.name, quantity: item.system.quantity, volume: item.system.volume
     })) : null;
+    const listedVolume = cargo?.reduce((total, entry) => total + entry.volume, 0);
     const slotChoices = (slots, choices, labelPrefix) => slots.map(slot => ({
       ...slot, choices: choices.map(value => ({
         value, label: `${labelPrefix}.${value}`, selected: slot.value === value
@@ -215,6 +221,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         name: system.shipName,
         classes: Array.from({ length: MAX_SHIP_CLASS + 1 }, (_, value) => ({ value, selected: value === system.shipClass })),
         freeMounts: ship.freeMounts, compartmentSpace: ship.compartmentSpace,
+        hold: shipHold(system, listedVolume, ship.compartmentSpace),
+        cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: slotChoices(ship.mounts, MOUNT_CHOICES, "OUW25.Ship.MountChoices"),
         compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices")
       },
@@ -228,7 +236,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       showContracts: type === "cooperative",
       cargo: cargo && {
         entries: cargo,
-        volume: cargo.reduce((total, entry) => total + entry.volume, 0)
+        volume: listedVolume
       },
       money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },

@@ -43,7 +43,7 @@ test("the built package registers models and an editable notes sheet for its dec
       luck: 0, specialty: "medic", past: "unset", merit: "strong", flaw: "unset",
       fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
     if (!merchant) Object.assign(sheet.actor.system, {
-      shipClass: 0, mount1: "none", mount2: "none",
+      shipClass: 0, cargoLoad: 5, fuelStock: 10.5, provisionsStock: 18.25, mount1: "none", mount2: "none",
       compartment1: "passenger", compartment2: "none", compartment3: "none", compartment4: "none"
     });
     sheet.actor.items = [{ type: "debt", id: "debt-1", name: "Creditor", system: {
@@ -97,6 +97,7 @@ test("the built package registers models and an editable notes sheet for its dec
         assert.equal(identity, null);
         assert.equal(ship.freeMounts, 2);
         assert.equal(ship.compartmentSpace, 420);
+        assert.deepEqual(ship.hold, { capacity: 1600, occupied: 452.25, nearFull: false, overloaded: false });
         assert.equal(ship.mounts[0].choices.find(choice => choice.selected).value, "none");
       }
       assert.deepEqual(context, {
@@ -263,6 +264,16 @@ test("ship class hides slots without counting or erasing their loadout", async (
   assert.equal(small.compartments.length, 4);
   assert.equal(ship.mount8, "winch");
   assert.equal(ship.compartment8, "diving");
+});
+
+test("hold warns at 100 st. free and distinguishes overload from exact capacity", async () => {
+  const { shipHold } = await import(new URL("module/ship.mjs", dist));
+  const ship = { shipClass: 0, cargoLoad: 1498, fuelStock: 0, provisionsStock: 18 };
+  assert.equal(shipHold(ship, 0, 0).nearFull, false);
+  assert.equal(shipHold(ship, 1, 0).nearFull, true);
+  assert.equal(shipHold(ship, 101, 0).overloaded, false);
+  assert.equal(shipHold(ship, 101.5, 0).overloaded, true);
+  assert.equal(shipHold({ ...ship, shipClass: 4 }, 0, 0).capacity, 25200);
 });
 
 test("debt totals stay separate and exact beyond the safe integer range", async () => {

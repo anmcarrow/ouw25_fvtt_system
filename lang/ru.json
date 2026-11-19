@@ -125,6 +125,12 @@
       "Class": "Класс судна",
       "FreeMounts": "Свободных станин: {count}",
       "CompartmentSpace": "Спецотсеки занимают в трюме: {volume} ст.",
+      "CargoLoad": "Груз вне ведомости, ст.",
+      "FuelStock": "Запас топлива, ст.",
+      "ProvisionsStock": "Запас провианта, мер.",
+      "Hold": "Трюм: занято {occupied} / {capacity} ст.",
+      "Overloaded": "Загрузка превышает вместимость трюма.",
+      "NearFull": "В трюме осталось не более 100 ст. свободного места.",
       "Mount": "Станина {number}",
       "Compartment": "Спецотсек {number}",
       "MountChoices": {

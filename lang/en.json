@@ -125,6 +125,12 @@
       "Class": "Ship class",
       "FreeMounts": "Free mounts: {count}",
       "CompartmentSpace": "Hold space taken by special compartments: {volume}",
+      "CargoLoad": "Unlisted cargo, st.",
+      "FuelStock": "Fuel stock, st.",
+      "ProvisionsStock": "Provisions stock, measures",
+      "Hold": "Hold: {occupied} / {capacity} st. occupied",
+      "Overloaded": "The load exceeds hold capacity.",
+      "NearFull": "The hold has 100 st. or less free.",
       "Mount": "Mount {number}",
       "Compartment": "Special compartment {number}",
       "MountChoices": {

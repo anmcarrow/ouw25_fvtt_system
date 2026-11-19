@@ -119,6 +119,41 @@
         "notoriety": "A bad reputation draws attention and invites trouble."
       }
     },
+    "ShipQuality": {
+      "merit": { "Title": "Ship merits", "Slot": "Merit {number}" },
+      "flaw": { "Title": "Ship flaws", "Slot": "Flaw {number}" },
+      "HoldBonus": "Hold bonus (d6 × 100 st.)",
+      "Duplicates": "Do not select the same quality more than once.",
+      "Names": {
+        "none": "—",
+        "large_hold": "Spacious hold",
+        "unremarkable": "Unremarkable",
+        "quiet": "Soundproofing",
+        "low_profile": "Low profile",
+        "strong_hull": "Reinforced hull",
+        "seaworthy": "Seaworthiness",
+        "clumsy": "Poor handling",
+        "cursed": "Cursed",
+        "worn_hull": "Worn hull",
+        "worn_engine": "Worn engine",
+        "stolen": "Stolen ship",
+        "vermin": "Vermin aboard"
+      },
+      "Help": {
+        "large_hold": "Add the result of d6 × 100 st. to the hold capacity.",
+        "unremarkable": "Casual witnesses recognize the ship only half the time.",
+        "quiet": "Advantage when trying to go unnoticed.",
+        "low_profile": "Advantage when trying to evade a ranged attack.",
+        "strong_hull": "+2 durability.",
+        "seaworthy": "Advantage when chasing or escaping pursuit.",
+        "clumsy": "A complication when maneuverability matters.",
+        "cursed": "Blazni run rampant aboard; unrest cannot fall below 5.",
+        "worn_hull": "The first point of damage adds a complication.",
+        "worn_engine": "Forced mode is unavailable.",
+        "stolen": "The previous owner wants the ship back.",
+        "vermin": "Harmful, possibly intelligent vermin inhabit the ship."
+      }
+    },
     "Ship": {
       "Title": "Ship",
       "Name": "Ship name",

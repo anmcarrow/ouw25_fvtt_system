@@ -95,6 +95,33 @@
         </label>
       {{/each}}
     </fieldset>
+    {{#each ship.qualities}}
+      <fieldset class="ouw25-ship-qualities">
+        <legend>{{localize title}}</legend>
+        {{#each slots}}
+          <label>
+            {{localize ../slotLabel number=number}}
+            <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
+              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+            </select>
+          </label>
+        {{/each}}
+        {{#if holdBonuses}}
+          <label>
+            {{localize "OUW25.ShipQuality.HoldBonus"}}
+            <select name="system.holdBonus" {{#unless @root.editable}}disabled{{/unless}}>
+              {{#each holdBonuses}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
+            </select>
+          </label>
+        {{/if}}
+        {{#if duplicates}}<p role="status">{{localize "OUW25.ShipQuality.Duplicates"}}</p>{{/if}}
+        {{#if help}}
+          <ul>
+            {{#each help}}<li><strong>{{localize name}}:</strong> {{localize text}}</li>{{/each}}
+          </ul>
+        {{/if}}
+      </fieldset>
+    {{/each}}
     </div>
     <div class="ouw25-sheet-column">
   {{#if contacts}}

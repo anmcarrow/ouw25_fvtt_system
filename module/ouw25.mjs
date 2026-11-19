@@ -4,6 +4,7 @@ import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } fr
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
+import { HOLD_BONUSES, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
@@ -82,11 +83,19 @@ class CooperativeModel extends NotesModel {
     const fields = {
       ...super.defineSchema(), budget: counterField(), shipName: new StringField({ initial: "" }),
       cargoLoad: counterField(), fuelStock: resourceField(10), provisionsStock: resourceField(10),
+      holdBonus: new NumberField({
+        required: true, nullable: false, initial: 0, integer: true, choices: HOLD_BONUSES
+      }),
       shipClass: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: MAX_SHIP_CLASS })
     };
     for (let slot = 1; slot <= SHIP_SLOT_COUNT; slot++) {
       fields[`mount${slot}`] = new StringField({ initial: slot === 1 ? "slagthrower" : "none", choices: MOUNT_CHOICES });
       fields[`compartment${slot}`] = new StringField({ initial: "none", choices: Object.keys(COMPARTMENT_SPACE) });
+    }
+    for (const [kind, choices] of Object.entries(SHIP_QUALITIES)) {
+      for (const slot of SHIP_QUALITY_SLOTS) {
+        fields[`${kind}${slot}`] = new StringField({ initial: "none", choices });
+      }
     }
     return fields;
   }
@@ -225,7 +234,21 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         hold: shipHold(system, listedVolume, ship.compartmentSpace),
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: slotChoices(ship.mounts, MOUNT_CHOICES, "OUW25.Ship.MountChoices"),
-        compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices")
+        compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices"),
+        qualities: Object.entries(SHIP_QUALITIES).map(([kind, choices]) => {
+          const slots = shipQualitySlots(system, kind);
+          const selected = slots.map(({ value }) => value).filter(value => value !== "none");
+          const unique = [...new Set(selected)];
+          const labels = "OUW25.ShipQuality.Names";
+          return {
+            title: `OUW25.ShipQuality.${kind}.Title`, slotLabel: `OUW25.ShipQuality.${kind}.Slot`,
+            slots: slotChoices(slots, choices, labels), duplicates: selected.length !== unique.length,
+            help: unique.map(value => ({ name: `${labels}.${value}`, text: `OUW25.ShipQuality.Help.${value}` })),
+            holdBonuses: unique.includes("large_hold") ? HOLD_BONUSES.map(value => ({
+              value, selected: value === system.holdBonus
+            })) : null
+          };
+        })
       },
       contacts: contacts && {
         entries: contacts,

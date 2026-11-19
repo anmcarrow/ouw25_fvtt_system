@@ -276,6 +276,15 @@ test("hold warns at 100 st. free and distinguishes overload from exact capacity"
   assert.equal(shipHold({ ...ship, shipClass: 4 }, 0, 0).capacity, 25200);
 });
 
+test("a spacious hold applies the saved bonus once and only while selected", async () => {
+  const { shipHold } = await import(new URL("module/ship.mjs", dist));
+  const ship = { shipClass: 0, cargoLoad: 1601, fuelStock: 0, provisionsStock: 0, holdBonus: 200 };
+  assert.equal(shipHold(ship, 0, 0).overloaded, true);
+  const expanded = { ...ship, merit2: "large_hold", merit4: "large_hold" };
+  assert.deepEqual(shipHold(expanded, 0, 0), { capacity: 1800, occupied: 1601, nearFull: false, overloaded: false });
+  assert.equal(shipHold({ ...expanded, holdBonus: 150 }, 0, 0).capacity, 1600);
+});
+
 test("debt totals stay separate and exact beyond the safe integer range", async () => {
   const { debtTotals } = await import(new URL("module/finance.mjs", dist));
   assert.deepEqual(debtTotals([

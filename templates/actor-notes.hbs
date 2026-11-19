@@ -224,6 +224,41 @@
       </div>
     </fieldset>
   {{/if}}
+  {{#each traits}}
+    <fieldset class="ouw25-traits">
+      <legend>{{localize label}}</legend>
+      <label>
+        {{localize primary}}
+        <select name="system.{{kind}}" {{#unless @root.editable}}disabled{{/unless}}>
+          {{#each choices}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
+          {{/each}}
+        </select>
+      </label>
+      {{#if @root.editable}}
+        <button type="button" data-action="rollCreation" data-creation="{{kind}}">{{localize "OUW25.Creation.RollTrait"}}</button>
+      {{/if}}
+      {{#if help}}<p>{{localize help}}</p>{{/if}}
+      {{#if entries}}
+        <ul>
+          {{#each entries}}
+            <li>
+              <strong>{{localize name}}</strong>
+              <p>{{localize help}}</p>
+              {{#if @root.editable}}
+                <button type="button" data-action="editTrait" data-creation="{{../kind}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                <button type="button" data-action="rollCreation" data-creation="{{../kind}}" data-record-id="{{id}}">{{localize "OUW25.Creation.RollTrait"}}</button>
+                <button type="button" data-action="deleteRecord" data-record-type="trait" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+              {{/if}}
+            </li>
+          {{/each}}
+        </ul>
+      {{/if}}
+      {{#if @root.editable}}
+        <button type="button" data-action="editTrait" data-creation="{{kind}}">{{localize add}}</button>
+      {{/if}}
+    </fieldset>
+  {{/each}}
   <label>
     {{localize "OUW25.Notes"}}
     <textarea name="system.notes" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>

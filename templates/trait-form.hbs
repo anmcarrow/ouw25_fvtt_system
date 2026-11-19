@@ -1,0 +1,10 @@
+<div class="form-group">
+  <label>
+    {{localize "OUW25.Trait.Choice"}}
+    <select name="code" required>
+      {{#each choices}}
+        <option value="{{value}}" {{#if selected}}selected{{/if}} {{#if (eq value "unset")}}disabled{{/if}}>{{localize label}}</option>
+      {{/each}}
+    </select>
+  </label>
+</div>

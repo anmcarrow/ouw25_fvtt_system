@@ -3,6 +3,7 @@ import { DEBT_DIRECTIONS, debtTotals, pensionBalanceAfterDeposit, pensionProgres
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration } from "./ship.mjs";
+import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
@@ -10,13 +11,19 @@ const RELATION_KINDS = ["friend", "enemy"];
 const RECORD_LABELS = new Map([
   ["debt", "OUW25.Debt"],
   ["relationship", "OUW25.Relationship"],
-  ["possession", "OUW25.Possession"]
+  ["possession", "OUW25.Possession"],
+  ["trait", "OUW25.Trait"]
 ]);
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
   ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
   ["pocketMoney", { key: "Money", formula: "4d6", resolve: startingPocketMoney, usesPast: true }]
 ]);
+for (const kind of Object.keys(MERCHANT_TRAITS)) {
+  CREATION_ROLLS.set(kind, {
+    key: "Trait", formula: "3d6", resolve: total => traitFromRoll(kind, total), labels: "OUW25.Trait.Names"
+  });
+}
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
@@ -36,6 +43,7 @@ function counterField(initial = 0) {
 
 class MerchantModel extends NotesModel {
   static defineSchema() {
+    const { StringField } = foundry.data.fields;
     const wounds = Object.fromEntries(WOUND_SLOTS.map(slot => [
       `wound${slot}`, new foundry.data.fields.BooleanField({ initial: false })
     ]));
@@ -43,6 +51,8 @@ class MerchantModel extends NotesModel {
       luck: counterField(1),
       specialty: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_SPECIALTIES }),
       past: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_PASTS }),
+      merit: new StringField({ initial: "unset", choices: ["unset", ...MERCHANT_TRAITS.merit] }),
+      flaw: new StringField({ initial: "unset", choices: ["unset", ...MERCHANT_TRAITS.flaw] }),
       fragile: new foundry.data.fields.BooleanField({ initial: false }),
       ...wounds };
   }
@@ -91,6 +101,21 @@ class PossessionModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+class TraitModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return { code: new foundry.data.fields.StringField({
+      initial: MERCHANT_TRAITS.merit[0], choices: Object.values(MERCHANT_TRAITS).flat()
+    }) };
+  }
+}
+
+function traitChoices(kind, selected, includeUnset = false) {
+  const codes = MERCHANT_TRAITS[kind];
+  return (includeUnset ? ["unset", ...codes] : codes).map(value => ({
+    value, selected: value === selected, label: `OUW25.Trait.Names.${value}`
+  }));
+}
+
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
   #luckPending = false;
@@ -105,6 +130,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       depositPension: Ouw25ActorSheet.depositPension,
       changeLuck: Ouw25ActorSheet.changeLuck,
       rollCreation: Ouw25ActorSheet.rollCreation,
+      editTrait: Ouw25ActorSheet.editTrait,
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord
     }
@@ -122,6 +148,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const specialtyCount = merchant ? availableSpecialties(system.past).length : 0;
     const debts = merchant ? this.actor.items.filter(item => item.type === "debt") : [];
     const relationships = merchant ? this.actor.items.filter(item => item.type === "relationship") : [];
+    const traits = merchant ? this.actor.items.filter(item => item.type === "trait") : [];
     const ship = type === "cooperative" ? shipConfiguration(system) : null;
     const slotChoices = (slots, choices, labelPrefix) => slots.map(slot => ({
       ...slot, choices: choices.map(value => ({
@@ -161,6 +188,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           id: item.id, name: item.name, amount: item.system.amount
         }))
       } : null,
+      traits: merchant ? Object.entries(MERCHANT_TRAITS).map(([kind, codes]) => ({
+        kind, label: `OUW25.Trait.${kind}.Title`, primary: `OUW25.Trait.${kind}.Primary`,
+        add: `OUW25.Trait.${kind}.Add`, choices: traitChoices(kind, system[kind] ?? "unset", true),
+        help: codes.includes(system[kind]) ? `OUW25.Trait.Help.${system[kind]}` : null,
+        entries: traits.filter(item => codes.includes(item.system.code)).map(({ id, system: { code } }) => ({
+          id, name: `OUW25.Trait.Names.${code}`, help: `OUW25.Trait.Help.${code}`
+        }))
+      })) : null,
       condition: merchant ? {
         specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty
@@ -187,7 +222,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     if (!this.isEditable || actor.type !== "merchant" || this.#recordPending) return;
     const { recordId: id, recordType: type } = target.dataset;
     const key = RECORD_LABELS.get(type);
-    if (!key) return;
+    if (!key || type === "trait") return;
     const debt = type === "debt";
     const possession = type === "possession";
     const directions = debt ? DEBT_DIRECTIONS : possession ? [] : RELATION_KINDS;
@@ -223,6 +258,42 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (type === "relationship") system.reason = String(data.reason ?? "").trim();
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name, system }]);
       else await actor.createEmbeddedDocuments("Item", [{ type, name, system }]);
+    } finally {
+      this.#recordPending = false;
+    }
+  }
+
+  static async editTrait(event, target) {
+    const actor = this.actor;
+    const { creation: kind, recordId: id } = target.dataset;
+    if (!this.isEditable || actor.type !== "merchant" || this.#recordPending
+      || !Object.hasOwn(MERCHANT_TRAITS, kind)) return;
+    const codes = MERCHANT_TRAITS[kind];
+    const item = id ? actor.items.get(id) : null;
+    const previous = item?.system.code;
+    if (id && (item?.type !== "trait" || !codes.includes(previous))) return;
+    this.#recordPending = true;
+    try {
+      const { i18n } = game;
+      const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/trait-form.hbs`, {
+        choices: traitChoices(kind, previous ?? "unset", true)
+      });
+      const data = await foundry.applications.api.DialogV2.input({
+        window: { title: i18n.localize(id ? "OUW25.Debt.Edit" : `OUW25.Trait.${kind}.Add`) },
+        content, rejectClose: false, ok: { label: i18n.localize("OUW25.Save") }
+      });
+      if (!data || !this.isEditable) return;
+      if (id && actor.items.get(id)?.system.code !== previous) {
+        ui.notifications.warn(i18n.localize("OUW25.Creation.Changed"));
+        return;
+      }
+      if (!codes.includes(data.code)) {
+        ui.notifications.warn(i18n.localize("OUW25.Trait.Invalid"));
+        return;
+      }
+      const fields = { name: i18n.localize(`OUW25.Trait.Names.${data.code}`), system: { code: data.code } };
+      if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, ...fields }]);
+      else await actor.createEmbeddedDocuments("Item", [{ type: "trait", ...fields }]);
     } finally {
       this.#recordPending = false;
     }
@@ -265,8 +336,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const field = target.dataset.creation;
     const config = CREATION_ROLLS.get(field);
     if (!config) return;
+    const id = target.dataset.recordId;
+    const item = id ? actor.items.get(id) : null;
+    if (id && (!Object.hasOwn(MERCHANT_TRAITS, field) || item?.type !== "trait"
+      || !MERCHANT_TRAITS[field].includes(item.system.code))) return;
     const { key, resolve, labels, usesPast } = config;
-    const previous = actor.system[field];
+    const currentValue = () => id ? actor.items.get(id)?.system.code : actor.system[field];
+    const previous = currentValue();
     const { past } = actor.system;
     const specialtyCount = field === "specialty" ? availableSpecialties(past).length : 0;
     if (specialtyCount === 1) return;
@@ -284,13 +360,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const { Roll } = foundry.dice;
       const roll = await new Roll(formula).evaluate({ allowInteractive: false });
       if (!this.isEditable) return;
-      if (actor.system[field] !== previous || (usesPast && actor.system.past !== past)) {
+      if (currentValue() !== previous || (usesPast && actor.system.past !== past)) {
         ui.notifications.warn(i18n.localize("OUW25.Creation.Changed"));
         return;
       }
       const value = resolve(roll.total, past);
-      await actor.update({ [`system.${field}`]: value });
       const result = labels ? i18n.localize(`${labels}.${value}`) : value;
+      if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name: result, "system.code": value }]);
+      else await actor.update({ [`system.${field}`]: value });
       await roll.toMessage({
         speaker: foundry.documents.ChatMessage.getSpeaker({ actor }),
         flavor: i18n.format(`OUW25.Creation.Result${key}`, { result })
@@ -383,6 +460,7 @@ Hooks.once("init", () => {
   CONFIG.Item.dataModels.debt = DebtModel;
   CONFIG.Item.dataModels.relationship = RelationshipModel;
   CONFIG.Item.dataModels.possession = PossessionModel;
+  CONFIG.Item.dataModels.trait = TraitModel;
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, Ouw25ActorSheet, {
     types: Object.keys(models),
     makeDefault: true,

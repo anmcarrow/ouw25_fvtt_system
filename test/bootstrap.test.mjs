@@ -39,7 +39,8 @@ test("the built package registers models and an editable notes sheet for its dec
     const sheet = new Sheet();
     const merchant = type === "merchant";
     sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
-      luck: 0, specialty: "medic", past: "unset", fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
+      luck: 0, specialty: "medic", past: "unset", merit: "strong", flaw: "unset",
+      fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
     if (!merchant) Object.assign(sheet.actor.system, {
       shipClass: 0, mount1: "none", mount2: "none",
       compartment1: "passenger", compartment2: "none", compartment3: "none", compartment4: "none"
@@ -48,12 +49,22 @@ test("the built package registers models and an editable notes sheet for its dec
       direction: "payable", amount: 12, location: "Port"
     } }, { type: "relationship", id: "friend-1", name: "Friend", system: {
       direction: "friend", location: "Harbor", reason: "Rescue"
-    } }, { type: "possession", id: "gear-1", name: "Lantern", system: { amount: 0 } }];
+    } }, { type: "possession", id: "gear-1", name: "Lantern", system: { amount: 0 } },
+    { type: "trait", id: "trait-1", system: { code: "greedy" } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, ...context } = await sheet._prepareContext({});
-      if (merchant) assert.equal(ship, null);
-      else {
+      const { ship, traits, ...context } = await sheet._prepareContext({});
+      if (merchant) {
+        assert.equal(ship, null);
+        const [merit, flaw] = traits;
+        assert.equal(merit.choices.find(choice => choice.selected).value, "strong");
+        assert.equal(merit.help, "OUW25.Trait.Help.strong");
+        assert.deepEqual(merit.entries, []);
+        assert.deepEqual(flaw.entries, [{
+          id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
+        }]);
+      } else {
+        assert.equal(traits, null);
         assert.equal(ship.freeMounts, 2);
         assert.equal(ship.compartmentSpace, 420);
         assert.equal(ship.mounts[0].choices.find(choice => choice.selected).value, "none");
@@ -129,6 +140,24 @@ test("the built package registers models and an editable notes sheet for its dec
   }
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));
+});
+
+test("trait rolls follow the Roll20 ranges and have localized names and help", async () => {
+  const { MERCHANT_TRAITS, traitFromRoll } = await import(new URL("module/traits.mjs", dist));
+  assert.equal(traitFromRoll("merit", 3), "stress_resistant");
+  assert.equal(traitFromRoll("merit", 18), "empathetic");
+  assert.equal(traitFromRoll("flaw", 10), "distracted");
+  assert.equal(traitFromRoll("flaw", 18), "notoriety");
+  for (const [kind, total] of [["merit", 2], ["flaw", 19], ["flaw", 6.5], ["toString", 10]]) {
+    assert.throws(() => traitFromRoll(kind, total), RangeError);
+  }
+  for (const lang of ["ru", "en"]) {
+    const { OUW25: { Trait } } = JSON.parse(await readFile(new URL(`lang/${lang}.json`, dist)));
+    for (const code of Object.values(MERCHANT_TRAITS).flat()) {
+      assert.ok(Trait.Names[code], `${lang}: missing name for ${code}`);
+      assert.ok(Trait.Help[code], `${lang}: missing help for ${code}`);
+    }
+  }
 });
 
 test("collision distinguishes outcomes after deductions", async () => {

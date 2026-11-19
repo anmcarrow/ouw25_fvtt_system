@@ -4,12 +4,24 @@
       "merchant": "Merchant",
       "cooperative": "Cooperative"
     },
-    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait", "contact": "Cooperative contact", "contract": "Cooperative contract" }
+    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait", "contact": "Cooperative contact", "contract": "Cooperative contract", "cargo": "Cooperative cargo" }
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Cargo": {
+      "Title": "Cargo",
+      "Name": "Name",
+      "Quantity": "Quantity",
+      "Volume": "Volume, st.",
+      "VolumeHelp": "Enter the volume of the whole lot, not of one unit.",
+      "Total": "Listed cargo volume: {volume} st.",
+      "Add": "Add cargo",
+      "Empty": "No cargo listed.",
+      "Invalid": "Enter a name, a nonnegative whole quantity, and a nonnegative volume.",
+      "ConfirmDelete": "Delete this cargo record?"
+    },
     "Contract": {
       "Title": "Contracts",
       "Subject": "What",

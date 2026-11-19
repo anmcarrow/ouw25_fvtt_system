@@ -133,6 +133,40 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contract">{{localize "OUW25.Contract.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+  {{#if cargo}}
+    <fieldset class="ouw25-cargo">
+      <legend>{{localize "OUW25.Cargo.Title"}}</legend>
+      <p>{{localize "OUW25.Cargo.Total" volume=cargo.volume}}</p>
+      <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Cargo.Title"}}">
+        <thead>
+          <tr>
+            <th scope="col">{{localize "OUW25.Cargo.Name"}}</th>
+            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Cargo.Quantity"}}</th>
+            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Cargo.Volume"}}</th>
+            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each cargo.entries}}
+            <tr>
+              <td>{{name}}</td>
+              <td class="ouw25-debt-amount">{{quantity}}</td>
+              <td class="ouw25-debt-amount">{{volume}}</td>
+              {{#if @root.editable}}
+                <td class="ouw25-debt-actions">
+                  <button type="button" data-action="editRecord" data-record-type="cargo" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                  <button type="button" data-action="deleteRecord" data-record-type="cargo" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                </td>
+              {{/if}}
+            </tr>
+          {{else}}
+            <tr><td colspan="{{#if editable}}4{{else}}3{{/if}}">{{localize "OUW25.Cargo.Empty"}}</td></tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="cargo">{{localize "OUW25.Cargo.Add"}}</button>{{/if}}
+    </fieldset>
+  {{/if}}
   {{#if ledger}}
     <fieldset class="ouw25-ledger">
       <legend>{{localize "OUW25.Debt.Title"}}</legend>

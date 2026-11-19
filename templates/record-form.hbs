@@ -12,12 +12,23 @@
   <label for="{{rootId}}-name">{{localize nameLabel}}</label>
   <input id="{{rootId}}-name" name="name" type="text" value="{{name}}" required>
 </div>
-{{#unless possession}}
+{{#if showLocation}}
 <div class="form-group">
   <label for="{{rootId}}-location">{{localize locationLabel}}</label>
   <input id="{{rootId}}-location" name="location" type="text" value="{{location}}">
 </div>
-{{/unless}}
+{{/if}}
+{{#if cargo}}
+  <div class="form-group">
+    <label for="{{rootId}}-quantity">{{localize "OUW25.Cargo.Quantity"}}</label>
+    <input id="{{rootId}}-quantity" name="quantity" type="number" value="{{quantity}}" min="0" max="9007199254740991" step="1" required>
+  </div>
+  <div class="form-group">
+    <label for="{{rootId}}-volume">{{localize "OUW25.Cargo.Volume"}}</label>
+    <input id="{{rootId}}-volume" name="volume" type="number" value="{{volume}}" min="0" max="9007199254740991" step="any" required>
+    <p class="hint">{{localize "OUW25.Cargo.VolumeHelp"}}</p>
+  </div>
+{{/if}}
 {{#if contract}}
   <div class="form-group">
     <label for="{{rootId}}-deadline">{{localize "OUW25.Contract.Deadline"}}</label>

@@ -16,9 +16,10 @@ const RECORD_LABELS = new Map([
   ["possession", "OUW25.Possession"],
   ["trait", "OUW25.Trait"],
   ["contact", "OUW25.Contact"],
-  ["contract", "OUW25.Contract"]
+  ["contract", "OUW25.Contract"],
+  ["cargo", "OUW25.Cargo"]
 ]);
-const COOPERATIVE_RECORDS = new Set(["contact", "contract"]);
+const COOPERATIVE_RECORDS = new Set(["contact", "contract", "cargo"]);
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
   ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
@@ -126,6 +127,17 @@ class ContractModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+class CargoModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return {
+      quantity: counterField(),
+      volume: new foundry.data.fields.NumberField({
+        required: true, nullable: false, initial: 0, min: 0, max: Number.MAX_SAFE_INTEGER
+      })
+    };
+  }
+}
+
 class TraitModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return { code: new foundry.data.fields.StringField({
@@ -185,6 +197,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const contacts = ship ? this.actor.items.filter(item => item.type === "contact").map(item => ({
       id: item.id, name: item.name, location: item.system.location, reason: item.system.reason, amount: item.system.amount
     })) : null;
+    const cargo = ship ? this.actor.items.filter(item => item.type === "cargo").map(item => ({
+      id: item.id, name: item.name, quantity: item.system.quantity, volume: item.system.volume
+    })) : null;
     const slotChoices = (slots, choices, labelPrefix) => slots.map(slot => ({
       ...slot, choices: choices.map(value => ({
         value, label: `${labelPrefix}.${value}`, selected: slot.value === value
@@ -211,6 +226,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         id: item.id, name: item.name, location: item.system.location, deadline: item.system.deadline, amount: item.system.amount
       })) : null,
       showContracts: type === "cooperative",
+      cargo: cargo && {
+        entries: cargo,
+        volume: cargo.reduce((total, entry) => total + entry.volume, 0)
+      },
       money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
       pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },
@@ -277,6 +296,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const { recordId: id, recordType: type } = target.dataset;
     const contact = type === "contact";
     const contract = type === "contract";
+    const cargo = type === "cargo";
     if (!this.isEditable || actor.type !== (COOPERATIVE_RECORDS.has(type) ? "cooperative" : "merchant") || this.#recordPending) return;
     const key = RECORD_LABELS.get(type);
     if (!key || type === "trait") return;
@@ -291,13 +311,15 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const direction = item?.system.direction ?? directions[0];
       const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/record-form.hbs`, {
         rootId: `ouw25-record-${foundry.utils.randomID()}`,
-        possession, contract, hasAmount, hasReason: type === "relationship" || contact, directionLabel: `${key}.Direction`,
-        nameLabel: contract ? `${key}.Subject` : possession ? `${key}.Description` : "OUW25.Debt.Counterparty",
+        showLocation: !possession && !cargo, contract, cargo, hasAmount,
+        hasReason: type === "relationship" || contact, directionLabel: `${key}.Direction`,
+        nameLabel: cargo ? `${key}.Name` : contract ? `${key}.Subject` : possession ? `${key}.Description` : "OUW25.Debt.Counterparty",
         locationLabel: contract ? `${key}.Destination` : "OUW25.Debt.Location",
         amountLabel: contact ? `${key}.Debt` : possession || contract ? `${key}.Cost` : "OUW25.Debt.Amount",
         reasonLabel: contact ? `${key}.Relation` : "OUW25.Relationship.Reason", reason: item?.system.reason ?? "",
         name: item?.name ?? "", location: item?.system.location ?? "", amount: item?.system.amount ?? 0,
         deadline: item?.system.deadline ?? "",
+        quantity: item?.system.quantity ?? 0, volume: item?.system.volume ?? 0,
         directions: directions.map(value => ({
           value, label: `${key}.${value}`, selected: value === direction
         }))
@@ -309,17 +331,22 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!data || !this.isEditable || (id && actor.items.get(id)?.type !== type)) return;
       const name = String(data.name ?? "").trim();
       const amount = String(data.amount ?? "").trim() ? Number(data.amount) : NaN;
+      const quantity = String(data.quantity ?? "").trim() ? Number(data.quantity) : NaN;
+      const volume = String(data.volume ?? "").trim() ? Number(data.volume) : NaN;
       if (!name || (directions.length && !directions.includes(data.direction))
-        || (hasAmount && (!Number.isSafeInteger(amount) || amount < 0))) {
+        || (hasAmount && (!Number.isSafeInteger(amount) || amount < 0))
+        || (cargo && (!Number.isSafeInteger(quantity) || quantity < 0
+          || !Number.isFinite(volume) || volume < 0 || volume > Number.MAX_SAFE_INTEGER))) {
         ui.notifications.warn(game.i18n.localize(`${key}.Invalid`));
         return;
       }
       const location = String(data.location ?? "").trim();
-      const system = possession ? {} : { location };
+      const system = possession || cargo ? {} : { location };
       if (directions.length) system.direction = data.direction;
       if (hasAmount) system.amount = amount;
       if (type === "relationship" || contact) system.reason = String(data.reason ?? "").trim();
       if (contract) system.deadline = String(data.deadline ?? "").trim();
+      if (cargo) Object.assign(system, { quantity, volume });
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name, system }]);
       else await actor.createEmbeddedDocuments("Item", [{ type, name, system }]);
     } finally {
@@ -590,6 +617,7 @@ Hooks.once("init", () => {
   CONFIG.Item.dataModels.trait = TraitModel;
   CONFIG.Item.dataModels.contact = ContactModel;
   CONFIG.Item.dataModels.contract = ContractModel;
+  CONFIG.Item.dataModels.cargo = CargoModel;
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, Ouw25ActorSheet, {
     types: Object.keys(models),
     makeDefault: true,

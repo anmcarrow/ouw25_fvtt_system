@@ -60,13 +60,16 @@ test("the built package registers models and an editable notes sheet for its dec
     } },
     { type: "contract", id: "contract-1", name: "Deliver supplies", system: {
       location: "Harbor", deadline: "Before the next tide", amount: 45
-    } }];
+    } },
+    { type: "cargo", id: "cargo-1", name: "Crates", system: { quantity: 3, volume: 12.5 } },
+    { type: "cargo", id: "cargo-2", name: "Bales", system: { quantity: 5, volume: 2.25 } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, ...context } = await sheet._prepareContext({});
+      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ...context } = await sheet._prepareContext({});
       assert.equal(showContracts, !merchant);
       assert.equal(pastMoves, null);
       if (merchant) {
+        assert.equal(cargo, null);
         assert.equal(contracts, null);
         assert.equal(contacts, null);
         assert.equal(ship, null);
@@ -82,6 +85,8 @@ test("the built package registers models and an editable notes sheet for its dec
           id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
         }]);
       } else {
+        assert.equal(cargo.volume, 14.75);
+        assert.deepEqual(cargo.entries[0], { id: "cargo-1", name: "Crates", quantity: 3, volume: 12.5 });
         assert.deepEqual(contracts, [{
           id: "contract-1", name: "Deliver supplies", location: "Harbor", deadline: "Before the next tide", amount: 45
         }]);

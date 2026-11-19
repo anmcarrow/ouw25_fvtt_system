@@ -154,7 +154,21 @@
       "FuelShortage": "There is not enough fuel for one sector.",
       "NoProvisions": "Travel is blocked without provisions.",
       "ProvisionsShortage": "There are not enough provisions for one sector.",
-      "EstimateOnly": "This calculates mode and consumption; travel is not applied yet."
+      "TravelInfo": "Travel is applied after confirming the complete calculation; only the last transition can be undone.",
+      "SaveBeforeTransition": "Save sheet changes first; travel and rollback use saved values.",
+      "TravelCounters": "Sectors traveled: {sectors}; travel watches: {watches}.",
+      "TravelSector": "Travel one sector",
+      "UndoSector": "Undo last sector",
+      "ConfirmTransition": "Apply the complete transition? Fuel −{fuel}; provisions −{provisions}; unrest +{unrest}; travel time +{watches} watches.",
+      "ConfirmUndo": "Restore the recorded state from before the last transition? Fuel {fuel} and provisions {provisions} will be returned; unrest decreases by {unrest}; travel time decreases by {watches} watches.",
+      "SingleOperator": "Only the designated ship operator should perform this action. Save sheet changes before proceeding.",
+      "TransitionBlocked": "Transition not applied: check crew and supplies. No values were changed.",
+      "InvalidState": "Transition not applied: voyage state is invalid. No values were changed.",
+      "InvalidTransition": "Rollback unavailable: the last transition record is invalid.",
+      "TransitionConflict": "Rollback unavailable: values changed since the transition. Nothing was changed.",
+      "StateChanged": "State changed while awaiting confirmation. Operation cancelled; review the sheet and try again.",
+      "TransitionDone": "Sector traveled: fuel −{fuel}; provisions −{provisions}; unrest +{unrest}; travel time +{watches} watches.",
+      "TransitionUndone": "Last sector undone; resources and counters restored. Chat rolls were not undone."
     },
     "ShipQuality": {
       "merit": { "Title": "Ship merits", "Slot": "Merit {number}" },

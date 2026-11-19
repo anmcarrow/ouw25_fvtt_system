@@ -294,7 +294,13 @@
         {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
         {{#if ship.voyage.provisionsLow}}<p role="status">{{localize "OUW25.Voyage.ProvisionsLow"}}</p>{{/if}}
         {{#each ship.voyage.shortages}}<p role="status">{{localize this}}</p>{{/each}}
-        <p>{{localize "OUW25.Voyage.EstimateOnly"}}</p>
+        <p>{{localize "OUW25.Voyage.TravelInfo"}}</p>
+        <p>{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}}</p>
+        {{#if editable}}
+          <button type="button" data-action="travelSector" {{#unless ship.canTravel}}disabled{{/unless}}>{{localize "OUW25.Voyage.TravelSector"}}</button>
+          <button type="button" data-action="undoSector" {{#unless ship.canUndoTransition}}disabled{{/unless}}>{{localize "OUW25.Voyage.UndoSector"}}</button>
+        {{/if}}
+        {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
       </fieldset>
     </div>
   {{else}}

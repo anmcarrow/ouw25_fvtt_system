@@ -332,6 +332,38 @@ test("voyage rates follow crew bands, modes, shortages, and ship flaws", async (
   assert.equal(calculateVoyage({ ...ship, crewCount: 11 }).crewOverCapacity, true);
 });
 
+test("sector transition applies and exactly rolls back the complete recorded state", async () => {
+  const { prepareSectorTransition, rollbackSectorTransition } = await import(new URL("module/ship.mjs", dist));
+  const ship = {
+    shipClass: 0, crewCount: 10, forcedMode: false, illuminationMode: false,
+    fuelStock: 10, provisionsStock: 10, unrest: 24.5,
+    travelSectors: 2, travelWatches: 3.5, lastTransition: ""
+  };
+  const prepared = prepareSectorTransition(ship, "sector-1");
+  assert.deepEqual(prepared.costs, { fuel: 1, provisions: 1, unrest: 0.5, watches: 1 });
+  assert.deepEqual(
+    Object.fromEntries(["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"]
+      .map(field => [field, prepared.update[field]])),
+    { fuelStock: 9, provisionsStock: 9, unrest: 25, travelSectors: 3, travelWatches: 4.5 }
+  );
+  assert.equal(ship.fuelStock, 10);
+  const applied = { ...ship, ...prepared.update };
+  const rollback = rollbackSectorTransition(applied);
+  assert.deepEqual(
+    Object.fromEntries(["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"]
+      .map(field => [field, rollback[field]])),
+    Object.fromEntries(["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"]
+      .map(field => [field, ship[field]]))
+  );
+  assert.equal(rollback.lastTransition, "");
+  assert.deepEqual(rollback.costs, prepared.costs);
+  assert.throws(() => rollbackSectorTransition({ ...applied, fuelStock: 8 }), /TransitionConflict/);
+  assert.throws(() => prepareSectorTransition({ ...ship, provisionsStock: 0 }, "sector-2"), /TransitionBlocked/);
+  assert.throws(() => prepareSectorTransition({ ...ship, travelSectors: Number.MAX_SAFE_INTEGER }, "sector-2"), /InvalidState/);
+  assert.throws(() => prepareSectorTransition({ ...ship, travelWatches: Number.MAX_SAFE_INTEGER }, "sector-2"), /InvalidState/);
+  assert.throws(() => rollbackSectorTransition({ ...applied, lastTransition: "{" }), /InvalidTransition/);
+});
+
 test("debt totals stay separate and exact beyond the safe integer range", async () => {
   const { debtTotals } = await import(new URL("module/finance.mjs", dist));
   assert.deepEqual(debtTotals([

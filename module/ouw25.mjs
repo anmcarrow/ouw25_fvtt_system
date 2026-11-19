@@ -4,7 +4,10 @@ import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } fr
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
-import { calculateVoyage, HOLD_BONUSES, SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots } from "./ship.mjs";
+import {
+  calculateVoyage, HOLD_BONUSES, prepareSectorTransition, rollbackSectorTransition,
+  SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots
+} from "./ship.mjs";
 import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
@@ -22,6 +25,16 @@ const RECORD_LABELS = new Map([
   ["cargo", "OUW25.Cargo"]
 ]);
 const COOPERATIVE_RECORDS = new Set(["contact", "contract", "cargo"]);
+const PENDING_VOYAGE_OPERATIONS = new Set();
+const VOYAGE_STATE_FIELDS = [
+  "shipClass", "crewCount", "forcedMode", "illuminationMode", "unrest", "fuelStock",
+  "provisionsStock", "travelSectors", "travelWatches", "lastTransition",
+  "flaw1", "flaw2", "flaw3", "flaw4"
+];
+const VOYAGE_FORM_FIELDS = [
+  "shipClass", "crewCount", "forcedMode", "illuminationMode", "unrest",
+  "fuelStock", "provisionsStock", "flaw1", "flaw2", "flaw3", "flaw4"
+];
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
   ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
@@ -59,6 +72,23 @@ function resourceField(initial = 0) {
   });
 }
 
+function voyageStateFingerprint(system) {
+  return JSON.stringify(VOYAGE_STATE_FIELDS.map(field => system[field]));
+}
+
+function hasUnsavedVoyageInputs(target, system) {
+  const form = target.closest("form");
+  if (!form) return true;
+  return VOYAGE_FORM_FIELDS.some(field => {
+    const input = form.elements.namedItem(`system.${field}`);
+    if (!input || input.disabled) return false;
+    if (input.value === "") return true;
+    const value = input.type === "checkbox" ? input.checked
+      : input.type === "number" ? Number(input.value) : input.value;
+    return value !== system[field];
+  });
+}
+
 class MerchantModel extends NotesModel {
   static defineSchema() {
     const { StringField } = foundry.data.fields;
@@ -90,7 +120,9 @@ class CooperativeModel extends NotesModel {
       shipClass: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: MAX_SHIP_CLASS }),
       crewCount: counterField(10), forcedMode: new BooleanField({ initial: false }),
       illuminationMode: new BooleanField({ initial: false }),
-      unrest: new NumberField({ required: true, nullable: false, initial: 0, min: 0, max: 25 })
+      unrest: new NumberField({ required: true, nullable: false, initial: 0, min: 0, max: 25 }),
+      travelSectors: counterField(), travelWatches: resourceField(),
+      lastTransition: new StringField({ initial: "" }), travelStatus: new StringField({ initial: "" })
     };
     for (let slot = 1; slot <= SHIP_SLOT_COUNT; slot++) {
       fields[`mount${slot}`] = new StringField({ initial: slot === 1 ? "slagthrower" : "none", choices: MOUNT_CHOICES });
@@ -201,7 +233,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       rollPersonalAction: Ouw25ActorSheet.rollPersonalAction,
       editTrait: Ouw25ActorSheet.editTrait,
       editRecord: Ouw25ActorSheet.editRecord,
-      deleteRecord: Ouw25ActorSheet.deleteRecord
+      deleteRecord: Ouw25ActorSheet.deleteRecord,
+      travelSector: Ouw25ActorSheet.travelSector,
+      undoSector: Ouw25ActorSheet.undoSector
     }
   };
 
@@ -252,6 +286,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         hold: shipHold(system, listedVolume, ship.compartmentSpace),
         crewCount: system.crewCount, forcedMode: system.forcedMode,
         illuminationMode: system.illuminationMode, unrestInput: system.unrest,
+        travelSectors: system.travelSectors, travelWatches: system.travelWatches,
+        travelStatus: system.travelStatus, canTravel: this.isEditable && !voyage.travelBlocked,
+        canUndoTransition: this.isEditable && Boolean(system.lastTransition),
         voyage,
         forcedDisabled: voyage.wornEngine && !system.forcedMode,
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
@@ -568,6 +605,79 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     } finally {
       target.disabled = false;
       this.#depositPending = false;
+    }
+  }
+
+  static async travelSector(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "cooperative" || PENDING_VOYAGE_OPERATIONS.has(actor.id)) return;
+    PENDING_VOYAGE_OPERATIONS.add(actor.id);
+    target.disabled = true;
+    try {
+      const { i18n } = game;
+      if (hasUnsavedVoyageInputs(target, actor.system)) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
+        return;
+      }
+      const fingerprint = voyageStateFingerprint(actor.system);
+      const transition = prepareSectorTransition(actor.system, foundry.utils.randomID());
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: i18n.localize("OUW25.Voyage.TravelSector") },
+        content: `<p>${i18n.format("OUW25.Voyage.ConfirmTransition", transition.costs)}</p><p>${i18n.localize("OUW25.Voyage.SingleOperator")}</p>`,
+        rejectClose: false
+      });
+      if (!confirmed || !this.isEditable) return;
+      if (voyageStateFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        return;
+      }
+      const update = Object.fromEntries(Object.entries(transition.update)
+        .map(([field, value]) => [`system.${field}`, value]));
+      update["system.travelStatus"] = i18n.format("OUW25.Voyage.TransitionDone", transition.costs);
+      await actor.update(update);
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      ui.notifications.warn(i18n.localize(error.message));
+    } finally {
+      PENDING_VOYAGE_OPERATIONS.delete(actor.id);
+      target.disabled = false;
+    }
+  }
+
+  static async undoSector(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "cooperative" || PENDING_VOYAGE_OPERATIONS.has(actor.id)) return;
+    PENDING_VOYAGE_OPERATIONS.add(actor.id);
+    target.disabled = true;
+    try {
+      const { i18n } = game;
+      if (hasUnsavedVoyageInputs(target, actor.system)) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
+        return;
+      }
+      const fingerprint = voyageStateFingerprint(actor.system);
+      const rollback = rollbackSectorTransition(actor.system);
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: i18n.localize("OUW25.Voyage.UndoSector") },
+        content: `<p>${i18n.format("OUW25.Voyage.ConfirmUndo", rollback.costs)}</p><p>${i18n.localize("OUW25.Voyage.SingleOperator")}</p>`,
+        rejectClose: false
+      });
+      if (!confirmed || !this.isEditable) return;
+      if (voyageStateFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        return;
+      }
+      const update = Object.fromEntries(Object.entries(rollback)
+        .filter(([field]) => field !== "costs")
+        .map(([field, value]) => [`system.${field}`, value]));
+      update["system.travelStatus"] = i18n.localize("OUW25.Voyage.TransitionUndone");
+      await actor.update(update);
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      ui.notifications.warn(i18n.localize(error.message));
+    } finally {
+      PENDING_VOYAGE_OPERATIONS.delete(actor.id);
+      target.disabled = false;
     }
   }
 

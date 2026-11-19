@@ -80,6 +80,73 @@ export function calculateVoyage(ship) {
   };
 }
 
+const TRANSITION_FIELDS = ["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"];
+
+function transitionState(ship) {
+  const state = Object.fromEntries(TRANSITION_FIELDS.map(field => [field, ship[field]]));
+  if (!Number.isSafeInteger(state.travelSectors) || state.travelSectors < 0
+    || !Number.isFinite(state.travelWatches) || state.travelWatches < 0 || state.travelWatches > Number.MAX_SAFE_INTEGER
+    || !Number.isFinite(state.fuelStock) || state.fuelStock < 0 || state.fuelStock > Number.MAX_SAFE_INTEGER
+    || !Number.isFinite(state.provisionsStock) || state.provisionsStock < 0 || state.provisionsStock > Number.MAX_SAFE_INTEGER
+    || !Number.isFinite(state.unrest) || state.unrest < 0 || state.unrest > 25) {
+    throw new RangeError("OUW25.Voyage.InvalidState");
+  }
+  return state;
+}
+
+export function prepareSectorTransition(ship, id) {
+  if (typeof id !== "string" || !id) throw new RangeError("OUW25.Voyage.InvalidState");
+  const stats = calculateVoyage(ship);
+  if (stats.travelBlocked) throw new RangeError("OUW25.Voyage.TransitionBlocked");
+  const before = transitionState(ship);
+  const after = {
+    fuelStock: before.fuelStock - stats.fuelPerSector,
+    provisionsStock: before.provisionsStock - stats.provisionsPerSector,
+    unrest: stats.unrest + Math.min(stats.unrestPerSector, 25 - stats.unrest),
+    travelSectors: before.travelSectors + 1,
+    travelWatches: before.travelWatches + 1 / stats.speed
+  };
+  if (!Number.isSafeInteger(after.travelSectors) || !Number.isFinite(after.travelWatches)
+    || after.travelSectors < 0 || after.travelWatches < 0 || after.travelWatches > Number.MAX_SAFE_INTEGER) {
+    throw new RangeError("OUW25.Voyage.InvalidState");
+  }
+  const costs = {
+    fuel: stats.fuelPerSector,
+    provisions: stats.provisionsPerSector,
+    unrest: after.unrest - before.unrest,
+    watches: after.travelWatches - before.travelWatches
+  };
+  const update = {
+    ...after,
+    lastTransition: JSON.stringify({ version: 1, id, before, after, costs })
+  };
+  return { update, costs };
+}
+
+export function rollbackSectorTransition(ship) {
+  let record;
+  try {
+    record = JSON.parse(ship.lastTransition);
+  } catch {
+    throw new RangeError("OUW25.Voyage.InvalidTransition");
+  }
+  if (!record || record.version !== 1 || typeof record.id !== "string" || !record.id) {
+    throw new RangeError("OUW25.Voyage.InvalidTransition");
+  }
+  const before = transitionState(record.before ?? {});
+  const after = transitionState(record.after ?? {});
+  const current = transitionState(ship);
+  if (TRANSITION_FIELDS.some(field => current[field] !== after[field])) {
+    throw new RangeError("OUW25.Voyage.TransitionConflict");
+  }
+  const { costs } = record;
+  if (!costs || ["fuel", "provisions", "unrest", "watches"].some(field =>
+    !Number.isFinite(costs[field]) || costs[field] < 0 || costs[field] > Number.MAX_SAFE_INTEGER)) {
+    throw new RangeError("OUW25.Voyage.InvalidTransition");
+  }
+  return { ...before, lastTransition: "", costs };
+}
+
 export function shipCondition(ship) {
   const strongHull = shipQualitySlots(ship, "merit").some(({ value }) => value === "strong_hull");
   const durability = SHIP_CLASS_STATS[ship.shipClass].durability + (strongHull ? 2 : 0);

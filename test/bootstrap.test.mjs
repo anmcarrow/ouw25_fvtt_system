@@ -44,7 +44,7 @@ test("the built package registers models and an editable notes sheet for its dec
       direction: "payable", amount: 12, location: "Port"
     } }, { type: "relationship", id: "friend-1", name: "Friend", system: {
       direction: "friend", location: "Harbor", reason: "Rescue"
-    } }];
+    } }, { type: "possession", id: "gear-1", name: "Lantern", system: { amount: 0 } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       assert.deepEqual(await sheet._prepareContext({}), {
@@ -61,6 +61,7 @@ test("the built package registers models and an editable notes sheet for its dec
           { label: "OUW25.Relationship.friend", entries: [{ id: "friend-1", name: "Friend", location: "Harbor", reason: "Rescue" }] },
           { label: "OUW25.Relationship.enemy", entries: [] }
         ] : null,
+        possessions: merchant ? { entries: [{ id: "gear-1", name: "Lantern", amount: 0 }] } : null,
         condition: merchant ? { specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === "medic"
         })), specialtyHelp: "OUW25.Specialty.Help.medic", specialtyConflict: false,

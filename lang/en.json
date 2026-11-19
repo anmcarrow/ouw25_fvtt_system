@@ -4,12 +4,20 @@
       "merchant": "Merchant",
       "cooperative": "Cooperative"
     },
-    "Item": { "debt": "Debt record", "relationship": "Relationship" }
+    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession" }
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Possession": {
+      "Title": "Personal possessions",
+      "Description": "Description",
+      "Cost": "Value, og.",
+      "Add": "Add possession",
+      "ConfirmDelete": "Delete this possession? Pocket money will not change.",
+      "Invalid": "Enter a description and a non-negative whole value."
+    },
     "Relationship": {
       "Title": "Personal relationships",
       "friend": "Friends",

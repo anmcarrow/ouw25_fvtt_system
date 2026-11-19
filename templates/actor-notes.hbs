@@ -104,6 +104,37 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="relationship">{{localize "OUW25.Relationship.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+  {{#if possessions}}
+    <fieldset class="ouw25-possessions">
+      <legend>{{localize "OUW25.Possession.Title"}}</legend>
+      <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Possession.Title"}}">
+        <thead>
+          <tr>
+            <th scope="col">{{localize "OUW25.Possession.Description"}}</th>
+            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Possession.Cost"}}</th>
+            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each possessions.entries}}
+            <tr>
+              <th scope="row">{{name}}</th>
+              <td class="ouw25-debt-amount">{{amount}}</td>
+              {{#if @root.editable}}
+                <td class="ouw25-debt-actions">
+                  <button type="button" data-action="editRecord" data-record-type="possession" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                  <button type="button" data-action="deleteRecord" data-record-type="possession" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                </td>
+              {{/if}}
+            </tr>
+          {{else}}
+            <tr><td colspan="{{#if editable}}3{{else}}2{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="possession">{{localize "OUW25.Possession.Add"}}</button>{{/if}}
+    </fieldset>
+  {{/if}}
   {{#if condition}}
     <fieldset class="ouw25-condition">
       <legend>{{localize "OUW25.Condition.Title"}}</legend>

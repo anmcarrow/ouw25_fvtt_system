@@ -6,6 +6,11 @@ import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, special
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
 const RELATION_KINDS = ["friend", "enemy"];
+const RECORD_LABELS = new Map([
+  ["debt", "OUW25.Debt"],
+  ["relationship", "OUW25.Relationship"],
+  ["possession", "OUW25.Possession"]
+]);
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
   ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
@@ -70,6 +75,12 @@ class RelationshipModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+class PossessionModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    return { amount: counterField() };
+  }
+}
+
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
   #luckPending = false;
@@ -122,6 +133,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           id: item.id, name: item.name, location: item.system.location, reason: item.system.reason
         }))
       })) : null,
+      possessions: merchant ? {
+        entries: this.actor.items.filter(item => item.type === "possession").map(item => ({
+          id: item.id, name: item.name, amount: item.system.amount
+        }))
+      } : null,
       condition: merchant ? {
         specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty
@@ -147,10 +163,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const actor = this.actor;
     if (!this.isEditable || actor.type !== "merchant" || this.#recordPending) return;
     const { recordId: id, recordType: type } = target.dataset;
-    if (type !== "debt" && type !== "relationship") return;
+    const key = RECORD_LABELS.get(type);
+    if (!key) return;
     const debt = type === "debt";
-    const key = debt ? "OUW25.Debt" : "OUW25.Relationship";
-    const directions = debt ? DEBT_DIRECTIONS : RELATION_KINDS;
+    const possession = type === "possession";
+    const directions = debt ? DEBT_DIRECTIONS : possession ? [] : RELATION_KINDS;
     const item = id ? actor.items.get(id) : null;
     if (id && item?.type !== type) return;
     this.#recordPending = true;
@@ -158,7 +175,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const direction = item?.system.direction ?? directions[0];
       const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/record-form.hbs`, {
         rootId: `ouw25-record-${foundry.utils.randomID()}`,
-        debt, directionLabel: `${key}.Direction`, reason: item?.system.reason ?? "",
+        possession, hasAmount: debt || possession, directionLabel: `${key}.Direction`,
+        amountLabel: possession ? `${key}.Cost` : "OUW25.Debt.Amount", reason: item?.system.reason ?? "",
         name: item?.name ?? "", location: item?.system.location ?? "", amount: item?.system.amount ?? 0,
         directions: directions.map(value => ({
           value, label: `${key}.${value}`, selected: value === direction
@@ -171,13 +189,15 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!data || !this.isEditable || (id && actor.items.get(id)?.type !== type)) return;
       const name = String(data.name ?? "").trim();
       const amount = String(data.amount ?? "").trim() ? Number(data.amount) : NaN;
-      if (!name || !directions.includes(data.direction) || (debt && (!Number.isSafeInteger(amount) || amount < 0))) {
+      if (!name || (!possession && !directions.includes(data.direction))
+        || ((debt || possession) && (!Number.isSafeInteger(amount) || amount < 0))) {
         ui.notifications.warn(game.i18n.localize(`${key}.Invalid`));
         return;
       }
-      const system = { direction: data.direction, location: String(data.location ?? "").trim() };
+      const location = String(data.location ?? "").trim();
+      const system = possession ? { amount } : { direction: data.direction, location };
       if (debt) system.amount = amount;
-      else system.reason = String(data.reason ?? "").trim();
+      if (type === "relationship") system.reason = String(data.reason ?? "").trim();
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name, system }]);
       else await actor.createEmbeddedDocuments("Item", [{ type, name, system }]);
     } finally {
@@ -189,12 +209,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const actor = this.actor;
     const { recordId: id, recordType: type } = target.dataset;
     if (!this.isEditable || actor.type !== "merchant" || this.#recordPending) return;
-    if ((type !== "debt" && type !== "relationship") || actor.items.get(id)?.type !== type) return;
+    const key = RECORD_LABELS.get(type);
+    if (!key || actor.items.get(id)?.type !== type) return;
     this.#recordPending = true;
     try {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
         window: { title: game.i18n.localize("OUW25.Debt.Delete") },
-        content: `<p>${game.i18n.localize(type === "debt" ? "OUW25.Debt.ConfirmDelete" : "OUW25.Relationship.ConfirmDelete")}</p>`,
+        content: `<p>${game.i18n.localize(`${key}.ConfirmDelete`)}</p>`,
         rejectClose: false
       });
       if (confirmed && this.isEditable && actor.items.get(id)?.type === type) {
@@ -338,6 +359,7 @@ Hooks.once("init", () => {
   Object.assign(CONFIG.Actor.dataModels, models);
   CONFIG.Item.dataModels.debt = DebtModel;
   CONFIG.Item.dataModels.relationship = RelationshipModel;
+  CONFIG.Item.dataModels.possession = PossessionModel;
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, Ouw25ActorSheet, {
     types: Object.keys(models),
     makeDefault: true,

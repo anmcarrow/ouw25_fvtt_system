@@ -54,8 +54,8 @@
                 <td class="ouw25-debt-amount">{{amount}}</td>
                 {{#if @root.editable}}
                   <td class="ouw25-debt-actions">
-                    <button type="button" data-action="editDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                    <button type="button" data-action="deleteDebt" data-debt-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                    <button type="button" data-action="editRecord" data-record-type="debt" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                    <button type="button" data-action="deleteRecord" data-record-type="debt" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
                   </td>
                 {{/if}}
               </tr>
@@ -65,7 +65,43 @@
           </tbody>
         </table>
       {{/each}}
-      {{#if editable}}<button type="button" data-action="editDebt">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="debt">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
+    </fieldset>
+  {{/if}}
+  {{#if relationships}}
+    <fieldset class="ouw25-relationships">
+      <legend>{{localize "OUW25.Relationship.Title"}}</legend>
+      {{#each relationships}}
+        <table class="ouw25-debt-table">
+          <caption>{{localize label}}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
+              <th scope="col">{{localize "OUW25.Debt.Location"}}</th>
+              <th scope="col">{{localize "OUW25.Relationship.Reason"}}</th>
+              {{#if @root.editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+            </tr>
+          </thead>
+          <tbody>
+            {{#each entries}}
+              <tr>
+                <th scope="row">{{name}}</th>
+                <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
+                <td>{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
+                {{#if @root.editable}}
+                  <td class="ouw25-debt-actions">
+                    <button type="button" data-action="editRecord" data-record-type="relationship" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+                    <button type="button" data-action="deleteRecord" data-record-type="relationship" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                  </td>
+                {{/if}}
+              </tr>
+            {{else}}
+              <tr><td colspan="{{#if @root.editable}}4{{else}}3{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
+            {{/each}}
+          </tbody>
+        </table>
+      {{/each}}
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="relationship">{{localize "OUW25.Relationship.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
   {{#if condition}}

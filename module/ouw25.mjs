@@ -5,6 +5,7 @@ import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, special
 
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
+const RELATION_KINDS = ["friend", "enemy"];
 const CREATION_ROLLS = new Map([
   ["past", { key: "Past", formula: "3d6", resolve: pastFromRoll, labels: "OUW25.Past" }],
   ["specialty", { key: "Specialty", resolve: specialtyFromRoll, labels: "OUW25.Specialty", usesPast: true }],
@@ -58,11 +59,22 @@ class DebtModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+class RelationshipModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    const { StringField } = foundry.data.fields;
+    return {
+      direction: new StringField({ initial: "friend", choices: RELATION_KINDS }),
+      location: new StringField({ initial: "" }),
+      reason: new StringField({ initial: "" })
+    };
+  }
+}
+
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
   #luckPending = false;
   #creationRollPending = false;
-  #debtPending = false;
+  #recordPending = false;
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
@@ -72,8 +84,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       depositPension: Ouw25ActorSheet.depositPension,
       changeLuck: Ouw25ActorSheet.changeLuck,
       rollCreation: Ouw25ActorSheet.rollCreation,
-      editDebt: Ouw25ActorSheet.editDebt,
-      deleteDebt: Ouw25ActorSheet.deleteDebt
+      editRecord: Ouw25ActorSheet.editRecord,
+      deleteRecord: Ouw25ActorSheet.deleteRecord
     }
   };
 
@@ -88,6 +100,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const lethal = merchant ? lethalWoundSlot(system.past, system.fragile) : null;
     const specialtyCount = merchant ? availableSpecialties(system.past).length : 0;
     const debts = merchant ? this.actor.items.filter(item => item.type === "debt") : [];
+    const relationships = merchant ? this.actor.items.filter(item => item.type === "relationship") : [];
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
@@ -103,6 +116,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           id: item.id, name: item.name, location: item.system.location, amount: item.system.amount
         }))
       })) } : null,
+      relationships: merchant ? RELATION_KINDS.map(kind => ({
+        label: `OUW25.Relationship.${kind}`,
+        entries: relationships.filter(item => item.system.direction === kind).map(item => ({
+          id: item.id, name: item.name, location: item.system.location, reason: item.system.reason
+        }))
+      })) : null,
       condition: merchant ? {
         specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty
@@ -124,57 +143,65 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     };
   }
 
-  static async editDebt(event, target) {
+  static async editRecord(event, target) {
     const actor = this.actor;
-    if (!this.isEditable || actor.type !== "merchant" || this.#debtPending) return;
-    const id = target.dataset.debtId;
+    if (!this.isEditable || actor.type !== "merchant" || this.#recordPending) return;
+    const { recordId: id, recordType: type } = target.dataset;
+    if (type !== "debt" && type !== "relationship") return;
+    const debt = type === "debt";
+    const key = debt ? "OUW25.Debt" : "OUW25.Relationship";
+    const directions = debt ? DEBT_DIRECTIONS : RELATION_KINDS;
     const item = id ? actor.items.get(id) : null;
-    if (id && item?.type !== "debt") return;
-    this.#debtPending = true;
+    if (id && item?.type !== type) return;
+    this.#recordPending = true;
     try {
-      const direction = item?.system.direction ?? "payable";
-      const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/debt-form.hbs`, {
-        rootId: `ouw25-debt-${foundry.utils.randomID()}`,
+      const direction = item?.system.direction ?? directions[0];
+      const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/record-form.hbs`, {
+        rootId: `ouw25-record-${foundry.utils.randomID()}`,
+        debt, directionLabel: `${key}.Direction`, reason: item?.system.reason ?? "",
         name: item?.name ?? "", location: item?.system.location ?? "", amount: item?.system.amount ?? 0,
-        directions: DEBT_DIRECTIONS.map(value => ({
-          value, label: `OUW25.Debt.${value}`, selected: value === direction
+        directions: directions.map(value => ({
+          value, label: `${key}.${value}`, selected: value === direction
         }))
       });
       const data = await foundry.applications.api.DialogV2.input({
-        window: { title: game.i18n.localize(item ? "OUW25.Debt.Edit" : "OUW25.Debt.Add") },
+        window: { title: game.i18n.localize(item ? "OUW25.Debt.Edit" : `${key}.Add`) },
         content, rejectClose: false, ok: { label: game.i18n.localize("OUW25.Save") }
       });
-      if (!data || !this.isEditable || (id && actor.items.get(id)?.type !== "debt")) return;
+      if (!data || !this.isEditable || (id && actor.items.get(id)?.type !== type)) return;
       const name = String(data.name ?? "").trim();
       const amount = String(data.amount ?? "").trim() ? Number(data.amount) : NaN;
-      if (!name || !DEBT_DIRECTIONS.includes(data.direction) || !Number.isSafeInteger(amount) || amount < 0) {
-        ui.notifications.warn(game.i18n.localize("OUW25.Debt.Invalid"));
+      if (!name || !directions.includes(data.direction) || (debt && (!Number.isSafeInteger(amount) || amount < 0))) {
+        ui.notifications.warn(game.i18n.localize(`${key}.Invalid`));
         return;
       }
-      const system = { direction: data.direction, location: String(data.location ?? "").trim(), amount };
+      const system = { direction: data.direction, location: String(data.location ?? "").trim() };
+      if (debt) system.amount = amount;
+      else system.reason = String(data.reason ?? "").trim();
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name, system }]);
-      else await actor.createEmbeddedDocuments("Item", [{ type: "debt", name, system }]);
+      else await actor.createEmbeddedDocuments("Item", [{ type, name, system }]);
     } finally {
-      this.#debtPending = false;
+      this.#recordPending = false;
     }
   }
 
-  static async deleteDebt(event, target) {
+  static async deleteRecord(event, target) {
     const actor = this.actor;
-    const id = target.dataset.debtId;
-    if (!this.isEditable || actor.type !== "merchant" || this.#debtPending || actor.items.get(id)?.type !== "debt") return;
-    this.#debtPending = true;
+    const { recordId: id, recordType: type } = target.dataset;
+    if (!this.isEditable || actor.type !== "merchant" || this.#recordPending) return;
+    if ((type !== "debt" && type !== "relationship") || actor.items.get(id)?.type !== type) return;
+    this.#recordPending = true;
     try {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
         window: { title: game.i18n.localize("OUW25.Debt.Delete") },
-        content: `<p>${game.i18n.localize("OUW25.Debt.ConfirmDelete")}</p>`,
+        content: `<p>${game.i18n.localize(type === "debt" ? "OUW25.Debt.ConfirmDelete" : "OUW25.Relationship.ConfirmDelete")}</p>`,
         rejectClose: false
       });
-      if (confirmed && this.isEditable && actor.items.get(id)?.type === "debt") {
+      if (confirmed && this.isEditable && actor.items.get(id)?.type === type) {
         await actor.deleteEmbeddedDocuments("Item", [id]);
       }
     } finally {
-      this.#debtPending = false;
+      this.#recordPending = false;
     }
   }
 
@@ -310,6 +337,7 @@ Hooks.once("init", () => {
   const models = { merchant: MerchantModel, cooperative: CooperativeModel };
   Object.assign(CONFIG.Actor.dataModels, models);
   CONFIG.Item.dataModels.debt = DebtModel;
+  CONFIG.Item.dataModels.relationship = RelationshipModel;
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, Ouw25ActorSheet, {
     types: Object.keys(models),
     makeDefault: true,

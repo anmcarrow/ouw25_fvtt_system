@@ -42,6 +42,8 @@ test("the built package registers models and an editable notes sheet for its dec
       luck: 0, specialty: "medic", past: "unset", fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
     sheet.actor.items = [{ type: "debt", id: "debt-1", name: "Creditor", system: {
       direction: "payable", amount: 12, location: "Port"
+    } }, { type: "relationship", id: "friend-1", name: "Friend", system: {
+      direction: "friend", location: "Harbor", reason: "Rescue"
     } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
@@ -55,6 +57,10 @@ test("the built package registers models and an editable notes sheet for its dec
           { label: "OUW25.Debt.payable", entries: [{ id: "debt-1", name: "Creditor", amount: 12, location: "Port" }] },
           { label: "OUW25.Debt.receivable", entries: [] }
         ] } : null,
+        relationships: merchant ? [
+          { label: "OUW25.Relationship.friend", entries: [{ id: "friend-1", name: "Friend", location: "Harbor", reason: "Rescue" }] },
+          { label: "OUW25.Relationship.enemy", entries: [] }
+        ] : null,
         condition: merchant ? { specialties: MERCHANT_SPECIALTIES.map(value => ({
           value, label: `OUW25.Specialty.${value}`, selected: value === "medic"
         })), specialtyHelp: "OUW25.Specialty.Help.medic", specialtyConflict: false,

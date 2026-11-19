@@ -4,12 +4,22 @@
       "merchant": "Merchant",
       "cooperative": "Cooperative"
     },
-    "Item": { "debt": "Debt record" }
+    "Item": { "debt": "Debt record", "relationship": "Relationship" }
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Relationship": {
+      "Title": "Personal relationships",
+      "friend": "Friends",
+      "enemy": "Enemies",
+      "Direction": "Relationship",
+      "Reason": "Reason",
+      "Add": "Add relationship",
+      "ConfirmDelete": "Delete this relationship?",
+      "Invalid": "Enter a name and choose a relationship."
+    },
     "Debt": {
       "Title": "Personal debts",
       "payable": "I owe",

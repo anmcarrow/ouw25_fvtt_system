@@ -43,7 +43,8 @@
   color: inherit;
 }
 
-.ouw25 button {
+.ouw25 .ouw25-notes button,
+.ouw25 .dialog-content button {
   --button-background-color: var(--ouw25-color-accent-soft);
   --button-border-color: transparent;
   --button-text-color: #fff8ee;
@@ -59,13 +60,15 @@
   padding: 0.45rem 0.7rem;
 }
 
-.ouw25 button:hover:not(:disabled) {
+.ouw25 .ouw25-notes button:hover:not(:disabled),
+.ouw25 .dialog-content button:hover:not(:disabled) {
   background: var(--ouw25-color-accent-soft);
   color: #fff8ee;
   filter: brightness(1.08) drop-shadow(0 2px 2px rgba(55, 15, 0, 0.18));
 }
 
-.ouw25 button:disabled {
+.ouw25 .ouw25-notes button:disabled,
+.ouw25 .dialog-content button:disabled {
   background: var(--ouw25-color-paper);
   color: var(--ouw25-color-ink);
   opacity: 1;

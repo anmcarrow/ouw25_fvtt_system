@@ -135,6 +135,26 @@
       "BeyondLimit": "Damage {number} (beyond the track)",
       "OverLimit": "Damage exceeds the ship's durability."
     },
+    "Voyage": {
+      "Title": "Modes and supplies",
+      "Crew": "Crew count",
+      "CrewSummary": "Crew: {crew} / {capacity} ({band})",
+      "CrewBand": { "above-half": "above half crew", "half": "half crew", "below-half": "below half crew" },
+      "CrewOverCapacity": "Crew exceeds the ship's capacity.",
+      "ForcedMode": "Forced mode",
+      "IlluminationMode": "Illumination mode",
+      "Unrest": "Sea unrest",
+      "TravelRates": "Speed: {speed}; per sector — fuel {fuel}, provisions {provisions}; unrest +{unrest}.",
+      "UnrestCurrent": "Effective unrest: {unrest} of 25.",
+      "ForcedBlocked": "A worn engine cannot use forced mode.",
+      "FuelLow": "Fuel is low: about {sectors} full sectors remain.",
+      "ProvisionsLow": "No more than five sectors of provisions remain.",
+      "NoCrew": "Crew is required to travel.",
+      "FuelShortage": "There is not enough fuel for one sector.",
+      "NoProvisions": "Travel is blocked without provisions.",
+      "ProvisionsShortage": "There are not enough provisions for one sector.",
+      "EstimateOnly": "This calculates mode and consumption; travel is not applied yet."
+    },
     "ShipQuality": {
       "merit": { "Title": "Ship merits", "Slot": "Merit {number}" },
       "flaw": { "Title": "Ship flaws", "Slot": "Flaw {number}" },

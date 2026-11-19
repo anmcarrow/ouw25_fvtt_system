@@ -301,6 +301,37 @@ test("a reinforced hull adds two durability once; marked damage stays repairable
   assert.equal(shipCondition({ shipClass: 6, merit4: "strong_hull" }).slots.at(-1).number, 11);
 });
 
+test("voyage rates follow crew bands, modes, shortages, and ship flaws", async () => {
+  const { calculateVoyage } = await import(new URL("module/ship.mjs", dist));
+  const ship = { shipClass: 0, crewCount: 10, fuelStock: 10, provisionsStock: 10, unrest: 0 };
+  assert.deepEqual(
+    (({ crewBand, speed, fuelPerSector, provisionsPerSector, unrestPerSector, travelBlocked }) =>
+      ({ crewBand, speed, fuelPerSector, provisionsPerSector, unrestPerSector, travelBlocked }))(calculateVoyage(ship)),
+    { crewBand: "above-half", speed: 1, fuelPerSector: 1, provisionsPerSector: 1, unrestPerSector: 1, travelBlocked: false }
+  );
+  const forced = calculateVoyage({ ...ship, forcedMode: true, illuminationMode: true });
+  assert.equal(forced.speed, 2);
+  assert.equal(forced.fuelPerSector, 4);
+  assert.equal(forced.provisionsPerSector, 0.5);
+  assert.equal(forced.unrestPerSector, 0.5);
+  assert.equal(calculateVoyage({ ...ship, crewCount: 5, forcedMode: true }).crewBand, "half");
+  const lowCrew = calculateVoyage({ ...ship, crewCount: 4, forcedMode: true });
+  assert.equal(lowCrew.speed, 1);
+  assert.equal(lowCrew.fuelPerSector, 4);
+  assert.equal(lowCrew.provisionsPerSector, 0.5);
+  const worn = calculateVoyage({ ...ship, forcedMode: true, flaw3: "worn_engine" });
+  assert.equal(worn.forced, false);
+  assert.equal(worn.forcedBlocked, true);
+  assert.equal(worn.fuelPerSector, 1);
+  const blocked = calculateVoyage({
+    ...ship, crewCount: 0, fuelStock: 0, provisionsStock: 0, flaw1: "cursed"
+  });
+  assert.equal(blocked.travelBlocked, true);
+  assert.deepEqual(blocked.shortages, ["OUW25.Voyage.NoCrew", "OUW25.Voyage.FuelShortage", "OUW25.Voyage.NoProvisions"]);
+  assert.equal(blocked.unrest, 5);
+  assert.equal(calculateVoyage({ ...ship, crewCount: 11 }).crewOverCapacity, true);
+});
+
 test("debt totals stay separate and exact beyond the safe integer range", async () => {
   const { debtTotals } = await import(new URL("module/finance.mjs", dist));
   assert.deepEqual(debtTotals([

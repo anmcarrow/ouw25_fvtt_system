@@ -4,7 +4,7 @@ import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } fr
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
-import { HOLD_BONUSES, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots } from "./ship.mjs";
+import { calculateVoyage, HOLD_BONUSES, SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots } from "./ship.mjs";
 import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
@@ -87,7 +87,10 @@ class CooperativeModel extends NotesModel {
       holdBonus: new NumberField({
         required: true, nullable: false, initial: 0, integer: true, choices: HOLD_BONUSES
       }),
-      shipClass: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: MAX_SHIP_CLASS })
+      shipClass: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: MAX_SHIP_CLASS }),
+      crewCount: counterField(10), forcedMode: new BooleanField({ initial: false }),
+      illuminationMode: new BooleanField({ initial: false }),
+      unrest: new NumberField({ required: true, nullable: false, initial: 0, min: 0, max: 25 })
     };
     for (let slot = 1; slot <= SHIP_SLOT_COUNT; slot++) {
       fields[`mount${slot}`] = new StringField({ initial: slot === 1 ? "slagthrower" : "none", choices: MOUNT_CHOICES });
@@ -232,6 +235,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const field = `gear${number}`;
       return { number, field, value: system[field] ?? "none" };
     });
+    const voyage = ship && calculateVoyage(system);
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
@@ -240,9 +244,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       showCollision: this.isEditable && merchant,
       ship: ship && {
         name: system.shipName,
-        classes: Array.from({ length: MAX_SHIP_CLASS + 1 }, (_, value) => ({ value, selected: value === system.shipClass })),
+        classes: Array.from({ length: MAX_SHIP_CLASS + 1 }, (_, value) => ({
+          value, selected: value === system.shipClass,
+          crew: SHIP_CLASS_STATS[value].crew, durability: SHIP_CLASS_STATS[value].durability
+        })),
         freeMounts: ship.freeMounts, compartmentSpace: ship.compartmentSpace,
         hold: shipHold(system, listedVolume, ship.compartmentSpace),
+        voyage,
+        forcedDisabled: voyage.wornEngine && !system.forcedMode,
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: slotChoices(ship.mounts, MOUNT_CHOICES, "OUW25.Ship.MountChoices"),
         compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices"),

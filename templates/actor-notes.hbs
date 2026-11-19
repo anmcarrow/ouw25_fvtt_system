@@ -267,6 +267,34 @@
         </div>
         {{#if ship.condition.overLimit}}<p role="status">{{localize "OUW25.ShipCondition.OverLimit"}}</p>{{/if}}
       </fieldset>
+      <fieldset class="ouw25-voyage">
+        <legend>{{localize "OUW25.Voyage.Title"}}</legend>
+        <label>
+          {{localize "OUW25.Voyage.Crew"}}
+          <input type="number" name="system.crewCount" min="0" max="9007199254740991" step="1" value="{{system.crewCount}}" required {{#unless editable}}readonly{{/unless}}>
+        </label>
+        <label>
+          {{localize "OUW25.Voyage.ForcedMode"}}
+          <input type="checkbox" name="system.forcedMode" {{checked system.forcedMode}} {{#if ship.forcedDisabled}}disabled{{/if}} {{#unless editable}}disabled{{/unless}}>
+        </label>
+        <label>
+          {{localize "OUW25.Voyage.IlluminationMode"}}
+          <input type="checkbox" name="system.illuminationMode" {{checked system.illuminationMode}} {{#unless editable}}disabled{{/unless}}>
+        </label>
+        <label>
+          {{localize "OUW25.Voyage.Unrest"}}
+          <input type="number" name="system.unrest" min="0" max="25" step="any" value="{{system.unrest}}" required {{#unless editable}}readonly{{/unless}}>
+        </label>
+        <p>{{localize "OUW25.Voyage.CrewSummary" crew=system.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}</p>
+        {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
+        <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
+        <p>{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}</p>
+        {{#if ship.voyage.forcedBlocked}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
+        {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
+        {{#if ship.voyage.provisionsLow}}<p role="status">{{localize "OUW25.Voyage.ProvisionsLow"}}</p>{{/if}}
+        {{#each ship.voyage.shortages}}<p role="status">{{localize this}}</p>{{/each}}
+        <p>{{localize "OUW25.Voyage.EstimateOnly"}}</p>
+      </fieldset>
     </div>
   {{else}}
     <div class="ouw25-sheet-column">

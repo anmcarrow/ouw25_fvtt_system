@@ -38,9 +38,9 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   const buttonSurface = composite(surface, accentSoft.slice(1, 4).map(Number), Number(accentSoft[4]));
 
   assert.match(styles, /color-scheme:\s*light;/);
-  assert.match(styles, /--color-checkbox-checked:\s*var\(--ouw25-color-accent-soft\);/);
   assert.match(styles, /\.ouw25 \.ouw25-notes \*\s*\{\s*color:\s*inherit;/);
-  assert.match(styles, /\.ouw25 \.ouw25-notes input\[type="checkbox"\]\s*\{\s*accent-color:\s*var\(--ouw25-color-accent-soft\);/);
+  assert.match(styles, /body\.game \.app\.ouw25 \.ouw25-notes input\[type="checkbox"\]\s*\{(?=[^}]*--checkbox-background-color:\s*var\(--ouw25-color-accent\);)(?=[^}]*--checkbox-checked-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*--checkbox-checkmark-color:\s*var\(--ouw25-color-surface\);)(?=[^}]*--checkbox-font-weight:\s*unset;)(?=[^}]*accent-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*color-scheme:\s*light;)[^}]*\}/s);
+  assert.match(styles, /body\.game \.app\.ouw25 \.ouw25-notes input\[type="checkbox"\]:disabled,\s*body\.game \.app\.ouw25 \.ouw25-notes input\[type="checkbox"\]\[readonly\]\s*\{[^}]*--checkbox-background-color:\s*var\(--ouw25-color-paper\);/s);
   assert.match(styles, /\.ouw25 \.ouw25-sheet-heading\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\)/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes fieldset\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\);[^}]*margin-block:\s*0\.25rem;[^}]*padding:\s*0\.5rem;/s);
   assert.match(styles, /--ouw25-field-background:\s*var\(--ouw25-color-surface\);/);

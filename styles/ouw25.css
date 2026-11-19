@@ -2,7 +2,6 @@
   --ouw25-color-ink: #370f00;
   --ouw25-color-accent: #2a0e06;
   --ouw25-color-accent-soft: rgba(42, 14, 6, 0.7);
-  --color-checkbox-checked: var(--ouw25-color-accent-soft);
   --ouw25-color-danger: #b3261e;
   --ouw25-color-warning: #690098;
   --ouw25-color-accent-calm: #133e61;
@@ -175,6 +174,23 @@
 
 .ouw25 .ouw25-notes input[type="checkbox"] {
   accent-color: var(--ouw25-color-accent-soft);
+}
+
+body.game .app.ouw25 .ouw25-notes input[type="checkbox"] {
+  --checkbox-background-color: var(--ouw25-color-accent);
+  --checkbox-checked-color: var(--ouw25-color-accent-soft);
+  --checkbox-checkmark-color: var(--ouw25-color-surface);
+  --checkbox-font-weight: unset;
+  accent-color: var(--ouw25-color-accent-soft);
+  color-scheme: light;
+}
+
+body.game .app.ouw25 .ouw25-notes input[type="checkbox"]:disabled,
+body.game .app.ouw25 .ouw25-notes input[type="checkbox"][readonly] {
+  --checkbox-background-color: var(--ouw25-color-paper);
+  --checkbox-checked-color: var(--ouw25-color-paper);
+  --checkbox-checkmark-color: var(--ouw25-color-ink);
+  accent-color: var(--ouw25-color-paper);
 }
 
 .ouw25 .ouw25-notes option {

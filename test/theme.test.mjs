@@ -33,6 +33,9 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   assert.match(styles, /\.ouw25 \.ouw25-sheet-heading\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\)/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes fieldset\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\)/s);
   assert.match(styles, /--ouw25-field-background:\s*var\(--ouw25-color-surface\);/);
+  assert.match(styles, /\.ouw25 \.ouw25-notes \.ouw25-debt-table thead,\s*\.ouw25 \.ouw25-notes \.ouw25-debt-table tfoot\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background:\s*var\(--ouw25-color-surface\);[^}]*text-shadow:\s*none;/s);
+  assert.match(styles, /\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-color-paper\);/);
+  assert.match(styles, /\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody tr:nth-child\(odd\)\s*\{\s*background-color:\s*var\(--ouw25-color-surface\);/);
   assert.match(styles, /\.ouw25 \.ouw25-notes button\s*\{[^}]*color:\s*#fff8ee;[^}]*background-color:\s*var\(--ouw25-color-accent\)/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes button:disabled\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background-color:\s*var\(--ouw25-color-paper\)/s);
 

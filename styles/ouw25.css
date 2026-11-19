@@ -182,6 +182,31 @@
   text-align: start;
 }
 
+.ouw25 .ouw25-notes .ouw25-debt-table {
+  color: var(--ouw25-color-ink);
+  background: var(--ouw25-color-surface);
+}
+
+.ouw25 .ouw25-notes .ouw25-debt-table thead,
+.ouw25 .ouw25-notes .ouw25-debt-table tfoot {
+  color: var(--ouw25-color-ink);
+  background: var(--ouw25-color-surface);
+  text-shadow: none;
+}
+
+.ouw25 .ouw25-notes .ouw25-debt-table th,
+.ouw25 .ouw25-notes .ouw25-debt-table td {
+  color: var(--ouw25-color-ink);
+}
+
+.ouw25 .ouw25-notes .ouw25-debt-table tbody tr:nth-child(even) {
+  background-color: var(--ouw25-color-paper);
+}
+
+.ouw25 .ouw25-notes .ouw25-debt-table tbody tr:nth-child(odd) {
+  background-color: var(--ouw25-color-surface);
+}
+
 .ouw25 .ouw25-debt-table :is(th, td) {
   overflow-wrap: anywhere;
 }

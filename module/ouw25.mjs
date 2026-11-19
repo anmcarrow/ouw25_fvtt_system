@@ -5,6 +5,7 @@ import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, special
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
+import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
@@ -123,6 +124,12 @@ function traitChoices(kind, selected, includeUnset = false) {
   }));
 }
 
+function personalActionButtons(source, value) {
+  return personalActions(source, value).map(({ id }) => ({
+    id, source, value, label: `OUW25.PersonalAction.Moves.${id}.label`
+  }));
+}
+
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
   #luckPending = false;
@@ -137,6 +144,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       depositPension: Ouw25ActorSheet.depositPension,
       changeLuck: Ouw25ActorSheet.changeLuck,
       rollCreation: Ouw25ActorSheet.rollCreation,
+      rollPersonalAction: Ouw25ActorSheet.rollPersonalAction,
       editTrait: Ouw25ActorSheet.editTrait,
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord
@@ -200,7 +208,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         hiring: MERCHANT_HIRING.map(value => ({
           value, label: `OUW25.Identity.Hiring.${value}`, selected: value === (system.hiring ?? "unset")
         })),
-        hiringHelp: system.hiring && system.hiring !== "unset" ? `OUW25.Identity.HiringHelp.${system.hiring}` : null
+        hiringHelp: system.hiring && system.hiring !== "unset" ? `OUW25.Identity.HiringHelp.${system.hiring}` : null,
+        actions: personalActionButtons("hiring", system.hiring)
+      } : null,
+      pastMoves: merchant && system.past && system.past !== "unset" ? {
+        help: `OUW25.PersonalAction.PastHelp.${system.past}`,
+        actions: personalActionButtons("past", system.past)
       } : null,
       traits: merchant ? Object.entries(MERCHANT_TRAITS).map(([kind, codes]) => ({
         kind, label: `OUW25.Trait.${kind}.Title`, primary: `OUW25.Trait.${kind}.Primary`,
@@ -436,9 +449,70 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     }
   }
 
+  static async rollPersonalAction(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "merchant" || target.disabled) return;
+    const { source, profile, move } = target.dataset;
+    if (source !== "past" && source !== "hiring") return;
+    const action = personalActions(source, actor.system[source]).find(({ id }) => id === move);
+    if (!action || actor.system[source] !== profile) return;
+    const { i18n } = game;
+    const title = i18n.localize(`OUW25.PersonalAction.Moves.${move}.label`);
+    if (action.collision) return Ouw25ActorSheet.#rollCollision.call(this, target, title);
+
+    target.disabled = true;
+    try {
+      let formula = action.formula;
+      if (action.supplies) {
+        const label = i18n.localize("OUW25.PersonalAction.Successes");
+        const data = await foundry.applications.api.DialogV2.input({
+          window: { title },
+          content: `<label>${label}<input type="number" name="successes" min="1" max="100" step="1" value="1" required></label>`,
+          rejectClose: false
+        });
+        if (!data) return;
+        try {
+          formula = provisionFormula(data.successes);
+        } catch (error) {
+          if (!(error instanceof RangeError)) throw error;
+          ui.notifications.warn(i18n.localize("OUW25.PersonalAction.InvalidSuccesses"));
+          return;
+        }
+      }
+      if (!this.isEditable || actor.system[source] !== profile) return;
+      const { Roll } = foundry.dice;
+      const { ChatMessage } = foundry.documents;
+      const messageMode = game.settings.get("core", "messageMode");
+      const roll = await new Roll(formula).evaluate({ allowInteractive: false });
+      const outcome = personalOutcome(action, roll.total);
+      const data = { ...outcome.data };
+      const rolls = [roll];
+      for (const [key, extraFormula] of Object.entries(outcome.extra)) {
+        const extra = await new Roll(extraFormula).evaluate({ allowInteractive: false });
+        rolls.push(extra);
+        data[key] = extra.total;
+      }
+      if (!this.isEditable || actor.system[source] !== profile) return;
+      const result = i18n.format(outcome.key, data);
+      const message = {
+        speaker: ChatMessage.getSpeaker({ actor }),
+        flavor: i18n.format("OUW25.PersonalAction.Result", { title, result }),
+        rolls
+      };
+      ChatMessage.applyRollMode(message, messageMode);
+      await ChatMessage.create(message);
+    } finally {
+      target.disabled = false;
+    }
+  }
+
   static async rollCollision(event, target) {
+    return Ouw25ActorSheet.#rollCollision.call(this, target);
+  }
+
+  static async #rollCollision(target, title) {
     if (!this.isEditable || this.actor.type !== "merchant" || target.disabled) return;
-    const section = target.closest(".ouw25-collision");
+    const section = target.closest(".ouw25-notes").querySelector(".ouw25-collision");
     let input;
     try {
       input = parseCollisionInput(section.querySelector("[data-dice]").value, section.querySelector("[data-deduction]").value);
@@ -456,12 +530,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const roll = await new Roll(`${input.diceCount}d6`).evaluate({ allowInteractive: messageMode !== "blind" });
       const dice = roll.dice.flatMap(term => term.results.filter(result => result.active).map(result => result.result));
       const { outcome, remaining } = resolveCollision(dice, input.deduction);
-      await roll.toMessage({
-        speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        flavor: game.i18n.format("OUW25.Collision.Result", {
+      const result = game.i18n.format("OUW25.Collision.Result", {
           outcome: game.i18n.localize(`OUW25.Collision.${outcome}`),
           remaining
-        })
+      });
+      await roll.toMessage({
+        speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+        flavor: title ? game.i18n.format("OUW25.PersonalAction.Result", { title, result }) : result
       }, { messageMode });
     } finally {
       target.disabled = false;

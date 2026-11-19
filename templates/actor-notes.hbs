@@ -197,6 +197,11 @@
         <button type="button" data-action="rollCreation" data-creation="hiring">{{localize "OUW25.Creation.RollHiring"}}</button>
       {{/if}}
       {{#if identity.hiringHelp}}<p>{{localize identity.hiringHelp}}</p>{{/if}}
+      {{#if editable}}
+        {{#each identity.actions}}
+          <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{localize label}}</button>
+        {{/each}}
+      {{/if}}
     </fieldset>
   {{/if}}
   {{#if condition}}
@@ -234,6 +239,15 @@
           <input type="checkbox" name="system.fragile" {{checked condition.fragile}} {{#unless editable}}disabled{{/unless}}>
           {{localize "OUW25.Past.Fragile"}}
         </label>
+      {{/if}}
+      {{#if pastMoves}}
+        <p>{{localize pastMoves.help}}</p>
+        {{#if editable}}
+          {{#each pastMoves.actions}}
+            <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{localize label}}</button>
+          {{/each}}
+          {{#if pastMoves.actions}}<p>{{localize "OUW25.PersonalAction.Manual"}}</p>{{/if}}
+        {{/if}}
       {{/if}}
       <p>{{localize "OUW25.Condition.Luck" count=condition.luck}}</p>
       <p>{{localize "OUW25.Condition.LuckHelp"}}</p>

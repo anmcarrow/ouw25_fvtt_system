@@ -54,7 +54,8 @@ test("the built package registers models and an editable notes sheet for its dec
     { type: "trait", id: "trait-1", system: { code: "greedy" } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, identity, ...context } = await sheet._prepareContext({});
+      const { ship, traits, identity, pastMoves, ...context } = await sheet._prepareContext({});
+      assert.equal(pastMoves, null);
       if (merchant) {
         assert.equal(ship, null);
         assert.equal(identity.name, "Original");
@@ -136,7 +137,9 @@ test("the built package registers models and an editable notes sheet for its dec
         ["deprived", true, 2], ["veteran", true, 3], ["hard_worker", true, 4]
       ]) {
         Object.assign(sheet.actor.system, { past, fragile });
-        const { condition } = await sheet._prepareContext({});
+        const { condition, pastMoves } = await sheet._prepareContext({});
+        assert.equal(pastMoves.help, `OUW25.PersonalAction.PastHelp.${past}`);
+        if (past === "veteran") assert.equal(pastMoves.actions[0].id, "comrade");
         assert.equal(condition.showFragile, past === "deprived");
         assert.equal(condition.wounds.length, threshold);
         assert.deepEqual(condition.wounds.filter(wound => wound.lethal).map(wound => wound.slot), [threshold]);
@@ -175,6 +178,22 @@ test("trait rolls follow the Roll20 ranges and have localized names and help", a
       assert.ok(Trait.Help[code], `${lang}: missing help for ${code}`);
     }
   }
+});
+
+test("personal moves resolve situational rolls without applying consequences", async () => {
+  const { personalActions, personalOutcome, provisionFormula } = await import(new URL("module/personal-actions.mjs", dist));
+  const [, , debtor] = personalActions("past", "gambler");
+  assert.deepEqual(personalOutcome(debtor, 4), {
+    key: "OUW25.PersonalAction.Moves.debtor.4", extra: { amount: "1d6*1000", guards: "2d6" }
+  });
+  assert.deepEqual(personalOutcome(debtor, 6), { key: "OUW25.PersonalAction.Moves.debtor.6", extra: {} });
+  const [poison] = personalActions("hiring", "ate");
+  assert.match(personalOutcome(poison, 3).key, /\.yes$/);
+  assert.match(personalOutcome(poison, 4).key, /\.no$/);
+  assert.throws(() => personalOutcome(poison, 7), RangeError);
+  assert.equal(provisionFormula("3"), "6d6");
+  assert.throws(() => provisionFormula("2.5"), RangeError);
+  assert.deepEqual(personalActions("past", "constructor"), []);
 });
 
 test("collision distinguishes outcomes after deductions", async () => {

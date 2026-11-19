@@ -250,6 +250,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         })),
         freeMounts: ship.freeMounts, compartmentSpace: ship.compartmentSpace,
         hold: shipHold(system, listedVolume, ship.compartmentSpace),
+        crewCount: system.crewCount, forcedMode: system.forcedMode,
+        illuminationMode: system.illuminationMode, unrestInput: system.unrest,
         voyage,
         forcedDisabled: voyage.wornEngine && !system.forcedMode,
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,

@@ -40,6 +40,10 @@ test("the built package registers models and an editable notes sheet for its dec
     const merchant = type === "merchant";
     sheet.actor = { type, system: { notes: "test note", pocketMoney: 12, budget: 34, pensionBalance: 30_005,
       luck: 0, specialty: "medic", past: "unset", fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
+    if (!merchant) Object.assign(sheet.actor.system, {
+      shipClass: 0, mount1: "none", mount2: "none",
+      compartment1: "passenger", compartment2: "none", compartment3: "none", compartment4: "none"
+    });
     sheet.actor.items = [{ type: "debt", id: "debt-1", name: "Creditor", system: {
       direction: "payable", amount: 12, location: "Port"
     } }, { type: "relationship", id: "friend-1", name: "Friend", system: {
@@ -47,7 +51,14 @@ test("the built package registers models and an editable notes sheet for its dec
     } }, { type: "possession", id: "gear-1", name: "Lantern", system: { amount: 0 } }];
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      assert.deepEqual(await sheet._prepareContext({}), {
+      const { ship, ...context } = await sheet._prepareContext({});
+      if (merchant) assert.equal(ship, null);
+      else {
+        assert.equal(ship.freeMounts, 2);
+        assert.equal(ship.compartmentSpace, 420);
+        assert.equal(ship.mounts[0].choices.find(choice => choice.selected).value, "none");
+      }
+      assert.deepEqual(context, {
         notes: "test note", actorTypeLabel: `TYPES.Actor.${type}`, editable,
         showCollision: editable && merchant,
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
@@ -147,6 +158,23 @@ test("creation rolls map to the pilot background table and apply starting-money 
   assert.equal(startingPocketMoney(14, "veteran"), 140);
   assert.equal(startingPocketMoney(14, "deprived"), 700);
   assert.equal(startingPocketMoney(14, "slave"), 0);
+});
+
+test("ship class hides slots without counting or erasing their loadout", async () => {
+  const { shipConfiguration } = await import(new URL("module/ship.mjs", dist));
+  const fields = Object.fromEntries(Array.from({ length: 8 }, (_, index) => [
+    [`mount${index + 1}`, "none"], [`compartment${index + 1}`, "none"]
+  ]).flat());
+  const ship = { ...fields, shipClass: 6, mount1: "none", mount8: "winch", compartment4: "passenger", compartment8: "diving" };
+  const large = shipConfiguration(ship);
+  assert.equal(large.freeMounts, 7);
+  assert.equal(large.compartmentSpace, 1220);
+  const small = shipConfiguration({ ...ship, shipClass: 0 });
+  assert.equal(small.freeMounts, 2);
+  assert.equal(small.compartmentSpace, 420);
+  assert.equal(small.compartments.length, 4);
+  assert.equal(ship.mount8, "winch");
+  assert.equal(ship.compartment8, "diving");
 });
 
 test("debt totals stay separate and exact beyond the safe integer range", async () => {

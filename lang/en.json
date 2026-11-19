@@ -10,6 +10,28 @@
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "Ship": {
+      "Title": "Ship",
+      "Name": "Ship name",
+      "Class": "Ship class",
+      "FreeMounts": "Free mounts: {count}",
+      "CompartmentSpace": "Hold space taken by special compartments: {volume}",
+      "Mount": "Mount {number}",
+      "Compartment": "Special compartment {number}",
+      "MountChoices": {
+        "none": "Free",
+        "slagthrower": "Slagthrower",
+        "harpoon": "Harpoon gun",
+        "water_cannon": "Water cannon",
+        "winch": "Motorized winch"
+      },
+      "CompartmentChoices": {
+        "none": "None",
+        "passenger": "Passenger compartment (420)",
+        "premium": "Premium compartment (525)",
+        "diving": "Diving compartment (800)"
+      }
+    },
     "Possession": {
       "Title": "Personal possessions",
       "Description": "Description",

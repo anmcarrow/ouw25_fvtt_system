@@ -29,6 +29,39 @@
       </div>
     {{/if}}
   </fieldset>
+  {{#if ship}}
+    <fieldset class="ouw25-ship">
+      <legend>{{localize "OUW25.Ship.Title"}}</legend>
+      <label>
+        {{localize "OUW25.Ship.Name"}}
+        <input type="text" name="system.shipName" value="{{ship.name}}" {{#unless editable}}readonly{{/unless}}>
+      </label>
+      <label>
+        {{localize "OUW25.Ship.Class"}}
+        <select name="system.shipClass" {{#unless editable}}disabled{{/unless}}>
+          {{#each ship.classes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
+        </select>
+      </label>
+      <p>{{localize "OUW25.Ship.FreeMounts" count=ship.freeMounts}}</p>
+      {{#each ship.mounts}}
+        <label>
+          {{localize "OUW25.Ship.Mount" number=number}}
+          <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
+            {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+          </select>
+        </label>
+      {{/each}}
+      <p>{{localize "OUW25.Ship.CompartmentSpace" volume=ship.compartmentSpace}}</p>
+      {{#each ship.compartments}}
+        <label>
+          {{localize "OUW25.Ship.Compartment" number=number}}
+          <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
+            {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+          </select>
+        </label>
+      {{/each}}
+    </fieldset>
+  {{/if}}
   {{#if ledger}}
     <fieldset class="ouw25-ledger">
       <legend>{{localize "OUW25.Debt.Title"}}</legend>

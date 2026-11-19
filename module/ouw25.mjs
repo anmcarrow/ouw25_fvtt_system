@@ -2,6 +2,7 @@ import { parseCollisionInput, resolveCollision } from "./collision.mjs";
 import { DEBT_DIRECTIONS, debtTotals, pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
+import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration } from "./ship.mjs";
 
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
@@ -49,7 +50,16 @@ class MerchantModel extends NotesModel {
 
 class CooperativeModel extends NotesModel {
   static defineSchema() {
-    return { ...super.defineSchema(), budget: counterField() };
+    const { NumberField, StringField } = foundry.data.fields;
+    const fields = {
+      ...super.defineSchema(), budget: counterField(), shipName: new StringField({ initial: "" }),
+      shipClass: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: MAX_SHIP_CLASS })
+    };
+    for (let slot = 1; slot <= SHIP_SLOT_COUNT; slot++) {
+      fields[`mount${slot}`] = new StringField({ initial: slot === 1 ? "slagthrower" : "none", choices: MOUNT_CHOICES });
+      fields[`compartment${slot}`] = new StringField({ initial: "none", choices: Object.keys(COMPARTMENT_SPACE) });
+    }
+    return fields;
   }
 }
 
@@ -112,12 +122,25 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const specialtyCount = merchant ? availableSpecialties(system.past).length : 0;
     const debts = merchant ? this.actor.items.filter(item => item.type === "debt") : [];
     const relationships = merchant ? this.actor.items.filter(item => item.type === "relationship") : [];
+    const ship = type === "cooperative" ? shipConfiguration(system) : null;
+    const slotChoices = (slots, choices, labelPrefix) => slots.map(slot => ({
+      ...slot, choices: choices.map(value => ({
+        value, label: `${labelPrefix}.${value}`, selected: slot.value === value
+      }))
+    }));
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
       actorTypeLabel: `TYPES.Actor.${type}`,
       editable: this.isEditable,
       showCollision: this.isEditable && merchant,
+      ship: ship && {
+        name: system.shipName,
+        classes: Array.from({ length: MAX_SHIP_CLASS + 1 }, (_, value) => ({ value, selected: value === system.shipClass })),
+        freeMounts: ship.freeMounts, compartmentSpace: ship.compartmentSpace,
+        mounts: slotChoices(ship.mounts, MOUNT_CHOICES, "OUW25.Ship.MountChoices"),
+        compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices")
+      },
       money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
       pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },

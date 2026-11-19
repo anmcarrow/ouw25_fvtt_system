@@ -10,6 +10,28 @@
     "ActorSheet": "Лист Благословенного прилива",
     "Notes": "Заметки",
     "Save": "Сохранить",
+    "Ship": {
+      "Title": "Судно",
+      "Name": "Название судна",
+      "Class": "Класс судна",
+      "FreeMounts": "Свободных станин: {count}",
+      "CompartmentSpace": "Спецотсеки занимают в трюме: {volume} ст.",
+      "Mount": "Станина {number}",
+      "Compartment": "Спецотсек {number}",
+      "MountChoices": {
+        "none": "Свободна",
+        "slagthrower": "Шлакомёт",
+        "harpoon": "Гарпунная пушка",
+        "water_cannon": "Водомёт",
+        "winch": "Моторная лебёдка"
+      },
+      "CompartmentChoices": {
+        "none": "Нет",
+        "passenger": "Пассажирский отсек (420 ст.)",
+        "premium": "Премиум-отсек (525 ст.)",
+        "diving": "Погружной отсек (800 ст.)"
+      }
+    },
     "Possession": {
       "Title": "Личные вещи",
       "Description": "Описание",

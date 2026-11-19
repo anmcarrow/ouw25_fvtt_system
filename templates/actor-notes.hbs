@@ -297,8 +297,13 @@
         <p>{{localize "OUW25.Voyage.TravelInfo"}}</p>
         <p>{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}}</p>
         {{#if editable}}
-          <button type="button" data-action="travelSector" {{#unless ship.canTravel}}disabled{{/unless}}>{{localize "OUW25.Voyage.TravelSector"}}</button>
-          <button type="button" data-action="undoSector" {{#unless ship.canUndoTransition}}disabled{{/unless}}>{{localize "OUW25.Voyage.UndoSector"}}</button>
+          <div class="ouw25-voyage-actions">
+            <button type="button" data-action="travelSector" {{#unless ship.canTravel}}disabled{{/unless}}>{{localize "OUW25.Voyage.TravelSector"}}</button>
+            <button type="button" data-action="undoSector" {{#unless ship.canUndoTransition}}disabled{{/unless}}>{{localize "OUW25.Voyage.UndoSector"}}</button>
+            <button type="button" data-action="resetVoyage">{{localize "OUW25.Voyage.ResetCounters"}}</button>
+            <button type="button" data-action="psychotherapy">{{localize "OUW25.Voyage.Psychotherapy"}}</button>
+            <button type="button" data-action="increaseUnrest">{{localize "OUW25.Voyage.IncreaseUnrest"}}</button>
+          </div>
         {{/if}}
         {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
       </fieldset>

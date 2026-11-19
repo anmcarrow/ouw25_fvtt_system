@@ -5,7 +5,8 @@ import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, special
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
 import {
-  calculateVoyage, HOLD_BONUSES, prepareSectorTransition, rollbackSectorTransition,
+  calculateVoyage, HOLD_BONUSES, prepareSectorTransition, prepareUnrestIncrease, prepareVoyageReset,
+  resolvePsychotherapy, rollbackSectorTransition,
   SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots
 } from "./ship.mjs";
 import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition } from "./ship.mjs";
@@ -87,6 +88,25 @@ function hasUnsavedVoyageInputs(target, system) {
       : typeof system[field] === "number" ? Number(input.value) : input.value;
     return value !== system[field];
   });
+}
+
+async function publishVoyageRoll(actor, flavor, rolls, stateApplied) {
+  const { ChatMessage } = foundry.documents;
+  const message = {
+    speaker: ChatMessage.getSpeaker({ actor }),
+    flavor,
+    rolls: rolls.filter(Boolean)
+  };
+  ChatMessage.applyRollMode(message, game.settings.get("core", "messageMode"));
+  try {
+    await ChatMessage.create(message);
+  } catch (error) {
+    console.error(error);
+    ui.notifications.error(game.i18n.localize(
+      stateApplied ? "OUW25.Voyage.ChatFailedApplied" : "OUW25.Voyage.ChatFailedNotApplied"
+    ));
+    throw error;
+  }
 }
 
 class MerchantModel extends NotesModel {
@@ -235,7 +255,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord,
       travelSector: Ouw25ActorSheet.travelSector,
-      undoSector: Ouw25ActorSheet.undoSector
+      undoSector: Ouw25ActorSheet.undoSector,
+      resetVoyage: Ouw25ActorSheet.resetVoyage,
+      psychotherapy: Ouw25ActorSheet.psychotherapy,
+      increaseUnrest: Ouw25ActorSheet.increaseUnrest
     }
   };
 
@@ -672,6 +695,176 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         .map(([field, value]) => [`system.${field}`, value]));
       update["system.travelStatus"] = i18n.localize("OUW25.Voyage.TransitionUndone");
       await actor.update(update);
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      ui.notifications.warn(i18n.localize(error.message));
+    } finally {
+      PENDING_VOYAGE_OPERATIONS.delete(actor.id);
+      target.disabled = false;
+    }
+  }
+
+  static async resetVoyage(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "cooperative" || PENDING_VOYAGE_OPERATIONS.has(actor.id)) return;
+    PENDING_VOYAGE_OPERATIONS.add(actor.id);
+    target.disabled = true;
+    try {
+      const { i18n } = game;
+      if (hasUnsavedVoyageInputs(target, actor.system)) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
+        return;
+      }
+      const fingerprint = voyageStateFingerprint(actor.system);
+      const reset = prepareVoyageReset(actor.system);
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: i18n.localize("OUW25.Voyage.ResetCounters") },
+        content: `<p>${i18n.localize("OUW25.Voyage.ConfirmReset")}</p>`,
+        rejectClose: false
+      });
+      if (!confirmed || !this.isEditable) return;
+      if (voyageStateFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        return;
+      }
+      const update = Object.fromEntries(Object.entries(reset.update)
+        .map(([field, value]) => [`system.${field}`, value]));
+      const status = actor.system.lastTransition && !reset.rollbackPreserved
+        ? "OUW25.Voyage.ResetRollbackUnavailable" : "OUW25.Voyage.ResetDone";
+      update["system.travelStatus"] = i18n.localize(status);
+      await actor.update(update);
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      ui.notifications.warn(i18n.localize(error.message));
+    } finally {
+      PENDING_VOYAGE_OPERATIONS.delete(actor.id);
+      target.disabled = false;
+    }
+  }
+
+  static async psychotherapy(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "cooperative" || PENDING_VOYAGE_OPERATIONS.has(actor.id)) return;
+    PENDING_VOYAGE_OPERATIONS.add(actor.id);
+    target.disabled = true;
+    try {
+      const { i18n } = game;
+      if (hasUnsavedVoyageInputs(target, actor.system)) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
+        return;
+      }
+      const fingerprint = voyageStateFingerprint(actor.system);
+      const startingUnrest = actor.system.unrest;
+      const inputs = await foundry.applications.api.DialogV2.input({
+        window: { title: i18n.localize("OUW25.Voyage.Psychotherapy") },
+        content: `<label>${i18n.localize("OUW25.Voyage.AdditionalDice")}<input type="number" name="additionalDice" min="0" max="100" step="1" value="0" required></label>
+          <label>${i18n.localize("OUW25.Voyage.Complications")}<input type="number" name="complications" min="0" max="104" step="1" value="0" required></label>`,
+        rejectClose: false,
+        ok: { label: i18n.localize("OUW25.Voyage.RollTherapy") }
+      });
+      if (!inputs || !this.isEditable) return;
+      const additionalDice = Number(inputs.additionalDice);
+      const complications = Number(inputs.complications);
+      if (!Number.isSafeInteger(additionalDice) || additionalDice < 0 || additionalDice > 100
+        || !Number.isSafeInteger(complications) || complications < 0 || complications > 104) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.InvalidTherapyInput"));
+        return;
+      }
+      if (voyageStateFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        return;
+      }
+      const { Roll } = foundry.dice;
+      const successRoll = await new Roll(`${4 + additionalDice}d6`).evaluate({ allowInteractive: false });
+      const reliefRoll = await new Roll("1d6").evaluate({ allowInteractive: false });
+      const successes = successRoll.dice.flatMap(term => term.results)
+        .filter(({ active, result }) => active && result >= 6).length - complications;
+      const outcome = resolvePsychotherapy(startingUnrest, successes, reliefRoll.total);
+      if (!this.isEditable || voyageStateFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.TherapyNotApplied", {
+          successes, relief: outcome.relief
+        }), [successRoll, reliefRoll], false);
+        return;
+      }
+      await actor.update({
+        "system.unrest": outcome.unrest,
+        "system.travelStatus": i18n.format("OUW25.Voyage.TherapyDone", { relief: outcome.relief })
+      });
+      await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.TherapyChat", {
+        successes, relief: outcome.relief
+      }), [successRoll, reliefRoll], true);
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      ui.notifications.warn(i18n.localize(error.message));
+    } finally {
+      PENDING_VOYAGE_OPERATIONS.delete(actor.id);
+      target.disabled = false;
+    }
+  }
+
+  static async increaseUnrest(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "cooperative" || PENDING_VOYAGE_OPERATIONS.has(actor.id)) return;
+    PENDING_VOYAGE_OPERATIONS.add(actor.id);
+    target.disabled = true;
+    try {
+      const { i18n } = game;
+      if (hasUnsavedVoyageInputs(target, actor.system)) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
+        return;
+      }
+      const fingerprint = voyageStateFingerprint(actor.system);
+      const startingUnrest = actor.system.unrest;
+      const inputs = await foundry.applications.api.DialogV2.input({
+        window: { title: i18n.localize("OUW25.Voyage.IncreaseUnrest") },
+        content: `<label>${i18n.localize("OUW25.Voyage.IncreaseAmount")}
+          <select name="increaseType">
+            <option value="one">${i18n.localize("OUW25.Voyage.IncreaseOne")}</option>
+            <option value="oneDie">${i18n.localize("OUW25.Voyage.IncreaseOneDie")}</option>
+            <option value="twoDice">${i18n.localize("OUW25.Voyage.IncreaseTwoDice")}</option>
+            <option value="threeDice">${i18n.localize("OUW25.Voyage.IncreaseThreeDice")}</option>
+            <option value="custom">${i18n.localize("OUW25.Voyage.IncreaseCustom")}</option>
+          </select>
+        </label>
+        <label>${i18n.localize("OUW25.Voyage.CustomIncrease")}<input type="number" name="customIncrease" min="0" max="9007199254740991" step="any" value="1"></label>`,
+        rejectClose: false,
+        ok: { label: i18n.localize("OUW25.Voyage.ApplyIncrease") }
+      });
+      if (!inputs || !this.isEditable) return;
+      if (!["one", "oneDie", "twoDice", "threeDice", "custom"].includes(inputs.increaseType)) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.InvalidIncrease"));
+        return;
+      }
+      if (voyageStateFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        return;
+      }
+      const formulas = { oneDie: "1d6", twoDice: "2d6", threeDice: "3d6" };
+      const formula = formulas[inputs.increaseType];
+      const roll = formula
+        ? await new foundry.dice.Roll(formula).evaluate({ allowInteractive: false })
+        : null;
+      const gain = inputs.increaseType === "one" ? 1
+        : inputs.increaseType === "custom" ? Number(inputs.customIncrease)
+          : roll.total;
+      const outcome = prepareUnrestIncrease(startingUnrest, gain);
+      if (!this.isEditable || voyageStateFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.IncreaseNotApplied", {
+          increase: outcome.increase
+        }), [roll], false);
+        return;
+      }
+      await actor.update({
+        "system.unrest": outcome.unrest,
+        "system.travelStatus": i18n.format("OUW25.Voyage.UnrestIncreased", {
+          increase: outcome.increase
+        })
+      });
+      await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.IncreaseChat", {
+        increase: outcome.increase
+      }), [roll], true);
     } catch (error) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));

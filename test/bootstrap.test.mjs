@@ -364,6 +364,59 @@ test("sector transition applies and exactly rolls back the complete recorded sta
   assert.throws(() => rollbackSectorTransition({ ...applied, lastTransition: "{" }), /InvalidTransition/);
 });
 
+test("voyage reset preserves the last rollback while keeping reset counters at zero", async () => {
+  const { prepareSectorTransition, prepareVoyageReset, rollbackSectorTransition } =
+    await import(new URL("module/ship.mjs", dist));
+  const ship = {
+    shipClass: 0, crewCount: 10, forcedMode: false, illuminationMode: false,
+    fuelStock: 10, provisionsStock: 10, unrest: 2,
+    travelSectors: 4, travelWatches: 2.5, lastTransition: ""
+  };
+  const transition = prepareSectorTransition(ship, "sector-1");
+  const applied = { ...ship, ...transition.update };
+  const reset = prepareVoyageReset(applied);
+  assert.equal(reset.rollbackPreserved, true);
+  const afterFirstReset = { ...applied, ...reset.update };
+  const repeatedReset = prepareVoyageReset(afterFirstReset);
+  assert.equal(repeatedReset.rollbackPreserved, true);
+  const afterReset = { ...afterFirstReset, ...repeatedReset.update };
+  assert.equal(afterReset.travelSectors, 0);
+  assert.equal(afterReset.travelWatches, 0);
+  assert.equal(afterReset.fuelStock, applied.fuelStock);
+  assert.equal(afterReset.unrest, applied.unrest);
+  const rollback = rollbackSectorTransition(afterReset);
+  assert.equal(rollback.fuelStock, ship.fuelStock);
+  assert.equal(rollback.unrest, ship.unrest);
+  assert.equal(rollback.travelSectors, 0);
+  assert.equal(rollback.travelWatches, 0);
+  assert.equal(rollback.costs.watches, 0);
+
+  const conflicted = prepareVoyageReset({ ...applied, fuelStock: applied.fuelStock + 1 });
+  assert.equal(conflicted.rollbackPreserved, false);
+  assert.throws(() => rollbackSectorTransition({
+    ...applied, fuelStock: applied.fuelStock + 1, ...conflicted.update
+  }), /TransitionConflict/);
+});
+
+test("psychotherapy resolves full and partial successes without negative unrest", async () => {
+  const { resolvePsychotherapy } = await import(new URL("module/ship.mjs", dist));
+  assert.deepEqual(resolvePsychotherapy(10, 2, 5), { unrest: 5, relief: 5 });
+  assert.deepEqual(resolvePsychotherapy(10, 1, 5), { unrest: 8, relief: 2 });
+  assert.deepEqual(resolvePsychotherapy(10, 0, 6), { unrest: 10, relief: 0 });
+  assert.deepEqual(resolvePsychotherapy(0.5, 2, 6), { unrest: 0, relief: 0.5 });
+  assert.throws(() => resolvePsychotherapy(26, 2, 6), /InvalidState/);
+  assert.throws(() => resolvePsychotherapy(10, 2, 7), /InvalidState/);
+});
+
+test("unrest increase is nonnegative, fractional, and capped at 25", async () => {
+  const { prepareUnrestIncrease } = await import(new URL("module/ship.mjs", dist));
+  assert.deepEqual(prepareUnrestIncrease(24, 2), { unrest: 25, increase: 1 });
+  assert.deepEqual(prepareUnrestIncrease(4, 0.5), { unrest: 4.5, increase: 0.5 });
+  assert.deepEqual(prepareUnrestIncrease(25, 1), { unrest: 25, increase: 0 });
+  assert.throws(() => prepareUnrestIncrease(4, -1), /InvalidState/);
+  assert.throws(() => prepareUnrestIncrease(4, Number.POSITIVE_INFINITY), /InvalidState/);
+});
+
 test("debt totals stay separate and exact beyond the safe integer range", async () => {
   const { debtTotals } = await import(new URL("module/finance.mjs", dist));
   assert.deepEqual(debtTotals([

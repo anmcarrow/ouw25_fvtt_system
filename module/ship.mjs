@@ -94,6 +94,32 @@ function transitionState(ship) {
   return state;
 }
 
+function readTransitionRecord(value) {
+  let record;
+  try {
+    record = JSON.parse(value);
+  } catch {
+    throw new RangeError("OUW25.Voyage.InvalidTransition");
+  }
+  if (!record || record.version !== 1 || typeof record.id !== "string" || !record.id) {
+    throw new RangeError("OUW25.Voyage.InvalidTransition");
+  }
+  const before = transitionState(record.before ?? {});
+  const after = transitionState(record.after ?? {});
+  const { costs } = record;
+  if (!costs || ["fuel", "provisions", "unrest", "watches"].some(field =>
+    !Number.isFinite(costs[field]) || costs[field] < 0 || costs[field] > Number.MAX_SAFE_INTEGER)) {
+    throw new RangeError("OUW25.Voyage.InvalidTransition");
+  }
+  return { ...record, before, after, costs };
+}
+
+function validCounterReset(reset) {
+  return reset && Number.isSafeInteger(reset.travelSectors) && reset.travelSectors >= 0
+    && Number.isFinite(reset.travelWatches) && reset.travelWatches >= 0
+    && reset.travelWatches <= Number.MAX_SAFE_INTEGER;
+}
+
 export function prepareSectorTransition(ship, id) {
   if (typeof id !== "string" || !id) throw new RangeError("OUW25.Voyage.InvalidState");
   const stats = calculateVoyage(ship);
@@ -123,28 +149,70 @@ export function prepareSectorTransition(ship, id) {
   return { update, costs };
 }
 
-export function rollbackSectorTransition(ship) {
-  let record;
-  try {
-    record = JSON.parse(ship.lastTransition);
-  } catch {
-    throw new RangeError("OUW25.Voyage.InvalidTransition");
-  }
-  if (!record || record.version !== 1 || typeof record.id !== "string" || !record.id) {
-    throw new RangeError("OUW25.Voyage.InvalidTransition");
-  }
-  const before = transitionState(record.before ?? {});
-  const after = transitionState(record.after ?? {});
+export function prepareVoyageReset(ship) {
   const current = transitionState(ship);
-  if (TRANSITION_FIELDS.some(field => current[field] !== after[field])) {
+  const update = { travelSectors: 0, travelWatches: 0 };
+  if (!ship.lastTransition) return { update, rollbackPreserved: false };
+
+  const record = readTransitionRecord(ship.lastTransition);
+  const nonCounterFields = TRANSITION_FIELDS.filter(field => field !== "travelSectors" && field !== "travelWatches");
+  const currentCountersMatchAfter = current.travelSectors === record.after.travelSectors
+    && current.travelWatches === record.after.travelWatches;
+  const currentCountersMatchReset = validCounterReset(record.counterReset)
+    && current.travelSectors === record.counterReset.travelSectors
+    && current.travelWatches === record.counterReset.travelWatches;
+  if (nonCounterFields.some(field => current[field] !== record.after[field])
+    || (!currentCountersMatchAfter && !currentCountersMatchReset)) {
+    return { update, rollbackPreserved: false };
+  }
+
+  update.lastTransition = JSON.stringify({
+    ...record,
+    counterReset: { travelSectors: 0, travelWatches: 0 }
+  });
+  return { update, rollbackPreserved: true };
+}
+
+export function rollbackSectorTransition(ship) {
+  const record = readTransitionRecord(ship.lastTransition);
+  const { before, after, costs } = record;
+  const current = transitionState(ship);
+  const reset = record.counterReset;
+  const counterReset = validCounterReset(reset);
+  const fieldsToMatch = counterReset
+    ? TRANSITION_FIELDS.filter(field => field !== "travelSectors" && field !== "travelWatches")
+    : TRANSITION_FIELDS;
+  if (fieldsToMatch.some(field => current[field] !== after[field])
+    || (counterReset && (current.travelSectors !== reset.travelSectors
+      || current.travelWatches !== reset.travelWatches))) {
     throw new RangeError("OUW25.Voyage.TransitionConflict");
   }
-  const { costs } = record;
-  if (!costs || ["fuel", "provisions", "unrest", "watches"].some(field =>
-    !Number.isFinite(costs[field]) || costs[field] < 0 || costs[field] > Number.MAX_SAFE_INTEGER)) {
-    throw new RangeError("OUW25.Voyage.InvalidTransition");
+  return {
+    ...before,
+    ...(counterReset ? { travelSectors: reset.travelSectors, travelWatches: reset.travelWatches } : {}),
+    lastTransition: "",
+    costs: counterReset ? { ...costs, watches: 0 } : costs
+  };
+}
+
+export function resolvePsychotherapy(unrest, successes, reliefDie) {
+  if (!Number.isFinite(unrest) || unrest < 0 || unrest > 25
+    || !Number.isSafeInteger(successes)
+    || !Number.isSafeInteger(reliefDie) || reliefDie < 1 || reliefDie > 6) {
+    throw new RangeError("OUW25.Voyage.InvalidState");
   }
-  return { ...before, lastTransition: "", costs };
+  const possibleRelief = successes >= 2 ? reliefDie : successes === 1 ? Math.floor(reliefDie / 2) : 0;
+  const relief = Math.min(unrest, possibleRelief);
+  return { unrest: unrest - relief, relief };
+}
+
+export function prepareUnrestIncrease(unrest, gain) {
+  if (!Number.isFinite(unrest) || unrest < 0 || unrest > 25
+    || !Number.isFinite(gain) || gain < 0 || gain > Number.MAX_SAFE_INTEGER) {
+    throw new RangeError("OUW25.Voyage.InvalidState");
+  }
+  const nextUnrest = Math.min(25, unrest + gain);
+  return { unrest: nextUnrest, increase: nextUnrest - unrest };
 }
 
 export function shipCondition(ship) {

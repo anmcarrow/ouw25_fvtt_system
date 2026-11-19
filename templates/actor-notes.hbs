@@ -1,5 +1,4 @@
-<section class="ouw25-notes">
-  <h2>{{localize actorTypeLabel}}</h2>
+{{#*inline "ouw25-finances"}}
   <fieldset>
     <legend>{{localize "OUW25.Finance.Title"}}</legend>
     <label>
@@ -29,7 +28,24 @@
       </div>
     {{/if}}
   </fieldset>
+{{/inline}}
+{{#*inline "ouw25-journal"}}
+  <fieldset>
+    <legend>{{localize "OUW25.Notes"}}</legend>
+    <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
+  </fieldset>
+{{/inline}}
+<section class="ouw25-notes">
+  <header class="ouw25-sheet-heading">
+    <h2>{{localize actorTypeLabel}}</h2>
+    {{#if editable}}
+      <button type="submit">{{localize "OUW25.Save"}}</button>
+    {{/if}}
+  </header>
+  <div class="ouw25-sheet-columns">
   {{#if ship}}
+    <div class="ouw25-sheet-column">
+    {{> ouw25-finances}}
     <fieldset class="ouw25-ship">
       <legend>{{localize "OUW25.Ship.Title"}}</legend>
       <label>
@@ -79,7 +95,8 @@
         </label>
       {{/each}}
     </fieldset>
-  {{/if}}
+    </div>
+    <div class="ouw25-sheet-column">
   {{#if contacts}}
     <fieldset class="ouw25-contacts">
       <legend>{{localize "OUW25.Contact.Title"}}</legend>
@@ -185,6 +202,11 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="cargo">{{localize "OUW25.Cargo.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+    {{> ouw25-journal}}
+    </div>
+  {{else}}
+    <div class="ouw25-sheet-column">
+    {{> ouw25-finances}}
   {{#if ledger}}
     <fieldset class="ouw25-ledger">
       <legend>{{localize "OUW25.Debt.Title"}}</legend>
@@ -291,6 +313,8 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="possession">{{localize "OUW25.Possession.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+    </div>
+    <div class="ouw25-sheet-column">
   {{#if identity}}
     <fieldset class="ouw25-identity">
       <legend>{{localize "OUW25.Identity.Title"}}</legend>
@@ -427,13 +451,9 @@
       {{/if}}
     </fieldset>
   {{/each}}
-  <label>
-    {{localize "OUW25.Notes"}}
-    <textarea name="system.notes" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
-  </label>
-  {{#if editable}}
-    <button type="submit">{{localize "OUW25.Save"}}</button>
-  {{/if}}
+    </div>
+    <div class="ouw25-sheet-column">
+    {{> ouw25-journal}}
   {{#if showCollision}}
     <fieldset class="ouw25-collision">
       <legend>{{localize "OUW25.Collision.Title"}}</legend>
@@ -442,4 +462,7 @@
       <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
     </fieldset>
   {{/if}}
+    </div>
+  {{/if}}
+  </div>
 </section>

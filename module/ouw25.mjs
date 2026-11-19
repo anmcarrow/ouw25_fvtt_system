@@ -172,7 +172,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
-    position: { width: 540 },
+    position: { width: 1120 },
+    window: { resizable: true },
     actions: {
       rollCollision: Ouw25ActorSheet.rollCollision,
       depositPension: Ouw25ActorSheet.depositPension,

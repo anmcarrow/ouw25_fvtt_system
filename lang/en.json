@@ -240,7 +240,7 @@
     "PersonalAction": {
       "Successes": "Collision success points",
       "InvalidSuccesses": "Enter a whole number from 1 to 100.",
-      "Manual": "Set dice and deductions at the bottom of the sheet for luck checks. Apply consequences manually.",
+      "Manual": "For luck checks, set dice and deductions in the Collision Engine block. Apply consequences manually.",
       "Result": "{title}: {result}",
       "PastHelp": {
         "veteran": "A partial success finds a comrade in ports larger than a village; isolated places require full success. A comrade gives reliable information and may lend muscle in a major port. Refusing a favor strains the relationship.",

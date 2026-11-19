@@ -1,6 +1,6 @@
 import { parseCollisionInput, resolveCollision } from "./collision.mjs";
 import { pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
-import { lethalWoundSlot, MERCHANT_PASTS } from "./merchant.mjs";
+import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
 
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
@@ -43,6 +43,7 @@ class CooperativeModel extends NotesModel {
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
   #luckPending = false;
+  #creationRollPending = false;
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
@@ -50,7 +51,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     actions: {
       rollCollision: Ouw25ActorSheet.rollCollision,
       depositPension: Ouw25ActorSheet.depositPension,
-      changeLuck: Ouw25ActorSheet.changeLuck
+      changeLuck: Ouw25ActorSheet.changeLuck,
+      rollCreation: Ouw25ActorSheet.rollCreation
     }
   };
 
@@ -84,6 +86,44 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         wounds: WOUND_SLOTS.slice(0, lethal).map(slot => ({ slot, marked: system[`wound${slot}`], lethal: slot === lethal }))
       } : null
     };
+  }
+
+  static async rollCreation(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "merchant" || this.#creationRollPending) return;
+    const field = target.dataset.creation;
+    if (field !== "past" && field !== "pocketMoney") return;
+    const isPast = field === "past";
+    const { past, pocketMoney } = actor.system;
+    const key = isPast ? "Past" : "Money";
+    const { i18n } = game;
+    this.#creationRollPending = true;
+    target.disabled = true;
+    try {
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: i18n.localize(`OUW25.Creation.Roll${key}`) },
+        content: `<p>${i18n.localize(`OUW25.Creation.Confirm${key}`)}</p>`,
+        rejectClose: false
+      });
+      if (!confirmed || !this.isEditable) return;
+      const { Roll } = foundry.dice;
+      const roll = await new Roll(isPast ? "3d6" : "4d6").evaluate({ allowInteractive: false });
+      if (!this.isEditable) return;
+      if (actor.system.past !== past || (!isPast && actor.system.pocketMoney !== pocketMoney)) {
+        ui.notifications.warn(i18n.localize("OUW25.Creation.Changed"));
+        return;
+      }
+      const value = isPast ? pastFromRoll(roll.total) : startingPocketMoney(roll.total, past);
+      await actor.update({ [`system.${field}`]: value });
+      const result = isPast ? i18n.localize(`OUW25.Past.${value}`) : value;
+      await roll.toMessage({
+        speaker: foundry.documents.ChatMessage.getSpeaker({ actor }),
+        flavor: i18n.format(`OUW25.Creation.Result${key}`, { result })
+      }, { messageMode: game.settings.get("core", "messageMode") });
+    } finally {
+      this.#creationRollPending = false;
+      target.disabled = false;
+    }
   }
 
   static async changeLuck(event, target) {

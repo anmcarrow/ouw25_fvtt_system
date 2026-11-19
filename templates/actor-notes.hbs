@@ -8,6 +8,9 @@
       {{localize "OUW25.Finance.Currency"}}
     </label>
     {{#if pension}}
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="pocketMoney">{{localize "OUW25.Creation.RollMoney"}}</button>
+      {{/if}}
       <div class="ouw25-pension">
         <p>{{localize "OUW25.Finance.PensionBalance" balance=pension.balance}}</p>
         <p>{{localize "OUW25.Finance.Leaves" leaves=pension.leaves}}</p>
@@ -37,6 +40,9 @@
           {{/each}}
         </select>
       </label>
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="past">{{localize "OUW25.Creation.RollPast"}}</button>
+      {{/if}}
       {{#if condition.showFragile}}
         <label>
           <input type="checkbox" name="system.fragile" {{checked condition.fragile}} {{#unless editable}}disabled{{/unless}}>

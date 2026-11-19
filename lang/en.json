@@ -44,6 +44,15 @@
       "slave": "Bondservant",
       "Fragile": "Fragility selected (second wound is lethal)"
     },
+    "Creation": {
+      "RollPast": "Roll significant past (3d6)",
+      "ConfirmPast": "Replace the saved significant past with a 3d6 roll? Save any other edits before rolling.",
+      "ResultPast": "Random significant past: {result}.",
+      "RollMoney": "Roll starting money (4d6)",
+      "ConfirmMoney": "Replace pocket money using 4d6 and the saved significant past? Save any other edits before rolling.",
+      "ResultMoney": "Starting pocket money: {result} og.",
+      "Changed": "The saved values changed. Start the roll again."
+    },
     "Condition": {
       "Title": "Luck and wounds",
       "Luck": "Luck marks: {count}",

@@ -98,6 +98,18 @@ test("collision distinguishes outcomes after deductions", async () => {
   }
 });
 
+test("creation rolls map to the pilot background table and apply starting-money exceptions", async () => {
+  const { pastFromRoll, startingPocketMoney } = await import(new URL("module/merchant.mjs", dist));
+  assert.equal(pastFromRoll(3), "veteran");
+  assert.equal(pastFromRoll(6), "deprived");
+  assert.equal(pastFromRoll(18), "slave");
+  assert.throws(() => pastFromRoll(2), RangeError);
+  assert.throws(() => pastFromRoll(19), RangeError);
+  assert.equal(startingPocketMoney(14, "veteran"), 140);
+  assert.equal(startingPocketMoney(14, "deprived"), 700);
+  assert.equal(startingPocketMoney(14, "slave"), 0);
+});
+
 test("pension deposits advance leave thresholds without rounding or overflowing", async () => {
   const { pensionBalanceAfterDeposit, pensionProgress } = await import(new URL("module/finance.mjs", dist));
   assert.deepEqual(pensionProgress(29_999), { leaves: 0, untilNext: 1 });

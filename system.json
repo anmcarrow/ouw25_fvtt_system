@@ -2,7 +2,7 @@
   "id": "ouw25",
   "title": "Укрытое море: Благословенный прилив",
   "description": "Ранняя сборка системы для Foundry VTT: листы Коммерсанта и Кооператива, проверка (не)удачи.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "compatibility": {
     "minimum": "14",
     "verified": "14.370",
@@ -11,11 +11,12 @@
   "esmodules": ["module/ouw25.mjs"],
   "styles": ["styles/ouw25.css"],
   "languages": [
+    { "lang": "en", "name": "English", "path": "lang/en.json" },
     { "lang": "ru", "name": "Русский", "path": "lang/ru.json" }
   ],
   "url": "https://github.com/anmcarrow/ouw25_fvtt_system",
   "manifest": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/latest/download/system.json",
-  "download": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/download/v0.0.2/ouw25.zip",
+  "download": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/download/v0.0.3/ouw25.zip",
   "documentTypes": {
     "Actor": {
       "merchant": {},

@@ -1,0 +1,24 @@
+{
+  "TYPES": {
+    "Actor": {
+      "merchant": "Merchant",
+      "cooperative": "Cooperative"
+    }
+  },
+  "OUW25": {
+    "ActorSheet": "Blessed Tide Sheet",
+    "Notes": "Notes",
+    "Save": "Save",
+    "Collision": {
+      "Title": "(Un)Luck Check",
+      "Dice": "Dice",
+      "Deduction": "Complications",
+      "Roll": "Roll",
+      "InvalidInput": "Enter 4 to 100 dice and a non-negative whole number of complications.",
+      "Result": "(Un)Luck check: {outcome}. Total after deduction: {remaining}.",
+      "Success": "full success",
+      "Partial": "partial success",
+      "Failure": "failure"
+    }
+  }
+}

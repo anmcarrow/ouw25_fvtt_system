@@ -56,3 +56,17 @@ test("collision distinguishes outcomes after deductions", async () => {
     assert.deepEqual(resolveCollision(dice, deduction), { remaining, outcome });
   }
 });
+
+test("the English fallback covers the Russian sheet labels and roll result placeholders", async () => {
+  const manifest = JSON.parse(await readFile(new URL("system.json", dist), "utf8"));
+  const readLocale = async lang => {
+    const entry = manifest.languages.find(language => language.lang === lang);
+    assert.ok(entry, `Missing ${lang} in the manifest`);
+    return JSON.parse(await readFile(new URL(entry.path, dist), "utf8"));
+  };
+  const [english, russian] = await Promise.all(["en", "ru"].map(readLocale));
+  const signature = object => Object.fromEntries(Object.entries(object).map(([key, value]) => [
+    key, typeof value === "string" ? (value.match(/\{\w+\}/g) ?? []).sort() : signature(value)
+  ]));
+  assert.deepEqual(signature(english), signature(russian));
+});

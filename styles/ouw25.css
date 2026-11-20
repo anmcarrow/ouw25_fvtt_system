@@ -226,6 +226,63 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
   min-inline-size: 34rem;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-choice-row,
+body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ouw25 .ouw25-choice-row > :is(input, select, textarea, strong) {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.ouw25 .ouw25-personal-actions {
+  flex-wrap: wrap;
+}
+
+.ouw25 .ouw25-personal-actions > button {
+  inline-size: auto;
+}
+
+body.game .application.ouw25 .ouw25-notes button.ouw25-roll-icon {
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  flex: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin: 0;
+  padding: 0.25rem;
+  inline-size: auto;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-identity input[name="name"] {
+  font-size: 25px;
+  line-height: 1.2;
+  min-block-size: 42px;
+}
+
+body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
+  block-size: 1lh;
+  box-sizing: content-box;
+  min-block-size: 1lh;
+  resize: vertical;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > fieldset {
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds {
+  border-block: 1px solid var(--ouw25-color-accent);
+  padding-block: 0.5rem;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-layout {
   grid-template-columns: minmax(0, 1fr);
   min-inline-size: 38rem;
@@ -309,10 +366,6 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-column > fieldset > legen
   font-size: 1.1rem;
   font-weight: 400;
   margin-block: 0.25rem;
-}
-
-body.game .application.ouw25 .ouw25-notes .ouw25-identity label:has(> input[name="name"]) {
-  font-family: var(--ouw25-font-heading);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea),

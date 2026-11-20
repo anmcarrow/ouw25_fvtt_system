@@ -1,15 +1,18 @@
+{{#*inline "ouw25-roll-icon"}}
+  <button type="button" class="ouw25-roll-icon" data-action="rollCreation" data-creation="{{creation}}" {{#if recordId}}data-record-id="{{recordId}}"{{/if}} aria-label="{{localize label formula=formula}}" data-tooltip="{{localize label formula=formula}}"><span aria-hidden="true">&#x1F3B2;</span></button>
+{{/inline}}
+{{#*inline "ouw25-money-input"}}
+  <input type="number" name="system.{{money.field}}" aria-label="{{localize money.label}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
+{{/inline}}
 {{#*inline "ouw25-finances"}}
   <fieldset>
-    <legend>{{localize "OUW25.Finance.Title"}}</legend>
-    <label>
-      {{localize money.label}}
-      <input type="number" name="system.{{money.field}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
-      {{localize "OUW25.Finance.Currency"}}
-    </label>
     {{#if pension}}
-      {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="pocketMoney">{{localize "OUW25.Creation.RollMoney"}}</button>
-      {{/if}}
+      <div>{{localize money.label}}</div>
+      <div class="ouw25-choice-row">
+        {{> ouw25-money-input}}
+        <span>{{localize "OUW25.Finance.Currency"}}</span>
+        {{#if editable}}{{> ouw25-roll-icon creation="pocketMoney" label="OUW25.Creation.RollMoney"}}{{/if}}
+      </div>
       <div class="ouw25-pension">
         <p>{{localize "OUW25.Finance.PensionBalance" balance=pension.balance}}</p>
         <p>{{localize "OUW25.Finance.Leaves" leaves=pension.leaves}}</p>
@@ -26,6 +29,13 @@
           <button type="button" data-action="depositPension">{{localize "OUW25.Finance.Deposit"}}</button>
         {{/if}}
       </div>
+    {{else}}
+      <legend>{{localize "OUW25.Finance.Title"}}</legend>
+      <label>
+        {{localize money.label}}
+        {{> ouw25-money-input}}
+        {{localize "OUW25.Finance.Currency"}}
+      </label>
     {{/if}}
   </fieldset>
 {{/inline}}
@@ -494,17 +504,14 @@
   {{#*inline "ouw25-hiring"}}
     <fieldset>
       <legend>{{localize "OUW25.Identity.HiringTitle"}}</legend>
-      <label>
-        {{localize "OUW25.Identity.HiringTitle"}}
-        <select name="system.hiring" {{#unless editable}}disabled{{/unless}}>
+      <div class="ouw25-choice-row">
+        <select name="system.hiring" aria-label="{{localize "OUW25.Identity.HiringTitle"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each identity.hiring}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
         </select>
-      </label>
-      {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="hiring">{{localize "OUW25.Creation.RollHiring"}}</button>
-      {{/if}}
+        {{#if editable}}{{> ouw25-roll-icon creation="hiring" label="OUW25.Creation.RollHiring"}}{{/if}}
+      </div>
       {{#if identity.hiringHelp}}<p>{{localize identity.hiringHelp}}</p>{{/if}}
       {{#if editable}}
         {{#each identity.actions}}
@@ -516,89 +523,80 @@
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-merchant-layout"}}
     <div class="ouw25-sheet-column">
   {{#if identity}}
-    <fieldset class="ouw25-identity">
-      <legend>{{localize "OUW25.Identity.Title"}}</legend>
-      <label>
-        {{localize "OUW25.Identity.Name"}}
-        <input type="text" name="name" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
-      </label>
-      {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="name">{{localize "OUW25.Creation.RollName"}}</button>
-      {{/if}}
-    </fieldset>
+    <div class="ouw25-choice-row ouw25-identity">
+      <input type="text" name="name" aria-label="{{localize "OUW25.Identity.Name"}}" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
+      {{#if editable}}{{> ouw25-roll-icon creation="name" label="OUW25.Creation.RollName"}}{{/if}}
+    </div>
   {{/if}}
   {{#if condition}}
     <fieldset>
       <legend>{{localize "OUW25.Specialty.Title"}}</legend>
-      <label>
-        {{localize "OUW25.Specialty.Title"}}
-        <select name="system.specialty" {{#unless editable}}disabled{{/unless}}>
+      <div class="ouw25-choice-row">
+        <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.specialties}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
         </select>
-      </label>
+        {{#if editable}}
+          {{#if condition.specialtyFormula}}{{> ouw25-roll-icon creation="specialty" label="OUW25.Creation.RollSpecialty" formula=condition.specialtyFormula}}{{/if}}
+        {{/if}}
+      </div>
       {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
       {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
-      {{#if editable}}
-        {{#if condition.specialtyFormula}}
-          <button type="button" data-action="rollCreation" data-creation="specialty">{{localize "OUW25.Creation.RollSpecialty" formula=condition.specialtyFormula}}</button>
-        {{/if}}
-      {{/if}}
       {{#if condition.specialtyHelp}}<p>{{localize condition.specialtyHelp}}</p>{{/if}}
     </fieldset>
   {{/if}}
   {{#if identity}}
     <fieldset>
       <legend>{{localize "OUW25.Identity.Dream"}}</legend>
-      <textarea name="system.dream" aria-label="{{localize "OUW25.Identity.Dream"}}" rows="2" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
-      {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="dream">{{localize "OUW25.Creation.RollDream"}}</button>
-      {{/if}}
+      <div class="ouw25-choice-row">
+        <textarea name="system.dream" aria-label="{{localize "OUW25.Identity.Dream"}}" rows="1" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
+        {{#if editable}}{{> ouw25-roll-icon creation="dream" label="OUW25.Creation.RollDream"}}{{/if}}
+      </div>
     </fieldset>
   {{/if}}
   {{> ouw25-merchant-traits}}
   {{#if condition}}
     <fieldset>
       <legend>{{localize "OUW25.Past.Title"}}</legend>
-      <label>
-        {{localize "OUW25.Past.Title"}}
-        <select name="system.past" {{#unless editable}}disabled{{/unless}}>
+      <div class="ouw25-choice-row">
+        <select name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.pasts}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
         </select>
-      </label>
-      {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="past">{{localize "OUW25.Creation.RollPast"}}</button>
-      {{/if}}
+        {{#if editable}}{{> ouw25-roll-icon creation="past" label="OUW25.Creation.RollPast"}}{{/if}}
+      </div>
       {{#if pastMoves}}
         <p>{{localize pastMoves.help}}</p>
         {{#if editable}}
-          {{#each pastMoves.actions}}
-            <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{localize label}}</button>
-          {{/each}}
-          {{#if pastMoves.actions}}<p>{{localize "OUW25.PersonalAction.Manual"}}</p>{{/if}}
+          {{#if pastMoves.actions}}
+            <div class="ouw25-personal-actions">
+              {{#each pastMoves.actions}}
+                <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{localize label}}</button>
+              {{/each}}
+            </div>
+            <p>{{localize "OUW25.PersonalAction.Manual"}}</p>
+          {{/if}}
         {{/if}}
+      {{/if}}
     </fieldset>
   {{/if}}
   {{#if identity}}{{> ouw25-hiring}}{{/if}}
     </div>
-    <div class="ouw25-sheet-column">
-    <fieldset>
-        <legend>{{localize "OUW25.Debt.PayableTotal" payable=ledger.totals.payable}}</legend>
-    </fieldset>
+    <div class="ouw25-sheet-column ouw25-merchant-sidebar">
+    <p>{{localize "OUW25.Debt.PayableTotal" payable=ledger.totals.payable}}</p>
     {{> ouw25-finances}}
   {{#if condition}}
-    <fieldset class="ouw25-condition">
-        <legend>{{localize "OUW25.Condition.Title"}}</legend>
-      {{/if}}
+    <div>
       <p>{{localize "OUW25.Condition.Luck" count=condition.luck}}</p>
       <p>{{localize "OUW25.Condition.LuckHelp"}}</p>
       {{#if editable}}
         <button type="button" data-action="changeLuck" data-luck="add" {{#unless condition.canAdd}}disabled{{/unless}}>{{localize "OUW25.Condition.AddLuck"}}</button>
         <button type="button" data-action="changeLuck" data-luck="spend" {{#unless condition.canSpend}}disabled{{/unless}}>{{localize "OUW25.Condition.SpendLuck"}}</button>
       {{/if}}
+    </div>
+    <div class="ouw25-merchant-wounds">
       <div>
         {{#each condition.wounds}}
           <label>
@@ -620,24 +618,21 @@
           {{localize "OUW25.Past.Fragile"}}
         </label>
       {{/if}}
-    </fieldset>
+    </div>
   {{/if}}
-    <fieldset class="ouw25-bargain-reference">
-      <legend>{{localize "OUW25.Bargain.Title"}}</legend>
-      <details>
-        <summary>{{localize "OUW25.Bargain.Summary"}}</summary>
-        <p>{{localize "OUW25.Bargain.Price"}}</p>
-        <p>{{localize "OUW25.Bargain.Payment"}}</p>
-        <p>{{localize "OUW25.Bargain.Consequences"}}</p>
-      </details>
-    </fieldset>
+    <details class="ouw25-bargain-reference">
+      <summary>{{localize "OUW25.Bargain.Title"}}</summary>
+      <p>{{localize "OUW25.Bargain.Price"}}</p>
+      <p>{{localize "OUW25.Bargain.Payment"}}</p>
+      <p>{{localize "OUW25.Bargain.Consequences"}}</p>
+    </details>
   {{#if showCollision}}
-    <fieldset class="ouw25-collision">
-      <legend>{{localize "OUW25.Collision.Title"}}</legend>
+    <details class="ouw25-collision">
+      <summary>{{localize "OUW25.Collision.Title"}}</summary>
       <label>{{localize "OUW25.Collision.Dice"}} <input type="number" min="4" max="100" step="1" value="4" data-dice></label>
       <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
       <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
-    </fieldset>
+    </details>
   {{/if}}
     </div>
   {{/ouw25-tab}}
@@ -645,27 +640,21 @@
   {{#each traits}}
     <fieldset class="ouw25-traits">
       <legend>{{localize label}}</legend>
-      <label>
-        {{localize primary}}
-        <select name="system.{{kind}}" {{#unless @root.editable}}disabled{{/unless}}>
-          {{#each choices}}
-            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
-          {{/each}}
-        </select>
-      </label>
-      {{#if @root.editable}}
-        <button type="button" data-action="rollCreation" data-creation="{{kind}}">{{localize "OUW25.Creation.RollTrait"}}</button>
+      {{#if help}}
+        {{#each choices}}{{#if selected}}<p><strong>{{localize label}}</strong></p>{{/if}}{{/each}}
+        <p>{{localize help}}</p>
       {{/if}}
-      {{#if help}}<p>{{localize help}}</p>{{/if}}
       {{#if entries}}
         <ul>
           {{#each entries}}
             <li>
-              <strong>{{localize name}}</strong>
+              <div class="ouw25-choice-row">
+                <strong>{{localize name}}</strong>
+                {{#if @root.editable}}{{> ouw25-roll-icon creation=../kind recordId=id label="OUW25.Creation.RollTrait"}}{{/if}}
+              </div>
               <p>{{localize help}}</p>
               {{#if @root.editable}}
                 <button type="button" data-action="editTrait" data-creation="{{../kind}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                <button type="button" data-action="rollCreation" data-creation="{{../kind}}" data-record-id="{{id}}">{{localize "OUW25.Creation.RollTrait"}}</button>
                 <button type="button" data-action="deleteRecord" data-record-type="trait" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
               {{/if}}
             </li>

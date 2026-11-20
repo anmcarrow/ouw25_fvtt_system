@@ -12,7 +12,9 @@
   --ouw25-font-input: "LXGW WenKai Mono TC", "Courier New", monospace;
   --ouw25-font-accent: "Caveat", cursive;
   --ouw25-surface-translucent: color-mix(in srgb, var(--ouw25-color-surface) 80%, transparent);
-  --ouw25-field-background: var(--ouw25-surface-translucent);
+  --ouw25-field-background: color-mix(in srgb, var(--ouw25-color-surface) 70%, transparent);
+  --ouw25-checkbox-background: color-mix(in srgb, var(--ouw25-color-accent) 70%, transparent);
+  --ouw25-checkbox-disabled-background: color-mix(in srgb, var(--ouw25-color-paper) 70%, transparent);
   --color-select-option-bg: var(--ouw25-color-surface);
   --ouw25-border-gradient: linear-gradient(
     to right,
@@ -159,7 +161,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check span {
   height: 100%;
   border: 1px solid var(--ouw25-color-accent);
   border-radius: 0.25em;
-  background: var(--ouw25-color-surface);
+  background: var(--ouw25-field-background);
   line-height: 1;
   pointer-events: none;
 }
@@ -378,8 +380,11 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
   resize: vertical;
 }
 
-.ouw25 .ouw25-merchant-sidebar {
-  --ouw25-field-background: var(--ouw25-color-surface);
+.ouw25 .ouw25-sheet-column.ouw25-merchant-sidebar {
+  --ouw25-sidebar-gap: 0.75rem;
+  --ouw25-reference-padding: 0.6rem;
+  --ouw25-reference-paper: url("./images/smallpaper5.webp");
+  gap: var(--ouw25-sidebar-gap);
   container-type: inline-size;
   overflow-wrap: anywhere;
 }
@@ -434,11 +439,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar .ouw25-total-d
   max-inline-size: 65%;
 }
 
-.ouw25 .ouw25-pension-reference {
-  background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
+.ouw25 .ouw25-pension-reference,
+.ouw25 .ouw25-pension-reference > p {
+  background: var(--ouw25-color-paper) var(--ouw25-reference-paper) center top / 100% auto no-repeat;
   border-radius: 0.35rem;
   box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
-  padding: 0.6rem;
+}
+
+.ouw25 .ouw25-pension-reference {
+  padding: var(--ouw25-reference-padding);
   position: relative;
 }
 
@@ -449,9 +458,6 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar .ouw25-total-d
   z-index: 1;
   margin: 0;
   padding: 0.8rem;
-  background: inherit;
-  border-radius: inherit;
-  box-shadow: inherit;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-input > input {
@@ -465,6 +471,9 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-inpu
 
 .ouw25 .ouw25-luck {
   --ouw25-luck-gradient: linear-gradient(to right, #edcd79, #ed9d79, #ede579, #edbd79);
+  --ouw25-luck-ring-size: min(60cqi, 9rem);
+  --ouw25-luck-scale: 0.65;
+  --ouw25-luck-button-size: 2rem;
   background: url("./images/lucky_point.webp") center / calc(17.71875rem * 0.65) auto no-repeat;
   min-block-size: min(100cqi, 12rem);
   display: grid;
@@ -477,13 +486,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
   display: grid;
   place-items: center;
   position: relative;
-  inline-size: min(60%, 9rem);
+  inline-size: var(--ouw25-luck-ring-size);
   aspect-ratio: 1;
   font-family: "Limelight", var(--ouw25-font-accent);
   font-size: clamp(2rem, 27cqi, 5.3125rem);
   line-height: 1;
   text-align: center;
-  transform: scale(0.65);
+  transform: scale(var(--ouw25-luck-scale));
 }
 
 .ouw25 .ouw25-luck-value::before {
@@ -509,11 +518,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
 .ouw25 .ouw25-luck-actions {
   display: grid;
   position: absolute;
-  inset-inline-end: 8%;
+  inset-inline-end: calc(8% + 0.3 * (42% - var(--ouw25-luck-button-size) - var(--ouw25-luck-ring-size) * var(--ouw25-luck-scale) / 2));
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-luck-actions > button {
-  min-inline-size: 2rem;
+  inline-size: var(--ouw25-luck-button-size);
   padding: 0.25rem;
 }
 
@@ -558,6 +567,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-ch
   inline-size: 32.8px;
   block-size: 32.8px;
   background: var(--ouw25-border-gradient);
+  clip-path: polygon(evenodd, 25% 0, 75% 0, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0 75%, 0 25%, 25% 0,
+    26.5% 3%, 3% 26.5%, 3% 73.5%, 26.5% 97%, 73.5% 97%, 97% 73.5%, 97% 26.5%, 73.5% 3%, 26.5% 3%);
   pointer-events: none;
 }
 
@@ -577,9 +588,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + spa
 }
 
 .ouw25 .ouw25-merchant-sidebar > details.ouw25-sidebar-card {
-  --ouw25-card-paper: url("./images/smallpaper5.webp");
-  padding: 15px;
+  --ouw25-card-paper: var(--ouw25-reference-paper);
+  padding: var(--ouw25-reference-padding);
   border-radius: 0.35rem;
+}
+
+.ouw25 .ouw25-merchant-sidebar > .ouw25-merchant-wounds + .ouw25-sidebar-card {
+  margin-block-start: var(--ouw25-sidebar-gap);
 }
 
 .ouw25 :is(.ouw25-sidebar-card, .ouw25-pension-reference) > summary {
@@ -721,20 +736,21 @@ body.game .application.ouw25 .ouw25-notes :is(select[name="system.specialty"], s
 }
 
 body.game .application.ouw25 .ouw25-notes input[type="checkbox"] {
-  --checkbox-background-color: var(--ouw25-color-accent);
-  --checkbox-checked-color: var(--ouw25-color-accent-soft);
+  --checkbox-background-color: var(--ouw25-checkbox-background);
+  --checkbox-checked-color: var(--ouw25-checkbox-background);
+  --checkbox-disabled-color: var(--ouw25-checkbox-disabled-background);
   --checkbox-checkmark-color: var(--ouw25-color-surface);
   --checkbox-font-weight: unset;
-  accent-color: var(--ouw25-color-accent-soft);
+  accent-color: var(--ouw25-checkbox-background);
   color-scheme: light;
 }
 
 body.game .application.ouw25 .ouw25-notes input[type="checkbox"]:disabled,
 body.game .application.ouw25 .ouw25-notes input[type="checkbox"][readonly] {
-  --checkbox-background-color: var(--ouw25-color-paper);
-  --checkbox-checked-color: var(--ouw25-color-paper);
+  --checkbox-background-color: var(--ouw25-checkbox-disabled-background);
+  --checkbox-checked-color: var(--ouw25-checkbox-disabled-background);
   --checkbox-checkmark-color: var(--ouw25-color-ink);
-  accent-color: var(--ouw25-color-paper);
+  accent-color: var(--ouw25-checkbox-disabled-background);
 }
 
 body.game .application.ouw25 .ouw25-notes option {

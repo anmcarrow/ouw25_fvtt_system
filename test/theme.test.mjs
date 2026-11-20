@@ -48,10 +48,10 @@ test("the sheet uses light text surfaces with contrasting foreground colors", ()
 
   assert.match(styles, /color-scheme:\s*light;/);
   assert.match(styles, /\.ouw25 \.ouw25-notes \*\s*\{\s*color:\s*inherit;/);
-  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\s*\{(?=[^}]*--checkbox-background-color:\s*var\(--ouw25-color-accent\);)(?=[^}]*--checkbox-checked-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*--checkbox-checkmark-color:\s*var\(--ouw25-color-surface\);)(?=[^}]*--checkbox-font-weight:\s*unset;)(?=[^}]*accent-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*color-scheme:\s*light;)[^}]*\}/s);
-  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]:disabled,\s*body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\[readonly\]\s*\{[^}]*--checkbox-background-color:\s*var\(--ouw25-color-paper\);/s);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\s*\{(?=[^}]*--checkbox-background-color:\s*var\(--ouw25-checkbox-background\);)(?=[^}]*--checkbox-checked-color:\s*var\(--ouw25-checkbox-background\);)(?=[^}]*--checkbox-checkmark-color:\s*var\(--ouw25-color-surface\);)(?=[^}]*--checkbox-font-weight:\s*unset;)(?=[^}]*accent-color:\s*var\(--ouw25-checkbox-background\);)(?=[^}]*color-scheme:\s*light;)[^}]*\}/s);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]:disabled,\s*body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\[readonly\]\s*\{[^}]*--checkbox-background-color:\s*var\(--ouw25-checkbox-disabled-background\);/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes fieldset\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\);/s);
-  assert.match(styles, /--ouw25-field-background:\s*var\(--ouw25-surface-translucent\);/);
+  assert.match(styles, /--ouw25-field-background:\s*color-mix\(in srgb, var\(--ouw25-color-surface\) 70%, transparent\);/);
   assert.match(styles, /--ouw25-surface-translucent:\s*color-mix\(in srgb, var\(--ouw25-color-surface\) 80%, transparent\);/);
   assert.match(styles, /--color-select-option-bg:\s*var\(--ouw25-color-surface\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes option\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background-color:\s*var\(--ouw25-color-surface\);/s);
@@ -79,7 +79,7 @@ test("the Merchant sidebar uses bundled Roll20 textures", async () => {
   for (const [pattern, image] of [
     [/\.ouw25-pension\s*\{[^}]*--ouw25-card-paper:/, "smallpaper3"],
     [/\.ouw25-money-card\s*\{[^}]*--ouw25-card-paper:/, "smallpaper4"],
-    [/details\.ouw25-sidebar-card\s*\{[^}]*--ouw25-card-paper:/, "smallpaper5"],
+    [/--ouw25-reference-paper:/, "smallpaper5"],
     [/\.ouw25-luck\s*\{[^}]*background:/, "lucky_point"],
     [/\.ouw25-merchant-wounds\s*\{[^}]*background:/, "blood"]
   ]) {

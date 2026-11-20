@@ -429,7 +429,7 @@ body.game .application.ouw25 .ouw25-notes fieldset > legend > h3 {
   margin: 0.25rem 0;
 }
 
-body.game .application.ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select:not(.ouw25-choice-heading), textarea),
+body.game .application.ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select:not(.ouw25-choice-heading, [name="system.specialty"]), textarea),
 body.game .application.ouw25 .dialog-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
   font-family: var(--ouw25-font-input);
 }

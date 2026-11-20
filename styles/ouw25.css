@@ -254,11 +254,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions {
   flex-wrap: wrap;
 }
 
-.ouw25 .ouw25-personal-actions > button {
+body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button {
   inline-size: auto;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.8em;
 }
 
-body.game .application.ouw25 .ouw25-notes button.ouw25-roll-icon {
+.ouw25 .ouw25-personal-actions > button > span {
+  display: block;
+  transform: scaleX(0.9);
+}
+
+body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-trait-icon) {
   background: none;
   box-shadow: none;
   color: inherit;
@@ -268,6 +275,15 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-roll-icon {
   margin: 0;
   padding: 0.25rem;
   inline-size: auto;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions {
+  display: flex;
+  flex: none;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > button {
+  font-size: 1.35rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-identity input[name="name"] {

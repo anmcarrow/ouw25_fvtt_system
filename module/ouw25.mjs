@@ -247,9 +247,13 @@ function traitChoices(kind, selected, includeUnset = false) {
 }
 
 function personalActionButtons(source, value) {
-  return personalActions(source, value).map(({ id }) => ({
-    id, source, value, label: `OUW25.PersonalAction.Moves.${id}.label`
-  }));
+  return personalActions(source, value).map(({ id }) => {
+    const label = `OUW25.PersonalAction.Moves.${id}.label`;
+    return {
+      id, source, value, label,
+      ...(source === "past" && { caption: game.i18n.localize(label).split(" \u00b7 ", 1)[0] })
+    };
+  });
 }
 
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {

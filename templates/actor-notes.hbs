@@ -3,11 +3,7 @@
 {{/inline}}
 {{#*inline "ouw25-record-actions"}}
   <div class="ouw25-record-actions">
-    {{#if traitKind}}
-      <button type="button" data-action="editTrait" data-creation="{{traitKind}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-    {{else}}
-      <button type="button" data-action="editRecord" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-    {{/if}}
+    <button type="button" data-action="editRecord" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
     <button type="button" data-action="deleteRecord" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
   </div>
 {{/inline}}
@@ -580,7 +576,7 @@
           {{#if pastMoves.actions}}
             <div class="ouw25-personal-actions">
               {{#each pastMoves.actions}}
-                <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{localize label}}</button>
+                <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}" data-tooltip="{{localize label}}"><span>{{caption}}</span></button>
               {{/each}}
             </div>
             <p>{{localize "OUW25.PersonalAction.Manual"}}</p>
@@ -658,12 +654,15 @@
             <li>
               <div class="ouw25-choice-row">
                 <strong>{{localize name}}</strong>
-                {{#if @root.editable}}{{> ouw25-roll-icon creation=../kind recordId=id label="OUW25.Creation.RollTrait"}}{{/if}}
+                {{#if @root.editable}}
+                  <div class="ouw25-trait-actions">
+                    <button type="button" class="ouw25-trait-icon" data-action="editTrait" data-creation="{{../kind}}" data-record-id="{{id}}" aria-label="{{localize "OUW25.Debt.Edit"}}" data-tooltip="{{localize "OUW25.Debt.Edit"}}"><span aria-hidden="true">&#x270F;&#xFE0F;</span></button>
+                    <button type="button" class="ouw25-trait-icon" data-action="deleteRecord" data-record-type="trait" data-record-id="{{id}}" aria-label="{{localize "OUW25.Debt.Delete"}}" data-tooltip="{{localize "OUW25.Debt.Delete"}}"><span aria-hidden="true">&#x1F5D1;&#xFE0F;</span></button>
+                    {{> ouw25-roll-icon creation=../kind recordId=id label="OUW25.Creation.RollTrait"}}
+                  </div>
+                {{/if}}
               </div>
               <p>{{localize help}}</p>
-              {{#if @root.editable}}
-                {{> ouw25-record-actions recordType="trait" traitKind=../kind}}
-              {{/if}}
             </li>
           {{/each}}
         </ul>

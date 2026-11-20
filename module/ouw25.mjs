@@ -9,7 +9,7 @@ import {
   resolvePsychotherapy, rollbackSectorTransition,
   SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots, shipSelectionError
 } from "./ship.mjs";
-import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition } from "./ship.mjs";
+import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, shipGearSlots } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
@@ -302,10 +302,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         disabled: slot.value !== value && disabled(slot, value)
       }))
     }));
-    const gears = ship && SHIP_GEAR_SLOTS.map(number => {
-      const field = `gear${number}`;
-      return { number, field, value: system[field] ?? "none" };
-    });
+    const gears = ship && shipGearSlots(system);
+    const installedGear = gears && gears.map(({ value }) => value).filter(value => value !== "none");
+    const uniqueGear = new Set(installedGear);
     const voyage = ship && calculateVoyage(system);
     const hold = ship && shipHold(system, listedVolume, ship.compartmentSpace);
     const condition = ship && shipCondition(system);
@@ -337,9 +336,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices",
           ({ value: current }, value) => COMPARTMENT_SPACE[value] > (COMPARTMENT_SPACE[current] ?? 0)
             && hold.occupied + COMPARTMENT_SPACE[value] - (COMPARTMENT_SPACE[current] ?? 0) > hold.capacity),
-        gear: slotChoices(gears, SHIP_GEAR_CHOICES, "OUW25.ShipGear.Names"),
-        gearHelp: [...new Set(gears.map(({ value }) => value))].filter(value => value !== "none")
-          .map(value => `OUW25.ShipGear.Help.${value}`),
+        gear: slotChoices(gears, SHIP_GEAR_CHOICES, "OUW25.ShipGear.Names", (_slot, value) => uniqueGear.has(value)),
+        gearHelp: [...uniqueGear].map(value => `OUW25.ShipGear.Help.${value}`),
+        gearDuplicates: installedGear.length !== uniqueGear.size,
         condition: condition && {
           ...condition,
           slots: condition.slots.map(slot => ({ ...slot, critical: slot.number >= condition.durability }))

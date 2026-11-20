@@ -126,6 +126,7 @@
       }
     },
     "ShipGear": {
+      "Duplicates": "Each piece of fixed equipment can only be installed once.",
       "Title": "Fixed equipment",
       "Slot": "Equipment {number}",
       "Names": { "none": "—", "sandshoes": "Sand shoes", "tow": "Towing rig" },

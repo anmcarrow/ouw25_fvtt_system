@@ -239,10 +239,11 @@
           <label>
             {{localize "OUW25.ShipGear.Slot" number=number}}
             <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
             </select>
           </label>
         {{/each}}
+        {{#if ship.gearDuplicates}}<p role="status">{{localize "OUW25.ShipGear.Duplicates"}}</p>{{/if}}
         {{#if ship.gearHelp}}
           <ul>
             {{#each ship.gearHelp}}

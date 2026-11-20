@@ -23,11 +23,20 @@ export const SHIP_DAMAGE_SLOTS = Array.from({ length: MAX_SHIP_CLASS + 5 }, (_, 
 const SHIP_LAYOUT_FIELDS = [
   "shipClass", "holdBonus",
   ...Object.keys(SHIP_QUALITIES).flatMap(kind => SHIP_QUALITY_SLOTS.map(slot => `${kind}${slot}`)),
+  ...SHIP_GEAR_SLOTS.map(slot => `gear${slot}`),
   ...Array.from({ length: SHIP_SLOT_COUNT }, (_, index) => `compartment${index + 1}`)
 ];
 
 export function shipQualitySlots(ship, kind) {
-  return SHIP_QUALITY_SLOTS.map(number => {
+  return selectionSlots(ship, kind, SHIP_QUALITY_SLOTS);
+}
+
+export function shipGearSlots(ship) {
+  return selectionSlots(ship, "gear", SHIP_GEAR_SLOTS);
+}
+
+function selectionSlots(ship, kind, slots) {
+  return slots.map(number => {
     const field = `${kind}${number}`;
     return { number, field, value: ship[field] ?? "none" };
   });
@@ -47,13 +56,17 @@ export function shipSelectionError(ship, changes, listedVolume) {
   if (!SHIP_LAYOUT_FIELDS.some(field => Object.hasOwn(changes, field) && changes[field] !== ship[field])) return;
   const next = Object.assign(Object.fromEntries([...SHIP_LAYOUT_FIELDS, "cargoLoad", "fuelStock", "provisionsStock"]
     .map(field => [field, ship[field]])), changes);
-  for (const kind of Object.keys(SHIP_QUALITIES)) {
-    const before = shipQualitySlots(ship, kind);
-    const after = shipQualitySlots(next, kind);
+  const slotGroups = [
+    ...Object.keys(SHIP_QUALITIES).map(kind => [(state) => shipQualitySlots(state, kind), "OUW25.ShipQuality.Duplicates"]),
+    [shipGearSlots, "OUW25.ShipGear.Duplicates"]
+  ];
+  for (const [slots, error] of slotGroups) {
+    const before = slots(ship);
+    const after = slots(next);
     for (const { field, value } of after) {
       if (value !== "none" && value !== ship[field]
         && after.filter(slot => slot.value === value).length > Math.max(1, before.filter(slot => slot.value === value).length)) {
-        return "OUW25.ShipQuality.Duplicates";
+        return error;
       }
     }
   }

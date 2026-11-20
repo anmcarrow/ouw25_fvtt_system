@@ -53,7 +53,8 @@ test("the built package registers models and an editable notes sheet for its dec
       fragile: false, wound1: true, wound2: false, wound3: false, wound4: true } };
     if (!merchant) Object.assign(sheet.actor.system, {
       shipClass: 0, cargoLoad: 5, fuelStock: 10.5, provisionsStock: 18.25, mount1: "none", mount2: "none",
-      compartment1: "passenger", compartment2: "none", compartment3: "none", compartment4: "none"
+      compartment1: "passenger", compartment2: "none", compartment3: "none", compartment4: "none",
+      gear1: "sandshoes"
     });
     sheet.actor.items = [{ type: "debt", id: "debt-1", name: "Creditor", system: {
       direction: "payable", amount: 12, location: "Port"
@@ -109,6 +110,8 @@ test("the built package registers models and an editable notes sheet for its dec
         assert.deepEqual(ship.hold, { occupied: 452.25, capacity: 1600, nearFull: false, overloaded: false });
         assert.deepEqual(ship.hold, { capacity: 1600, occupied: 452.25, nearFull: false, overloaded: false });
         assert.equal(ship.mounts[0].choices.find(choice => choice.selected).value, "none");
+        assert.equal(ship.gear[0].choices.find(choice => choice.value === "sandshoes").disabled, false);
+        assert.deepEqual(ship.gear[1].choices.filter(choice => choice.disabled).map(choice => choice.value), ["sandshoes"]);
       }
       assert.deepEqual(context, {
         notes: "test note", autosaveStatus: "OUW25.SaveStatus.Saved", autosaveStatusState: "saved",
@@ -427,6 +430,16 @@ test("ship layout rejects duplicate qualities and new compartments that do not f
   assert.equal(shipSelectionError(ship, { merit2: "strong_hull" }, 0), "OUW25.ShipQuality.Duplicates");
   assert.equal(shipSelectionError(ship, { flaw2: "cursed" }, 0), "OUW25.ShipQuality.Duplicates");
   assert.equal(shipSelectionError(ship, { merit1: "none", merit2: "strong_hull" }, 0), undefined);
+});
+
+test("fixed equipment can only be installed once, but may be moved or removed", async () => {
+  const { shipSelectionError } = await import(new URL("module/ship.mjs", dist));
+  const ship = { shipClass: 0, gear1: "sandshoes", gear2: "none" };
+  assert.equal(shipSelectionError(ship, { gear2: "sandshoes" }, 0), "OUW25.ShipGear.Duplicates");
+  assert.equal(shipSelectionError(ship, { gear1: "tow", gear2: "tow" }, 0), "OUW25.ShipGear.Duplicates");
+  assert.equal(shipSelectionError(ship, { gear2: "tow" }, 0), undefined);
+  assert.equal(shipSelectionError(ship, { gear1: "none", gear2: "sandshoes" }, 0), undefined);
+  assert.equal(shipSelectionError({ ...ship, gear2: "sandshoes" }, { gear1: "none" }, 0), undefined);
 });
 
 test("a reinforced hull adds two durability once; marked damage stays repairable after removing it", async () => {

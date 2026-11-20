@@ -603,6 +603,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + spa
   cursor: pointer;
 }
 
+@container (inline-size < 16rem) {
+  .ouw25 :is(.ouw25-sidebar-card, .ouw25-pension-reference) > summary {
+    min-block-size: 2lh;
+    align-content: center;
+  }
+}
+
 .ouw25 .ouw25-sidebar-card > summary + :is(p, .ouw25-collision-controls) {
   border-block-start: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;

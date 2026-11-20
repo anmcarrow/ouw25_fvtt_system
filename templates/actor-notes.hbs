@@ -37,7 +37,7 @@
 {{/inline}}
 {{#*inline "ouw25-tab"}}
   <section class="tab ouw25-tab {{tab.cssClass}}" data-group="{{tab.group}}" data-tab="{{tab.id}}">
-    <div class="ouw25-sheet-columns">
+    <div class="ouw25-sheet-columns{{#if layout}} {{layout}}{{/if}}">
       {{> @partial-block}}
     </div>
   </section>
@@ -63,10 +63,10 @@
     </div>
   {{/ouw25-tab}}
   {{#*inline "ouw25-ship-basics"}}
-    <div class="ouw25-sheet-column">
     <fieldset class="ouw25-ship">
       <legend>{{localize "OUW25.Ship.Title"}}</legend>
-      <output class="ouw25-hold-status">{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}</output>
+      <div class="ouw25-ship-pair">
+      <div>
       <label>
         {{localize "OUW25.Ship.Name"}}
         <input type="text" name="system.shipName" value="{{ship.name}}" {{#unless editable}}readonly{{/unless}}>
@@ -77,42 +77,56 @@
           {{#each ship.classes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
         </select>
       </label>
-      <p>{{localize "OUW25.Ship.FreeMounts" count=ship.freeMounts}}</p>
-      {{#each ship.mounts}}
-        <label>
-          {{localize "OUW25.Ship.Mount" number=number}}
-          <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-            {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
-          </select>
-        </label>
+      </div>
+      {{> ouw25-ship-damage}}
+      </div>
+      <div class="ouw25-ship-stats">
+        <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
+        <p>{{localize "OUW25.Ship.FreeMounts" count=ship.freeMounts}}</p>
+        <output class="ouw25-hold-status">{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}</output>
+      </div>
+      {{#each ship.qualities}}
+        {{#if holdBonuses}}
+          <label>
+            {{localize "OUW25.ShipQuality.HoldBonus"}}
+            <select name="system.holdBonus" {{#unless @root.editable}}disabled{{/unless}}>
+              {{#each holdBonuses}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
+            </select>
+          </label>
+        {{/if}}
       {{/each}}
-      <p>{{localize "OUW25.Ship.CompartmentSpace" volume=ship.compartmentSpace}}</p>
+      <div class="ouw25-ship-resources">
       <label>
-        {{localize "OUW25.Ship.CargoLoad"}}
-        <input type="number" name="system.cargoLoad" min="0" max="9007199254740991" step="1" value="{{ship.cargoLoad}}" required {{#unless editable}}readonly{{/unless}}>
+        {{localize "OUW25.Voyage.Crew"}}
+        <input type="number" name="system.crewCount" min="0" max="9007199254740991" step="1" value="{{ship.crewCount}}" required {{#unless editable}}readonly{{/unless}}>
+      </label>
+      <label>
+        {{localize "OUW25.Ship.ProvisionsStock"}}
+        <input type="number" name="system.provisionsStock" min="0" max="9007199254740991" step="any" value="{{ship.provisionsStock}}" required {{#unless editable}}readonly{{/unless}}>
       </label>
       <label>
         {{localize "OUW25.Ship.FuelStock"}}
         <input type="number" name="system.fuelStock" min="0" max="9007199254740991" step="any" value="{{ship.fuelStock}}" required {{#unless editable}}readonly{{/unless}}>
       </label>
       <label>
-        {{localize "OUW25.Ship.ProvisionsStock"}}
-        <input type="number" name="system.provisionsStock" min="0" max="9007199254740991" step="any" value="{{ship.provisionsStock}}" required {{#unless editable}}readonly{{/unless}}>
+        {{localize "OUW25.Ship.CargoLoad"}}
+        <input type="number" name="system.cargoLoad" min="0" max="9007199254740991" step="1" value="{{ship.cargoLoad}}" required {{#unless editable}}readonly{{/unless}}>
       </label>
+      <label>
+        {{localize "OUW25.Voyage.Unrest"}}
+        <input type="number" name="system.unrest" min="0" max="25" step="1" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
+      </label>
+      </div>
+      <p>{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}</p>
+      <p>{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}</p>
       {{#if ship.hold.overloaded}}
         <p role="status">{{localize "OUW25.Ship.Overloaded"}}</p>
       {{else if ship.hold.nearFull}}
         <p role="status">{{localize "OUW25.Ship.NearFull"}}</p>
       {{/if}}
-      {{#each ship.compartments}}
-        <label>
-          {{localize "OUW25.Ship.Compartment" number=number}}
-          <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-            {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
-          </select>
-        </label>
-      {{/each}}
     </fieldset>
+  {{/inline}}
+  {{#*inline "ouw25-ship-qualities"}}
     {{#each ship.qualities}}
       <fieldset class="ouw25-ship-qualities">
         <legend>{{localize title}}</legend>
@@ -124,14 +138,6 @@
             </select>
           </label>
         {{/each}}
-        {{#if holdBonuses}}
-          <label>
-            {{localize "OUW25.ShipQuality.HoldBonus"}}
-            <select name="system.holdBonus" {{#unless @root.editable}}disabled{{/unless}}>
-              {{#each holdBonuses}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
-            </select>
-          </label>
-        {{/if}}
         {{#if duplicates}}<p role="status">{{localize "OUW25.ShipQuality.Duplicates"}}</p>{{/if}}
         {{#if help}}
           <ul>
@@ -140,7 +146,6 @@
         {{/if}}
       </fieldset>
     {{/each}}
-    </div>
   {{/inline}}
   {{#> ouw25-tab tab=tabs.contacts}}
     <div class="ouw25-sheet-column">
@@ -259,9 +264,7 @@
   {{/if}}
     </div>
   {{/inline}}
-  {{#> ouw25-tab tab=tabs.ship}}
-    {{> ouw25-ship-basics}}
-    <div class="ouw25-sheet-column">
+  {{#*inline "ouw25-ship-gear"}}
       <fieldset class="ouw25-ship-gear">
         <legend>{{localize "OUW25.ShipGear.Title"}}</legend>
         {{#each ship.gear}}
@@ -281,6 +284,8 @@
           </ul>
         {{/if}}
       </fieldset>
+  {{/inline}}
+  {{#*inline "ouw25-ship-damage"}}
       <fieldset class="ouw25-ship-condition">
         <legend>{{localize "OUW25.ShipCondition.Title"}}</legend>
         <p>{{localize "OUW25.ShipCondition.Durability" damaged=ship.condition.damaged durability=ship.condition.durability}}</p>
@@ -301,12 +306,12 @@
         </div>
         {{#if ship.condition.overLimit}}<p role="status">{{localize "OUW25.ShipCondition.OverLimit"}}</p>{{/if}}
       </fieldset>
+  {{/inline}}
+  {{#> ouw25-tab tab=tabs.ship layout="ouw25-ship-layout"}}
+    <div class="ouw25-sheet-column">
+      {{> ouw25-ship-basics}}
       <fieldset class="ouw25-voyage">
         <legend>{{localize "OUW25.Voyage.Title"}}</legend>
-        <label>
-          {{localize "OUW25.Voyage.Crew"}}
-          <input type="number" name="system.crewCount" min="0" max="9007199254740991" step="1" value="{{ship.crewCount}}" required {{#unless editable}}readonly{{/unless}}>
-        </label>
         <p>{{#if ship.forcedMode}}{{localize "OUW25.Voyage.ForcedOn"}}{{else}}{{localize "OUW25.Voyage.ForcedOff"}}{{/if}}</p>
         {{#if editable}}
           <button type="button" data-action="toggleForcedMode" {{#if ship.forcedDisabled}}disabled{{/if}}>
@@ -317,15 +322,8 @@
           {{localize "OUW25.Voyage.IlluminationMode"}}
           <input type="checkbox" name="system.illuminationMode" {{checked ship.illuminationMode}} {{#unless editable}}disabled{{/unless}}>
         </label>
-        <label>
-          {{localize "OUW25.Voyage.Unrest"}}
-          <input type="number" name="system.unrest" min="0" max="25" step="1" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
-        </label>
-        <p>{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}</p>
         {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
-        <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
         {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
-        <p>{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}</p>
         {{#if ship.voyage.wornEngine}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
         {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
         {{#if ship.voyage.provisionsLow}}<p role="status">{{localize "OUW25.Voyage.ProvisionsLow"}}</p>{{/if}}
@@ -343,6 +341,37 @@
         {{/if}}
         {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
       </fieldset>
+      <div class="ouw25-ship-pair">
+        {{> ouw25-ship-qualities}}
+      </div>
+      <div class="ouw25-ship-pair">
+        <div class="ouw25-sheet-column">
+          <fieldset class="ouw25-ship-mounts">
+            <legend>{{localize "OUW25.Ship.Mounts"}}</legend>
+            {{#each ship.mounts}}
+              <label>
+                {{localize "OUW25.Ship.Mount" number=number}}
+                <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
+                  {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+                </select>
+              </label>
+            {{/each}}
+          </fieldset>
+          {{> ouw25-ship-gear}}
+        </div>
+        <fieldset class="ouw25-ship-compartments">
+          <legend>{{localize "OUW25.Ship.Compartments"}}</legend>
+          {{#each ship.compartments}}
+            <label>
+              {{localize "OUW25.Ship.Compartment" number=number}}
+              <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
+                {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
+              </select>
+            </label>
+          {{/each}}
+          <p>{{localize "OUW25.Ship.CompartmentSpace" volume=ship.compartmentSpace}}</p>
+        </fieldset>
+      </div>
     </div>
   {{/ouw25-tab}}
   {{#> ouw25-tab tab=tabs.cargo}}
@@ -462,25 +491,9 @@
   {{/if}}
     </div>
   {{/inline}}
-  {{#> ouw25-tab tab=tabs.attributes}}
-    <div class="ouw25-sheet-column">
-  {{#if identity}}
-    <fieldset class="ouw25-identity">
-      <legend>{{localize "OUW25.Identity.Title"}}</legend>
-      <label>
-        {{localize "OUW25.Identity.Name"}}
-        <input type="text" name="name" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
-      </label>
-      {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="name">{{localize "OUW25.Creation.RollName"}}</button>
-      {{/if}}
-      <label>
-        {{localize "OUW25.Identity.Dream"}}
-        <textarea name="system.dream" rows="2" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
-      </label>
-      {{#if editable}}
-        <button type="button" data-action="rollCreation" data-creation="dream">{{localize "OUW25.Creation.RollDream"}}</button>
-      {{/if}}
+  {{#*inline "ouw25-hiring"}}
+    <fieldset>
+      <legend>{{localize "OUW25.Identity.HiringTitle"}}</legend>
       <label>
         {{localize "OUW25.Identity.HiringTitle"}}
         <select name="system.hiring" {{#unless editable}}disabled{{/unless}}>
@@ -499,10 +512,24 @@
         {{/each}}
       {{/if}}
     </fieldset>
+  {{/inline}}
+  {{#> ouw25-tab tab=tabs.attributes layout="ouw25-merchant-layout"}}
+    <div class="ouw25-sheet-column">
+  {{#if identity}}
+    <fieldset class="ouw25-identity">
+      <legend>{{localize "OUW25.Identity.Title"}}</legend>
+      <label>
+        {{localize "OUW25.Identity.Name"}}
+        <input type="text" name="name" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
+      </label>
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="name">{{localize "OUW25.Creation.RollName"}}</button>
+      {{/if}}
+    </fieldset>
   {{/if}}
   {{#if condition}}
-    <fieldset class="ouw25-condition">
-      <legend>{{localize "OUW25.Condition.Title"}}</legend>
+    <fieldset>
+      <legend>{{localize "OUW25.Specialty.Title"}}</legend>
       <label>
         {{localize "OUW25.Specialty.Title"}}
         <select name="system.specialty" {{#unless editable}}disabled{{/unless}}>
@@ -519,6 +546,21 @@
         {{/if}}
       {{/if}}
       {{#if condition.specialtyHelp}}<p>{{localize condition.specialtyHelp}}</p>{{/if}}
+    </fieldset>
+  {{/if}}
+  {{#if identity}}
+    <fieldset>
+      <legend>{{localize "OUW25.Identity.Dream"}}</legend>
+      <textarea name="system.dream" aria-label="{{localize "OUW25.Identity.Dream"}}" rows="2" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
+      {{#if editable}}
+        <button type="button" data-action="rollCreation" data-creation="dream">{{localize "OUW25.Creation.RollDream"}}</button>
+      {{/if}}
+    </fieldset>
+  {{/if}}
+  {{> ouw25-merchant-traits}}
+  {{#if condition}}
+    <fieldset>
+      <legend>{{localize "OUW25.Past.Title"}}</legend>
       <label>
         {{localize "OUW25.Past.Title"}}
         <select name="system.past" {{#unless editable}}disabled{{/unless}}>
@@ -530,12 +572,6 @@
       {{#if editable}}
         <button type="button" data-action="rollCreation" data-creation="past">{{localize "OUW25.Creation.RollPast"}}</button>
       {{/if}}
-      {{#if condition.showFragile}}
-        <label>
-          <input type="checkbox" name="system.fragile" {{checked condition.fragile}} {{#unless editable}}disabled{{/unless}}>
-          {{localize "OUW25.Past.Fragile"}}
-        </label>
-      {{/if}}
       {{#if pastMoves}}
         <p>{{localize pastMoves.help}}</p>
         {{#if editable}}
@@ -544,6 +580,18 @@
           {{/each}}
           {{#if pastMoves.actions}}<p>{{localize "OUW25.PersonalAction.Manual"}}</p>{{/if}}
         {{/if}}
+    </fieldset>
+  {{/if}}
+  {{#if identity}}{{> ouw25-hiring}}{{/if}}
+    </div>
+    <div class="ouw25-sheet-column">
+    <fieldset>
+        <legend>{{localize "OUW25.Debt.PayableTotal" payable=ledger.totals.payable}}</legend>
+    </fieldset>
+    {{> ouw25-finances}}
+  {{#if condition}}
+    <fieldset class="ouw25-condition">
+        <legend>{{localize "OUW25.Condition.Title"}}</legend>
       {{/if}}
       <p>{{localize "OUW25.Condition.Luck" count=condition.luck}}</p>
       <p>{{localize "OUW25.Condition.LuckHelp"}}</p>
@@ -566,8 +614,34 @@
           </label>
         {{/each}}
       </div>
+      {{#if condition.showFragile}}
+        <label>
+          <input type="checkbox" name="system.fragile" {{checked condition.fragile}} {{#unless editable}}disabled{{/unless}}>
+          {{localize "OUW25.Past.Fragile"}}
+        </label>
+      {{/if}}
     </fieldset>
   {{/if}}
+    <fieldset class="ouw25-bargain-reference">
+      <legend>{{localize "OUW25.Bargain.Title"}}</legend>
+      <details>
+        <summary>{{localize "OUW25.Bargain.Summary"}}</summary>
+        <p>{{localize "OUW25.Bargain.Price"}}</p>
+        <p>{{localize "OUW25.Bargain.Payment"}}</p>
+        <p>{{localize "OUW25.Bargain.Consequences"}}</p>
+      </details>
+    </fieldset>
+  {{#if showCollision}}
+    <fieldset class="ouw25-collision">
+      <legend>{{localize "OUW25.Collision.Title"}}</legend>
+      <label>{{localize "OUW25.Collision.Dice"}} <input type="number" min="4" max="100" step="1" value="4" data-dice></label>
+      <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
+      <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
+    </fieldset>
+  {{/if}}
+    </div>
+  {{/ouw25-tab}}
+  {{#*inline "ouw25-merchant-traits"}}
   {{#each traits}}
     <fieldset class="ouw25-traits">
       <legend>{{localize label}}</legend>
@@ -603,28 +677,7 @@
       {{/if}}
     </fieldset>
   {{/each}}
-    </div>
-    <div class="ouw25-sheet-column">
-    {{> ouw25-finances}}
-    <fieldset class="ouw25-bargain-reference">
-      <legend>{{localize "OUW25.Bargain.Title"}}</legend>
-      <details>
-        <summary>{{localize "OUW25.Bargain.Summary"}}</summary>
-        <p>{{localize "OUW25.Bargain.Price"}}</p>
-        <p>{{localize "OUW25.Bargain.Payment"}}</p>
-        <p>{{localize "OUW25.Bargain.Consequences"}}</p>
-      </details>
-    </fieldset>
-  {{#if showCollision}}
-    <fieldset class="ouw25-collision">
-      <legend>{{localize "OUW25.Collision.Title"}}</legend>
-      <label>{{localize "OUW25.Collision.Dice"}} <input type="number" min="4" max="100" step="1" value="4" data-dice></label>
-      <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
-      <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
-    </fieldset>
-  {{/if}}
-    </div>
-  {{/ouw25-tab}}
+  {{/inline}}
   {{#> ouw25-tab tab=tabs.items}}
     {{> ouw25-items}}
   {{/ouw25-tab}}

@@ -221,6 +221,46 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
   gap: 0.75rem;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
+  grid-template-columns: minmax(0, 67fr) minmax(0, 33fr);
+  min-inline-size: 34rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-layout {
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 38rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-layout fieldset {
+  margin-inline: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair,
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats,
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
+  display: grid;
+  align-items: start;
+  gap: 0.75rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats {
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  align-items: baseline;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: end;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .ouw25 .ouw25-sheet-column {
   display: flex;
   flex-direction: column;
@@ -262,6 +302,7 @@ body.game .application.ouw25 .ouw25-sheet-heading h2 {
   margin: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair > fieldset > legend,
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-column > fieldset > legend {
   color: var(--ouw25-color-accent);
   font-family: var(--ouw25-font-heading);
@@ -347,12 +388,16 @@ body.game .application.ouw25 .ouw25-notes option {
   margin-block: 0.5rem;
 }
 
-.ouw25 :is(.ouw25-ship, .ouw25-ship-qualities, .ouw25-ship-gear, .ouw25-voyage) label {
+.ouw25 :is(.ouw25-ship, .ouw25-ship-qualities, .ouw25-ship-gear, .ouw25-ship-mounts, .ouw25-ship-compartments, .ouw25-voyage) label {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   align-items: center;
   gap: 0.5rem;
   margin-block: 0.25rem;
+}
+
+.ouw25 .ouw25-ship .ouw25-ship-damage label {
+  display: flex;
 }
 
 .ouw25 .ouw25-ship-damage {

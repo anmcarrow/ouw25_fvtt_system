@@ -11,7 +11,8 @@
   --ouw25-font-body: "PT Sans", Arial, sans-serif;
   --ouw25-font-input: "LXGW WenKai Mono TC", "Courier New", monospace;
   --ouw25-font-accent: "Caveat", cursive;
-  --ouw25-field-background: var(--ouw25-color-surface);
+  --ouw25-surface-translucent: color-mix(in srgb, var(--ouw25-color-surface) 80%, transparent);
+  --ouw25-field-background: var(--ouw25-surface-translucent);
   --color-select-option-bg: var(--ouw25-color-surface);
   --ouw25-border-gradient: linear-gradient(
     to right,
@@ -378,6 +379,7 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
 }
 
 .ouw25 .ouw25-merchant-sidebar {
+  --ouw25-field-background: var(--ouw25-color-surface);
   container-type: inline-size;
   overflow-wrap: anywhere;
 }
@@ -412,6 +414,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
   font-family: var(--ouw25-font-accent);
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar .ouw25-total-debt > p {
+  line-height: 0.6;
+}
+
 .ouw25 .ouw25-total-debt > p > span {
   color: var(--ouw25-color-warning);
   font-size: 2em;
@@ -433,10 +439,19 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
   border-radius: 0.35rem;
   box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
   padding: 0.6rem;
+  position: relative;
 }
 
 .ouw25 .ouw25-pension-reference > p {
-  margin-block-end: 0;
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0.8rem;
+  background: inherit;
+  border-radius: inherit;
+  box-shadow: inherit;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-input > input {
@@ -450,7 +465,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-inpu
 
 .ouw25 .ouw25-luck {
   --ouw25-luck-gradient: linear-gradient(to right, #edcd79, #ed9d79, #ede579, #edbd79);
-  background: url("./images/lucky_point.webp") center / 17.71875rem auto no-repeat;
+  background: url("./images/lucky_point.webp") center / calc(17.71875rem * 0.65) auto no-repeat;
   min-block-size: min(100cqi, 12rem);
   display: grid;
   place-items: center;
@@ -468,6 +483,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
   font-size: clamp(2rem, 27cqi, 5.3125rem);
   line-height: 1;
   text-align: center;
+  transform: scale(0.65);
 }
 
 .ouw25 .ouw25-luck-value::before {
@@ -647,6 +663,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
 
 .ouw25 .ouw25-notes fieldset.ouw25-traits {
   padding-block-start: calc(var(--ouw25-fieldset-padding) * 0.49);
+}
+
+.ouw25 .ouw25-notes .ouw25-merchant-layout > .ouw25-sheet-column:first-child fieldset {
+  background-color: var(--ouw25-surface-translucent);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(h1, h2, h3, h4, h5, h6, summary),

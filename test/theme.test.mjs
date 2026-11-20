@@ -37,7 +37,7 @@ function composite(background, foreground, alpha) {
   return `#${channels.map(value => value.toString(16).padStart(2, "0")).join("")}`;
 }
 
-test("the sheet uses light opaque text surfaces with contrasting foreground colors", () => {
+test("the sheet uses light text surfaces with contrasting foreground colors", () => {
   const ink = color("color-ink");
   const paper = color("color-paper");
   const surface = color("color-surface");
@@ -51,7 +51,8 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\s*\{(?=[^}]*--checkbox-background-color:\s*var\(--ouw25-color-accent\);)(?=[^}]*--checkbox-checked-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*--checkbox-checkmark-color:\s*var\(--ouw25-color-surface\);)(?=[^}]*--checkbox-font-weight:\s*unset;)(?=[^}]*accent-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*color-scheme:\s*light;)[^}]*\}/s);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]:disabled,\s*body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\[readonly\]\s*\{[^}]*--checkbox-background-color:\s*var\(--ouw25-color-paper\);/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes fieldset\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\);/s);
-  assert.match(styles, /--ouw25-field-background:\s*var\(--ouw25-color-surface\);/);
+  assert.match(styles, /--ouw25-field-background:\s*var\(--ouw25-surface-translucent\);/);
+  assert.match(styles, /--ouw25-surface-translucent:\s*color-mix\(in srgb, var\(--ouw25-color-surface\) 80%, transparent\);/);
   assert.match(styles, /--color-select-option-bg:\s*var\(--ouw25-color-surface\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes option\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background-color:\s*var\(--ouw25-color-surface\);/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes :is\(input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\):not\(\[type="hidden"\]\), select, textarea\)\s*\{[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*background-color:\s*var\(--ouw25-field-background\);/s);

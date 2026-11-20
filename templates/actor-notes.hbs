@@ -15,14 +15,19 @@
 {{/inline}}
 {{#*inline "ouw25-finances"}}
   {{#if pension}}
-    <div class="ouw25-sidebar-card ouw25-pocket-money">
-      <h3>{{localize money.label}}</h3>
-      <div class="ouw25-choice-row">
-        <div class="ouw25-rolled-input ouw25-choice-row">
-          {{> ouw25-money-input}}
-          {{#if editable}}{{> ouw25-roll-icon creation="pocketMoney" label="OUW25.Creation.RollMoney"}}{{/if}}
+    <div class="ouw25-sidebar-card ouw25-money-card">
+      <div class="ouw25-pocket-money">
+        <h3>{{localize money.label}}</h3>
+        <div class="ouw25-choice-row">
+          <div class="ouw25-rolled-input ouw25-choice-row">
+            {{> ouw25-money-input}}
+            {{#if editable}}{{> ouw25-roll-icon creation="pocketMoney" label="OUW25.Creation.RollMoney"}}{{/if}}
+          </div>
+          <span>{{localize "OUW25.Finance.Currency"}}</span>
         </div>
-        <span>{{localize "OUW25.Finance.Currency"}}</span>
+      </div>
+      <div class="ouw25-total-debt">
+        <p>{{localize "OUW25.Debt.PayableLabel"}}:<br><span>{{ledger.totals.payable}}</span> {{localize "OUW25.Finance.Currency"}}</p>
       </div>
     </div>
     <div class="ouw25-sidebar-card ouw25-pension">
@@ -39,6 +44,10 @@
       {{else}}
         <p>{{localize "OUW25.Finance.UntilNext" amount=pension.untilNext}}</p>
       {{/if}}
+      <details class="ouw25-pension-reference">
+        <summary><span aria-hidden="true">&#x1F4D7;</span> {{localize "OUW25.Finance.PensionReference"}}</summary>
+        <p>{{localize "OUW25.Finance.PensionHelp"}}</p>
+      </details>
     </div>
   {{else}}
     <fieldset>
@@ -52,10 +61,7 @@
   {{/if}}
 {{/inline}}
 {{#*inline "ouw25-journal"}}
-  <fieldset>
-    {{> ouw25-block-heading heading="OUW25.Notes"}}
-    <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
-  </fieldset>
+  <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
 {{/inline}}
 {{#*inline "ouw25-tab"}}
   <section class="tab ouw25-tab {{tab.cssClass}}" data-group="{{tab.group}}" data-tab="{{tab.id}}">
@@ -597,13 +603,10 @@
     </div>
     </div>
     <div class="ouw25-sheet-column ouw25-merchant-sidebar">
-    <div class="ouw25-sidebar-card ouw25-total-debt">
-      <p>{{localize "OUW25.Debt.PayableLabel"}}: <span>{{ledger.totals.payable}}</span> {{localize "OUW25.Finance.Currency"}}</p>
-    </div>
     {{> ouw25-finances}}
   {{#if condition}}
     <div class="ouw25-luck">
-      <output class="ouw25-luck-value" tabindex="0" aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{localize "OUW25.Condition.LuckHelp"}}">{{condition.luck}}</output>
+      <output class="ouw25-luck-value" tabindex="0" aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{localize "OUW25.Condition.LuckHelp"}}"><span>{{condition.luck}}</span></output>
       {{#if editable}}
         <div class="ouw25-luck-actions">
           <button type="button" data-action="changeLuck" data-luck="add" aria-label="{{localize "OUW25.Condition.AddLuck"}}" data-tooltip="{{localize "OUW25.Condition.AddLuck"}}" {{#unless condition.canAdd}}disabled{{/unless}}>+</button>

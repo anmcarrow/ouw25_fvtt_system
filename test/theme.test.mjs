@@ -76,9 +76,8 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
 
 test("the Merchant sidebar uses bundled Roll20 textures", async () => {
   for (const [pattern, image] of [
-    [/\.ouw25-total-debt\s*\{[^}]*--ouw25-card-paper:/, "smallpaper2"],
     [/\.ouw25-pension\s*\{[^}]*--ouw25-card-paper:/, "smallpaper3"],
-    [/\.ouw25-pocket-money\s*\{[^}]*--ouw25-card-paper:/, "smallpaper4"],
+    [/\.ouw25-money-card\s*\{[^}]*--ouw25-card-paper:/, "smallpaper4"],
     [/details\.ouw25-sidebar-card\s*\{[^}]*--ouw25-card-paper:/, "smallpaper5"],
     [/\.ouw25-luck\s*\{[^}]*background:/, "lucky_point"],
     [/\.ouw25-merchant-wounds\s*\{[^}]*background:/, "blood"]

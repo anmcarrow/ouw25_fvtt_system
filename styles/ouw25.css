@@ -390,13 +390,11 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
   padding: 20px 15px 15px;
 }
 
-.ouw25 .ouw25-merchant-sidebar > .ouw25-total-debt {
-  --ouw25-card-paper: url("./images/smallpaper2.webp");
-  padding-block-end: 5px;
-}
-
-.ouw25 .ouw25-merchant-sidebar > .ouw25-pocket-money {
+.ouw25 .ouw25-merchant-sidebar > .ouw25-money-card {
   --ouw25-card-paper: url("./images/smallpaper4.webp");
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 0.6rem;
   padding-block-end: 7.5px;
 }
 
@@ -430,6 +428,17 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
   max-inline-size: 65%;
 }
 
+.ouw25 .ouw25-pension-reference {
+  background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
+  border-radius: 0.35rem;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+  padding: 0.6rem;
+}
+
+.ouw25 .ouw25-pension-reference > p {
+  margin-block-end: 0;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-input > input {
   appearance: textfield;
   min-block-size: 2rem;
@@ -440,7 +449,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-inpu
 }
 
 .ouw25 .ouw25-luck {
-  background: url("./images/lucky_point.webp") center / min(100%, 17.71875rem) auto no-repeat;
+  --ouw25-luck-gradient: linear-gradient(to right, #edcd79, #ed9d79, #ede579, #edbd79);
+  background: url("./images/lucky_point.webp") center / 17.71875rem auto no-repeat;
   min-block-size: min(100cqi, 12rem);
   display: grid;
   place-items: center;
@@ -449,16 +459,32 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-inpu
 
 body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
   color: var(--ouw25-color-accent);
+  display: grid;
+  place-items: center;
+  position: relative;
+  inline-size: min(60%, 9rem);
+  aspect-ratio: 1;
   font-family: "Limelight", var(--ouw25-font-accent);
   font-size: clamp(2rem, 27cqi, 5.3125rem);
   line-height: 1;
-  max-inline-size: 60%;
   text-align: center;
 }
 
+.ouw25 .ouw25-luck-value::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 2px;
+  background: var(--ouw25-luck-gradient);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 @supports (background-clip: text) {
-  body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
-    background-image: var(--ouw25-border-gradient);
+  body.game .application.ouw25 .ouw25-notes .ouw25-luck-value > span {
+    background-image: var(--ouw25-luck-gradient);
     background-clip: text;
     color: transparent;
   }
@@ -481,7 +507,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds {
   border-image: var(--ouw25-border-gradient) 1;
   display: grid;
   justify-items: center;
-  padding: 15px;
+  padding: 12.6px 15px;
 }
 
 .ouw25 .ouw25-wound-slots {
@@ -490,29 +516,48 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  min-block-size: 3.75rem;
+  min-block-size: 3.1875rem;
 }
 
 .ouw25 .ouw25-wound-slots[data-count="4"] {
-  max-inline-size: 106px;
+  max-inline-size: 86.4px;
+  row-gap: 11.7px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots > .ouw25-condition-check {
   place-items: center;
-  inline-size: 49px;
-  block-size: 49px;
+  inline-size: 39.2px;
+  block-size: 39.2px;
   margin: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check::before,
 body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check > span {
-  inline-size: 41px;
-  block-size: 41px;
-  border-color: transparent;
-  border-image: var(--ouw25-border-gradient) 1;
+  grid-area: 1 / 1;
+  clip-path: polygon(25% 0, 75% 0, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0 75%, 0 25%);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check::before {
+  content: "";
+  inline-size: 32.8px;
+  block-size: 32.8px;
+  background: var(--ouw25-border-gradient);
+  pointer-events: none;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check > span {
+  inline-size: 30.8px;
+  block-size: 30.8px;
+  border: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check:has(input:focus-visible) {
+  outline: 2px solid var(--ouw25-color-accent-calm);
+  border-radius: 0.25rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + span {
-  font-size: 2.45rem;
+  font-size: 1.96rem;
 }
 
 .ouw25 .ouw25-merchant-sidebar > details.ouw25-sidebar-card {
@@ -521,7 +566,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + spa
   border-radius: 0.35rem;
 }
 
-.ouw25 .ouw25-sidebar-card > summary {
+.ouw25 :is(.ouw25-sidebar-card, .ouw25-pension-reference) > summary {
   font-size: 16px;
   line-height: 1.4;
   cursor: pointer;

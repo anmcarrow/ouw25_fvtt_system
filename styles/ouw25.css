@@ -217,7 +217,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:hover:not(:
   border-image: var(--ouw25-border-gradient) 1;
   color: var(--ouw25-color-ink);
   font-family: var(--ouw25-font-heading);
-  font-size: 1.17em;
+  font-size: 1.404em;
   font-weight: 400;
   text-align: start;
   white-space: normal;
@@ -308,12 +308,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-trait-ic
   font-size: 0.860625rem;
 }
 
-.ouw25 .ouw25-merchant-layout {
-  --ouw25-profile-inset: min(100px, 42%);
-}
-
 .ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description) {
-  margin-inline-start: var(--ouw25-profile-inset);
+  margin-inline-start: calc(24px - var(--ouw25-fieldset-border) - var(--ouw25-fieldset-padding));
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-name {
@@ -392,14 +388,16 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
 }
 
 .ouw25 .ouw25-notes fieldset {
+  --ouw25-fieldset-border: 1px;
+  --ouw25-fieldset-padding: 0.5rem;
   color: var(--ouw25-color-ink);
   background-color: var(--ouw25-color-surface);
-  border: 1px solid transparent;
+  border: var(--ouw25-fieldset-border) solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   min-inline-size: 0;
   margin-block: 0.25rem;
   overflow-wrap: anywhere;
-  padding: 0.5rem;
+  padding: var(--ouw25-fieldset-padding);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(h1, h2, h3, h4, h5, h6, summary),
@@ -422,7 +420,7 @@ body.game .application.ouw25 .ouw25-sheet-heading h2 {
 }
 
 body.game .application.ouw25 .ouw25-notes fieldset > legend > h3 {
-  font-size: calc(1.1rem / 1.5 * 2.5);
+  font-size: calc(1.1rem / 1.5 * 2);
   margin: 0.25rem 0;
 }
 

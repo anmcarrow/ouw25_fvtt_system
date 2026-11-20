@@ -5,8 +5,8 @@ import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, special
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
 import {
-  calculateVoyage, HOLD_BONUSES, normalizeUnrest, prepareSectorTransition, prepareUnrestIncrease, prepareVoyageReset,
-  resolvePsychotherapy, rollbackSectorTransition,
+  calculateVoyage, hasWornEngine, HOLD_BONUSES, normalizeUnrest, prepareSectorTransition, prepareUnrestIncrease, prepareVoyageReset,
+  resolveForcedMode, resolvePsychotherapy, rollbackSectorTransition,
   SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots, shipSelectionError
 } from "./ship.mjs";
 import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, shipGearSlots } from "./ship.mjs";
@@ -33,7 +33,7 @@ const VOYAGE_STATE_FIELDS = [
   "flaw1", "flaw2", "flaw3", "flaw4"
 ];
 const VOYAGE_FORM_FIELDS = [
-  "shipClass", "crewCount", "forcedMode", "illuminationMode", "unrest",
+  "shipClass", "crewCount", "illuminationMode", "unrest",
   "fuelStock", "provisionsStock", "flaw1", "flaw2", "flaw3", "flaw4"
 ];
 const CREATION_ROLLS = new Map([
@@ -75,6 +75,11 @@ function resourceField(initial = 0) {
 
 function voyageStateFingerprint(system) {
   return JSON.stringify(VOYAGE_STATE_FIELDS.map(field => system[field]));
+}
+
+function forcedModeFingerprint(system) {
+  return JSON.stringify([system.forcedMode, hasWornEngine(system),
+    ...SHIP_DAMAGE_SLOTS.map(number => system[`damage${number}`])]);
 }
 
 function hasUnsavedVoyageInputs(target, system) {
@@ -267,6 +272,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       editTrait: Ouw25ActorSheet.editTrait,
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord,
+      toggleForcedMode: Ouw25ActorSheet.toggleForcedMode,
       travelSector: Ouw25ActorSheet.travelSector,
       undoSector: Ouw25ActorSheet.undoSector,
       resetVoyage: Ouw25ActorSheet.resetVoyage,
@@ -785,6 +791,78 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     } finally {
       target.disabled = false;
       this.#depositPending = false;
+    }
+  }
+
+  static async toggleForcedMode(event, target) {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "cooperative" || PENDING_VOYAGE_OPERATIONS.has(actor.id)) return;
+    PENDING_VOYAGE_OPERATIONS.add(actor.id);
+    target.disabled = true;
+    try {
+      try {
+        await this.#autosaveQueue;
+      } catch {
+        return;
+      }
+      if (!this.isEditable || this.#invalidAutosaveFields.size) return;
+      const { i18n } = game;
+      const enabling = !actor.system.forcedMode;
+      if (enabling && hasWornEngine(actor.system)) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.ForcedBlocked"));
+        return;
+      }
+      const fingerprint = forcedModeFingerprint(actor.system);
+      const title = i18n.localize(`OUW25.Voyage.${enabling ? "EnableForced" : "DisableForced"}`);
+      const inputs = await foundry.applications.api.DialogV2.input({
+        classes: ["ouw25"],
+        window: { title },
+        content: `<p>${i18n.localize("OUW25.Voyage.ForcedRisk")}</p>
+          <label>${i18n.localize("OUW25.Voyage.AdditionalDice")}<input type="number" name="additionalDice" min="0" max="100" step="1" value="0" required></label>
+          <label>${i18n.localize("OUW25.Voyage.Complications")}<input type="number" name="complications" min="0" max="104" step="1" value="0" required></label>`,
+        rejectClose: false,
+        ok: { label: i18n.localize("OUW25.Voyage.RollForced") }
+      });
+      if (!inputs || !this.isEditable) return;
+      const additionalDice = Number(inputs.additionalDice);
+      const complications = Number(inputs.complications);
+      if (!Number.isSafeInteger(additionalDice) || additionalDice < 0 || additionalDice > 100
+        || !Number.isSafeInteger(complications) || complications < 0 || complications > 104) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.InvalidCheckInput"));
+        return;
+      }
+      if (forcedModeFingerprint(actor.system) !== fingerprint) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        return;
+      }
+      const { Roll } = foundry.dice;
+      const roll = await new Roll(`${4 + additionalDice}d6`).evaluate({ allowInteractive: false });
+      const dice = roll.dice.flatMap(term => term.results.filter(({ active }) => active).map(({ result }) => result));
+      const { outcome, remaining } = resolveCollision(dice, complications);
+      const result = i18n.format("OUW25.Collision.Result", {
+        outcome: i18n.localize(`OUW25.Collision.${outcome}`), remaining
+      });
+      const summary = `${title}: ${result}`;
+      if (!this.isEditable || forcedModeFingerprint(actor.system) !== fingerprint) {
+        const warning = i18n.localize("OUW25.Voyage.StateChanged");
+        ui.notifications.warn(warning);
+        await publishVoyageRoll(actor, `${summary} ${warning}`, [roll], false);
+        return;
+      }
+      const { forcedMode, damageSlot } = resolveForcedMode(actor.system, remaining);
+      const mode = i18n.localize(`OUW25.Voyage.${forcedMode ? "ForcedOn" : "ForcedOff"}`);
+      const damage = outcome === "Failure"
+        ? ` ${i18n.localize(`OUW25.Voyage.${damageSlot ? "ForcedDamage" : "ForcedDamageFull"}`)}` : "";
+      const status = `${summary} ${mode}${damage}`;
+      await actor.update({
+        "system.forcedMode": forcedMode,
+        "system.travelStatus": status,
+        ...(damageSlot ? { [`system.damage${damageSlot}`]: true } : {})
+      });
+      await publishVoyageRoll(actor, status, [roll], true);
+    } finally {
+      PENDING_VOYAGE_OPERATIONS.delete(actor.id);
+      target.disabled = false;
     }
   }
 

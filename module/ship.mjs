@@ -84,13 +84,27 @@ export function normalizeUnrest(unrest, pending) {
   return { unrest: Math.floor(unrest), illuminationUnrestPending: pending ?? (unrest % 1 >= 0.5) };
 }
 
+export function hasWornEngine(ship) {
+  return shipQualitySlots(ship, "flaw").some(({ value }) => value === "worn_engine");
+}
+
+export function resolveForcedMode(ship, successes) {
+  const enabling = !ship.forcedMode;
+  if (enabling && hasWornEngine(ship)) throw new RangeError("OUW25.Voyage.ForcedBlocked");
+  const failed = successes <= 0;
+  return {
+    forcedMode: enabling && !failed,
+    damageSlot: failed ? SHIP_DAMAGE_SLOTS.find(number => !ship[`damage${number}`]) : undefined
+  };
+}
+
 export function calculateVoyage(ship) {
   const classStats = SHIP_CLASS_STATS[ship.shipClass];
   const crewCount = ship.crewCount;
   const crewBand = crewCount * 2 > classStats.crew ? "above-half"
     : crewCount * 2 === classStats.crew ? "half" : "below-half";
   const belowHalf = crewBand === "below-half";
-  const wornEngine = shipQualitySlots(ship, "flaw").some(({ value }) => value === "worn_engine");
+  const wornEngine = hasWornEngine(ship);
   const forced = Boolean(ship.forcedMode) && !wornEngine;
   const fuelPerSector = classStats.fuel * (belowHalf ? 2 : 1) * (forced ? 2 : 1) * (ship.illuminationMode ? 2 : 1);
   let provisionsPerSector = classStats.provisions * (crewBand === "above-half" ? 1 : 0.5);

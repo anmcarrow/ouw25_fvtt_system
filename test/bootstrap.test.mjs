@@ -458,6 +458,19 @@ test("a reinforced hull adds two durability once; marked damage stays repairable
   assert.equal(shipCondition({ shipClass: 6, merit4: "strong_hull" }).slots.at(-1).number, 11);
 });
 
+test("the mechanic's check toggles forced mode and only full failures mark damage", async () => {
+  const { resolveForcedMode, SHIP_DAMAGE_SLOTS } = await import(new URL("module/ship.mjs", dist));
+  const ship = { forcedMode: false, damage1: true, damage3: true };
+  assert.deepEqual(resolveForcedMode(ship, 1), { forcedMode: true, damageSlot: undefined });
+  assert.deepEqual(resolveForcedMode(ship, 0), { forcedMode: false, damageSlot: 2 });
+  assert.deepEqual(resolveForcedMode({ ...ship, forcedMode: true }, -1), { forcedMode: false, damageSlot: 2 });
+  assert.deepEqual(resolveForcedMode({ ...ship, forcedMode: true }, 2), { forcedMode: false, damageSlot: undefined });
+  const full = Object.fromEntries(SHIP_DAMAGE_SLOTS.map(slot => [`damage${slot}`, true]));
+  assert.deepEqual(resolveForcedMode({ ...ship, ...full }, 0), { forcedMode: false, damageSlot: undefined });
+  assert.throws(() => resolveForcedMode({ ...ship, flaw2: "worn_engine" }, 2), /ForcedBlocked/);
+  assert.equal(resolveForcedMode({ ...ship, flaw2: "worn_engine", forcedMode: true }, 2).forcedMode, false);
+});
+
 test("voyage rates follow crew bands, modes, shortages, and ship flaws", async () => {
   const { calculateVoyage } = await import(new URL("module/ship.mjs", dist));
   const ship = { shipClass: 0, crewCount: 10, fuelStock: 10, provisionsStock: 10, unrest: 0 };

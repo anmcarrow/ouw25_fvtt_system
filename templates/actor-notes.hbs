@@ -278,11 +278,12 @@
           {{localize "OUW25.Voyage.Crew"}}
           <input type="number" name="system.crewCount" min="0" max="9007199254740991" step="1" value="{{ship.crewCount}}" required {{#unless editable}}readonly{{/unless}}>
         </label>
-        <label>
-          {{localize "OUW25.Voyage.ForcedMode"}}
-          <input type="checkbox" name="system.forcedMode" {{checked ship.forcedMode}} {{#if ship.forcedDisabled}}disabled{{/if}} {{#unless editable}}disabled{{/unless}}>
-        </label>
-        <p>{{localize "OUW25.Voyage.ForcedCheck"}}</p>
+        <p>{{#if ship.forcedMode}}{{localize "OUW25.Voyage.ForcedOn"}}{{else}}{{localize "OUW25.Voyage.ForcedOff"}}{{/if}}</p>
+        {{#if editable}}
+          <button type="button" data-action="toggleForcedMode" {{#if ship.forcedDisabled}}disabled{{/if}}>
+            {{#if ship.forcedMode}}{{localize "OUW25.Voyage.DisableForced"}}{{else}}{{localize "OUW25.Voyage.EnableForced"}}{{/if}}
+          </button>
+        {{/if}}
         <label>
           {{localize "OUW25.Voyage.IlluminationMode"}}
           <input type="checkbox" name="system.illuminationMode" {{checked ship.illuminationMode}} {{#unless editable}}disabled{{/unless}}>
@@ -296,7 +297,7 @@
         <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
         {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
         <p>{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}</p>
-        {{#if ship.voyage.forcedBlocked}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
+        {{#if ship.voyage.wornEngine}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
         {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
         {{#if ship.voyage.provisionsLow}}<p role="status">{{localize "OUW25.Voyage.ProvisionsLow"}}</p>{{/if}}
         {{#each ship.voyage.shortages}}<p role="status">{{localize this}}</p>{{/each}}

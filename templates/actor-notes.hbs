@@ -568,6 +568,15 @@
     </div>
     <div class="ouw25-sheet-column">
     {{> ouw25-journal}}
+    <fieldset class="ouw25-bargain-reference">
+      <legend>{{localize "OUW25.Bargain.Title"}}</legend>
+      <details>
+        <summary>{{localize "OUW25.Bargain.Summary"}}</summary>
+        <p>{{localize "OUW25.Bargain.Price"}}</p>
+        <p>{{localize "OUW25.Bargain.Payment"}}</p>
+        <p>{{localize "OUW25.Bargain.Consequences"}}</p>
+      </details>
+    </fieldset>
   {{#if showCollision}}
     <fieldset class="ouw25-collision">
       <legend>{{localize "OUW25.Collision.Title"}}</legend>

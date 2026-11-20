@@ -223,7 +223,19 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
   grid-template-columns: minmax(0, 67fr) minmax(0, 33fr);
-  min-inline-size: 34rem;
+  min-inline-size: 39rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.ouw25 .ouw25-merchant-pair .ouw25-traits ul {
+  padding-inline-start: 0;
+  list-style: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-choice-row,
@@ -359,6 +371,7 @@ body.game .application.ouw25 .ouw25-sheet-heading h2 {
   margin: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair > fieldset > legend,
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair > fieldset > legend,
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-column > fieldset > legend {
   color: var(--ouw25-color-accent);
@@ -509,6 +522,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-debt-table tbody td.ouw25-debt-
   line-height: 1.1;
 }
 
-.ouw25 .ouw25-debt-table .ouw25-debt-actions button {
-  width: 100%;
+.ouw25 .ouw25-debt-table .ouw25-debt-actions {
+  inline-size: 1%;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 5.25rem);
+  gap: 0.35rem;
+  vertical-align: middle;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-record-actions > button {
+  inline-size: 100%;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0.25rem 0.35rem;
+  white-space: nowrap;
 }

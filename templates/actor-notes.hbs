@@ -1,6 +1,16 @@
 {{#*inline "ouw25-roll-icon"}}
   <button type="button" class="ouw25-roll-icon" data-action="rollCreation" data-creation="{{creation}}" {{#if recordId}}data-record-id="{{recordId}}"{{/if}} aria-label="{{localize label formula=formula}}" data-tooltip="{{localize label formula=formula}}"><span aria-hidden="true">&#x1F3B2;</span></button>
 {{/inline}}
+{{#*inline "ouw25-record-actions"}}
+  <div class="ouw25-record-actions">
+    {{#if traitKind}}
+      <button type="button" data-action="editTrait" data-creation="{{traitKind}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+    {{else}}
+      <button type="button" data-action="editRecord" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
+    {{/if}}
+    <button type="button" data-action="deleteRecord" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+  </div>
+{{/inline}}
 {{#*inline "ouw25-money-input"}}
   <input type="number" name="system.{{money.field}}" aria-label="{{localize money.label}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
 {{/inline}}
@@ -182,8 +192,7 @@
               <td class="ouw25-debt-amount">{{amount}}</td>
               {{#if @root.editable}}
                 <td class="ouw25-debt-actions">
-                  <button type="button" data-action="editRecord" data-record-type="contact" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                  <button type="button" data-action="deleteRecord" data-record-type="contact" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                  {{> ouw25-record-actions recordType="contact"}}
                 </td>
               {{/if}}
             </tr>
@@ -221,8 +230,7 @@
               <td class="ouw25-debt-amount">{{amount}}</td>
               {{#if @root.editable}}
                 <td class="ouw25-debt-actions">
-                  <button type="button" data-action="editRecord" data-record-type="contract" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                  <button type="button" data-action="deleteRecord" data-record-type="contract" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                  {{> ouw25-record-actions recordType="contract"}}
                 </td>
               {{/if}}
             </tr>
@@ -259,8 +267,7 @@
               <td class="ouw25-debt-amount">{{volume}}</td>
               {{#if @root.editable}}
                 <td class="ouw25-debt-actions">
-                  <button type="button" data-action="editRecord" data-record-type="cargo" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                  <button type="button" data-action="deleteRecord" data-record-type="cargo" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                  {{> ouw25-record-actions recordType="cargo"}}
                 </td>
               {{/if}}
             </tr>
@@ -415,8 +422,7 @@
                 <td class="ouw25-debt-amount">{{amount}}</td>
                 {{#if @root.editable}}
                   <td class="ouw25-debt-actions">
-                    <button type="button" data-action="editRecord" data-record-type="debt" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                    <button type="button" data-action="deleteRecord" data-record-type="debt" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                    {{> ouw25-record-actions recordType="debt"}}
                   </td>
                 {{/if}}
               </tr>
@@ -452,8 +458,7 @@
                 <td>{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
                 {{#if @root.editable}}
                   <td class="ouw25-debt-actions">
-                    <button type="button" data-action="editRecord" data-record-type="relationship" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                    <button type="button" data-action="deleteRecord" data-record-type="relationship" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                    {{> ouw25-record-actions recordType="relationship"}}
                   </td>
                 {{/if}}
               </tr>
@@ -486,8 +491,7 @@
               <td class="ouw25-debt-amount">{{amount}}</td>
               {{#if @root.editable}}
                 <td class="ouw25-debt-actions">
-                  <button type="button" data-action="editRecord" data-record-type="possession" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                  <button type="button" data-action="deleteRecord" data-record-type="possession" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                  {{> ouw25-record-actions recordType="possession"}}
                 </td>
               {{/if}}
             </tr>
@@ -555,7 +559,10 @@
       </div>
     </fieldset>
   {{/if}}
-  {{> ouw25-merchant-traits}}
+    <div class="ouw25-merchant-pair">
+      {{> ouw25-merchant-traits}}
+    </div>
+    <div class="ouw25-merchant-pair">
   {{#if condition}}
     <fieldset>
       <legend>{{localize "OUW25.Past.Title"}}</legend>
@@ -583,6 +590,7 @@
     </fieldset>
   {{/if}}
   {{#if identity}}{{> ouw25-hiring}}{{/if}}
+    </div>
     </div>
     <div class="ouw25-sheet-column ouw25-merchant-sidebar">
     <p>{{localize "OUW25.Debt.PayableTotal" payable=ledger.totals.payable}}</p>
@@ -654,8 +662,7 @@
               </div>
               <p>{{localize help}}</p>
               {{#if @root.editable}}
-                <button type="button" data-action="editTrait" data-creation="{{../kind}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-                <button type="button" data-action="deleteRecord" data-record-type="trait" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+                {{> ouw25-record-actions recordType="trait" traitKind=../kind}}
               {{/if}}
             </li>
           {{/each}}

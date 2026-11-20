@@ -3,7 +3,9 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const styles = await readFile(new URL("../dist/ouw25/styles/ouw25.css", import.meta.url), "utf8");
+const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", import.meta.url), "utf8");
 const module = await readFile(new URL("../dist/ouw25/module/ouw25.mjs", import.meta.url), "utf8");
+const manifest = JSON.parse(await readFile(new URL("../dist/ouw25/system.json", import.meta.url), "utf8"));
 
 function color(name) {
   const match = styles.match(new RegExp(`--ouw25-${name}:\\s*(#[0-9a-f]{6});`, "i"));
@@ -63,4 +65,31 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   for (const foreground of ["#b3261e", "#690098", "#133e61"]) {
     assert.ok(contrast(foreground, surface) >= 4.5, `${foreground} lacks contrast on the sheet surface`);
   }
+});
+
+test("Roll20 display, field, and accent fonts are bundled and applied within the AppV2 root", async () => {
+  assert.deepEqual(manifest.styles, ["styles/fonts.css", "styles/ouw25.css"]);
+  for (const family of ["Viaoda Libre", "LXGW WenKai Mono TC", "Caveat"]) {
+    assert.ok(fontStyles.includes(`font-family: '${family}'`), `missing ${family} font-face`);
+  }
+  assert.match(fontStyles, /U\+0400-045F/);
+  assert.doesNotMatch(fontStyles, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+
+  const fontAssets = [...fontStyles.matchAll(/src:\s*url\("([^"]+)"\)/g)].map(([, url]) => url);
+  assert.ok(fontAssets.length > 0);
+  for (const asset of fontAssets) {
+    assert.ok(asset.startsWith("./fonts/"), `font URL must be local: ${asset}`);
+    await readFile(new URL(`../dist/ouw25/styles/${asset.slice(2)}`, import.meta.url));
+  }
+
+  assert.match(styles, /--ouw25-font-heading:\s*"Viaoda Libre"/);
+  assert.match(styles, /--ouw25-font-input:\s*"LXGW WenKai Mono TC"/);
+  assert.match(styles, /--ouw25-font-accent:\s*"Caveat"/);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(h1, h2, h3, h4, h5, h6, summary\)[\s\S]*?font-family:\s*var\(--ouw25-font-heading\);/);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(input:not\(\[type="checkbox"\]\)[\s\S]*?font-family:\s*var\(--ouw25-font-input\);/);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes option,\s*body\.game \.application\.ouw25 \.dialog-content option\s*\{\s*font-family:\s*var\(--ouw25-font-input\);/);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-sheet-heading h2\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*font-size:\s*1\.7rem;)(?=[^}]*margin:\s*0;)[^}]*\}/s);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-sheet-column > fieldset > legend\s*\{(?=[^}]*font-family:\s*var\(--ouw25-font-heading\);)(?=[^}]*font-size:\s*1\.1rem;)(?=[^}]*margin-block:\s*0\.25rem;)[^}]*\}/s);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(h2, h3\),\s*body\.game \.application\.ouw25 \.dialog-content :is\(h2, h3\)\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*margin-block:\s*0\.8rem;)[^}]*\}/s);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody td\.ouw25-debt-amount\s*\{[^}]*font-family:\s*var\(--ouw25-font-accent\);/s);
 });

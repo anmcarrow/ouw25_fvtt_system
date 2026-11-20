@@ -7,6 +7,9 @@
   --ouw25-color-accent-calm: #133e61;
   --ouw25-color-paper: #f3efe3;
   --ouw25-color-surface: #fff8ee;
+  --ouw25-font-heading: "Viaoda Libre", Georgia, "Times New Roman", serif;
+  --ouw25-font-input: "LXGW WenKai Mono TC", "Courier New", monospace;
+  --ouw25-font-accent: "Caveat", cursive;
   --ouw25-field-background: var(--ouw25-color-surface);
   --color-select-option-bg: var(--ouw25-color-surface);
   --ouw25-accent-gradient: linear-gradient(
@@ -169,6 +172,47 @@ body.game .application.ouw25 .dialog-content .form-group {
   color: var(--ouw25-color-accent);
 }
 
+body.game .application.ouw25 .ouw25-notes :is(h1, h2, h3, h4, h5, h6, summary),
+body.game .application.ouw25 .dialog-content :is(h1, h2, h3, h4, h5, h6, summary) {
+  font-family: var(--ouw25-font-heading);
+  font-weight: 400;
+}
+
+body.game .application.ouw25 .ouw25-notes :is(h2, h3),
+body.game .application.ouw25 .dialog-content :is(h2, h3) {
+  color: var(--ouw25-color-accent);
+  margin-block: 0.8rem;
+}
+
+body.game .application.ouw25 .ouw25-sheet-heading h2 {
+  color: var(--ouw25-color-accent);
+  font-size: 1.7rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-column > fieldset > legend {
+  color: var(--ouw25-color-accent);
+  font-family: var(--ouw25-font-heading);
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin-block: 0.25rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-identity label:has(> input[name="name"]) {
+  font-family: var(--ouw25-font-heading);
+}
+
+body.game .application.ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea),
+body.game .application.ouw25 .dialog-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+  font-family: var(--ouw25-font-input);
+}
+
+body.game .application.ouw25 .ouw25-notes option,
+body.game .application.ouw25 .dialog-content option {
+  font-family: var(--ouw25-font-input);
+}
+
 .ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
   color: var(--ouw25-color-ink);
   background-color: var(--ouw25-field-background);
@@ -287,6 +331,13 @@ body.game .application.ouw25 .ouw25-notes option {
 .ouw25 .ouw25-debt-table .ouw25-debt-amount {
   text-align: end;
   font-variant-numeric: tabular-nums;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-debt-table tbody td.ouw25-debt-amount {
+  color: var(--ouw25-color-accent);
+  font-family: var(--ouw25-font-accent);
+  font-size: 1.15em;
+  line-height: 1.1;
 }
 
 .ouw25 .ouw25-debt-table .ouw25-debt-actions button {

@@ -35,6 +35,13 @@
     <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
   </fieldset>
 {{/inline}}
+{{#*inline "ouw25-tab"}}
+  <section class="tab ouw25-tab {{tab.cssClass}}" data-group="{{tab.group}}" data-tab="{{tab.id}}">
+    <div class="ouw25-sheet-columns">
+      {{> @partial-block}}
+    </div>
+  </section>
+{{/inline}}
 <section class="ouw25-notes">
   <header class="ouw25-sheet-heading">
     <h2>{{localize actorTypeLabel}}</h2>
@@ -43,10 +50,20 @@
       <button type="submit">{{localize "OUW25.Save"}}</button>
     {{/if}}
   </header>
-  <div class="ouw25-sheet-columns">
+  <nav class="tabs ouw25-sheet-tabs" aria-label="{{localize "OUW25.Tabs.Label"}}">
+    {{#each tabs}}
+      <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">{{localize label}}</button>
+    {{/each}}
+  </nav>
   {{#if ship}}
+  {{#> ouw25-tab tab=tabs.attributes}}
     <div class="ouw25-sheet-column">
     {{> ouw25-finances}}
+    {{> ouw25-journal}}
+    </div>
+  {{/ouw25-tab}}
+  {{#*inline "ouw25-ship-basics"}}
+    <div class="ouw25-sheet-column">
     <fieldset class="ouw25-ship">
       <legend>{{localize "OUW25.Ship.Title"}}</legend>
       <output class="ouw25-hold-status">{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}</output>
@@ -124,6 +141,8 @@
       </fieldset>
     {{/each}}
     </div>
+  {{/inline}}
+  {{#> ouw25-tab tab=tabs.contacts}}
     <div class="ouw25-sheet-column">
   {{#if contacts}}
     <fieldset class="ouw25-contacts">
@@ -161,6 +180,10 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contact">{{localize "OUW25.Contact.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+    </div>
+  {{/ouw25-tab}}
+  {{#> ouw25-tab tab=tabs.contracts}}
+    <div class="ouw25-sheet-column">
   {{#if showContracts}}
     <fieldset class="ouw25-contracts">
       <legend>{{localize "OUW25.Contract.Title"}}</legend>
@@ -196,6 +219,10 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contract">{{localize "OUW25.Contract.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
+    </div>
+  {{/ouw25-tab}}
+  {{#*inline "ouw25-cargo-list"}}
+    <div class="ouw25-sheet-column">
   {{#if cargo}}
     <fieldset class="ouw25-cargo">
       <legend>{{localize "OUW25.Cargo.Title"}}</legend>
@@ -230,8 +257,10 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="cargo">{{localize "OUW25.Cargo.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
-    {{> ouw25-journal}}
     </div>
+  {{/inline}}
+  {{#> ouw25-tab tab=tabs.ship}}
+    {{> ouw25-ship-basics}}
     <div class="ouw25-sheet-column">
       <fieldset class="ouw25-ship-gear">
         <legend>{{localize "OUW25.ShipGear.Title"}}</legend>
@@ -315,9 +344,13 @@
         {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
       </fieldset>
     </div>
+  {{/ouw25-tab}}
+  {{#> ouw25-tab tab=tabs.cargo}}
+    {{> ouw25-cargo-list}}
+  {{/ouw25-tab}}
   {{else}}
+  {{#*inline "ouw25-creditors"}}
     <div class="ouw25-sheet-column">
-    {{> ouw25-finances}}
   {{#if ledger}}
     <fieldset class="ouw25-ledger">
       <legend>{{localize "OUW25.Debt.Title"}}</legend>
@@ -357,12 +390,13 @@
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="debt">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
-  {{#if relationships}}
+    </div>
+  {{/inline}}
+  {{#*inline "ouw25-relationship-list"}}
+    <div class="ouw25-sheet-column">
     <fieldset class="ouw25-relationships">
-      <legend>{{localize "OUW25.Relationship.Title"}}</legend>
-      {{#each relationships}}
+      <legend>{{localize tab.label}}</legend>
         <table class="ouw25-debt-table">
-          <caption>{{localize label}}</caption>
           <thead>
             <tr>
               <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
@@ -389,10 +423,12 @@
             {{/each}}
           </tbody>
         </table>
-      {{/each}}
-      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="relationship">{{localize "OUW25.Relationship.Add"}}</button>{{/if}}
+      {{#if @root.editable}}<button type="button" data-action="editRecord" data-record-type="relationship" data-record-direction="{{kind}}">{{localize "OUW25.Relationship.Add"}}</button>{{/if}}
     </fieldset>
-  {{/if}}
+    </div>
+  {{/inline}}
+  {{#*inline "ouw25-items"}}
+    <div class="ouw25-sheet-column">
   {{#if possessions}}
     <fieldset class="ouw25-possessions">
       <legend>{{localize "OUW25.Possession.Title"}}</legend>
@@ -425,6 +461,8 @@
     </fieldset>
   {{/if}}
     </div>
+  {{/inline}}
+  {{#> ouw25-tab tab=tabs.attributes}}
     <div class="ouw25-sheet-column">
   {{#if identity}}
     <fieldset class="ouw25-identity">
@@ -567,7 +605,7 @@
   {{/each}}
     </div>
     <div class="ouw25-sheet-column">
-    {{> ouw25-journal}}
+    {{> ouw25-finances}}
     <fieldset class="ouw25-bargain-reference">
       <legend>{{localize "OUW25.Bargain.Title"}}</legend>
       <details>
@@ -586,6 +624,22 @@
     </fieldset>
   {{/if}}
     </div>
+  {{/ouw25-tab}}
+  {{#> ouw25-tab tab=tabs.items}}
+    {{> ouw25-items}}
+  {{/ouw25-tab}}
+  {{#each relationships}}
+    {{#> ouw25-tab tab=(lookup @root.tabs tab)}}
+      {{> ouw25-relationship-list}}
+    {{/ouw25-tab}}
+  {{/each}}
+  {{#> ouw25-tab tab=tabs.creditors}}
+    {{> ouw25-creditors}}
+  {{/ouw25-tab}}
+  {{#> ouw25-tab tab=tabs.notes}}
+    <div class="ouw25-sheet-column">
+      {{> ouw25-journal}}
+    </div>
+  {{/ouw25-tab}}
   {{/if}}
-  </div>
 </section>

@@ -197,6 +197,23 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input:focus-vis
   color: var(--ouw25-color-danger);
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  margin-block: 0.35rem 0.65rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs button:not(.active) {
+  background: var(--ouw25-color-surface);
+  color: var(--ouw25-color-ink);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
+  display: none;
+}
+
 .ouw25 .ouw25-sheet-columns {
   display: grid;
   grid-auto-flow: column;

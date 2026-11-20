@@ -16,6 +16,10 @@ import { personalActions, personalOutcome, provisionFormula } from "./personal-a
 const SYSTEM_ID = "ouw25";
 const WOUND_SLOTS = [1, 2, 3, 4];
 const RELATION_KINDS = ["friend", "enemy"];
+const SHEET_TABS = {
+  merchant: ["attributes", "items", "friends", "illwishers", "creditors", "notes"],
+  cooperative: ["attributes", "contacts", "contracts", "ship", "cargo"]
+};
 const RECORD_LABELS = new Map([
   ["debt", "OUW25.Debt"],
   ["relationship", "OUW25.Relationship"],
@@ -285,6 +289,23 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     notes: { template: `systems/${SYSTEM_ID}/templates/actor-notes.hbs` }
   };
 
+  static TABS = {
+    sheet: { initial: "attributes", labelPrefix: "OUW25.Tabs" }
+  };
+
+  _getTabsConfig(group) {
+    const config = super._getTabsConfig(group);
+    if (group !== "sheet") return config;
+    return { ...config, tabs: SHEET_TABS[this.actor.type].map(id => ({ id })) };
+  }
+
+  _toggleDisabled(disabled) {
+    super._toggleDisabled(disabled);
+    if (disabled) {
+      for (const tab of this.element.querySelectorAll(".ouw25-sheet-tabs button")) tab.disabled = false;
+    }
+  }
+
   async _prepareContext(options) {
     const { type, system } = this.actor;
     const merchant = type === "merchant";
@@ -387,7 +408,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         }))
       })) } : null,
       relationships: merchant ? RELATION_KINDS.map(kind => ({
-        label: `OUW25.Relationship.${kind}`,
+        kind, tab: kind === "friend" ? "friends" : "illwishers", label: `OUW25.Relationship.${kind}`,
         entries: relationships.filter(item => item.system.direction === kind).map(item => ({
           id: item.id, name: item.name, location: item.system.location, reason: item.system.reason
         }))
@@ -559,7 +580,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   static async editRecord(event, target) {
     const actor = this.actor;
-    const { recordId: id, recordType: type } = target.dataset;
+    const { recordId: id, recordType: type, recordDirection } = target.dataset;
     const contact = type === "contact";
     const contract = type === "contract";
     const cargo = type === "cargo";
@@ -574,7 +595,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     if (id && item?.type !== type) return;
     this.#recordPending = true;
     try {
-      const direction = item?.system.direction ?? directions[0];
+      const direction = item?.system.direction ?? (directions.includes(recordDirection) ? recordDirection : directions[0]);
       const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/record-form.hbs`, {
         rootId: `ouw25-record-${foundry.utils.randomID()}`,
         showLocation: !possession && !cargo, contract, cargo, hasAmount,

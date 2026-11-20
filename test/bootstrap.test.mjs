@@ -20,6 +20,7 @@ test("the built package registers models and an editable notes sheet for its dec
         get element() { return this._element; }
         get form() { return this._form; }
         async _prepareContext() { return {}; }
+        _getTabsConfig(group) { return this.constructor.TABS[group]; }
         _onChangeForm() {}
         async _onClickAction() { this.actionInvoked = true; }
         async _processSubmitData(_event, _form, data) { return data; }
@@ -73,6 +74,9 @@ test("the built package registers models and an editable notes sheet for its dec
     } },
     { type: "cargo", id: "cargo-1", name: "Crates", system: { quantity: 3, volume: 12.5 } },
     { type: "cargo", id: "cargo-2", name: "Bales", system: { quantity: 5, volume: 2.25 } }];
+    assert.deepEqual(sheet._getTabsConfig("sheet").tabs.map(({ id }) => id), merchant
+      ? ["attributes", "items", "friends", "illwishers", "creditors", "notes"]
+      : ["attributes", "contacts", "contracts", "ship", "cargo"]);
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ...context } = await sheet._prepareContext({});
@@ -125,8 +129,8 @@ test("the built package registers models and an editable notes sheet for its dec
           { label: "OUW25.Debt.receivable", entries: [] }
         ] } : null,
         relationships: merchant ? [
-          { label: "OUW25.Relationship.friend", entries: [{ id: "friend-1", name: "Friend", location: "Harbor", reason: "Rescue" }] },
-          { label: "OUW25.Relationship.enemy", entries: [] }
+          { kind: "friend", tab: "friends", label: "OUW25.Relationship.friend", entries: [{ id: "friend-1", name: "Friend", location: "Harbor", reason: "Rescue" }] },
+          { kind: "enemy", tab: "illwishers", label: "OUW25.Relationship.enemy", entries: [] }
         ] : null,
         possessions: merchant ? { entries: [{ id: "gear-1", name: "Lantern", amount: 0 }] } : null,
         condition: merchant ? { specialties: MERCHANT_SPECIALTIES.map(value => ({

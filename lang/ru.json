@@ -507,6 +507,19 @@
       "Wound": "Рана {slot}",
       "LethalWound": "Рана {slot} (смертельная)"
     },
+    "Tabs": {
+      "Label": "Разделы листа",
+      "attributes": "Атрибуты",
+      "items": "Личные вещи",
+      "friends": "Друзья",
+      "illwishers": "Враги",
+      "creditors": "Кредиторы",
+      "notes": "Заметки",
+      "contacts": "Контакты",
+      "contracts": "Контракты",
+      "ship": "Судно",
+      "cargo": "Трюм"
+    },
     "Bargain": {
       "Title": "Драматический торг",
       "Summary": "Цена и способы оплаты",

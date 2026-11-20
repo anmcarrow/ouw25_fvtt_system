@@ -507,6 +507,19 @@
       "Wound": "Wound {slot}",
       "LethalWound": "Wound {slot} (lethal)"
     },
+    "Tabs": {
+      "Label": "Sheet sections",
+      "attributes": "Attributes",
+      "items": "Personal belongings",
+      "friends": "Friends",
+      "illwishers": "Enemies",
+      "creditors": "Creditors",
+      "notes": "Notes",
+      "contacts": "Contacts",
+      "contracts": "Contracts",
+      "ship": "Ship",
+      "cargo": "Hold"
+    },
     "Bargain": {
       "Title": "Dramatic bargain",
       "Summary": "Price and ways to pay",

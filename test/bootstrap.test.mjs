@@ -124,7 +124,8 @@ test("the built package registers models and an editable notes sheet for its dec
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
         pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null,
-        ledger: merchant ? { totals: { payable: "12", receivable: "0" }, groups: [
+        ledger: merchant ? { totals: { payable: "12", receivable: "0" },
+          payableWarning: false, payableScale: 2 - 0.16 * Math.log10(13), groups: [
           { label: "OUW25.Debt.payable", entries: [{ id: "debt-1", name: "Creditor", amount: 12, location: "Port" }] },
           { label: "OUW25.Debt.receivable", entries: [] }
         ] } : null,

@@ -314,6 +314,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const lethal = merchant ? lethalWoundSlot(system.past, system.fragile) : null;
     const specialtyCount = merchant ? availableSpecialties(system.past).length : 0;
     const debts = merchant ? this.actor.items.filter(item => item.type === "debt") : [];
+    const totals = merchant ? debtTotals(debts.map(item => item.system)) : null;
     const relationships = merchant ? this.actor.items.filter(item => item.type === "relationship") : [];
     const traits = merchant ? this.actor.items.filter(item => item.type === "trait") : [];
     const ship = type === "cooperative" ? shipConfiguration(system) : null;
@@ -402,12 +403,17 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       money: merchant ? { value: system.pocketMoney, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
         : { value: system.budget, field: "budget", label: "OUW25.Finance.Budget" },
       pension: pension && { balance: system.pensionBalance, ...pension, complete: pension.untilNext === null },
-      ledger: merchant ? { totals: debtTotals(debts.map(item => item.system)), groups: DEBT_DIRECTIONS.map(direction => ({
-        label: `OUW25.Debt.${direction}`,
-        entries: debts.filter(item => item.system.direction === direction).map(item => ({
-          id: item.id, name: item.name, location: item.system.location, amount: item.system.amount
+      ledger: merchant ? {
+        totals,
+        payableWarning: BigInt(totals.payable) > 1000n,
+        payableScale: Math.max(0.9, 2 - 0.16 * Math.log10(1 + Number(totals.payable))),
+        groups: DEBT_DIRECTIONS.map(direction => ({
+          label: `OUW25.Debt.${direction}`,
+          entries: debts.filter(item => item.system.direction === direction).map(item => ({
+            id: item.id, name: item.name, location: item.system.location, amount: item.system.amount
+          }))
         }))
-      })) } : null,
+      } : null,
       relationships: merchant ? RELATION_KINDS.map(kind => ({
         kind, tab: kind === "friend" ? "friends" : "illwishers", label: `OUW25.Relationship.${kind}`,
         entries: relationships.filter(item => item.system.direction === kind).map(item => ({

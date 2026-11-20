@@ -297,6 +297,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button {
   padding: 0.2rem 0.35rem;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button:not(:disabled) {
+  background: var(--ouw25-past-button-bg);
+}
+
+.ouw25-personal-actions > button:nth-child(4n + 1) { --ouw25-past-button-bg: #546e7a; }
+.ouw25-personal-actions > button:nth-child(4n + 2) { --ouw25-past-button-bg: #77673f; }
+.ouw25-personal-actions > button:nth-child(4n + 3) { --ouw25-past-button-bg: #725c78; }
+.ouw25-personal-actions > button:nth-child(4n + 4) { --ouw25-past-button-bg: #526f62; }
+
 body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button,
 body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-profile-details > button {
   font-size: 0.8em;
@@ -415,18 +424,30 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-sid
   margin: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-total-debt > p, .ouw25-pension > h3) {
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-total-debt, .ouw25-pocket-money > h3, .ouw25-cash-controls > span, .ouw25-pension > h3) {
   font-family: var(--ouw25-font-accent);
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar .ouw25-total-debt > p {
-  line-height: 0.6;
+.ouw25 .ouw25-cash-controls {
+  padding-inline-end: 25px;
 }
 
-.ouw25 .ouw25-total-debt > p > span {
-  color: var(--ouw25-color-warning);
-  font-size: 2em;
+.ouw25 .ouw25-cash-controls > span {
+  font-size: 1.2rem;
+}
+
+.ouw25 .ouw25-debt-balance {
+  font-size: 1.4rem;
   line-height: 1;
+  margin-block-start: -0.3em;
+}
+
+.ouw25 .ouw25-debt-balance > span {
+  font-size: calc(1em * var(--ouw25-debt-scale));
+}
+
+.ouw25 .ouw25-debt-balance > .ouw25-debt-warning {
+  color: var(--ouw25-color-warning);
 }
 
 .ouw25 .ouw25-pension > h3 > span {
@@ -437,6 +458,19 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar .ouw25-total-d
 
 .ouw25 .ouw25-pension-controls > button {
   max-inline-size: 65%;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button:not(:disabled) {
+  background: linear-gradient(90deg, #485d78, #32445e 16%, #32445e 84%, #485d78);
+  color: #edcd79;
+}
+
+@supports (background-clip: text) {
+  body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button:not(:disabled) > span {
+    background: linear-gradient(90deg, #edcd79, #ed9d79, #ede579, #edbd79);
+    background-clip: text;
+    color: transparent;
+  }
 }
 
 .ouw25 .ouw25-pension-reference,

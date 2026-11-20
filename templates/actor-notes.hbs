@@ -18,7 +18,7 @@
     <div class="ouw25-sidebar-card ouw25-money-card">
       <div class="ouw25-pocket-money">
         <h3>{{localize money.label}}</h3>
-        <div class="ouw25-choice-row">
+        <div class="ouw25-choice-row ouw25-cash-controls">
           <div class="ouw25-rolled-input ouw25-choice-row">
             {{> ouw25-money-input}}
             {{#if editable}}{{> ouw25-roll-icon creation="pocketMoney" label="OUW25.Creation.RollMoney"}}{{/if}}
@@ -27,7 +27,8 @@
         </div>
       </div>
       <div class="ouw25-total-debt">
-        <p>{{localize "OUW25.Debt.PayableLabel"}}:<br><span>{{ledger.totals.payable}}</span> {{localize "OUW25.Finance.Currency"}}</p>
+        <p>{{localize "OUW25.Debt.PayableLabel"}}:</p>
+        <div class="ouw25-debt-balance"><span class="{{#if ledger.payableWarning}}ouw25-debt-warning{{/if}}" style="--ouw25-debt-scale: {{ledger.payableScale}}">{{ledger.totals.payable}}</span> {{localize "OUW25.Finance.Currency"}}</div>
       </div>
     </div>
     <div class="ouw25-sidebar-card ouw25-pension">
@@ -35,7 +36,7 @@
       {{#if editable}}
         <div class="ouw25-choice-row ouw25-pension-controls">
           <input type="number" step="any" inputmode="numeric" aria-label="{{localize "OUW25.Finance.DepositAmount"}}" data-deposit>
-          <button type="button" data-action="depositPension">{{localize "OUW25.Finance.Deposit"}}</button>
+          <button type="button" data-action="depositPension"><span>{{localize "OUW25.Finance.Deposit"}}</span></button>
         </div>
       {{/if}}
       <p>{{localize "OUW25.Finance.Leaves" leaves=pension.leaves}}</p>

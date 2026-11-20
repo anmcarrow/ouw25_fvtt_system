@@ -74,9 +74,9 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   }
 });
 
-test("Roll20 display, field, and accent fonts are bundled and applied within the AppV2 root", async () => {
+test("Roll20 body, display, field, and accent fonts are bundled and applied within the AppV2 root", async () => {
   assert.deepEqual(manifest.styles, ["styles/fonts.css", "styles/ouw25.css"]);
-  for (const family of ["Viaoda Libre", "LXGW WenKai Mono TC", "Caveat"]) {
+  for (const family of ["PT Sans", "Viaoda Libre", "LXGW WenKai Mono TC", "Caveat"]) {
     assert.ok(fontStyles.includes(`font-family: '${family}'`), `missing ${family} font-face`);
   }
   assert.match(fontStyles, /U\+0400-045F/);
@@ -90,6 +90,7 @@ test("Roll20 display, field, and accent fonts are bundled and applied within the
   }
 
   assert.match(styles, /--ouw25-font-heading:\s*"Viaoda Libre"/);
+  assert.match(styles, /--ouw25-font-body:\s*"PT Sans"/);
   assert.match(styles, /--ouw25-font-input:\s*"LXGW WenKai Mono TC"/);
   assert.match(styles, /--ouw25-font-accent:\s*"Caveat"/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(h1, h2, h3, h4, h5, h6, summary\)[\s\S]*?font-family:\s*var\(--ouw25-font-heading\);/);

@@ -8,6 +8,7 @@
   --ouw25-color-paper: #f3efe3;
   --ouw25-color-surface: #fff8ee;
   --ouw25-font-heading: "Viaoda Libre", Georgia, "Times New Roman", serif;
+  --ouw25-font-body: "PT Sans", Arial, sans-serif;
   --ouw25-font-input: "LXGW WenKai Mono TC", "Courier New", monospace;
   --ouw25-font-accent: "Caveat", cursive;
   --ouw25-field-background: var(--ouw25-color-surface);
@@ -43,6 +44,13 @@ body.game .application.ouw25:has(.ouw25-notes) {
 
 .ouw25 .ouw25-notes * {
   color: inherit;
+}
+
+body.game .application.ouw25 .ouw25-notes,
+body.game .application.ouw25 .ouw25-notes button,
+body.game .application.ouw25 .dialog-content,
+body.game .application.ouw25 .dialog-content button {
+  font-family: var(--ouw25-font-body);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(p, li, label, strong, b, output, caption) {
@@ -312,12 +320,17 @@ body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-trait-ic
   font-size: 0.860625rem;
 }
 
+.ouw25 .ouw25-trait-actions > .ouw25-trait-icon span {
+  position: relative;
+  inset-block-start: 2px;
+}
+
 .ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description, .ouw25-trait-name) {
   margin-inline-start: calc(24px - var(--ouw25-fieldset-border) - var(--ouw25-fieldset-padding));
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-name {
-  margin-block: 0;
+  margin-block: 0.15rem 0;
   margin-inline-end: 0;
 }
 
@@ -325,10 +338,27 @@ body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-description
   margin-block-start: 0.25em;
 }
 
+.ouw25 .ouw25-notes .ouw25-identity {
+  position: relative;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-identity input[name="name"] {
+  inline-size: 100%;
   font-size: 18.75px;
   line-height: 1.2;
   min-block-size: 42px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-identity:has(> .ouw25-roll-icon) input[name="name"] {
+  padding-inline-end: 35px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-identity > .ouw25-roll-icon {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 0;
+  inline-size: 35px;
+  transform: translateY(-50%);
 }
 
 body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
@@ -403,6 +433,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   margin-block: 0.25rem;
   overflow-wrap: anywhere;
   padding: var(--ouw25-fieldset-padding);
+}
+
+.ouw25 .ouw25-notes fieldset.ouw25-traits {
+  padding-block-start: calc(var(--ouw25-fieldset-padding) * 0.7);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(h1, h2, h3, h4, h5, h6, summary),

@@ -527,31 +527,28 @@
   {{/inline}}
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-merchant-layout"}}
     <div class="ouw25-sheet-column">
-  {{#if identity}}
-    <div class="ouw25-choice-row ouw25-identity">
-      <input type="text" name="name" aria-label="{{localize "OUW25.Identity.Name"}}" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
-      {{#if editable}}{{> ouw25-roll-icon creation="name" label="OUW25.Creation.RollName"}}{{/if}}
-    </div>
-  {{/if}}
-  {{#if condition}}
-    <fieldset>
-      {{> ouw25-block-heading heading="OUW25.Specialty.Title"}}
-      <div class="ouw25-choice-row">
-        <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
-          {{#each condition.specialties}}
-            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}{{#if help}} &mdash; {{localize help}}{{/if}}</option>
-          {{/each}}
-        </select>
-        {{#if editable}}
-          {{#if condition.specialtyFormula}}{{> ouw25-roll-icon creation="specialty" label="OUW25.Creation.RollSpecialty"}}{{/if}}
+      <div>
+        {{#if identity}}
+          <div class="ouw25-choice-row ouw25-identity">
+            <input type="text" name="name" aria-label="{{localize "OUW25.Identity.Name"}}" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
+            {{#if editable}}{{> ouw25-roll-icon creation="name" label="OUW25.Creation.RollName"}}{{/if}}
+          </div>
+        {{/if}}
+        {{#if condition}}
+          <div class="ouw25-choice-row">
+            <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
+              {{#each condition.specialties}}
+                <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}{{#if help}} &mdash; {{localize help}}{{/if}}</option>
+              {{/each}}
+            </select>
+            {{#if editable}}
+              {{#if condition.specialtyFormula}}{{> ouw25-roll-icon creation="specialty" label="OUW25.Creation.RollSpecialty"}}{{/if}}
+            {{/if}}
+          </div>
+          {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
+          {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
         {{/if}}
       </div>
-      <div class="ouw25-profile-details">
-        {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
-        {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
-      </div>
-    </fieldset>
-  {{/if}}
   {{#if identity}}
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Identity.Dream"}}

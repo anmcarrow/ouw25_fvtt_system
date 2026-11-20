@@ -28,6 +28,10 @@
   );
 }
 
+body.game .application.ouw25:has(.ouw25-notes) {
+  min-block-size: 60vh;
+}
+
 .ouw25 .ouw25-notes {
   box-sizing: border-box;
   color-scheme: light;
@@ -45,6 +49,10 @@
 
 .ouw25 .ouw25-notes * {
   color: inherit;
+}
+
+body.game .application.ouw25 .ouw25-notes :is(p, li, label, strong, b, output, caption) {
+  font-weight: 400;
 }
 
 body.game .application.ouw25 .ouw25-notes button,
@@ -121,7 +129,6 @@ body.game .application.ouw25 .ouw25-notes .ouw25-hold-status {
   padding: 0.25rem 0.5rem;
   border-inline-start: 2px solid var(--ouw25-color-accent);
   background: var(--ouw25-color-surface);
-  font-weight: bold;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-condition-check {
@@ -245,7 +252,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions {
   gap: 0.5rem;
 }
 
-.ouw25 .ouw25-choice-row > :is(input, select, textarea, strong) {
+.ouw25 .ouw25-choice-row > :is(input, select, textarea, .ouw25-trait-name) {
   flex: 1;
   min-inline-size: 0;
 }
@@ -270,7 +277,7 @@ body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-tra
   box-shadow: none;
   color: inherit;
   flex: none;
-  font-size: 1.5rem;
+  font-size: 1.425rem;
   line-height: 1;
   margin: 0;
   padding: 0.25rem;
@@ -282,12 +289,24 @@ body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions {
   flex: none;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > button {
-  font-size: 1.35rem;
+body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-trait-icon {
+  font-size: 1.1475rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-roll-icon {
+  font-size: 1.2825rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-name {
+  margin-block-end: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-description {
+  margin-block-start: 0.25em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-identity input[name="name"] {
-  font-size: 25px;
+  font-size: 18.75px;
   line-height: 1.2;
   min-block-size: 42px;
 }
@@ -489,7 +508,6 @@ body.game .application.ouw25 .ouw25-notes option {
 }
 
 .ouw25 .ouw25-debt-table caption {
-  font-weight: bold;
   text-align: start;
 }
 

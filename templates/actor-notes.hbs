@@ -1,5 +1,5 @@
 {{#*inline "ouw25-roll-icon"}}
-  <button type="button" class="ouw25-roll-icon" data-action="rollCreation" data-creation="{{creation}}" {{#if recordId}}data-record-id="{{recordId}}"{{/if}} aria-label="{{localize label formula=formula}}" data-tooltip="{{localize label formula=formula}}"><span aria-hidden="true">&#x1F3B2;</span></button>
+  <button type="button" class="ouw25-roll-icon" data-action="rollCreation" data-creation="{{creation}}" {{#if recordId}}data-record-id="{{recordId}}"{{/if}} aria-label="{{localize label}}" data-tooltip="{{localize label}}"><span aria-hidden="true">&#x1F3B2;</span></button>
 {{/inline}}
 {{#*inline "ouw25-record-actions"}}
   <div class="ouw25-record-actions">
@@ -515,7 +515,7 @@
       {{#if identity.hiringHelp}}<p>{{localize identity.hiringHelp}}</p>{{/if}}
       {{#if editable}}
         {{#each identity.actions}}
-          <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{localize label}}</button>
+          <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{caption}}</button>
         {{/each}}
       {{/if}}
     </fieldset>
@@ -538,7 +538,7 @@
           {{/each}}
         </select>
         {{#if editable}}
-          {{#if condition.specialtyFormula}}{{> ouw25-roll-icon creation="specialty" label="OUW25.Creation.RollSpecialty" formula=condition.specialtyFormula}}{{/if}}
+          {{#if condition.specialtyFormula}}{{> ouw25-roll-icon creation="specialty" label="OUW25.Creation.RollSpecialty"}}{{/if}}
         {{/if}}
       </div>
       {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
@@ -576,7 +576,7 @@
           {{#if pastMoves.actions}}
             <div class="ouw25-personal-actions">
               {{#each pastMoves.actions}}
-                <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}" data-tooltip="{{localize label}}"><span>{{caption}}</span></button>
+                <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}"><span>{{caption}}</span></button>
               {{/each}}
             </div>
             <p>{{localize "OUW25.PersonalAction.Manual"}}</p>
@@ -645,15 +645,15 @@
     <fieldset class="ouw25-traits">
       <legend>{{localize label}}</legend>
       {{#if help}}
-        {{#each choices}}{{#if selected}}<p><strong>{{localize label}}</strong></p>{{/if}}{{/each}}
-        <p>{{localize help}}</p>
+        {{#each choices}}{{#if selected}}<p class="ouw25-trait-name">{{localize label}}</p>{{/if}}{{/each}}
+        <p class="ouw25-trait-description">{{localize help}}</p>
       {{/if}}
       {{#if entries}}
         <ul>
           {{#each entries}}
             <li>
               <div class="ouw25-choice-row">
-                <strong>{{localize name}}</strong>
+                <span class="ouw25-trait-name">{{localize name}}</span>
                 {{#if @root.editable}}
                   <div class="ouw25-trait-actions">
                     <button type="button" class="ouw25-trait-icon" data-action="editTrait" data-creation="{{../kind}}" data-record-id="{{id}}" aria-label="{{localize "OUW25.Debt.Edit"}}" data-tooltip="{{localize "OUW25.Debt.Edit"}}"><span aria-hidden="true">&#x270F;&#xFE0F;</span></button>
@@ -662,7 +662,7 @@
                   </div>
                 {{/if}}
               </div>
-              <p>{{localize help}}</p>
+              <p class="ouw25-trait-description">{{localize help}}</p>
             </li>
           {{/each}}
         </ul>

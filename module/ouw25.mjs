@@ -247,13 +247,10 @@ function traitChoices(kind, selected, includeUnset = false) {
 }
 
 function personalActionButtons(source, value) {
-  return personalActions(source, value).map(({ id }) => {
-    const label = `OUW25.PersonalAction.Moves.${id}.label`;
-    return {
-      id, source, value, label,
-      ...(source === "past" && { caption: game.i18n.localize(label).split(" \u00b7 ", 1)[0] })
-    };
-  });
+  return personalActions(source, value).map(({ id }) => ({
+    id, source, value,
+    caption: game.i18n.localize(`OUW25.PersonalAction.Moves.${id}.label`).split(" \u00b7 ", 1)[0]
+  }));
 }
 
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
@@ -748,7 +745,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     try {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
         classes: ["ouw25"],
-        window: { title: i18n.format(`OUW25.Creation.Roll${key}`, { formula }) },
+        window: { title: i18n.localize(`OUW25.Creation.Roll${key}`) },
         content: `<p>${i18n.format(`OUW25.Creation.Confirm${key}`, { formula })}</p>`,
         rejectClose: false
       });

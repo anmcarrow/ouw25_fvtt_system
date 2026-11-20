@@ -320,9 +320,9 @@ body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-trait-ic
   font-size: 0.860625rem;
 }
 
-.ouw25 .ouw25-trait-actions > .ouw25-trait-icon span {
+.ouw25 .ouw25-trait-icon span {
   position: relative;
-  inset-block-start: 2px;
+  inset-block-start: 4px;
 }
 
 .ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description, .ouw25-trait-name) {
@@ -338,27 +338,36 @@ body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-description
   margin-block-start: 0.25em;
 }
 
-.ouw25 .ouw25-notes .ouw25-identity {
+.ouw25 .ouw25-notes .ouw25-rolled-input {
   position: relative;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.ouw25 .ouw25-notes .ouw25-rolled-input > input {
+  inline-size: 100%;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-identity input[name="name"] {
-  inline-size: 100%;
   font-size: 18.75px;
   line-height: 1.2;
   min-block-size: 42px;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-identity:has(> .ouw25-roll-icon) input[name="name"] {
+body.game .application.ouw25 .ouw25-notes .ouw25-rolled-input:has(> .ouw25-roll-icon) > input {
   padding-inline-end: 35px;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-identity > .ouw25-roll-icon {
+body.game .application.ouw25 .ouw25-notes .ouw25-rolled-input > .ouw25-roll-icon {
   position: absolute;
   inset-block-start: 50%;
   inset-inline-end: 0;
   inline-size: 35px;
   transform: translateY(-50%);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-roll-icon[data-creation="specialty"] {
+  translate: -2px 0;
 }
 
 body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
@@ -368,16 +377,172 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
   resize: vertical;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > fieldset {
-  background: none;
+.ouw25 .ouw25-merchant-sidebar {
+  container-type: inline-size;
+  overflow-wrap: anywhere;
+}
+
+.ouw25 .ouw25-merchant-sidebar > .ouw25-sidebar-card {
+  background: var(--ouw25-color-paper) var(--ouw25-card-paper) center top / 100% auto no-repeat;
   border: 0;
+  border-radius: 0.25rem;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+  padding: 20px 15px 15px;
+}
+
+.ouw25 .ouw25-merchant-sidebar > .ouw25-total-debt {
+  --ouw25-card-paper: url("./images/smallpaper2.webp");
+  padding-block-end: 5px;
+}
+
+.ouw25 .ouw25-merchant-sidebar > .ouw25-pocket-money {
+  --ouw25-card-paper: url("./images/smallpaper4.webp");
+  padding-block-end: 7.5px;
+}
+
+.ouw25 .ouw25-merchant-sidebar > .ouw25-pension {
+  --ouw25-card-paper: url("./images/smallpaper3.webp");
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-sidebar-card h3, .ouw25-total-debt > p) {
+  font-size: 1.4rem;
+  line-height: 1.2;
   margin: 0;
-  padding: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-total-debt > p, .ouw25-pension > h3) {
+  font-family: var(--ouw25-font-accent);
+}
+
+.ouw25 .ouw25-total-debt > p > span {
+  color: var(--ouw25-color-warning);
+  font-size: 2em;
+  line-height: 1;
+}
+
+.ouw25 .ouw25-pension > h3 > span {
+  color: var(--ouw25-color-accent-calm);
+  font-size: 1.5em;
+  line-height: 1;
+}
+
+.ouw25 .ouw25-pension-controls > button {
+  max-inline-size: 65%;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-input > input {
+  appearance: textfield;
+  min-block-size: 2rem;
+}
+
+.ouw25 .ouw25-pocket-money input::-webkit-inner-spin-button {
+  appearance: none;
+}
+
+.ouw25 .ouw25-luck {
+  background: url("./images/lucky_point.webp") center / min(100%, 17.71875rem) auto no-repeat;
+  min-block-size: min(100cqi, 12rem);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
+  color: var(--ouw25-color-accent);
+  font-family: "Limelight", var(--ouw25-font-accent);
+  font-size: clamp(2rem, 27cqi, 5.3125rem);
+  line-height: 1;
+  max-inline-size: 60%;
+  text-align: center;
+}
+
+@supports (background-clip: text) {
+  body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
+    background-image: var(--ouw25-border-gradient);
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+.ouw25 .ouw25-luck-actions {
+  display: grid;
+  position: absolute;
+  inset-inline-end: 8%;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-luck-actions > button {
+  min-inline-size: 2rem;
+  padding: 0.25rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds {
-  border-block: 1px solid var(--ouw25-color-accent);
-  padding-block: 0.5rem;
+  background: url("./images/blood.webp") center / cover no-repeat;
+  border-block: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  display: grid;
+  justify-items: center;
+  padding: 15px;
+}
+
+.ouw25 .ouw25-wound-slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 3.75rem;
+}
+
+.ouw25 .ouw25-wound-slots[data-count="4"] {
+  max-inline-size: 106px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots > .ouw25-condition-check {
+  place-items: center;
+  inline-size: 49px;
+  block-size: 49px;
+  margin: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check > span {
+  inline-size: 41px;
+  block-size: 41px;
+  border-color: transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + span {
+  font-size: 2.45rem;
+}
+
+.ouw25 .ouw25-merchant-sidebar > details.ouw25-sidebar-card {
+  --ouw25-card-paper: url("./images/smallpaper5.webp");
+  padding: 15px;
+  border-radius: 0.35rem;
+}
+
+.ouw25 .ouw25-sidebar-card > summary {
+  font-size: 16px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.ouw25 .ouw25-sidebar-card > summary + :is(p, .ouw25-collision-controls) {
+  border-block-start: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  margin-block-start: 0.6rem;
+  padding-block-start: 0.6rem;
+}
+
+.ouw25 .ouw25-collision-controls > label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ouw25 .ouw25-collision-controls > label > input {
+  inline-size: 5em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-layout {
@@ -436,7 +601,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
 }
 
 .ouw25 .ouw25-notes fieldset.ouw25-traits {
-  padding-block-start: calc(var(--ouw25-fieldset-padding) * 0.7);
+  padding-block-start: calc(var(--ouw25-fieldset-padding) * 0.49);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(h1, h2, h3, h4, h5, h6, summary),

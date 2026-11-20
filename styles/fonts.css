@@ -1,4 +1,12 @@
 @font-face {
+  font-family: 'Limelight';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/limelight-latin.woff2") format('woff2');
+}
+
+@font-face {
   font-family: 'PT Sans';
   font-style: normal;
   font-weight: 400;

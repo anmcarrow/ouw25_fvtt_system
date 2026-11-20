@@ -74,9 +74,27 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   }
 });
 
+test("the Merchant sidebar uses bundled Roll20 textures", async () => {
+  for (const [pattern, image] of [
+    [/\.ouw25-total-debt\s*\{[^}]*--ouw25-card-paper:/, "smallpaper2"],
+    [/\.ouw25-pension\s*\{[^}]*--ouw25-card-paper:/, "smallpaper3"],
+    [/\.ouw25-pocket-money\s*\{[^}]*--ouw25-card-paper:/, "smallpaper4"],
+    [/details\.ouw25-sidebar-card\s*\{[^}]*--ouw25-card-paper:/, "smallpaper5"],
+    [/\.ouw25-luck\s*\{[^}]*background:/, "lucky_point"],
+    [/\.ouw25-merchant-wounds\s*\{[^}]*background:/, "blood"]
+  ]) {
+    const ref = `./images/${image}.webp`;
+    const match = styles.match(pattern);
+    assert.ok(match, `missing sidebar style for ${image}`);
+    assert.ok(styles.slice(match.index + match[0].length).trimStart().startsWith(`url("${ref}")`));
+    const asset = await readFile(new URL(`../dist/ouw25/styles/${ref}`, import.meta.url));
+    assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+  }
+});
+
 test("Roll20 body, display, field, and accent fonts are bundled and applied within the AppV2 root", async () => {
   assert.deepEqual(manifest.styles, ["styles/fonts.css", "styles/ouw25.css"]);
-  for (const family of ["PT Sans", "Viaoda Libre", "LXGW WenKai Mono TC", "Caveat"]) {
+  for (const family of ["PT Sans", "Viaoda Libre", "LXGW WenKai Mono TC", "Caveat", "Limelight"]) {
     assert.ok(fontStyles.includes(`font-family: '${family}'`), `missing ${family} font-face`);
   }
   assert.match(fontStyles, /U\+0400-045F/);

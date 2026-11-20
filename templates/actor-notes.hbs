@@ -14,39 +14,42 @@
   <input type="number" name="system.{{money.field}}" aria-label="{{localize money.label}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
 {{/inline}}
 {{#*inline "ouw25-finances"}}
-  <fieldset>
-    {{#if pension}}
-      <div>{{localize money.label}}</div>
+  {{#if pension}}
+    <div class="ouw25-sidebar-card ouw25-pocket-money">
+      <h3>{{localize money.label}}</h3>
       <div class="ouw25-choice-row">
-        {{> ouw25-money-input}}
+        <div class="ouw25-rolled-input ouw25-choice-row">
+          {{> ouw25-money-input}}
+          {{#if editable}}{{> ouw25-roll-icon creation="pocketMoney" label="OUW25.Creation.RollMoney"}}{{/if}}
+        </div>
         <span>{{localize "OUW25.Finance.Currency"}}</span>
-        {{#if editable}}{{> ouw25-roll-icon creation="pocketMoney" label="OUW25.Creation.RollMoney"}}{{/if}}
       </div>
-      <div class="ouw25-pension">
-        <p>{{localize "OUW25.Finance.PensionBalance" balance=pension.balance}}</p>
-        <p>{{localize "OUW25.Finance.Leaves" leaves=pension.leaves}}</p>
-        {{#if pension.complete}}
-          <p>{{localize "OUW25.Finance.ContractComplete"}}</p>
-        {{else}}
-          <p>{{localize "OUW25.Finance.UntilNext" amount=pension.untilNext}}</p>
-        {{/if}}
-        {{#if editable}}
-          <label>
-            {{localize "OUW25.Finance.DepositAmount"}}
-            <input type="number" step="any" inputmode="numeric" data-deposit>
-          </label>
+    </div>
+    <div class="ouw25-sidebar-card ouw25-pension">
+      <h3>{{localize "OUW25.Finance.PensionLabel"}}: <span>{{pension.balance}}</span> {{localize "OUW25.Finance.Currency"}}</h3>
+      {{#if editable}}
+        <div class="ouw25-choice-row ouw25-pension-controls">
+          <input type="number" step="any" inputmode="numeric" aria-label="{{localize "OUW25.Finance.DepositAmount"}}" data-deposit>
           <button type="button" data-action="depositPension">{{localize "OUW25.Finance.Deposit"}}</button>
-        {{/if}}
-      </div>
-    {{else}}
+        </div>
+      {{/if}}
+      <p>{{localize "OUW25.Finance.Leaves" leaves=pension.leaves}}</p>
+      {{#if pension.complete}}
+        <p>{{localize "OUW25.Finance.ContractComplete"}}</p>
+      {{else}}
+        <p>{{localize "OUW25.Finance.UntilNext" amount=pension.untilNext}}</p>
+      {{/if}}
+    </div>
+  {{else}}
+    <fieldset>
       {{> ouw25-block-heading heading="OUW25.Finance.Title"}}
       <label>
         {{localize money.label}}
         {{> ouw25-money-input}}
         {{localize "OUW25.Finance.Currency"}}
       </label>
-    {{/if}}
-  </fieldset>
+    </fieldset>
+  {{/if}}
 {{/inline}}
 {{#*inline "ouw25-journal"}}
   <fieldset>
@@ -529,7 +532,7 @@
     <div class="ouw25-sheet-column">
       <div>
         {{#if identity}}
-          <div class="ouw25-choice-row ouw25-identity">
+          <div class="ouw25-choice-row ouw25-identity ouw25-rolled-input">
             <input type="text" name="name" aria-label="{{localize "OUW25.Identity.Name"}}" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
             {{#if editable}}{{> ouw25-roll-icon creation="name" label="OUW25.Creation.RollName"}}{{/if}}
           </div>
@@ -594,30 +597,26 @@
     </div>
     </div>
     <div class="ouw25-sheet-column ouw25-merchant-sidebar">
-    <p>{{localize "OUW25.Debt.PayableTotal" payable=ledger.totals.payable}}</p>
+    <div class="ouw25-sidebar-card ouw25-total-debt">
+      <p>{{localize "OUW25.Debt.PayableLabel"}}: <span>{{ledger.totals.payable}}</span> {{localize "OUW25.Finance.Currency"}}</p>
+    </div>
     {{> ouw25-finances}}
   {{#if condition}}
-    <div>
-      <p>{{localize "OUW25.Condition.Luck" count=condition.luck}}</p>
-      <p>{{localize "OUW25.Condition.LuckHelp"}}</p>
+    <div class="ouw25-luck">
+      <output class="ouw25-luck-value" tabindex="0" aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{localize "OUW25.Condition.LuckHelp"}}">{{condition.luck}}</output>
       {{#if editable}}
-        <button type="button" data-action="changeLuck" data-luck="add" {{#unless condition.canAdd}}disabled{{/unless}}>{{localize "OUW25.Condition.AddLuck"}}</button>
-        <button type="button" data-action="changeLuck" data-luck="spend" {{#unless condition.canSpend}}disabled{{/unless}}>{{localize "OUW25.Condition.SpendLuck"}}</button>
+        <div class="ouw25-luck-actions">
+          <button type="button" data-action="changeLuck" data-luck="add" aria-label="{{localize "OUW25.Condition.AddLuck"}}" data-tooltip="{{localize "OUW25.Condition.AddLuck"}}" {{#unless condition.canAdd}}disabled{{/unless}}>+</button>
+          <button type="button" data-action="changeLuck" data-luck="spend" aria-label="{{localize "OUW25.Condition.SpendLuck"}}" data-tooltip="{{localize "OUW25.Condition.SpendLuck"}}" {{#unless condition.canSpend}}disabled{{/unless}}>&minus;</button>
+        </div>
       {{/if}}
     </div>
     <div class="ouw25-merchant-wounds">
-      <div>
+      <div class="ouw25-wound-slots" data-count="{{condition.wounds.length}}">
         {{#each condition.wounds}}
-          <label>
-            <span class="ouw25-condition-check">
-              <input type="checkbox" name="system.wound{{slot}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
-              <span aria-hidden="true">{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}</span>
-            </span>
-            {{#if lethal}}
-              {{localize "OUW25.Condition.LethalWound" slot=slot}}
-            {{else}}
-              {{localize "OUW25.Condition.Wound" slot=slot}}
-            {{/if}}
+          <label class="ouw25-condition-check">
+            <input type="checkbox" name="system.wound{{slot}}" aria-label="{{#if lethal}}{{localize "OUW25.Condition.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Condition.Wound" slot=slot}}{{/if}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
+            <span aria-hidden="true">{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}</span>
           </label>
         {{/each}}
       </div>
@@ -629,18 +628,20 @@
       {{/if}}
     </div>
   {{/if}}
-    <details class="ouw25-bargain-reference">
-      <summary>{{localize "OUW25.Bargain.Title"}}</summary>
+    <details class="ouw25-sidebar-card ouw25-bargain-reference">
+      <summary><span aria-hidden="true">&#x1F9EE;</span> {{localize "OUW25.Bargain.Title"}}</summary>
       <p>{{localize "OUW25.Bargain.Price"}}</p>
       <p>{{localize "OUW25.Bargain.Payment"}}</p>
       <p>{{localize "OUW25.Bargain.Consequences"}}</p>
     </details>
   {{#if showCollision}}
-    <details class="ouw25-collision">
-      <summary>{{localize "OUW25.Collision.Title"}}</summary>
-      <label>{{localize "OUW25.Collision.Dice"}} <input type="number" min="4" max="100" step="1" value="4" data-dice></label>
-      <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
-      <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
+    <details class="ouw25-sidebar-card ouw25-collision">
+      <summary><span aria-hidden="true">&#x1F630;</span> {{localize "OUW25.Collision.Title"}}</summary>
+      <div class="ouw25-collision-controls">
+        <label>{{localize "OUW25.Collision.Dice"}} <input type="number" min="4" max="100" step="1" value="4" data-dice></label>
+        <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
+        <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
+      </div>
     </details>
   {{/if}}
     </div>

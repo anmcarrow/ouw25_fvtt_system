@@ -134,8 +134,9 @@ test("the built package registers models and an editable notes sheet for its dec
         ] : null,
         possessions: merchant ? { entries: [{ id: "gear-1", name: "Lantern", amount: 0 }] } : null,
         condition: merchant ? { specialties: MERCHANT_SPECIALTIES.map(value => ({
-          value, label: `OUW25.Specialty.${value}`, selected: value === "medic"
-        })), specialtyHelp: "OUW25.Specialty.Help.medic", specialtyConflict: false,
+          value, label: `OUW25.Specialty.${value}`, selected: value === "medic",
+          help: value === "unset" ? null : `OUW25.Specialty.Help.${value}`
+        })), specialtyConflict: false,
         specialtyRestriction: null, specialtyFormula: "1d4", pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === "unset"
         })), showFragile: false, fragile: false, luck: 0, canSpend: false, canAdd: true, wounds: [

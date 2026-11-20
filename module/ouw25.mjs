@@ -441,9 +441,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       })) : null,
       condition: merchant ? {
         specialties: MERCHANT_SPECIALTIES.map(value => ({
-          value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty
+          value, label: `OUW25.Specialty.${value}`, selected: value === system.specialty,
+          help: value === "unset" ? null : `OUW25.Specialty.Help.${value}`
         })),
-        specialtyHelp: system.specialty === "unset" ? null : `OUW25.Specialty.Help.${system.specialty}`,
         specialtyConflict: !isSpecialtyAllowed(system.specialty, system.past),
         specialtyRestriction: specialtyCount < 4 ? `OUW25.Specialty.Restriction.${system.past}` : null,
         specialtyFormula: specialtyCount > 1 ? `1d${specialtyCount}` : null,

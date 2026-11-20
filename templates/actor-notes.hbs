@@ -537,9 +537,9 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Specialty.Title"}}
       <div class="ouw25-choice-row">
-        <select class="ouw25-choice-heading" name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
+        <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.specialties}}
-            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}{{#if help}} &mdash; {{localize help}}{{/if}}</option>
           {{/each}}
         </select>
         {{#if editable}}
@@ -549,7 +549,6 @@
       <div class="ouw25-profile-details">
         {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
         {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
-        {{#if condition.specialtyHelp}}<p>{{localize condition.specialtyHelp}}</p>{{/if}}
       </div>
     </fieldset>
   {{/if}}

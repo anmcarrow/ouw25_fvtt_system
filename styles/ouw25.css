@@ -284,6 +284,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button {
   inline-size: auto;
   margin-block: 0;
   padding: 0.2rem 0.35rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button,
+body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-profile-details > button {
   font-size: 0.8em;
 }
 
@@ -308,12 +312,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-trait-ic
   font-size: 0.860625rem;
 }
 
-.ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description) {
+.ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description, .ouw25-trait-name) {
   margin-inline-start: calc(24px - var(--ouw25-fieldset-border) - var(--ouw25-fieldset-padding));
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-name {
-  margin: 0;
+  margin-block: 0;
+  margin-inline-end: 0;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-description {
@@ -436,8 +441,12 @@ body.game .application.ouw25 .dialog-content option {
 
 body.game .application.ouw25 .ouw25-merchant-layout :is(h4.ouw25-trait-name, select.ouw25-choice-heading) {
   font-family: var(--ouw25-font-heading);
-  font-size: calc(var(--font-h4-size, 1.25rem) / 1.5);
+  font-size: calc(var(--font-h4-size, 1.25rem) / 1.5 * 1.15);
   font-weight: 400;
+}
+
+body.game .application.ouw25 .ouw25-notes :is(select[name="system.specialty"], select[name="system.specialty"] option) {
+  font: inherit;
 }
 
 .ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {

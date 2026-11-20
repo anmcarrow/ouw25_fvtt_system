@@ -1,3 +1,6 @@
+{{#*inline "ouw25-block-heading"}}
+  <legend><h3>{{localize heading}}</h3></legend>
+{{/inline}}
 {{#*inline "ouw25-roll-icon"}}
   <button type="button" class="ouw25-roll-icon" data-action="rollCreation" data-creation="{{creation}}" {{#if recordId}}data-record-id="{{recordId}}"{{/if}} aria-label="{{localize label}}" data-tooltip="{{localize label}}"><span aria-hidden="true">&#x1F3B2;</span></button>
 {{/inline}}
@@ -36,7 +39,7 @@
         {{/if}}
       </div>
     {{else}}
-      <legend>{{localize "OUW25.Finance.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Finance.Title"}}
       <label>
         {{localize money.label}}
         {{> ouw25-money-input}}
@@ -47,7 +50,7 @@
 {{/inline}}
 {{#*inline "ouw25-journal"}}
   <fieldset>
-    <legend>{{localize "OUW25.Notes"}}</legend>
+    {{> ouw25-block-heading heading="OUW25.Notes"}}
     <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
   </fieldset>
 {{/inline}}
@@ -80,7 +83,7 @@
   {{/ouw25-tab}}
   {{#*inline "ouw25-ship-basics"}}
     <fieldset class="ouw25-ship">
-      <legend>{{localize "OUW25.Ship.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Ship.Title"}}
       <div class="ouw25-ship-pair">
       <div>
       <label>
@@ -145,7 +148,7 @@
   {{#*inline "ouw25-ship-qualities"}}
     {{#each ship.qualities}}
       <fieldset class="ouw25-ship-qualities">
-        <legend>{{localize title}}</legend>
+        {{> ouw25-block-heading heading=title}}
         {{#each slots}}
           <label>
             {{localize ../slotLabel number=number}}
@@ -167,7 +170,7 @@
     <div class="ouw25-sheet-column">
   {{#if contacts}}
     <fieldset class="ouw25-contacts">
-      <legend>{{localize "OUW25.Contact.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Contact.Title"}}
       <p>{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contact.Title"}}">
         <thead>
@@ -206,7 +209,7 @@
     <div class="ouw25-sheet-column">
   {{#if showContracts}}
     <fieldset class="ouw25-contracts">
-      <legend>{{localize "OUW25.Contract.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Contract.Title"}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contract.Title"}}">
         <thead>
           <tr>
@@ -244,7 +247,7 @@
     <div class="ouw25-sheet-column">
   {{#if cargo}}
     <fieldset class="ouw25-cargo">
-      <legend>{{localize "OUW25.Cargo.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Cargo.Title"}}
       <p>{{localize "OUW25.Cargo.Total" volume=cargo.volume}}</p>
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Cargo.Title"}}">
         <thead>
@@ -279,7 +282,7 @@
   {{/inline}}
   {{#*inline "ouw25-ship-gear"}}
       <fieldset class="ouw25-ship-gear">
-        <legend>{{localize "OUW25.ShipGear.Title"}}</legend>
+        {{> ouw25-block-heading heading="OUW25.ShipGear.Title"}}
         {{#each ship.gear}}
           <label>
             {{localize "OUW25.ShipGear.Slot" number=number}}
@@ -300,7 +303,7 @@
   {{/inline}}
   {{#*inline "ouw25-ship-damage"}}
       <fieldset class="ouw25-ship-condition">
-        <legend>{{localize "OUW25.ShipCondition.Title"}}</legend>
+        {{> ouw25-block-heading heading="OUW25.ShipCondition.Title"}}
         <p>{{localize "OUW25.ShipCondition.Durability" damaged=ship.condition.damaged durability=ship.condition.durability}}</p>
         <div class="ouw25-ship-damage">
           {{#each ship.condition.slots}}
@@ -324,7 +327,7 @@
     <div class="ouw25-sheet-column">
       {{> ouw25-ship-basics}}
       <fieldset class="ouw25-voyage">
-        <legend>{{localize "OUW25.Voyage.Title"}}</legend>
+        {{> ouw25-block-heading heading="OUW25.Voyage.Title"}}
         <p>{{#if ship.forcedMode}}{{localize "OUW25.Voyage.ForcedOn"}}{{else}}{{localize "OUW25.Voyage.ForcedOff"}}{{/if}}</p>
         {{#if editable}}
           <button type="button" data-action="toggleForcedMode" {{#if ship.forcedDisabled}}disabled{{/if}}>
@@ -360,7 +363,7 @@
       <div class="ouw25-ship-pair">
         <div class="ouw25-sheet-column">
           <fieldset class="ouw25-ship-mounts">
-            <legend>{{localize "OUW25.Ship.Mounts"}}</legend>
+            {{> ouw25-block-heading heading="OUW25.Ship.Mounts"}}
             {{#each ship.mounts}}
               <label>
                 {{localize "OUW25.Ship.Mount" number=number}}
@@ -373,7 +376,7 @@
           {{> ouw25-ship-gear}}
         </div>
         <fieldset class="ouw25-ship-compartments">
-          <legend>{{localize "OUW25.Ship.Compartments"}}</legend>
+          {{> ouw25-block-heading heading="OUW25.Ship.Compartments"}}
           {{#each ship.compartments}}
             <label>
               {{localize "OUW25.Ship.Compartment" number=number}}
@@ -395,7 +398,7 @@
     <div class="ouw25-sheet-column">
   {{#if ledger}}
     <fieldset class="ouw25-ledger">
-      <legend>{{localize "OUW25.Debt.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Debt.Title"}}
       <p>{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
       {{#each ledger.groups}}
         <table class="ouw25-debt-table">
@@ -436,7 +439,7 @@
   {{#*inline "ouw25-relationship-list"}}
     <div class="ouw25-sheet-column">
     <fieldset class="ouw25-relationships">
-      <legend>{{localize tab.label}}</legend>
+      {{> ouw25-block-heading heading=tab.label}}
         <table class="ouw25-debt-table">
           <thead>
             <tr>
@@ -471,7 +474,7 @@
     <div class="ouw25-sheet-column">
   {{#if possessions}}
     <fieldset class="ouw25-possessions">
-      <legend>{{localize "OUW25.Possession.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Possession.Title"}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Possession.Title"}}">
         <thead>
           <tr>
@@ -503,7 +506,7 @@
   {{/inline}}
   {{#*inline "ouw25-hiring"}}
     <fieldset>
-      <legend>{{localize "OUW25.Identity.HiringTitle"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Identity.HiringTitle"}}
       <div class="ouw25-choice-row">
         <select name="system.hiring" aria-label="{{localize "OUW25.Identity.HiringTitle"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each identity.hiring}}
@@ -530,7 +533,7 @@
   {{/if}}
   {{#if condition}}
     <fieldset>
-      <legend>{{localize "OUW25.Specialty.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Specialty.Title"}}
       <div class="ouw25-choice-row">
         <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.specialties}}
@@ -548,7 +551,7 @@
   {{/if}}
   {{#if identity}}
     <fieldset>
-      <legend>{{localize "OUW25.Identity.Dream"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Identity.Dream"}}
       <div class="ouw25-choice-row">
         <textarea name="system.dream" aria-label="{{localize "OUW25.Identity.Dream"}}" rows="1" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
         {{#if editable}}{{> ouw25-roll-icon creation="dream" label="OUW25.Creation.RollDream"}}{{/if}}
@@ -561,7 +564,7 @@
     <div class="ouw25-merchant-pair">
   {{#if condition}}
     <fieldset>
-      <legend>{{localize "OUW25.Past.Title"}}</legend>
+      {{> ouw25-block-heading heading="OUW25.Past.Title"}}
       <div class="ouw25-choice-row">
         <select name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.pasts}}
@@ -643,7 +646,7 @@
   {{#*inline "ouw25-merchant-traits"}}
   {{#each traits}}
     <fieldset class="ouw25-traits">
-      <legend>{{localize label}}</legend>
+      {{> ouw25-block-heading heading=label}}
       {{#if help}}
         {{#each choices}}{{#if selected}}<h4 class="ouw25-trait-name">{{localize label}}</h4>{{/if}}{{/each}}
         <p class="ouw25-trait-description">{{localize help}}</p>

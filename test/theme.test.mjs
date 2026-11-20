@@ -4,6 +4,13 @@ import test from "node:test";
 
 const styles = await readFile(new URL("../dist/ouw25/styles/ouw25.css", import.meta.url), "utf8");
 const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", import.meta.url), "utf8");
+
+test("the active actor tab uses a bundled WebP background", async () => {
+  const image = styles.match(/\.ouw25-sheet-tabs > button\.active:hover:not\(:disabled\)\s*\{\s*background: url\("\.\/([^"]+)"\)/)?.[1];
+  assert.ok(image);
+  const asset = await readFile(new URL(`../dist/ouw25/styles/${image}`, import.meta.url));
+  assert.equal(asset.toString("ascii", 8, 12), "WEBP");
+});
 const module = await readFile(new URL("../dist/ouw25/module/ouw25.mjs", import.meta.url), "utf8");
 const manifest = JSON.parse(await readFile(new URL("../dist/ouw25/system.json", import.meta.url), "utf8"));
 
@@ -90,7 +97,7 @@ test("Roll20 display, field, and accent fonts are bundled and applied within the
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(input:not\(\[type="checkbox"\]\)[\s\S]*?font-family:\s*var\(--ouw25-font-input\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes option,\s*body\.game \.application\.ouw25 \.dialog-content option\s*\{\s*font-family:\s*var\(--ouw25-font-input\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-sheet-heading h2\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*font-size:\s*1\.7rem;)(?=[^}]*margin:\s*0;)[^}]*\}/s);
-  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-sheet-column > fieldset > legend\s*\{(?=[^}]*font-family:\s*var\(--ouw25-font-heading\);)(?=[^}]*font-size:\s*1\.1rem;)(?=[^}]*margin-block:\s*0\.25rem;)[^}]*\}/s);
+  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes fieldset > legend > h3\s*\{\s*font-size:\s*calc\(1\.1rem \/ 1\.5\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(h2, h3\),\s*body\.game \.application\.ouw25 \.dialog-content :is\(h2, h3\)\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*margin-block:\s*0\.8rem;)[^}]*\}/s);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody td\.ouw25-debt-amount\s*\{[^}]*font-family:\s*var\(--ouw25-font-accent\);/s);
 });

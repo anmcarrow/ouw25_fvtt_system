@@ -205,16 +205,39 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input:focus-vis
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 0.35rem;
-  margin-block: 0.35rem 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 0;
+  min-inline-size: 39rem;
+  margin-block: 0.35rem 0.75rem;
+  border: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs button:not(.active) {
-  background: var(--ouw25-color-surface);
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button,
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:hover:not(:disabled) {
+  justify-content: flex-start;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0.4rem 7.5px;
+  background: none;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
   color: var(--ouw25-color-ink);
+  font-family: var(--ouw25-font-heading);
+  font-size: 1.17em;
+  font-weight: 400;
+  text-align: start;
+  white-space: normal;
+  box-shadow: none;
+  text-shadow: none;
+  filter: none;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active,
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:hover:not(:disabled) {
+  background: url("./images/smalltab_header.webp") center / 100% 100% no-repeat;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
@@ -257,12 +280,14 @@ body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions {
   min-inline-size: 0;
 }
 
-.ouw25 .ouw25-personal-actions {
+body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions {
   flex-wrap: wrap;
+  row-gap: 0.2rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button {
   inline-size: auto;
+  margin-block: 0;
   padding: 0.2rem 0.35rem;
   font-size: 0.8em;
 }
@@ -272,7 +297,7 @@ body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-tra
   box-shadow: none;
   color: inherit;
   flex: none;
-  font-size: 1.425rem;
+  font-size: 0.961875rem;
   line-height: 1;
   margin: 0;
   padding: 0.25rem;
@@ -288,11 +313,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-trait-ic
   font-size: 0.860625rem;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions > .ouw25-roll-icon {
-  font-size: 0.961875rem;
-}
-
 body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-trait-name {
+  font-size: calc(var(--font-h4-size, 1.25rem) / 1.5);
   margin: 0;
 }
 
@@ -378,10 +400,6 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   padding: 0.5rem;
 }
 
-.ouw25 .ouw25-sheet-column > fieldset legend {
-  color: var(--ouw25-color-accent);
-}
-
 body.game .application.ouw25 .ouw25-notes :is(h1, h2, h3, h4, h5, h6, summary),
 body.game .application.ouw25 .dialog-content :is(h1, h2, h3, h4, h5, h6, summary) {
   font-family: var(--ouw25-font-heading);
@@ -401,14 +419,9 @@ body.game .application.ouw25 .ouw25-sheet-heading h2 {
   margin: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair > fieldset > legend,
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair > fieldset > legend,
-body.game .application.ouw25 .ouw25-notes .ouw25-sheet-column > fieldset > legend {
-  color: var(--ouw25-color-accent);
-  font-family: var(--ouw25-font-heading);
-  font-size: 1.1rem;
-  font-weight: 400;
-  margin-block: 0.25rem;
+body.game .application.ouw25 .ouw25-notes fieldset > legend > h3 {
+  font-size: calc(1.1rem / 1.5);
+  margin: 0.25rem 0;
 }
 
 body.game .application.ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea),

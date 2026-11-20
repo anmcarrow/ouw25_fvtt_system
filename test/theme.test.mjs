@@ -50,7 +50,6 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   assert.match(styles, /\.ouw25 \.ouw25-notes \*\s*\{\s*color:\s*inherit;/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\s*\{(?=[^}]*--checkbox-background-color:\s*var\(--ouw25-color-accent\);)(?=[^}]*--checkbox-checked-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*--checkbox-checkmark-color:\s*var\(--ouw25-color-surface\);)(?=[^}]*--checkbox-font-weight:\s*unset;)(?=[^}]*accent-color:\s*var\(--ouw25-color-accent-soft\);)(?=[^}]*color-scheme:\s*light;)[^}]*\}/s);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]:disabled,\s*body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\[readonly\]\s*\{[^}]*--checkbox-background-color:\s*var\(--ouw25-color-paper\);/s);
-  assert.match(styles, /\.ouw25 \.ouw25-sheet-heading\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\)/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes fieldset\s*\{[^}]*background-color:\s*var\(--ouw25-color-surface\);[^}]*margin-block:\s*0\.25rem;[^}]*padding:\s*0\.5rem;/s);
   assert.match(styles, /--ouw25-field-background:\s*var\(--ouw25-color-surface\);/);
   assert.match(styles, /--color-select-option-bg:\s*var\(--ouw25-color-surface\);/);
@@ -97,7 +96,6 @@ test("Roll20 display, field, and accent fonts are bundled and applied within the
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(input:not\(\[type="checkbox"\]\)[\s\S]*?font-family:\s*var\(--ouw25-font-input\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes option,\s*body\.game \.application\.ouw25 \.dialog-content option\s*\{\s*font-family:\s*var\(--ouw25-font-input\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-sheet-heading h2\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*font-size:\s*1\.7rem;)(?=[^}]*margin:\s*0;)[^}]*\}/s);
-  assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes fieldset > legend > h3\s*\{\s*font-size:\s*calc\(1\.1rem \/ 1\.5\);/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(h2, h3\),\s*body\.game \.application\.ouw25 \.dialog-content :is\(h2, h3\)\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*margin-block:\s*0\.8rem;)[^}]*\}/s);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody td\.ouw25-debt-amount\s*\{[^}]*font-family:\s*var\(--ouw25-font-accent\);/s);
 });

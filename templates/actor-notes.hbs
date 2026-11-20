@@ -508,19 +508,21 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Identity.HiringTitle"}}
       <div class="ouw25-choice-row">
-        <select name="system.hiring" aria-label="{{localize "OUW25.Identity.HiringTitle"}}" {{#unless editable}}disabled{{/unless}}>
+        <select class="ouw25-choice-heading" name="system.hiring" aria-label="{{localize "OUW25.Identity.HiringTitle"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each identity.hiring}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
         </select>
         {{#if editable}}{{> ouw25-roll-icon creation="hiring" label="OUW25.Creation.RollHiring"}}{{/if}}
       </div>
-      {{#if identity.hiringHelp}}<p>{{localize identity.hiringHelp}}</p>{{/if}}
-      {{#if editable}}
-        {{#each identity.actions}}
-          <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{caption}}</button>
-        {{/each}}
-      {{/if}}
+      <div class="ouw25-profile-details">
+        {{#if identity.hiringHelp}}<p>{{localize identity.hiringHelp}}</p>{{/if}}
+        {{#if editable}}
+          {{#each identity.actions}}
+            <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{caption}}</button>
+          {{/each}}
+        {{/if}}
+      </div>
     </fieldset>
   {{/inline}}
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-merchant-layout"}}
@@ -535,7 +537,7 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Specialty.Title"}}
       <div class="ouw25-choice-row">
-        <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
+        <select class="ouw25-choice-heading" name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.specialties}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
@@ -544,9 +546,11 @@
           {{#if condition.specialtyFormula}}{{> ouw25-roll-icon creation="specialty" label="OUW25.Creation.RollSpecialty"}}{{/if}}
         {{/if}}
       </div>
-      {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
-      {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
-      {{#if condition.specialtyHelp}}<p>{{localize condition.specialtyHelp}}</p>{{/if}}
+      <div class="ouw25-profile-details">
+        {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
+        {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
+        {{#if condition.specialtyHelp}}<p>{{localize condition.specialtyHelp}}</p>{{/if}}
+      </div>
     </fieldset>
   {{/if}}
   {{#if identity}}
@@ -566,7 +570,7 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Past.Title"}}
       <div class="ouw25-choice-row">
-        <select name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" {{#unless editable}}disabled{{/unless}}>
+        <select class="ouw25-choice-heading" name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.pasts}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
@@ -574,6 +578,7 @@
         {{#if editable}}{{> ouw25-roll-icon creation="past" label="OUW25.Creation.RollPast"}}{{/if}}
       </div>
       {{#if pastMoves}}
+      <div class="ouw25-profile-details">
         <p>{{localize pastMoves.help}}</p>
         {{#if editable}}
           {{#if pastMoves.actions}}
@@ -584,6 +589,7 @@
             </div>
             <p>{{localize "OUW25.PersonalAction.Manual"}}</p>
           {{/if}}
+        </div>
         {{/if}}
       {{/if}}
     </fieldset>
@@ -671,7 +677,9 @@
         </ul>
       {{/if}}
       {{#if @root.editable}}
-        <button type="button" data-action="editTrait" data-creation="{{kind}}">{{localize add}}</button>
+        <div class="ouw25-profile-details">
+          <button type="button" data-action="editTrait" data-creation="{{kind}}">{{localize add}}</button>
+        </div>
       {{/if}}
     </fieldset>
   {{/each}}

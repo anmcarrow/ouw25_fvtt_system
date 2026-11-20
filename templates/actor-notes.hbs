@@ -87,7 +87,10 @@
   {{#> ouw25-tab tab=tabs.attributes}}
     <div class="ouw25-sheet-column">
     {{> ouw25-finances}}
-    {{> ouw25-journal}}
+    <fieldset>
+      {{> ouw25-block-heading heading="OUW25.Notes"}}
+      {{> ouw25-journal}}
+    </fieldset>
     </div>
   {{/ouw25-tab}}
   {{#*inline "ouw25-ship-basics"}}

@@ -11,17 +11,23 @@ test("the built package registers models and an editable notes sheet for its dec
   globalThis.Hooks = { once(event, callback) { if (event === "init") callback(); } };
   globalThis.CONFIG = { Actor: { dataModels: {} }, Item: { dataModels: {} } };
   globalThis.foundry = {
-    abstract: { TypeDataModel: class {} },
+    abstract: { TypeDataModel: class { static migrateData(source) { return source; } } },
     data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {} } },
     applications: {
       api: { HandlebarsApplicationMixin: base => base },
+      ux: { FormDataExtended: class {} },
       sheets: { ActorSheetV2: class {
+        get element() { return this._element; }
+        get form() { return this._form; }
         async _prepareContext() { return {}; }
+        _onChangeForm() {}
+        async _onClickAction() { this.actionInvoked = true; }
         async _processSubmitData(_event, _form, data) { return data; }
       } }
     },
     documents: { collections: { Actors: { registerSheet: (...args) => registration.push(args) } } }
   };
+  globalThis.game = { i18n: { localize: key => key } };
 
   await import(new URL(manifest.esmodules[0], dist));
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
@@ -34,6 +40,9 @@ test("the built package registers models and an editable notes sheet for its dec
   const templatePath = Sheet.PARTS.notes.template.replace(`systems/${id}/`, "");
   const template = await readFile(new URL(templatePath, dist), "utf8");
   assert.match(template, /name="system\.notes"/);
+  assert.match(template, /type="submit"/);
+  assert.match(template, /data-autosave-status/);
+  assert.match(template, /<output\b[^>]*ouw25-hold-status[^>]*>[^<]*occupied=ship\.hold\.occupied capacity=ship\.hold\.capacity/);
   for (const type of types) {
     assert.ok(CONFIG.Actor.dataModels[type].defineSchema().notes);
     const sheet = new Sheet();
@@ -97,11 +106,13 @@ test("the built package registers models and an editable notes sheet for its dec
         assert.equal(identity, null);
         assert.equal(ship.freeMounts, 2);
         assert.equal(ship.compartmentSpace, 420);
+        assert.deepEqual(ship.hold, { occupied: 452.25, capacity: 1600, nearFull: false, overloaded: false });
         assert.deepEqual(ship.hold, { capacity: 1600, occupied: 452.25, nearFull: false, overloaded: false });
         assert.equal(ship.mounts[0].choices.find(choice => choice.selected).value, "none");
       }
       assert.deepEqual(context, {
-        notes: "test note", actorTypeLabel: `TYPES.Actor.${type}`, editable,
+        notes: "test note", autosaveStatus: "OUW25.SaveStatus.Saved", autosaveStatusState: "saved",
+        actorTypeLabel: `TYPES.Actor.${type}`, editable,
         showCollision: editable && merchant,
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
@@ -171,6 +182,127 @@ test("the built package registers models and an editable notes sheet for its dec
       }
     } else assert.equal(updates, 0);
   }
+
+  const autosaveStatus = { textContent: "", dataset: {} };
+  const sheet = new Sheet();
+  sheet._element = {
+    querySelector: selector => selector === "[data-autosave-status]" ? autosaveStatus : null
+  };
+  sheet._form = { contains: () => true };
+  sheet.isEditable = true;
+  sheet.actor = {
+    type: "cooperative",
+    name: "Original ship",
+    system: Object.assign(Object.create({ unrest: 3 }), { notes: "", forcedMode: false }),
+    items: [],
+    update: async data => {
+      sheet.updates.push(data);
+      for (const [path, value] of Object.entries(data)) {
+        if (path === "name") sheet.actor.name = value;
+        else sheet.actor.system[path.slice("system.".length)] = value;
+      }
+    }
+  };
+  sheet.updates = [];
+  const change = event => sheet._onChangeForm({}, event);
+  const submit = () => sheet._onSubmitForm({ handler: async function (_event, form) {
+    assert.equal(form, sheet._form);
+    this.submitted = true;
+  } }, { currentTarget: sheet._form, preventDefault() {} });
+  await change({ target: {
+    name: "system.unrest", type: "number", value: "4", disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => true
+  } });
+  assert.deepEqual(sheet.updates, [{ "system.unrest": 4 }]);
+  assert.equal(autosaveStatus.textContent, "OUW25.SaveStatus.Saved");
+  await change({ target: {
+    name: "system.forcedMode", type: "checkbox", checked: true, disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => true
+  } });
+  assert.deepEqual(sheet.updates[1], { "system.forcedMode": true });
+  await change({ target: {
+    name: "name", type: "text", value: "New ship", disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => true
+  } });
+  assert.deepEqual(sheet.updates[2], { name: "New ship" });
+  await change({ target: {
+    name: "system.notes", type: "textarea", value: "Updated notes", disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => true
+  } });
+  assert.deepEqual(sheet.updates[3], { "system.notes": "Updated notes" });
+  await change({ target: { dataset: { deposit: "" }, value: "100" } });
+  assert.equal(sheet.updates.length, 4);
+
+  let releaseUpdate;
+  sheet.actor.update = async data => {
+    await new Promise(resolve => { releaseUpdate = resolve; });
+    sheet.updates.push(data);
+    sheet.actor.system.unrest = data["system.unrest"];
+  };
+  const pendingChange = change({ target: {
+    name: "system.unrest", type: "number", value: "5", disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => true
+  } });
+  await Promise.resolve();
+  const pendingAction = sheet._onClickAction({}, {});
+  await Promise.resolve();
+  assert.equal(sheet.actionInvoked, undefined);
+  releaseUpdate();
+  await Promise.all([pendingChange, pendingAction]);
+  assert.equal(sheet.actionInvoked, true);
+
+  let validityReported = false;
+  await change({ target: {
+    name: "system.unrest", type: "number", value: "", disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => false, reportValidity: () => { validityReported = true; }
+  } });
+  assert.equal(validityReported, true);
+  assert.equal(autosaveStatus.textContent, "OUW25.SaveStatus.Invalid");
+  await submit();
+  assert.equal(sheet.submitted, true);
+  assert.equal(autosaveStatus.textContent, "OUW25.SaveStatus.Saved");
+
+  const saveErrors = [];
+  globalThis.ui = { notifications: { warn() {}, error: message => saveErrors.push(message) } };
+  const originalConsoleError = console.error;
+  console.error = () => {};
+  sheet.actor.update = async () => { throw new Error("storage unavailable"); };
+  try {
+    await change({ target: {
+      name: "system.unrest", type: "number", value: "6", disabled: false, readOnly: false,
+      dataset: {}, checkValidity: () => true
+    } });
+    assert.equal(autosaveStatus.textContent, "OUW25.SaveStatus.Error");
+    assert.deepEqual(saveErrors, ["OUW25.SaveStatus.Error"]);
+    sheet.actionInvoked = false;
+    await sheet._onClickAction({}, {});
+    assert.equal(sheet.actionInvoked, false);
+  } finally {
+    console.error = originalConsoleError;
+  }
+  await submit();
+  assert.equal(autosaveStatus.textContent, "OUW25.SaveStatus.Saved");
+
+  const specialtyWarnings = [];
+  globalThis.ui = { notifications: { warn: message => specialtyWarnings.push(message), error() {} } };
+  const merchantSheet = new Sheet();
+  merchantSheet._element = sheet._element;
+  merchantSheet._form = sheet._form;
+  merchantSheet.isEditable = true;
+  merchantSheet.actor = {
+    type: "merchant", name: "Merchant", system: { past: "savage", specialty: "medic" },
+    update: async () => assert.fail("an invalid specialty must not be autosaved")
+  };
+  await merchantSheet._onChangeForm({}, { target: {
+    name: "system.specialty", type: "select-one", value: "navigator", disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => true
+  } });
+  assert.deepEqual(specialtyWarnings, ["OUW25.Specialty.Restriction.savage"]);
+  assert.equal(autosaveStatus.textContent, "OUW25.SaveStatus.Invalid");
+
+  const cooperative = CONFIG.Actor.dataModels.cooperative;
+  assert.deepEqual(cooperative.migrateData({ unrest: 11.5 }), { unrest: 11, illuminationUnrestPending: true });
+
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));
 });
@@ -285,6 +417,18 @@ test("a spacious hold applies the saved bonus once and only while selected", asy
   assert.equal(shipHold({ ...expanded, holdBonus: 150 }, 0, 0).capacity, 1600);
 });
 
+test("ship layout rejects duplicate qualities and new compartments that do not fit", async () => {
+  const { shipSelectionError } = await import(new URL("module/ship.mjs", dist));
+  const ship = { shipClass: 0, compartment1: "diving", merit1: "strong_hull", flaw1: "cursed", fuelStock: 10 };
+  assert.equal(shipSelectionError(ship, { compartment2: "diving" }, 0), "OUW25.Ship.CompartmentDoesNotFit");
+  assert.equal(shipSelectionError(ship, { compartment2: "passenger" }, 370), undefined);
+  assert.equal(shipSelectionError(ship, { compartment2: "passenger" }, 371), "OUW25.Ship.CompartmentDoesNotFit");
+  assert.equal(shipSelectionError({ ...ship, compartment2: "diving" }, { compartment2: "none" }, 1000), undefined);
+  assert.equal(shipSelectionError(ship, { merit2: "strong_hull" }, 0), "OUW25.ShipQuality.Duplicates");
+  assert.equal(shipSelectionError(ship, { flaw2: "cursed" }, 0), "OUW25.ShipQuality.Duplicates");
+  assert.equal(shipSelectionError(ship, { merit1: "none", merit2: "strong_hull" }, 0), undefined);
+});
+
 test("a reinforced hull adds two durability once; marked damage stays repairable after removing it", async () => {
   const { shipCondition } = await import(new URL("module/ship.mjs", dist));
   const ship = { shipClass: 0, damage1: true, damage2: true, damage3: true, damage5: true };
@@ -313,7 +457,7 @@ test("voyage rates follow crew bands, modes, shortages, and ship flaws", async (
   assert.equal(forced.speed, 2);
   assert.equal(forced.fuelPerSector, 4);
   assert.equal(forced.provisionsPerSector, 0.5);
-  assert.equal(forced.unrestPerSector, 0.5);
+  assert.equal(forced.unrestPerSector, 0);
   assert.equal(calculateVoyage({ ...ship, crewCount: 5, forcedMode: true }).crewBand, "half");
   const lowCrew = calculateVoyage({ ...ship, crewCount: 4, forcedMode: true });
   assert.equal(lowCrew.speed, 1);
@@ -336,11 +480,11 @@ test("sector transition applies and exactly rolls back the complete recorded sta
   const { prepareSectorTransition, rollbackSectorTransition } = await import(new URL("module/ship.mjs", dist));
   const ship = {
     shipClass: 0, crewCount: 10, forcedMode: false, illuminationMode: false,
-    fuelStock: 10, provisionsStock: 10, unrest: 24.5,
+    fuelStock: 10, provisionsStock: 10, unrest: 24,
     travelSectors: 2, travelWatches: 3.5, lastTransition: ""
   };
   const prepared = prepareSectorTransition(ship, "sector-1");
-  assert.deepEqual(prepared.costs, { fuel: 1, provisions: 1, unrest: 0.5, watches: 1 });
+  assert.deepEqual(prepared.costs, { fuel: 1, provisions: 1, unrest: 1, watches: 1 });
   assert.deepEqual(
     Object.fromEntries(["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"]
       .map(field => [field, prepared.update[field]])),
@@ -362,6 +506,26 @@ test("sector transition applies and exactly rolls back the complete recorded sta
   assert.throws(() => prepareSectorTransition({ ...ship, travelSectors: Number.MAX_SAFE_INTEGER }, "sector-2"), /InvalidState/);
   assert.throws(() => prepareSectorTransition({ ...ship, travelWatches: Number.MAX_SAFE_INTEGER }, "sector-2"), /InvalidState/);
   assert.throws(() => rollbackSectorTransition({ ...applied, lastTransition: "{" }), /InvalidTransition/);
+});
+
+test("only illuminated sectors advance the alternating unrest gain and rollback restores its phase", async () => {
+  const { prepareSectorTransition, prepareVoyageReset, rollbackSectorTransition } =
+    await import(new URL("module/ship.mjs", dist));
+  const initial = { shipClass: 0, crewCount: 10, fuelStock: 10, provisionsStock: 10, unrest: 5,
+    travelSectors: 0, travelWatches: 0, illuminationMode: true };
+  const first = { ...initial, ...prepareSectorTransition(initial, "first").update };
+  assert.equal(first.unrest, 5);
+  assert.equal(first.illuminationUnrestPending, true);
+  const reset = { ...first, ...prepareVoyageReset(first).update, illuminationMode: false };
+  const dark = { ...reset, ...prepareSectorTransition(reset, "dark").update, illuminationMode: true };
+  assert.equal(dark.unrest, 6);
+  assert.equal(dark.illuminationUnrestPending, true);
+  const second = { ...dark, ...prepareSectorTransition(dark, "second").update };
+  assert.equal(second.unrest, 7);
+  assert.equal(second.illuminationUnrestPending, false);
+  const undone = rollbackSectorTransition(second);
+  assert.equal(undone.unrest, 6);
+  assert.equal(undone.illuminationUnrestPending, true);
 });
 
 test("voyage reset preserves the last rollback while keeping reset counters at zero", async () => {
@@ -403,15 +567,15 @@ test("psychotherapy resolves full and partial successes without negative unrest"
   assert.deepEqual(resolvePsychotherapy(10, 2, 5), { unrest: 5, relief: 5 });
   assert.deepEqual(resolvePsychotherapy(10, 1, 5), { unrest: 8, relief: 2 });
   assert.deepEqual(resolvePsychotherapy(10, 0, 6), { unrest: 10, relief: 0 });
-  assert.deepEqual(resolvePsychotherapy(0.5, 2, 6), { unrest: 0, relief: 0.5 });
+  assert.deepEqual(resolvePsychotherapy(1, 2, 6), { unrest: 0, relief: 1 });
   assert.throws(() => resolvePsychotherapy(26, 2, 6), /InvalidState/);
   assert.throws(() => resolvePsychotherapy(10, 2, 7), /InvalidState/);
 });
 
-test("unrest increase is nonnegative, fractional, and capped at 25", async () => {
+test("unrest increase rejects fractional gains and is capped at 25", async () => {
   const { prepareUnrestIncrease } = await import(new URL("module/ship.mjs", dist));
   assert.deepEqual(prepareUnrestIncrease(24, 2), { unrest: 25, increase: 1 });
-  assert.deepEqual(prepareUnrestIncrease(4, 0.5), { unrest: 4.5, increase: 0.5 });
+  assert.throws(() => prepareUnrestIncrease(4, 0.5), /InvalidState/);
   assert.deepEqual(prepareUnrestIncrease(25, 1), { unrest: 25, increase: 0 });
   assert.throws(() => prepareUnrestIncrease(4, -1), /InvalidState/);
   assert.throws(() => prepareUnrestIncrease(4, Number.POSITIVE_INFINITY), /InvalidState/);

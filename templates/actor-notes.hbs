@@ -38,6 +38,7 @@
 <section class="ouw25-notes">
   <header class="ouw25-sheet-heading">
     <h2>{{localize actorTypeLabel}}</h2>
+    <span class="ouw25-save-status" data-autosave-status data-state="{{autosaveStatusState}}" role="status" aria-live="polite">{{autosaveStatus}}</span>
     {{#if editable}}
       <button type="submit">{{localize "OUW25.Save"}}</button>
     {{/if}}
@@ -48,6 +49,7 @@
     {{> ouw25-finances}}
     <fieldset class="ouw25-ship">
       <legend>{{localize "OUW25.Ship.Title"}}</legend>
+      <output class="ouw25-hold-status">{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}</output>
       <label>
         {{localize "OUW25.Ship.Name"}}
         <input type="text" name="system.shipName" value="{{ship.name}}" {{#unless editable}}readonly{{/unless}}>
@@ -80,7 +82,6 @@
         {{localize "OUW25.Ship.ProvisionsStock"}}
         <input type="number" name="system.provisionsStock" min="0" max="9007199254740991" step="any" value="{{ship.provisionsStock}}" required {{#unless editable}}readonly{{/unless}}>
       </label>
-      <p>{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}</p>
       {{#if ship.hold.overloaded}}
         <p role="status">{{localize "OUW25.Ship.Overloaded"}}</p>
       {{else if ship.hold.nearFull}}
@@ -90,7 +91,7 @@
         <label>
           {{localize "OUW25.Ship.Compartment" number=number}}
           <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-            {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+            {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
           </select>
         </label>
       {{/each}}
@@ -102,7 +103,7 @@
           <label>
             {{localize ../slotLabel number=number}}
             <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
             </select>
           </label>
         {{/each}}
@@ -256,7 +257,10 @@
         <div class="ouw25-ship-damage">
           {{#each ship.condition.slots}}
             <label>
-              <input type="checkbox" name="system.damage{{number}}" {{checked marked}} {{#unless @root.editable}}disabled{{/unless}}>
+              <span class="ouw25-condition-check">
+                <input type="checkbox" name="system.damage{{number}}" {{checked marked}} {{#unless @root.editable}}disabled{{/unless}}>
+                <span aria-hidden="true">{{#if critical}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>
+              </span>
               {{#if beyondLimit}}
                 {{localize "OUW25.ShipCondition.BeyondLimit" number=number}}
               {{else}}
@@ -284,11 +288,12 @@
         </label>
         <label>
           {{localize "OUW25.Voyage.Unrest"}}
-          <input type="number" name="system.unrest" min="0" max="25" step="any" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
+          <input type="number" name="system.unrest" min="0" max="25" step="1" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
         </label>
         <p>{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}</p>
         {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
         <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
+        {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
         <p>{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}</p>
         {{#if ship.voyage.forcedBlocked}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
         {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
@@ -509,7 +514,10 @@
       <div>
         {{#each condition.wounds}}
           <label>
-            <input type="checkbox" name="system.wound{{slot}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
+            <span class="ouw25-condition-check">
+              <input type="checkbox" name="system.wound{{slot}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
+              <span aria-hidden="true">{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}</span>
+            </span>
             {{#if lethal}}
               {{localize "OUW25.Condition.LethalWound" slot=slot}}
             {{else}}

@@ -5,9 +5,9 @@ import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, special
 import { dreamFromRoll, hiringFromRoll, MERCHANT_HIRING, merchantNameFromRolls } from "./merchant.mjs";
 import { COMPARTMENT_SPACE, MAX_SHIP_CLASS, MOUNT_CHOICES, SHIP_SLOT_COUNT, shipConfiguration, shipHold } from "./ship.mjs";
 import {
-  calculateVoyage, HOLD_BONUSES, prepareSectorTransition, prepareUnrestIncrease, prepareVoyageReset,
+  calculateVoyage, HOLD_BONUSES, normalizeUnrest, prepareSectorTransition, prepareUnrestIncrease, prepareVoyageReset,
   resolvePsychotherapy, rollbackSectorTransition,
-  SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots
+  SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots, shipSelectionError
 } from "./ship.mjs";
 import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
@@ -29,7 +29,7 @@ const COOPERATIVE_RECORDS = new Set(["contact", "contract", "cargo"]);
 const PENDING_VOYAGE_OPERATIONS = new Set();
 const VOYAGE_STATE_FIELDS = [
   "shipClass", "crewCount", "forcedMode", "illuminationMode", "unrest", "fuelStock",
-  "provisionsStock", "travelSectors", "travelWatches", "lastTransition",
+  "provisionsStock", "travelSectors", "travelWatches", "lastTransition", "illuminationUnrestPending",
   "flaw1", "flaw2", "flaw3", "flaw4"
 ];
 const VOYAGE_FORM_FIELDS = [
@@ -129,6 +129,13 @@ class MerchantModel extends NotesModel {
 }
 
 class CooperativeModel extends NotesModel {
+  static migrateData(source, options) {
+    if (Number.isFinite(source.unrest) && !Number.isInteger(source.unrest)) {
+      Object.assign(source, normalizeUnrest(source.unrest, source.illuminationUnrestPending));
+    }
+    return super.migrateData(source, options);
+  }
+
   static defineSchema() {
     const { BooleanField, NumberField, StringField } = foundry.data.fields;
     const fields = {
@@ -140,7 +147,8 @@ class CooperativeModel extends NotesModel {
       shipClass: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: MAX_SHIP_CLASS }),
       crewCount: counterField(10), forcedMode: new BooleanField({ initial: false }),
       illuminationMode: new BooleanField({ initial: false }),
-      unrest: new NumberField({ required: true, nullable: false, initial: 0, min: 0, max: 25 }),
+      unrest: new NumberField({ required: true, nullable: false, initial: 0, integer: true, min: 0, max: 25 }),
+      illuminationUnrestPending: new BooleanField({ initial: false }),
       travelSectors: counterField(), travelWatches: resourceField(),
       lastTransition: new StringField({ initial: "" }), travelStatus: new StringField({ initial: "" })
     };
@@ -240,6 +248,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #luckPending = false;
   #creationRollPending = false;
   #recordPending = false;
+  #autosaveQueue = Promise.resolve();
+  #invalidAutosaveFields = new Set();
+  #autosaveRevisions = new Map();
+  #submitRejected = false;
+  #autosaveStatus = "Saved";
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
@@ -283,9 +296,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       id: item.id, name: item.name, quantity: item.system.quantity, volume: item.system.volume
     })) : null;
     const listedVolume = cargo?.reduce((total, entry) => total + entry.volume, 0);
-    const slotChoices = (slots, choices, labelPrefix) => slots.map(slot => ({
+    const slotChoices = (slots, choices, labelPrefix, disabled = () => false) => slots.map(slot => ({
       ...slot, choices: choices.map(value => ({
-        value, label: `${labelPrefix}.${value}`, selected: slot.value === value
+        value, label: `${labelPrefix}.${value}`, selected: slot.value === value,
+        disabled: slot.value !== value && disabled(slot, value)
       }))
     }));
     const gears = ship && SHIP_GEAR_SLOTS.map(number => {
@@ -293,9 +307,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       return { number, field, value: system[field] ?? "none" };
     });
     const voyage = ship && calculateVoyage(system);
+    const hold = ship && shipHold(system, listedVolume, ship.compartmentSpace);
+    const condition = ship && shipCondition(system);
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
+      autosaveStatus: game.i18n.localize(`OUW25.SaveStatus.${this.#autosaveStatus}`),
+      autosaveStatusState: this.#autosaveStatus.toLowerCase(),
       actorTypeLabel: `TYPES.Actor.${type}`,
       editable: this.isEditable,
       showCollision: this.isEditable && merchant,
@@ -306,7 +324,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           crew: SHIP_CLASS_STATS[value].crew, durability: SHIP_CLASS_STATS[value].durability
         })),
         freeMounts: ship.freeMounts, compartmentSpace: ship.compartmentSpace,
-        hold: shipHold(system, listedVolume, ship.compartmentSpace),
+        hold,
         crewCount: system.crewCount, forcedMode: system.forcedMode,
         illuminationMode: system.illuminationMode, unrestInput: system.unrest,
         travelSectors: system.travelSectors, travelWatches: system.travelWatches,
@@ -316,11 +334,16 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         forcedDisabled: voyage.wornEngine && !system.forcedMode,
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: slotChoices(ship.mounts, MOUNT_CHOICES, "OUW25.Ship.MountChoices"),
-        compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices"),
+        compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices",
+          ({ value: current }, value) => COMPARTMENT_SPACE[value] > (COMPARTMENT_SPACE[current] ?? 0)
+            && hold.occupied + COMPARTMENT_SPACE[value] - (COMPARTMENT_SPACE[current] ?? 0) > hold.capacity),
         gear: slotChoices(gears, SHIP_GEAR_CHOICES, "OUW25.ShipGear.Names"),
         gearHelp: [...new Set(gears.map(({ value }) => value))].filter(value => value !== "none")
           .map(value => `OUW25.ShipGear.Help.${value}`),
-        condition: shipCondition(system),
+        condition: condition && {
+          ...condition,
+          slots: condition.slots.map(slot => ({ ...slot, critical: slot.number >= condition.durability }))
+        },
         qualities: Object.entries(SHIP_QUALITIES).map(([kind, choices]) => {
           const slots = shipQualitySlots(system, kind);
           const selected = slots.map(({ value }) => value).filter(value => value !== "none");
@@ -328,7 +351,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           const labels = "OUW25.ShipQuality.Names";
           return {
             title: `OUW25.ShipQuality.${kind}.Title`, slotLabel: `OUW25.ShipQuality.${kind}.Slot`,
-            slots: slotChoices(slots, choices, labels), duplicates: selected.length !== unique.length,
+            slots: slotChoices(slots, choices, labels, (_slot, value) => unique.includes(value)),
+            duplicates: selected.length !== unique.length,
             help: unique.map(value => ({ name: `${labels}.${value}`, text: `OUW25.ShipQuality.Help.${value}` })),
             holdBonuses: unique.includes("large_hold") ? HOLD_BONUSES.map(value => ({
               value, selected: value === system.holdBonus
@@ -407,6 +431,125 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         wounds: WOUND_SLOTS.slice(0, lethal).map(slot => ({ slot, marked: system[`wound${slot}`], lethal: slot === lethal }))
       } : null
     };
+  }
+
+  _onChangeForm(formConfig, event) {
+    super._onChangeForm(formConfig, event);
+    return this.#autosaveField(event);
+  }
+
+  async _onClickAction(event, target) {
+    try {
+      await this.#autosaveQueue;
+    } catch {
+      return;
+    }
+    if (this.#invalidAutosaveFields.size) return;
+    return super._onClickAction(event, target);
+  }
+
+  async _onSubmitForm(formConfig, event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!this.isEditable || !form) return;
+    const formData = new foundry.applications.ux.FormDataExtended(form);
+    await this.#autosaveQueue.catch(() => {});
+    this.#submitRejected = false;
+    this.#setAutosaveStatus("Saving");
+    try {
+      const result = await formConfig.handler?.call(this, event, form, formData);
+      if (this.#submitRejected) {
+        this.#setAutosaveStatus("Invalid");
+        return result;
+      }
+      this.#invalidAutosaveFields.clear();
+      this.#autosaveQueue = Promise.resolve();
+      this.#setAutosaveStatus("Saved");
+      return result;
+    } catch (error) {
+      this.#setAutosaveStatus("Error");
+      console.error(error);
+      ui.notifications.error(game.i18n.localize("OUW25.SaveStatus.Error"));
+      throw error;
+    }
+  }
+
+  #setAutosaveStatus(status) {
+    this.#autosaveStatus = status;
+    const statusElement = this.element?.querySelector("[data-autosave-status]");
+    if (!statusElement) return;
+    statusElement.textContent = game.i18n.localize(`OUW25.SaveStatus.${status}`);
+    statusElement.dataset.state = status.toLowerCase();
+  }
+
+  #autosaveField(event) {
+    const input = event.target;
+    if (!this.isEditable || !input || input.disabled || input.readOnly
+      || input.dataset?.autosave === "false") return;
+    const name = input.name;
+    if (!name || (name !== "name" && !name.startsWith("system."))) return;
+    if (this.form && !this.form.contains(input)) return;
+
+    const actorName = name === "name";
+    const field = actorName ? "name" : name.slice("system.".length);
+    if (!actorName && !(field in this.actor.system)) return;
+    const path = actorName ? "name" : `system.${field}`;
+    const revision = (this.#autosaveRevisions.get(path) ?? 0) + 1;
+    this.#autosaveRevisions.set(path, revision);
+    if (typeof input.checkValidity === "function" && !input.checkValidity()) {
+      input.reportValidity?.();
+      this.#invalidAutosaveFields.add(path);
+      this.#setAutosaveStatus("Invalid");
+      return;
+    }
+
+    const currentValue = actorName ? this.actor.name : this.actor.system[field];
+    const value = input.type === "checkbox" ? input.checked
+      : typeof currentValue === "number" ? Number(input.value) : input.value;
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      input.reportValidity?.();
+      this.#invalidAutosaveFields.add(path);
+      this.#setAutosaveStatus("Invalid");
+      return;
+    }
+
+    this.#invalidAutosaveFields.delete(path);
+    const save = this.#autosaveQueue.catch(() => {}).then(async () => {
+      if (this.#autosaveRevisions.get(path) !== revision) return true;
+      const savedValue = actorName ? this.actor.name : this.actor.system[field];
+      if (Object.is(value, savedValue)) return true;
+      if (!actorName && field === "specialty" && !isSpecialtyAllowed(value, this.actor.system.past)) {
+        ui.notifications.warn(game.i18n.localize(`OUW25.Specialty.Restriction.${this.actor.system.past}`));
+        this.#invalidAutosaveFields.add(path);
+        return false;
+      }
+      if (!actorName && this.actor.type === "cooperative") {
+        const error = shipSelectionError(this.actor.system, { [field]: value }, this.#listedCargoVolume());
+        if (error) {
+          input.value = String(savedValue);
+          ui.notifications.warn(game.i18n.localize(error));
+          return false;
+        }
+      }
+      await this.actor.update(actorName ? { name: value } : { [path]: value });
+      return true;
+    });
+    this.#autosaveQueue = save;
+    this.#setAutosaveStatus("Saving");
+    return save.then(saved => {
+      if (this.#autosaveQueue === save) {
+        this.#setAutosaveStatus(this.#invalidAutosaveFields.size ? "Invalid" : "Saved");
+      }
+      return saved;
+    }).catch(error => {
+      if (this.#autosaveQueue === save) this.#setAutosaveStatus("Error");
+      console.error(error);
+      ui.notifications.error(game.i18n.localize("OUW25.SaveStatus.Error"));
+    });
+  }
+
+  #listedCargoVolume() {
+    return this.actor.items.filter(item => item.type === "cargo").reduce((total, item) => total + item.system.volume, 0);
   }
 
   static async editRecord(event, target) {
@@ -519,6 +662,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     this.#recordPending = true;
     try {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"],
         window: { title: game.i18n.localize("OUW25.Debt.Delete") },
         content: `<p>${game.i18n.localize(`${key}.ConfirmDelete`)}</p>`,
         rejectClose: false
@@ -535,8 +679,18 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const { type, system } = this.actor;
     const { specialty = system.specialty, past = system.past } = submitData.system ?? {};
     if (type === "merchant" && specialty !== system.specialty && !isSpecialtyAllowed(specialty, past)) {
+      this.#submitRejected = true;
+      this.#invalidAutosaveFields.add("system.specialty");
       ui.notifications.warn(game.i18n.localize(`OUW25.Specialty.Restriction.${past}`));
       return {};
+    }
+    if (type === "cooperative" && submitData.system) {
+      const error = shipSelectionError(system, submitData.system, this.#listedCargoVolume());
+      if (error) {
+        this.#submitRejected = true;
+        ui.notifications.warn(game.i18n.localize(error));
+        return {};
+      }
     }
     return super._processSubmitData(event, form, submitData, options);
   }
@@ -563,6 +717,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     target.disabled = true;
     try {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"],
         window: { title: i18n.format(`OUW25.Creation.Roll${key}`, { formula }) },
         content: `<p>${i18n.format(`OUW25.Creation.Confirm${key}`, { formula })}</p>`,
         rejectClose: false
@@ -616,6 +771,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     try {
       pensionBalanceAfterDeposit(actor.system.pensionBalance, amount);
       const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"],
         window: { title: i18n.localize("OUW25.Finance.Deposit") },
         content: `<p>${i18n.format("OUW25.Finance.ConfirmDeposit", { amount: Number(amount) })}</p>`,
         rejectClose: false
@@ -647,6 +803,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const fingerprint = voyageStateFingerprint(actor.system);
       const transition = prepareSectorTransition(actor.system, foundry.utils.randomID());
       const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"],
         window: { title: i18n.localize("OUW25.Voyage.TravelSector") },
         content: `<p>${i18n.format("OUW25.Voyage.ConfirmTransition", transition.costs)}</p><p>${i18n.localize("OUW25.Voyage.SingleOperator")}</p>`,
         rejectClose: false
@@ -683,6 +840,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const fingerprint = voyageStateFingerprint(actor.system);
       const rollback = rollbackSectorTransition(actor.system);
       const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"],
         window: { title: i18n.localize("OUW25.Voyage.UndoSector") },
         content: `<p>${i18n.format("OUW25.Voyage.ConfirmUndo", rollback.costs)}</p><p>${i18n.localize("OUW25.Voyage.SingleOperator")}</p>`,
         rejectClose: false
@@ -720,6 +878,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const fingerprint = voyageStateFingerprint(actor.system);
       const reset = prepareVoyageReset(actor.system);
       const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"],
         window: { title: i18n.localize("OUW25.Voyage.ResetCounters") },
         content: `<p>${i18n.localize("OUW25.Voyage.ConfirmReset")}</p>`,
         rejectClose: false
@@ -758,6 +917,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const fingerprint = voyageStateFingerprint(actor.system);
       const startingUnrest = actor.system.unrest;
       const inputs = await foundry.applications.api.DialogV2.input({
+        classes: ["ouw25"],
         window: { title: i18n.localize("OUW25.Voyage.Psychotherapy") },
         content: `<label>${i18n.localize("OUW25.Voyage.AdditionalDice")}<input type="number" name="additionalDice" min="0" max="100" step="1" value="0" required></label>
           <label>${i18n.localize("OUW25.Voyage.Complications")}<input type="number" name="complications" min="0" max="104" step="1" value="0" required></label>`,
@@ -819,6 +979,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const fingerprint = voyageStateFingerprint(actor.system);
       const startingUnrest = actor.system.unrest;
       const inputs = await foundry.applications.api.DialogV2.input({
+        classes: ["ouw25"],
         window: { title: i18n.localize("OUW25.Voyage.IncreaseUnrest") },
         content: `<label>${i18n.localize("OUW25.Voyage.IncreaseAmount")}
           <select name="increaseType">
@@ -829,7 +990,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
             <option value="custom">${i18n.localize("OUW25.Voyage.IncreaseCustom")}</option>
           </select>
         </label>
-        <label>${i18n.localize("OUW25.Voyage.CustomIncrease")}<input type="number" name="customIncrease" min="0" max="9007199254740991" step="any" value="1"></label>`,
+        <label>${i18n.localize("OUW25.Voyage.CustomIncrease")}<input type="number" name="customIncrease" min="0" max="9007199254740991" step="1" value="1"></label>`,
         rejectClose: false,
         ok: { label: i18n.localize("OUW25.Voyage.ApplyIncrease") }
       });
@@ -893,6 +1054,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (action.supplies) {
         const label = i18n.localize("OUW25.PersonalAction.Successes");
         const data = await foundry.applications.api.DialogV2.input({
+          classes: ["ouw25"],
           window: { title },
           content: `<label>${label}<input type="number" name="successes" min="1" max="100" step="1" value="1" required></label>`,
           rejectClose: false

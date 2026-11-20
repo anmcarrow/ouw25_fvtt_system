@@ -10,6 +10,12 @@
     "ActorSheet": "Blessed Tide Sheet",
     "Notes": "Notes",
     "Save": "Save",
+    "SaveStatus": {
+      "Saving": "Saving…",
+      "Saved": "Saved",
+      "Error": "Couldn't save changes.",
+      "Invalid": "Fix the highlighted value before continuing."
+    },
     "Cargo": {
       "Title": "Cargo",
       "Name": "Name",
@@ -144,6 +150,7 @@
       "ForcedMode": "Forced mode",
       "ForcedCheck": "Resolve the mechanic's check before enabling this mode; the check is not automated yet.",
       "IlluminationMode": "Illumination mode",
+      "IlluminationUnrest": "Illumination adds 1 unrest every second illuminated sector.",
       "Unrest": "Sea unrest",
       "TravelRates": "Speed: {speed}; per sector — fuel {fuel}, provisions {provisions}; unrest +{unrest}.",
       "UnrestCurrent": "Effective unrest: {unrest} of 25.",
@@ -242,6 +249,7 @@
       "FuelStock": "Fuel stock, st.",
       "ProvisionsStock": "Provisions stock, measures",
       "Hold": "Hold: {occupied} / {capacity} st. occupied",
+      "CompartmentDoesNotFit": "There is not enough room in the hold for that compartment.",
       "Overloaded": "The load exceeds hold capacity.",
       "NearFull": "The hold has 100 st. or less free.",
       "Mount": "Mount {number}",

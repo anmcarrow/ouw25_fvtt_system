@@ -20,6 +20,11 @@ export const HOLD_BONUSES = [0, 100, 200, 300, 400, 500, 600];
 export const SHIP_GEAR_CHOICES = ["none", "sandshoes", "tow"];
 export const SHIP_GEAR_SLOTS = [1, 2];
 export const SHIP_DAMAGE_SLOTS = Array.from({ length: MAX_SHIP_CLASS + 5 }, (_, i) => i + 1);
+const SHIP_LAYOUT_FIELDS = [
+  "shipClass", "holdBonus",
+  ...Object.keys(SHIP_QUALITIES).flatMap(kind => SHIP_QUALITY_SLOTS.map(slot => `${kind}${slot}`)),
+  ...Array.from({ length: SHIP_SLOT_COUNT }, (_, index) => `compartment${index + 1}`)
+];
 
 export function shipQualitySlots(ship, kind) {
   return SHIP_QUALITY_SLOTS.map(number => {
@@ -32,9 +37,38 @@ export function shipHold(ship, listedVolume, compartmentSpace) {
   const { shipClass, cargoLoad, fuelStock, provisionsStock, holdBonus } = ship;
   const largeHold = shipQualitySlots(ship, "merit").some(({ value }) => value === "large_hold");
   const capacity = SHIP_CLASS_STATS[shipClass].hold + (largeHold && HOLD_BONUSES.includes(holdBonus) ? holdBonus : 0);
-  const occupied = cargoLoad + listedVolume + fuelStock + Math.ceil(provisionsStock / 18) + compartmentSpace;
+  const occupied = (cargoLoad ?? 0) + listedVolume + (fuelStock ?? 0)
+    + Math.ceil((provisionsStock ?? 0) / 18) + compartmentSpace;
   const free = capacity - occupied;
   return { capacity, occupied, nearFull: free >= 0 && free <= 100, overloaded: free < 0 };
+}
+
+export function shipSelectionError(ship, changes, listedVolume) {
+  if (!SHIP_LAYOUT_FIELDS.some(field => Object.hasOwn(changes, field) && changes[field] !== ship[field])) return;
+  const next = Object.assign(Object.fromEntries([...SHIP_LAYOUT_FIELDS, "cargoLoad", "fuelStock", "provisionsStock"]
+    .map(field => [field, ship[field]])), changes);
+  for (const kind of Object.keys(SHIP_QUALITIES)) {
+    const before = shipQualitySlots(ship, kind);
+    const after = shipQualitySlots(next, kind);
+    for (const { field, value } of after) {
+      if (value !== "none" && value !== ship[field]
+        && after.filter(slot => slot.value === value).length > Math.max(1, before.filter(slot => slot.value === value).length)) {
+        return "OUW25.ShipQuality.Duplicates";
+      }
+    }
+  }
+  const beforeSpace = shipConfiguration(ship).compartmentSpace;
+  const afterSpace = shipConfiguration(next).compartmentSpace;
+  const beforeHold = shipHold(ship, listedVolume, beforeSpace);
+  const afterHold = shipHold(next, listedVolume, afterSpace);
+  if ((afterSpace > beforeSpace && afterHold.overloaded)
+    || afterSpace - afterHold.capacity > Math.max(0, beforeSpace - beforeHold.capacity)) {
+    return "OUW25.Ship.CompartmentDoesNotFit";
+  }
+}
+
+export function normalizeUnrest(unrest, pending) {
+  return { unrest: Math.floor(unrest), illuminationUnrestPending: pending ?? (unrest % 1 >= 0.5) };
 }
 
 export function calculateVoyage(ship) {
@@ -52,7 +86,7 @@ export function calculateVoyage(ship) {
   const provisionsStock = ship.provisionsStock;
   const unrest = Math.min(25, Math.max(
     shipQualitySlots(ship, "flaw").some(({ value }) => value === "cursed") ? 5 : 0,
-    ship.unrest
+    Math.floor(ship.unrest)
   ));
   const shortages = [];
   if (crewCount === 0) shortages.push("OUW25.Voyage.NoCrew");
@@ -71,7 +105,7 @@ export function calculateVoyage(ship) {
     fuelPerSector,
     provisionsPerSector,
     unrest,
-    unrestPerSector: ship.illuminationMode ? 0.5 : 1,
+    unrestPerSector: ship.illuminationMode ? Number(Boolean(ship.illuminationUnrestPending)) : 1,
     fuelLow: fuelStock > 0 && fuelStock <= fuelPerSector * 5,
     fuelSectors: Math.floor(fuelStock / fuelPerSector),
     provisionsLow: provisionsStock > 0 && provisionsStock <= provisionsPerSector * ((forced ? 2 : 1) * (belowHalf ? 0.5 : 1)) * 5,
@@ -80,7 +114,7 @@ export function calculateVoyage(ship) {
   };
 }
 
-const TRANSITION_FIELDS = ["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"];
+const TRANSITION_FIELDS = ["fuelStock", "provisionsStock", "unrest", "illuminationUnrestPending", "travelSectors", "travelWatches"];
 
 function transitionState(ship) {
   const state = Object.fromEntries(TRANSITION_FIELDS.map(field => [field, ship[field]]));
@@ -91,7 +125,7 @@ function transitionState(ship) {
     || !Number.isFinite(state.unrest) || state.unrest < 0 || state.unrest > 25) {
     throw new RangeError("OUW25.Voyage.InvalidState");
   }
-  return state;
+  return { ...state, ...normalizeUnrest(state.unrest, state.illuminationUnrestPending) };
 }
 
 function readTransitionRecord(value) {
@@ -111,7 +145,9 @@ function readTransitionRecord(value) {
     !Number.isFinite(costs[field]) || costs[field] < 0 || costs[field] > Number.MAX_SAFE_INTEGER)) {
     throw new RangeError("OUW25.Voyage.InvalidTransition");
   }
-  return { ...record, before, after, costs };
+  return { ...record, before, after, costs: {
+    ...costs, unrest: after.unrest - before.unrest
+  } };
 }
 
 function validCounterReset(reset) {
@@ -129,6 +165,7 @@ export function prepareSectorTransition(ship, id) {
     fuelStock: before.fuelStock - stats.fuelPerSector,
     provisionsStock: before.provisionsStock - stats.provisionsPerSector,
     unrest: stats.unrest + Math.min(stats.unrestPerSector, 25 - stats.unrest),
+    illuminationUnrestPending: ship.illuminationMode ? !before.illuminationUnrestPending : before.illuminationUnrestPending,
     travelSectors: before.travelSectors + 1,
     travelWatches: before.travelWatches + 1 / stats.speed
   };
@@ -196,7 +233,7 @@ export function rollbackSectorTransition(ship) {
 }
 
 export function resolvePsychotherapy(unrest, successes, reliefDie) {
-  if (!Number.isFinite(unrest) || unrest < 0 || unrest > 25
+  if (!Number.isInteger(unrest) || unrest < 0 || unrest > 25
     || !Number.isSafeInteger(successes)
     || !Number.isSafeInteger(reliefDie) || reliefDie < 1 || reliefDie > 6) {
     throw new RangeError("OUW25.Voyage.InvalidState");
@@ -207,8 +244,8 @@ export function resolvePsychotherapy(unrest, successes, reliefDie) {
 }
 
 export function prepareUnrestIncrease(unrest, gain) {
-  if (!Number.isFinite(unrest) || unrest < 0 || unrest > 25
-    || !Number.isFinite(gain) || gain < 0 || gain > Number.MAX_SAFE_INTEGER) {
+  if (!Number.isInteger(unrest) || unrest < 0 || unrest > 25
+    || !Number.isSafeInteger(gain) || gain < 0) {
     throw new RangeError("OUW25.Voyage.InvalidState");
   }
   const nextUnrest = Math.min(25, unrest + gain);
@@ -240,6 +277,6 @@ export function shipConfiguration(ship) {
     mounts,
     compartments,
     freeMounts: mounts.filter(({ value }) => value === "none").length,
-    compartmentSpace: compartments.reduce((sum, { value }) => sum + COMPARTMENT_SPACE[value], 0)
+    compartmentSpace: compartments.reduce((sum, { value }) => sum + (COMPARTMENT_SPACE[value] ?? 0), 0)
   };
 }

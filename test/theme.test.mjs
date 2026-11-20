@@ -57,7 +57,8 @@ test("the sheet uses light opaque text surfaces with contrasting foreground colo
   assert.match(styles, /body\.game \.application\.ouw25 \.dialog-content \.form-group\s*\{[^}]*margin-block:\s*0\.5rem;/s);
   assert.match(styles, /\.ouw25 \.dialog-content\s*\{[^}]*background:\s*var\(--ouw25-color-paper\);/s);
   assert.match(module, /static DEFAULT_OPTIONS = \{\s*classes:\s*\["ouw25"\]/s);
-  assert.equal((module.match(/DialogV2\.input\(\{\s*classes:\s*\["ouw25"\]/g) ?? []).length, 2);
+  assert.doesNotMatch(module, /DialogV2\.(?:input|confirm)\(\{\s*(?!\s|classes:)/);
+  assert.match(styles, /body\.game \.application\.ouw25 \.dialog-content :is\([^}]*border: 1px solid var\(--ouw25-color-accent\);/s);
 
   for (const background of [paper, surface]) assert.ok(contrast(ink, background) >= 4.5);
   assert.ok(contrast("#fff8ee", accent) >= 4.5);

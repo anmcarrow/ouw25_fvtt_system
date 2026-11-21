@@ -180,8 +180,8 @@
   {{/inline}}
   {{#*inline "ouw25-ship-qualities"}}
     {{#each ship.qualities}}
-      <fieldset class="ouw25-ship-qualities">
-        {{> ouw25-block-heading heading=title}}
+      <section class="ouw25-ship-qualities" aria-label="{{localize title}}">
+        <h3>{{localize title}}</h3>
         {{#each slots}}
           <label>
             {{localize ../slotLabel number=number}}
@@ -196,7 +196,7 @@
             {{#each help}}<li><strong>{{localize name}}:</strong> {{localize text}}</li>{{/each}}
           </ul>
         {{/if}}
-      </fieldset>
+      </section>
     {{/each}}
   {{/inline}}
   {{#> ouw25-tab tab=tabs.contacts}}
@@ -311,8 +311,8 @@
     </div>
   {{/inline}}
   {{#*inline "ouw25-ship-gear"}}
-      <fieldset class="ouw25-ship-gear">
-        {{> ouw25-block-heading heading="OUW25.ShipGear.Title"}}
+      <section class="ouw25-ship-gear" aria-label="{{localize "OUW25.ShipGear.Title"}}">
+        <h3>{{localize "OUW25.ShipGear.Title"}}</h3>
         {{#each ship.gear}}
           <label>
             {{localize "OUW25.ShipGear.Slot" number=number}}
@@ -329,7 +329,7 @@
             {{/each}}
           </ul>
         {{/if}}
-      </fieldset>
+      </section>
   {{/inline}}
   {{#*inline "ouw25-ship-damage"}}
       <fieldset class="ouw25-ship-condition">
@@ -387,13 +387,13 @@
         {{/if}}
         {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
       </fieldset>
-      <div class="ouw25-ship-pair">
+      <div class="ouw25-ship-group ouw25-ship-pair">
         {{> ouw25-ship-qualities}}
       </div>
-      <div class="ouw25-ship-pair">
+      <div class="ouw25-ship-group ouw25-ship-pair">
         <div class="ouw25-sheet-column">
-          <fieldset class="ouw25-ship-mounts">
-            {{> ouw25-block-heading heading="OUW25.Ship.Mounts"}}
+          <section class="ouw25-ship-mounts" aria-label="{{localize "OUW25.Ship.Mounts"}}">
+            <h3>{{localize "OUW25.Ship.Mounts"}}</h3>
             {{#each ship.mounts}}
               <label>
                 {{localize "OUW25.Ship.Mount" number=number}}
@@ -402,11 +402,11 @@
                 </select>
               </label>
             {{/each}}
-          </fieldset>
+          </section>
           {{> ouw25-ship-gear}}
         </div>
-        <fieldset class="ouw25-ship-compartments">
-          {{> ouw25-block-heading heading="OUW25.Ship.Compartments"}}
+        <section class="ouw25-ship-compartments" aria-label="{{localize "OUW25.Ship.Compartments"}}">
+          <h3>{{localize "OUW25.Ship.Compartments"}}</h3>
           {{#each ship.compartments}}
             <label>
               {{localize "OUW25.Ship.Compartment" number=number}}
@@ -416,7 +416,7 @@
             </label>
           {{/each}}
           <p>{{localize "OUW25.Ship.CompartmentSpace" volume=ship.compartmentSpace}}</p>
-        </fieldset>
+        </section>
       </div>
     </div>
   {{/ouw25-tab}}

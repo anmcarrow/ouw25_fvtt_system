@@ -404,6 +404,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h
   font-size: 1.6em;
   position: relative;
   inset-block-start: -5px;
+  inset-inline-start: 20px;
   justify-content: flex-end;
   line-height: 1;
   inline-size: calc(100% + 2 * (var(--ouw25-fieldset-padding) + var(--ouw25-fieldset-border)));
@@ -418,10 +419,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h
 
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes textarea {
   box-sizing: border-box;
-  flex: 1 1 0;
-  min-block-size: 350px;
+  flex: 0 0 auto;
+  block-size: calc(100% - (0.25rem + var(--ouw25-cooperative-heading-height) / 2 - 1px) - 20px);
+  min-block-size: 0;
+  max-block-size: none;
   inline-size: 100%;
   margin: calc(0.25rem + var(--ouw25-cooperative-heading-height) / 2 - 1px) 0 20px;
+  resize: vertical;
 }
 
 .ouw25 .ouw25-merchant-profile {
@@ -965,6 +969,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-layout {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-layout fieldset {
   margin-inline: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-group {
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  margin-block: 0.25rem;
+  padding: 0.8rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-group h3 {
+  font-size: calc(1.1rem / 1.5 * 2);
+  margin: 0 0 0.25rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair,

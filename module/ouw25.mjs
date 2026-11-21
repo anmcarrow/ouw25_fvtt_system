@@ -20,6 +20,8 @@ const DEFAULT_ACTOR_ARTWORK = {
   cooperative: "systems/ouw25/styles/images/ship_logo.webp"
 };
 const WOUND_SLOTS = [1, 2, 3, 4];
+const COOPERATIVE_REPUTATIONS = ["unset", "profiteers", "hunters", "purists", "smart", "daredevils", "ordinary"];
+const COOPERATIVE_MEMORIES = ["unset", "rescue", "lost_profit", "scandal", "secret", "fame", "blood"];
 const RELATION_KINDS = ["friend", "enemy"];
 const SHEET_TABS = {
   merchant: ["attributes", "items", "friends", "illwishers", "creditors", "notes"],
@@ -199,7 +201,10 @@ class CooperativeModel extends NotesModel {
   static defineSchema() {
     const { BooleanField, NumberField, StringField } = foundry.data.fields;
     const fields = {
-      ...super.defineSchema(), budget: counterField(), shipName: new StringField({ initial: "" }),
+      ...super.defineSchema(), budget: counterField(),
+      reputation: new StringField({ initial: "unset", choices: COOPERATIVE_REPUTATIONS }),
+      memory: new StringField({ initial: "unset", choices: COOPERATIVE_MEMORIES }),
+      shipName: new StringField({ initial: "" }),
       cargoLoad: counterField(), fuelStock: resourceField(10), provisionsStock: resourceField(10),
       holdBonus: new NumberField({
         required: true, nullable: false, initial: 0, integer: true, choices: HOLD_BONUSES
@@ -389,6 +394,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const voyage = ship && calculateVoyage(system);
     const hold = ship && shipHold(system, listedVolume, ship.compartmentSpace);
     const condition = ship && shipCondition(system);
+    const cooperativeChoices = (values, selected, category) => ({
+      choices: values.map(value => ({
+        value, label: `OUW25.Cooperative.${category}.Names.${value}`, selected: value === (selected ?? "unset")
+      })),
+      help: selected && selected !== "unset" ? `OUW25.Cooperative.${category}.Help.${selected}` : null
+    });
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
@@ -443,6 +454,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       contacts: contacts && {
         entries: contacts,
         total: String(contacts.reduce((total, { amount }) => total + BigInt(amount), 0n))
+      },
+      cooperative: ship && {
+        reputation: cooperativeChoices(COOPERATIVE_REPUTATIONS, system.reputation, "Reputation"),
+        memory: cooperativeChoices(COOPERATIVE_MEMORIES, system.memory, "Memory")
       },
       contracts: type === "cooperative" ? this.actor.items.filter(item => item.type === "contract").map(item => ({
         id: item.id, name: item.name, location: item.system.location, deadline: item.system.deadline, amount: item.system.amount

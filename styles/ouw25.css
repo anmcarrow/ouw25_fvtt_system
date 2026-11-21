@@ -310,16 +310,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:not(
 
 .ouw25 .ouw25-sheet-tabs > button > span {
   display: inline-block;
-  transform-origin: left center;
+}
+
+.ouw25 .ouw25-sheet-tabs > button:not(.active):hover > span {
+  color: color-mix(in srgb, var(--ouw25-color-ink) 85%, white);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .ouw25 .ouw25-sheet-tabs > button:not(.active) > span {
-    transition: transform 150ms ease;
-  }
-
-  .ouw25 .ouw25-sheet-tabs > button:not(.active):hover > span {
-    transform: scale(1.025);
+    transition: color 150ms ease;
   }
 }
 
@@ -353,6 +352,54 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab[data-tab="attributes"]:not(
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
   grid-template-columns: minmax(0, 67fr) minmax(0, 33fr);
   min-inline-size: 39rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-inline-size: 39rem;
+  gap: 1.2rem;
+}
+
+.ouw25 .ouw25-cooperative-budget-column {
+  isolation: isolate;
+  position: relative;
+}
+
+.ouw25 .ouw25-cooperative-budget-column::before {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  inset: 0;
+  background: url("./images/team.webp") center / contain no-repeat;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.ouw25 .ouw25-cooperative-budget-column > fieldset {
+  margin-inline: 0;
+}
+
+.ouw25 .ouw25-cooperative-budget label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ouw25 .ouw25-cooperative-budget input {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.ouw25 .ouw25-cooperative-budget p {
+  color: var(--ouw25-color-warning);
+  font-family: var(--ouw25-font-accent);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes textarea {
+  box-sizing: border-box;
+  block-size: 350px;
+  inline-size: 100%;
+  margin: 0;
 }
 
 .ouw25 .ouw25-merchant-profile {
@@ -1104,6 +1151,24 @@ body.game .application.ouw25 .ouw25-notes option {
 
 .ouw25 .ouw25-notes .ouw25-debt-table tbody tr:nth-child(odd) {
   background-color: var(--ouw25-color-surface);
+}
+
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo) .ouw25-debt-table {
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo) .ouw25-debt-table thead {
+  background: transparent;
+  border: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo) .ouw25-debt-table thead th {
+  border: 0;
+  border-block-end: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  font-weight: 700;
 }
 
 .ouw25 .ouw25-debt-table :is(th, td) {

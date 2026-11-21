@@ -18,6 +18,7 @@
     },
     "Cargo": {
       "Title": "Cargo",
+      "Heading": "Cargo – {volume} st.",
       "Name": "Name",
       "Quantity": "Quantity",
       "Volume": "Volume, st.",
@@ -27,6 +28,38 @@
       "Empty": "No cargo listed.",
       "Invalid": "Enter a name, a nonnegative whole quantity, and a nonnegative volume.",
       "ConfirmDelete": "Delete this cargo record?"
+    },
+    "Cooperative": {
+      "Reputation": {
+        "Title": "Reputation",
+        "Names": {
+          "unset": "— Choose —", "profiteers": "Profiteers", "hunters": "Hunters",
+          "purists": "Purists", "smart": "Clever ones", "daredevils": "Daredevils", "ordinary": "Ordinary folk"
+        },
+        "Help": {
+          "profiteers": "Advantage when bargaining over pay; lawkeepers may be less friendly; half the fee is paid in advance.",
+          "hunters": "Advantage when searching and pursuing, plus an extra success on retreat; clients impose penalties for failure.",
+          "purists": "Advantage with law-abiding people, complications when dealing with scoundrels; respectable clients offer a second chance.",
+          "smart": "Advantage on careful, complex actions and complications on hasty ones; part of the payment is rarities or information.",
+          "daredevils": "Two shared luck marks per encounter; complications on cautious actions and a risk of strange or unpaid jobs.",
+          "ordinary": "Advantage on expected actions and complications when improvising; average pay and another similar job."
+        }
+      },
+      "Memory": {
+        "Title": "Memories",
+        "Names": {
+          "unset": "— Choose —", "rescue": "Miraculous rescue", "lost_profit": "Lost opportunity",
+          "scandal": "Public scandal", "secret": "Terrible secret", "fame": "Five tokks of fame", "blood": "Blood and death"
+        },
+        "Help": {
+          "rescue": "Who or what did you save, what do you owe your rescuer, and what danger remains?",
+          "lost_profit": "Who was the other party, where did the money go, and what consequences remain?",
+          "scandal": "Who was caught up in the scandal with you, and who holds a grudge?",
+          "secret": "What disaster did you cause, who knows the truth, and who helps conceal it?",
+          "fame": "What made you famous, who helped, and what contacts and enemies did you gain?",
+          "blood": "What massacre changed you, whom do you blame, and which details haunt you?"
+        }
+      }
     },
     "Contract": {
       "Title": "Contracts",

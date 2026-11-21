@@ -47,7 +47,7 @@ test("actor sheet hover and panel styles retain their distinct visual roles", ()
   assert.match(styles, /\.ouw25-portrait-view::after\s*\{[^}]*box-shadow:\s*inset /s);
   assert.match(styles, /\.ouw25-create-actor-types img\s*\{[^}]*filter:\s*invert\(1\)/s);
   assert.match(template, /data-action="tab"[^>]*><span>\{\{localize label\}\}<\/span><\/button>/);
-  assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*transform:\s*scale\(1\.025\);/);
+  assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*color:\s*color-mix\(/);
   assert.match(styles, /background:\s*linear-gradient\(90deg, color-mix\(in srgb, var\(--ouw25-button-color/);
 });
 

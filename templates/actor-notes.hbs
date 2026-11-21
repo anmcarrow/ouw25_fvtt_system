@@ -86,13 +86,31 @@
   </nav>
   <div class="ouw25-tab-stack">
   {{#if ship}}
-  {{#> ouw25-tab tab=tabs.attributes}}
+  {{#> ouw25-tab tab=tabs.attributes layout="ouw25-cooperative-layout"}}
     <div class="ouw25-sheet-column">
-    {{> ouw25-finances}}
-    <fieldset>
-      {{> ouw25-block-heading heading="OUW25.Notes"}}
+      <div class="ouw25-cooperative-budget-column">
+        <div class="ouw25-cooperative-budget">
+          <label>{{localize "OUW25.Finance.Budget"}}: {{> ouw25-money-input}} {{localize "OUW25.Finance.Currency"}}</label>
+          {{#unless (eq contacts.total "0")}}<p>{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>{{/unless}}
+        </div>
+        <fieldset>
+          {{> ouw25-block-heading heading="OUW25.Cooperative.Reputation.Title"}}
+          <select name="system.reputation" aria-label="{{localize "OUW25.Cooperative.Reputation.Title"}}" {{#unless editable}}disabled{{/unless}}>
+            {{#each cooperative.reputation.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+          </select>
+          {{#if cooperative.reputation.help}}<p>{{localize cooperative.reputation.help}}</p>{{/if}}
+        </fieldset>
+        <fieldset>
+          {{> ouw25-block-heading heading="OUW25.Cooperative.Memory.Title"}}
+          <select name="system.memory" aria-label="{{localize "OUW25.Cooperative.Memory.Title"}}" {{#unless editable}}disabled{{/unless}}>
+            {{#each cooperative.memory.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+          </select>
+          {{#if cooperative.memory.help}}<p>{{localize cooperative.memory.help}}</p>{{/if}}
+        </fieldset>
+      </div>
+    </div>
+    <div class="ouw25-sheet-column ouw25-cooperative-notes">
       {{> ouw25-journal}}
-    </fieldset>
     </div>
   {{/ouw25-tab}}
   {{#*inline "ouw25-ship-basics"}}
@@ -261,8 +279,7 @@
     <div class="ouw25-sheet-column">
   {{#if cargo}}
     <fieldset class="ouw25-cargo">
-      {{> ouw25-block-heading heading="OUW25.Cargo.Title"}}
-      <p>{{localize "OUW25.Cargo.Total" volume=cargo.volume}}</p>
+      <legend><h3>{{localize "OUW25.Cargo.Heading" volume=cargo.volume}}</h3></legend>
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Cargo.Title"}}">
         <thead>
           <tr>
@@ -284,8 +301,6 @@
                 </td>
               {{/if}}
             </tr>
-          {{else}}
-            <tr><td colspan="{{#if editable}}4{{else}}3{{/if}}">{{localize "OUW25.Cargo.Empty"}}</td></tr>
           {{/each}}
         </tbody>
       </table>

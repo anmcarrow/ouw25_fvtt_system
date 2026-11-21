@@ -65,7 +65,7 @@ test("the built package registers models and an editable notes sheet for its dec
     if (!merchant) Object.assign(sheet.actor.system, {
       shipClass: 0, cargoLoad: 5, fuelStock: 10.5, provisionsStock: 18.25, mount1: "none", mount2: "none",
       compartment1: "passenger", compartment2: "none", compartment3: "none", compartment4: "none",
-      gear1: "sandshoes"
+      gear1: "sandshoes", reputation: "hunters", memory: "rescue"
     });
     sheet.actor.items = [{ type: "debt", id: "debt-1", name: "Creditor", system: {
       direction: "payable", amount: 12, location: "Port"
@@ -89,13 +89,14 @@ test("the built package registers models and an editable notes sheet for its dec
       : ["attributes", "contacts", "contracts", "ship", "cargo"]);
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ...context } = await sheet._prepareContext({});
+      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, cooperative, ...context } = await sheet._prepareContext({});
       assert.equal(showContracts, !merchant);
       assert.equal(pastMoves, null);
       if (merchant) {
         assert.equal(cargo, null);
         assert.equal(contracts, null);
         assert.equal(contacts, null);
+        assert.equal(cooperative, null);
         assert.equal(ship, null);
         assert.equal(identity.name, "Original");
         assert.equal(identity.dream, "Custom dream");
@@ -109,6 +110,19 @@ test("the built package registers models and an editable notes sheet for its dec
           id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
         }]);
       } else {
+        assert.equal(cooperative.reputation.choices.find(choice => choice.selected).value, "hunters");
+        assert.equal(cooperative.reputation.help, "OUW25.Cooperative.Reputation.Help.hunters");
+        assert.equal(cooperative.memory.choices.find(choice => choice.selected).value, "rescue");
+        assert.equal(cooperative.memory.help, "OUW25.Cooperative.Memory.Help.rescue");
+        for (const language of ["en", "ru"]) {
+          const texts = JSON.parse(await readFile(new URL(`lang/${language}.json`, dist), "utf8"));
+          for (const [category, selection] of Object.entries({ Reputation: cooperative.reputation, Memory: cooperative.memory })) {
+            for (const { value } of selection.choices) {
+              assert.ok(texts.OUW25.Cooperative[category].Names[value]);
+              if (value !== "unset") assert.ok(texts.OUW25.Cooperative[category].Help[value]);
+            }
+          }
+        }
         assert.equal(cargo.volume, 14.75);
         assert.deepEqual(cargo.entries[0], { id: "cargo-1", name: "Crates", quantity: 3, volume: 12.5 });
         assert.deepEqual(contracts, [{
@@ -156,6 +170,14 @@ test("the built package registers models and an editable notes sheet for its dec
         ] } : null
       });
 
+    }
+    if (!merchant) {
+      Object.assign(sheet.actor.system, { reputation: "unset", memory: "unset" });
+      const { cooperative } = await sheet._prepareContext({});
+      assert.equal(cooperative.reputation.choices.find(choice => choice.selected).value, "unset");
+      assert.equal(cooperative.memory.choices.find(choice => choice.selected).value, "unset");
+      assert.equal(cooperative.reputation.help, null);
+      assert.equal(cooperative.memory.help, null);
     }
     let updates = 0;
     sheet.actor.update = async data => {

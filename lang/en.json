@@ -158,6 +158,10 @@
         "notoriety": "A bad reputation draws attention and invites trouble."
       }
     },
+    "ShipList": {
+      "Add": { "merit": "Add ship merit", "flaw": "Add ship flaw", "mount": "Add mount", "compartment": "Add compartment", "gear": "Add equipment" },
+      "ConfirmDelete": "Remove this ship entry?"
+    },
     "ShipGear": {
       "Duplicates": "Each piece of fixed equipment can only be installed once.",
       "Title": "Fixed equipment",

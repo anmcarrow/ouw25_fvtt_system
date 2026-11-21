@@ -143,9 +143,11 @@ test("the built package registers models and an editable notes sheet for its dec
         assert.equal(ship.compartmentSpace, 420);
         assert.deepEqual(ship.hold, { occupied: 452.25, capacity: 1600, nearFull: false, overloaded: false });
         assert.deepEqual(ship.hold, { capacity: 1600, occupied: 452.25, nearFull: false, overloaded: false });
-        assert.equal(ship.mounts[0].choices.find(choice => choice.selected).value, "none");
-        assert.equal(ship.gear[0].choices.find(choice => choice.value === "sandshoes").disabled, false);
-        assert.deepEqual(ship.gear[1].choices.filter(choice => choice.disabled).map(choice => choice.value), ["sandshoes"]);
+        assert.deepEqual(ship.mounts.entries, []);
+        assert.deepEqual(ship.gear.entries, [{
+          field: "gear1", name: "OUW25.ShipGear.Names.sandshoes", help: "OUW25.ShipGear.Help.sandshoes"
+        }]);
+        assert.equal(ship.gear.canAdd, true);
       }
       assert.deepEqual(context, {
         notes: "test note", autosaveStatus: "OUW25.SaveStatus.Saved", autosaveStatusState: "saved",
@@ -377,6 +379,60 @@ test("the built package registers models and an editable notes sheet for its dec
 
   const cooperative = CONFIG.Actor.dataModels.cooperative;
   assert.deepEqual(cooperative.migrateData({ unrest: 11.5 }), { unrest: 11, illuminationUnrestPending: true });
+
+  const shipSheet = new Sheet();
+  shipSheet.isEditable = true;
+  const shipSystem = {
+    shipClass: 0, cargoLoad: 0, fuelStock: 0, provisionsStock: 0, holdBonus: 0,
+    merit1: "strong_hull", merit2: "none", merit3: "none", merit4: "none",
+    flaw1: "none", flaw2: "none", flaw3: "none", flaw4: "none",
+    gear1: "sandshoes", gear2: "none", mount1: "slagthrower", mount2: "none",
+    compartment1: "passenger", compartment2: "none", compartment3: "none", compartment4: "none"
+  };
+  shipSheet.actor = {
+    type: "cooperative", system: shipSystem, items: [],
+    async update(changes) { for (const [path, value] of Object.entries(changes)) shipSystem[path.slice(7)] = value; }
+  };
+  const warnings = [];
+  globalThis.ui = { notifications: { warn: value => warnings.push(value) } };
+  let response = { code: "strong_hull" };
+  let choices;
+  foundry.applications.handlebars = { renderTemplate: async (_path, context) => {
+    choices = context.choices;
+    return "";
+  } };
+  foundry.applications.api.DialogV2 = { input: async () => response, confirm: async () => true };
+  const editShip = (kind, field) => Sheet.DEFAULT_OPTIONS.actions.editShipEntry.call(shipSheet, null, { dataset: { kind, field } });
+  const deleteShip = (kind, field) => Sheet.DEFAULT_OPTIONS.actions.deleteShipEntry.call(shipSheet, null, { dataset: { kind, field } });
+  await editShip("merit");
+  assert.equal(choices.find(choice => choice.value === "strong_hull").disabled, true);
+  assert.equal(shipSystem.merit2, "none");
+  assert.equal(warnings.pop(), "OUW25.ShipQuality.Duplicates");
+  response = { code: "worn_engine" };
+  await editShip("flaw");
+  assert.equal(shipSystem.flaw1, "worn_engine");
+  response = { code: "winch" };
+  await editShip("mount");
+  assert.equal(shipSystem.mount2, "winch");
+  response = { code: "tow" };
+  await editShip("gear", "gear1");
+  assert.equal(shipSystem.gear1, "tow");
+  await deleteShip("gear", "gear1");
+  assert.equal(shipSystem.gear1, "none");
+  shipSystem.cargoLoad = 1100;
+  response = { code: "diving" };
+  await editShip("compartment");
+  assert.equal(choices.find(choice => choice.value === "diving").disabled, true);
+  assert.equal(shipSystem.compartment2, "none");
+  assert.equal(warnings.pop(), "OUW25.Ship.CompartmentDoesNotFit");
+  shipSheet.isEditable = false;
+  await deleteShip("mount", "mount1");
+  assert.equal(shipSystem.mount1, "slagthrower");
+  shipSheet.isEditable = true;
+  foundry.applications.api.DialogV2.confirm = async () => { shipSystem.mount1 = "harpoon"; return true; };
+  await deleteShip("mount", "mount1");
+  assert.equal(shipSystem.mount1, "harpoon");
+  assert.equal(warnings.pop(), "OUW25.Creation.Changed");
 
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));

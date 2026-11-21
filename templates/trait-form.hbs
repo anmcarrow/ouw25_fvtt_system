@@ -1,9 +1,9 @@
 <div class="form-group">
   <label>
-    {{localize "OUW25.Trait.Choice"}}
+    {{#if choiceLabel}}{{localize choiceLabel}}{{else}}{{localize "OUW25.Trait.Choice"}}{{/if}}
     <select name="code" required>
       {{#each choices}}
-        <option value="{{value}}" {{#if selected}}selected{{/if}} {{#if (eq value "unset")}}disabled{{/if}}>{{localize label}}</option>
+        <option value="{{value}}" {{#if selected}}selected{{/if}} {{#if (eq value "unset")}}disabled{{else}}{{#if disabled}}disabled{{/if}}{{/if}}>{{localize label}}</option>
       {{/each}}
     </select>
   </label>

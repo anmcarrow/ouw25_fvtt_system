@@ -89,7 +89,7 @@ body.game .application.ouw25 .form-footer button {
 }
 
 body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"])) {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), white 18%), var(--ouw25-button-color, var(--ouw25-color-accent-soft)) 50%, color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), white 18%));
+  background: radial-gradient(ellipse at center, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), white 18%));
 }
 
 body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"])) {
@@ -544,7 +544,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair {
   gap: 0.75rem;
 }
 
-.ouw25 .ouw25-merchant-pair .ouw25-traits ul {
+.ouw25 .ouw25-merchant-pair .ouw25-traits ul,
+.ouw25 .ouw25-ship-list ul {
   padding-inline-start: 0;
   list-style: none;
 }
@@ -761,7 +762,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
 }
 
 body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-luck-actions) > button:not(:disabled) {
-  background: linear-gradient(90deg, #485d78, #32445e 50%, #485d78);
+  background: radial-gradient(ellipse at center, #32445e, #485d78);
   color: #edcd79;
 }
 
@@ -1069,6 +1070,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   flex-direction: column;
   gap: 0.75rem;
   min-width: 0;
+}
+
+.ouw25 .ouw25-ledger-totals {
+  margin: 0 0 -0.5rem;
 }
 
 .ouw25 .ouw25-notes fieldset {

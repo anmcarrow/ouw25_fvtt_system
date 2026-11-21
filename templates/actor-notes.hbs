@@ -174,27 +174,34 @@
       {{/if}}
     </div>
   {{/inline}}
-  {{#*inline "ouw25-ship-qualities"}}
-    {{#each ship.qualities}}
-      <fieldset class="ouw25-ship-qualities ouw25-traits">
-        {{> ouw25-block-heading heading=title}}
-        {{#each slots}}
-          <label>
-            {{localize ../slotLabel number=number}}
-            <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
-            </select>
-          </label>
-        {{/each}}
-        {{#if duplicates}}<p role="status">{{localize "OUW25.ShipQuality.Duplicates"}}</p>{{/if}}
-        {{#if help}}
-          {{#each help}}
-            <h4 class="ouw25-trait-name">{{localize name}}</h4>
-            <p class="ouw25-trait-description">{{localize text}}</p>
+  {{#*inline "ouw25-ship-list"}}
+    <fieldset class="ouw25-ship-list ouw25-traits">
+      {{> ouw25-block-heading heading=list.title}}
+      {{#if list.entries}}
+        <ul>
+          {{#each list.entries}}
+            <li>
+              <div class="ouw25-choice-row">
+                <h4 class="ouw25-trait-name">{{localize name}}</h4>
+                {{#if @root.editable}}
+                  <div class="ouw25-trait-actions">
+                    <button type="button" class="ouw25-trait-icon" data-action="editShipEntry" data-kind="{{../list.kind}}" data-field="{{field}}" aria-label="{{localize "OUW25.Debt.Edit"}}" data-tooltip="{{localize "OUW25.Debt.Edit"}}"><span aria-hidden="true">&#x270F;&#xFE0F;</span></button>
+                    <button type="button" class="ouw25-trait-icon" data-action="deleteShipEntry" data-kind="{{../list.kind}}" data-field="{{field}}" aria-label="{{localize "OUW25.Debt.Delete"}}" data-tooltip="{{localize "OUW25.Debt.Delete"}}"><span aria-hidden="true">&#x1F5D1;&#xFE0F;</span></button>
+                  </div>
+                {{/if}}
+              </div>
+              {{#if help}}<p class="ouw25-trait-description">{{localize help}}</p>{{/if}}
+            </li>
           {{/each}}
-        {{/if}}
-      </fieldset>
-    {{/each}}
+        </ul>
+      {{/if}}
+      {{#if showSpace}}<p>{{localize "OUW25.Ship.CompartmentSpace" volume=@root.ship.compartmentSpace}}</p>{{/if}}
+      {{#if @root.editable}}
+        <div class="ouw25-profile-details">
+          <button type="button" data-action="editShipEntry" data-kind="{{list.kind}}" {{#unless list.canAdd}}disabled{{/unless}}>{{localize list.add}}</button>
+        </div>
+      {{/if}}
+    </fieldset>
   {{/inline}}
   {{#> ouw25-tab tab=tabs.contacts}}
     <div class="ouw25-sheet-column">
@@ -305,27 +312,6 @@
   {{/if}}
     </div>
   {{/inline}}
-  {{#*inline "ouw25-ship-gear"}}
-      <section class="ouw25-ship-gear" aria-label="{{localize "OUW25.ShipGear.Title"}}">
-        <h3>{{localize "OUW25.ShipGear.Title"}}</h3>
-        {{#each ship.gear}}
-          <label>
-            {{localize "OUW25.ShipGear.Slot" number=number}}
-            <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-              {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
-            </select>
-          </label>
-        {{/each}}
-        {{#if ship.gearDuplicates}}<p role="status">{{localize "OUW25.ShipGear.Duplicates"}}</p>{{/if}}
-        {{#if ship.gearHelp}}
-          <ul>
-            {{#each ship.gearHelp}}
-              <li>{{localize this}}</li>
-            {{/each}}
-          </ul>
-        {{/if}}
-      </section>
-  {{/inline}}
   {{#*inline "ouw25-ship-damage"}}
       <div class="ouw25-ship-condition">
         <h3>{{localize "OUW25.ShipCondition.Title"}}</h3>
@@ -374,35 +360,14 @@
         {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
       </fieldset>
       <div class="ouw25-ship-pair">
-        {{> ouw25-ship-qualities}}
+        {{#each ship.qualities}}{{> ouw25-ship-list list=this}}{{/each}}
       </div>
       <div class="ouw25-ship-pair">
         <div class="ouw25-sheet-column">
-          <fieldset class="ouw25-ship-mounts ouw25-traits">
-            {{> ouw25-block-heading heading="OUW25.Ship.Mounts"}}
-            {{#each ship.mounts}}
-              <label>
-                {{localize "OUW25.Ship.Mount" number=number}}
-                <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-                  {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
-                </select>
-              </label>
-            {{/each}}
-          </fieldset>
-          {{> ouw25-ship-gear}}
+          {{> ouw25-ship-list list=ship.mounts}}
+          {{> ouw25-ship-list list=ship.gear}}
         </div>
-        <fieldset class="ouw25-ship-compartments ouw25-traits">
-          {{> ouw25-block-heading heading="OUW25.Ship.Compartments"}}
-          {{#each ship.compartments}}
-            <label>
-              {{localize "OUW25.Ship.Compartment" number=number}}
-              <select name="system.{{field}}" {{#unless @root.editable}}disabled{{/unless}}>
-                {{#each choices}}<option value="{{value}}" {{#if selected}}selected{{/if}} {{#if disabled}}disabled{{/if}}>{{localize label}}</option>{{/each}}
-              </select>
-            </label>
-          {{/each}}
-          <p>{{localize "OUW25.Ship.CompartmentSpace" volume=ship.compartmentSpace}}</p>
-        </fieldset>
+        {{> ouw25-ship-list list=ship.compartments showSpace=true}}
       </div>
     </div>
   {{/ouw25-tab}}
@@ -413,8 +378,8 @@
   {{#*inline "ouw25-creditors"}}
     <div class="ouw25-sheet-column">
   {{#if ledger}}
+    <p class="ouw25-ledger-totals">{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
     <fieldset class="ouw25-ledger" aria-label="{{localize "OUW25.Debt.Title"}}">
-      <p>{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
       {{#each ledger.groups}}
         <table class="ouw25-debt-table">
           <caption><h4>{{localize label}}</h4></caption>

@@ -35,6 +35,18 @@ export function shipGearSlots(ship) {
   return selectionSlots(ship, "gear", SHIP_GEAR_SLOTS);
 }
 
+export function shipListDefinition(ship, kind) {
+  const config = shipConfiguration(ship);
+  const definitions = {
+    merit: { slots: shipQualitySlots(ship, "merit"), choices: SHIP_QUALITIES.merit, labels: "OUW25.ShipQuality.Names", help: "OUW25.ShipQuality.Help", title: "OUW25.ShipQuality.merit.Title" },
+    flaw: { slots: shipQualitySlots(ship, "flaw"), choices: SHIP_QUALITIES.flaw, labels: "OUW25.ShipQuality.Names", help: "OUW25.ShipQuality.Help", title: "OUW25.ShipQuality.flaw.Title" },
+    mount: { slots: config.mounts, choices: MOUNT_CHOICES, labels: "OUW25.Ship.MountChoices", title: "OUW25.Ship.Mounts" },
+    compartment: { slots: config.compartments, choices: Object.keys(COMPARTMENT_SPACE), labels: "OUW25.Ship.CompartmentChoices", title: "OUW25.Ship.Compartments" },
+    gear: { slots: shipGearSlots(ship), choices: SHIP_GEAR_CHOICES, labels: "OUW25.ShipGear.Names", help: "OUW25.ShipGear.Help", title: "OUW25.ShipGear.Title" }
+  };
+  return Object.hasOwn(definitions, kind) ? definitions[kind] : undefined;
+}
+
 function selectionSlots(ship, kind, slots) {
   return slots.map(number => {
     const field = `${kind}${number}`;

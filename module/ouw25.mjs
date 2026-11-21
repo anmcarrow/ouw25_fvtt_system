@@ -9,7 +9,7 @@ import {
   resolveForcedMode, resolvePsychotherapy, rollbackSectorTransition,
   SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots, shipSelectionError
 } from "./ship.mjs";
-import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, shipGearSlots } from "./ship.mjs";
+import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, shipListDefinition } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
@@ -332,6 +332,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       rollCreation: Ouw25ActorSheet.rollCreation,
       rollPersonalAction: Ouw25ActorSheet.rollPersonalAction,
       editTrait: Ouw25ActorSheet.editTrait,
+      editShipEntry: Ouw25ActorSheet.editShipEntry,
+      deleteShipEntry: Ouw25ActorSheet.deleteShipEntry,
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord,
       toggleForcedMode: Ouw25ActorSheet.toggleForcedMode,
@@ -383,15 +385,16 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       id: item.id, name: item.name, quantity: item.system.quantity, volume: item.system.volume
     })) : null;
     const listedVolume = cargo?.reduce((total, entry) => total + entry.volume, 0);
-    const slotChoices = (slots, choices, labelPrefix, disabled = () => false) => slots.map(slot => ({
-      ...slot, choices: choices.map(value => ({
-        value, label: `${labelPrefix}.${value}`, selected: slot.value === value,
-        disabled: slot.value !== value && disabled(slot, value)
-      }))
-    }));
-    const gears = ship && shipGearSlots(system);
-    const installedGear = gears && gears.map(({ value }) => value).filter(value => value !== "none");
-    const uniqueGear = new Set(installedGear);
+    const shipList = kind => {
+      const { slots, labels, help, title } = shipListDefinition(system, kind);
+      return {
+        kind, title, add: `OUW25.ShipList.Add.${kind}`,
+        canAdd: slots.some(({ value }) => !value || value === "none"),
+        entries: slots.filter(({ value }) => value && value !== "none").map(({ field, value }) => ({
+          field, name: `${labels}.${value}`, help: help && `${help}.${value}`
+        }))
+      };
+    };
     const voyage = ship && calculateVoyage(system);
     const hold = ship && shipHold(system, listedVolume, ship.compartmentSpace);
     const condition = ship && shipCondition(system);
@@ -425,27 +428,15 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         voyage,
         forcedDisabled: voyage.wornEngine && !system.forcedMode,
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
-        mounts: slotChoices(ship.mounts, MOUNT_CHOICES, "OUW25.Ship.MountChoices"),
-        compartments: slotChoices(ship.compartments, Object.keys(COMPARTMENT_SPACE), "OUW25.Ship.CompartmentChoices",
-          ({ value: current }, value) => COMPARTMENT_SPACE[value] > (COMPARTMENT_SPACE[current] ?? 0)
-            && hold.occupied + COMPARTMENT_SPACE[value] - (COMPARTMENT_SPACE[current] ?? 0) > hold.capacity),
-        gear: slotChoices(gears, SHIP_GEAR_CHOICES, "OUW25.ShipGear.Names", (_slot, value) => uniqueGear.has(value)),
-        gearHelp: [...uniqueGear].map(value => `OUW25.ShipGear.Help.${value}`),
-        gearDuplicates: installedGear.length !== uniqueGear.size,
+        mounts: shipList("mount"), compartments: shipList("compartment"), gear: shipList("gear"),
         condition: condition && {
           ...condition,
           slots: condition.slots.map(slot => ({ ...slot, critical: slot.number >= condition.durability }))
         },
-        qualities: Object.entries(SHIP_QUALITIES).map(([kind, choices]) => {
-          const slots = shipQualitySlots(system, kind);
-          const selected = slots.map(({ value }) => value).filter(value => value !== "none");
-          const unique = [...new Set(selected)];
-          const labels = "OUW25.ShipQuality.Names";
+        qualities: Object.keys(SHIP_QUALITIES).map(kind => {
+          const unique = shipQualitySlots(system, kind).map(({ value }) => value);
           return {
-            title: `OUW25.ShipQuality.${kind}.Title`, slotLabel: `OUW25.ShipQuality.${kind}.Slot`,
-            slots: slotChoices(slots, choices, labels, (_slot, value) => unique.includes(value)),
-            duplicates: selected.length !== unique.length,
-            help: unique.map(value => ({ name: `${labels}.${value}`, text: `OUW25.ShipQuality.Help.${value}` })),
+            ...shipList(kind),
             holdBonuses: unique.includes("large_hold") ? HOLD_BONUSES.map(value => ({
               value, selected: value === system.holdBonus
             })) : null
@@ -750,6 +741,83 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const fields = { name: i18n.localize(`OUW25.Trait.Names.${data.code}`), system: { code: data.code } };
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, ...fields }]);
       else await actor.createEmbeddedDocuments("Item", [{ type: "trait", ...fields }]);
+    } finally {
+      this.#recordPending = false;
+    }
+  }
+
+  static async editShipEntry(event, target) {
+    const actor = this.actor;
+    const { kind, field: requestedField } = target.dataset;
+    if (!this.isEditable || actor.type !== "cooperative" || this.#recordPending) return;
+    const definition = shipListDefinition(actor.system, kind);
+    if (!definition) return;
+    const slot = requestedField ? definition.slots.find(({ field }) => field === requestedField)
+      : definition.slots.find(({ value }) => !value || value === "none");
+    if (!slot || (requestedField && (!slot.value || slot.value === "none"))) return;
+    const previous = slot.value ?? "none";
+    this.#recordPending = true;
+    try {
+      const choices = [
+        { value: "unset", label: "OUW25.Trait.Names.unset", selected: !requestedField },
+        ...definition.choices.filter(value => value !== "none").map(value => ({
+          value, label: `${definition.labels}.${value}`, selected: value === previous,
+          disabled: value !== previous && Boolean(shipSelectionError(actor.system, { [slot.field]: value }, this.#listedCargoVolume()))
+        }))
+      ];
+      const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/trait-form.hbs`, {
+        choices, choiceLabel: definition.title
+      });
+      const data = await foundry.applications.api.DialogV2.input({
+        classes: ["ouw25"],
+        window: { title: game.i18n.localize(requestedField ? "OUW25.Debt.Edit" : `OUW25.ShipList.Add.${kind}`) },
+        content, rejectClose: false, ok: { label: game.i18n.localize("OUW25.Save") }
+      });
+      if (!data || !this.isEditable) return;
+      const current = shipListDefinition(actor.system, kind)?.slots.find(({ field }) => field === slot.field);
+      if (!current || (current.value ?? "none") !== previous) {
+        ui.notifications.warn(game.i18n.localize("OUW25.Creation.Changed"));
+        return;
+      }
+      if (!definition.choices.includes(data.code) || data.code === "none") {
+        ui.notifications.warn(game.i18n.localize("OUW25.Trait.Invalid"));
+        return;
+      }
+      const error = shipSelectionError(actor.system, { [slot.field]: data.code }, this.#listedCargoVolume());
+      if (error) {
+        ui.notifications.warn(game.i18n.localize(error));
+        return;
+      }
+      await actor.update({ [`system.${slot.field}`]: data.code });
+    } finally {
+      this.#recordPending = false;
+    }
+  }
+
+  static async deleteShipEntry(event, target) {
+    const actor = this.actor;
+    const { kind, field } = target.dataset;
+    if (!this.isEditable || actor.type !== "cooperative" || this.#recordPending) return;
+    const slot = shipListDefinition(actor.system, kind)?.slots.find(entry => entry.field === field);
+    if (!slot || !slot.value || slot.value === "none") return;
+    this.#recordPending = true;
+    try {
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"], window: { title: game.i18n.localize("OUW25.Debt.Delete") },
+        content: `<p>${game.i18n.localize("OUW25.ShipList.ConfirmDelete")}</p>`, rejectClose: false
+      });
+      if (!confirmed || !this.isEditable) return;
+      const current = shipListDefinition(actor.system, kind)?.slots.find(entry => entry.field === field);
+      if (!current || current.value !== slot.value) {
+        ui.notifications.warn(game.i18n.localize("OUW25.Creation.Changed"));
+        return;
+      }
+      const error = shipSelectionError(actor.system, { [field]: "none" }, this.#listedCargoVolume());
+      if (error) {
+        ui.notifications.warn(game.i18n.localize(error));
+        return;
+      }
+      await actor.update({ [`system.${field}`]: "none" });
     } finally {
       this.#recordPending = false;
     }

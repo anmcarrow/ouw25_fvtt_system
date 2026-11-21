@@ -23,6 +23,7 @@ test("record tables retain accessible names without visible block headings", () 
   }
   assert.match(template, /<caption><h4>\{\{localize label\}\}<\/h4><\/caption>/);
   assert.match(template, /<fieldset class="ouw25-cargo">\s*<legend>/);
+  assert.match(template, /<p class="ouw25-ledger-totals">[\s\S]*?<\/p>\s*<fieldset class="ouw25-ledger"/);
 });
 
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {
@@ -59,7 +60,8 @@ test("actor sheet hover and panel styles retain their distinct visual roles", ()
   assert.match(styles, /\.ouw25-create-actor-types img\s*\{[^}]*filter:\s*invert\(1\)/s);
   assert.match(template, /data-action="tab"[^>]*><span>\{\{localize label\}\}<\/span><\/button>/);
   assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*color:\s*color-mix\(/);
-  assert.match(styles, /background:\s*linear-gradient\(90deg, color-mix\(in srgb, var\(--ouw25-button-color/);
+  assert.match(styles, /background:\s*radial-gradient\(ellipse at center, var\(--ouw25-button-color/);
+  assert.match(styles, /background:\s*radial-gradient\(ellipse at center, #32445e, #485d78\)/);
 });
 
 test("light interface inverts only default actor artwork in the actor directories", () => {

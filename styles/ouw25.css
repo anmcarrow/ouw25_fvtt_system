@@ -1,3 +1,10 @@
+:is(#interface.theme-light .actors-sidebar, #actors-popout.theme-light) .directory-item img:is(
+  [src="systems/ouw25/styles/images/bugger_transp.webp"],
+  [src="systems/ouw25/styles/images/ship_logo.webp"]
+) {
+  filter: invert(1);
+}
+
 .ouw25 {
   --ouw25-color-ink: #370f00;
   --ouw25-color-accent: #2a0e06;
@@ -440,7 +447,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   }
 
   body.game .application.ouw25 .ouw25-notes .ouw25-portrait-frame:hover {
-    transform: rotate(2deg) scale(1.035);
+    transform: rotate(0deg) scale(1.035);
   }
 }
 
@@ -563,7 +570,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-rolled-input:has(> .ouw25-roll-
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-identity:has(> .ouw25-roll-icon) > input {
-  padding-inline-end: 37px;
+  padding-inline-end: 39px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-rolled-input > .ouw25-roll-icon {
@@ -575,11 +582,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-rolled-input > .ouw25-roll-icon
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-identity > .ouw25-roll-icon {
-  inset-inline-end: 2px;
+  inset-inline-end: 4px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-choice-row:has(> .ouw25-roll-icon[data-creation="specialty"]) {
-  padding-inline-end: 2px;
+  padding-inline-end: 4px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-roll-icon[data-creation="specialty"] {

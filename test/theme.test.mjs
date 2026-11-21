@@ -26,10 +26,10 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*180px;[^}]*block-size:\s*170px;[^}]*translate:\s*0 -5px;/s);
   assert.match(styles, /\.ouw25-portrait-view::before\s*\{[^}]*background:\s*url\("\.\/images\/bugger\.webp"\)/s);
   assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*translate:\s*3px 0;[^}]*transform:\s*rotate\(-2deg\);/s);
-  assert.match(styles, /\.ouw25-portrait-frame:hover\s*\{\s*transform:\s*rotate\(2deg\) scale\(1\.035\);/);
-  assert.match(styles, /\.ouw25-identity:has\(> \.ouw25-roll-icon\) > input\s*\{\s*padding-inline-end:\s*37px;/);
-  assert.match(styles, /\.ouw25-identity > \.ouw25-roll-icon\s*\{\s*inset-inline-end:\s*2px;/);
-  assert.match(styles, /\.ouw25-choice-row:has\(> \.ouw25-roll-icon\[data-creation="specialty"\]\)\s*\{\s*padding-inline-end:\s*2px;/);
+  assert.match(styles, /\.ouw25-portrait-frame:hover\s*\{\s*transform:\s*rotate\(0deg\) scale\(1\.035\);/);
+  assert.match(styles, /\.ouw25-identity:has\(> \.ouw25-roll-icon\) > input\s*\{\s*padding-inline-end:\s*39px;/);
+  assert.match(styles, /\.ouw25-identity > \.ouw25-roll-icon\s*\{\s*inset-inline-end:\s*4px;/);
+  assert.match(styles, /\.ouw25-choice-row:has\(> \.ouw25-roll-icon\[data-creation="specialty"\]\)\s*\{\s*padding-inline-end:\s*4px;/);
   assert.match(styles, /button:not\(:disabled\):not\(:where\(\.ouw25-roll-icon, \.ouw25-trait-icon, \.ouw25-portrait, \[data-action="tab"\]\)\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
   const utilityIconRule = styles.match(/\.ouw25-notes button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\)\s*\{[^}]*\}/s)?.[0];
   assert.ok(utilityIconRule);
@@ -49,6 +49,10 @@ test("actor sheet hover and panel styles retain their distinct visual roles", ()
   assert.match(template, /data-action="tab"[^>]*><span>\{\{localize label\}\}<\/span><\/button>/);
   assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*transform:\s*scale\(1\.025\);/);
   assert.match(styles, /background:\s*linear-gradient\(90deg, color-mix\(in srgb, var\(--ouw25-button-color/);
+});
+
+test("light interface inverts only default actor artwork in the actor directories", () => {
+  assert.match(styles, /:is\(#interface\.theme-light \.actors-sidebar, #actors-popout\.theme-light\) \.directory-item img:is\([\s\S]*?\[src="systems\/ouw25\/styles\/images\/bugger_transp\.webp"\],[\s\S]*?\[src="systems\/ouw25\/styles\/images\/ship_logo\.webp"\][\s\S]*?filter:\s*invert\(1\)/);
 });
 
 const module = await readFile(new URL("../dist/ouw25/module/ouw25.mjs", import.meta.url), "utf8");

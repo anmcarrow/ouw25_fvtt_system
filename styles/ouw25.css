@@ -397,6 +397,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   place-items: center;
   background: url("./images/smallphoto_frame.webp") center / 100% 100% no-repeat;
   box-shadow: 0 2px 6px rgba(20, 15, 12, 0.24);
+  translate: 3px 0;
+  transform: rotate(-2deg);
 }
 
 .ouw25 .ouw25-portrait-view::before {
@@ -415,7 +417,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   content: "";
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 2px 7px rgba(20, 15, 12, 0.28);
+  box-shadow: inset 0 1px 4px rgba(20, 15, 12, 0.16);
   pointer-events: none;
 }
 
@@ -438,7 +440,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   }
 
   body.game .application.ouw25 .ouw25-notes .ouw25-portrait-frame:hover {
-    transform: rotate(-2deg) scale(1.035);
+    transform: rotate(2deg) scale(1.035);
   }
 }
 
@@ -560,12 +562,24 @@ body.game .application.ouw25 .ouw25-notes .ouw25-rolled-input:has(> .ouw25-roll-
   padding-inline-end: 35px;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-identity:has(> .ouw25-roll-icon) > input {
+  padding-inline-end: 37px;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-rolled-input > .ouw25-roll-icon {
   position: absolute;
   inset-block-start: 50%;
   inset-inline-end: 0;
   inline-size: 35px;
   transform: translateY(-50%);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-identity > .ouw25-roll-icon {
+  inset-inline-end: 2px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-choice-row:has(> .ouw25-roll-icon[data-creation="specialty"]) {
+  padding-inline-end: 2px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-roll-icon[data-creation="specialty"] {

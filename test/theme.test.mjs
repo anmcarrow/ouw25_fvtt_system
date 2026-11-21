@@ -25,7 +25,11 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(module, /hasPortrait:\s*Boolean\(this\.actor\.img && this\.actor\.img !== DEFAULT_ACTOR_IMAGE\)/);
   assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*180px;[^}]*block-size:\s*170px;[^}]*translate:\s*0 -5px;/s);
   assert.match(styles, /\.ouw25-portrait-view::before\s*\{[^}]*background:\s*url\("\.\/images\/bugger\.webp"\)/s);
-  assert.match(styles, /\.ouw25-portrait-frame:hover\s*\{\s*transform:\s*rotate\(-2deg\) scale\(1\.035\);/);
+  assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*translate:\s*3px 0;[^}]*transform:\s*rotate\(-2deg\);/s);
+  assert.match(styles, /\.ouw25-portrait-frame:hover\s*\{\s*transform:\s*rotate\(2deg\) scale\(1\.035\);/);
+  assert.match(styles, /\.ouw25-identity:has\(> \.ouw25-roll-icon\) > input\s*\{\s*padding-inline-end:\s*37px;/);
+  assert.match(styles, /\.ouw25-identity > \.ouw25-roll-icon\s*\{\s*inset-inline-end:\s*2px;/);
+  assert.match(styles, /\.ouw25-choice-row:has\(> \.ouw25-roll-icon\[data-creation="specialty"\]\)\s*\{\s*padding-inline-end:\s*2px;/);
   assert.match(styles, /button:not\(:disabled\):not\(:where\(\.ouw25-roll-icon, \.ouw25-trait-icon, \.ouw25-portrait, \[data-action="tab"\]\)\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
   const utilityIconRule = styles.match(/\.ouw25-notes button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\)\s*\{[^}]*\}/s)?.[0];
   assert.ok(utilityIconRule);

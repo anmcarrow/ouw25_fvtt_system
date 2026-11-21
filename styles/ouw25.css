@@ -355,7 +355,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
+  --ouw25-cooperative-heading-height: calc(1.1rem / 1.5 * 2 + 0.5rem);
+  --ouw25-notes-top: calc(0.25rem + var(--ouw25-cooperative-heading-height) / 2 - 1px);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  block-size: 100%;
   min-inline-size: 39rem;
   gap: 1.2rem;
 }
@@ -426,11 +429,11 @@ body.game .application.ouw25 .ouw25-notes :is(
 ) > textarea[name="system.notes"] {
   box-sizing: border-box;
   flex: 0 0 auto;
-  block-size: 100%;
+  block-size: calc(100% - var(--ouw25-notes-top, 0px));
   min-block-size: 0;
   max-block-size: none;
   inline-size: 100%;
-  margin: 0;
+  margin: var(--ouw25-notes-top, 0px) 0 0;
   resize: vertical;
 }
 

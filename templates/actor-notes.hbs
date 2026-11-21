@@ -84,6 +84,7 @@
       <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">{{localize label}}</button>
     {{/each}}
   </nav>
+  <div class="ouw25-tab-stack">
   {{#if ship}}
   {{#> ouw25-tab tab=tabs.attributes}}
     <div class="ouw25-sheet-column">
@@ -714,4 +715,5 @@
     </div>
   {{/ouw25-tab}}
   {{/if}}
+  </div>
 </section>

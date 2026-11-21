@@ -264,8 +264,20 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
   display: none;
 }
 
-.ouw25 .ouw25-notes > .ouw25-tab.active {
+.ouw25 .ouw25-tab-stack {
+  display: grid;
   flex: 1 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ouw25 .ouw25-tab-stack > .ouw25-tab {
+  grid-area: 1 / 1;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-tab[data-tab="attributes"]:not(.active) {
+  display: block;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .ouw25 .ouw25-sheet-columns {

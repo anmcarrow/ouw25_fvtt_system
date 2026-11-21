@@ -589,6 +589,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-choice-row:has(> .ouw25-roll-ic
   padding-inline-end: 4px;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-choice-row > select[name="system.specialty"] {
+  margin-inline-end: 3px;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-roll-icon[data-creation="specialty"] {
   translate: -2px 0;
 }

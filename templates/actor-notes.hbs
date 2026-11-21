@@ -542,13 +542,17 @@
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-merchant-layout"}}
     <div class="ouw25-sheet-column">
       <div class="ouw25-merchant-profile">
-        {{#if editable}}
-          <button type="button" class="ouw25-portrait" data-action="editPortrait" aria-label="{{localize "OUW25.Identity.EditPortrait"}}" data-tooltip="{{localize "OUW25.Identity.EditPortrait"}}">
-            <img src="{{identity.img}}" alt="">
-          </button>
-        {{else}}
-          <img class="ouw25-portrait" src="{{identity.img}}" alt="{{identity.name}}">
-        {{/if}}
+        <div class="ouw25-portrait-frame">
+          <div class="ouw25-portrait-view">
+            {{#if editable}}
+              <button type="button" class="ouw25-portrait" data-action="editPortrait" aria-label="{{localize "OUW25.Identity.EditPortrait"}}" data-tooltip="{{localize "OUW25.Identity.EditPortrait"}}">
+                <img src="{{identity.img}}" alt="">
+              </button>
+            {{else}}
+              <img class="ouw25-portrait" src="{{identity.img}}" alt="{{identity.name}}">
+            {{/if}}
+          </div>
+          </div>
         <div class="ouw25-merchant-profile-fields">
         {{#if identity}}
           <div class="ouw25-choice-row ouw25-identity ouw25-rolled-input">

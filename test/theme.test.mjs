@@ -4,6 +4,7 @@ import test from "node:test";
 
 const styles = await readFile(new URL("../dist/ouw25/styles/ouw25.css", import.meta.url), "utf8");
 const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", import.meta.url), "utf8");
+const template = await readFile(new URL("../dist/ouw25/templates/actor-notes.hbs", import.meta.url), "utf8");
 
 test("the active actor tab uses a bundled WebP background", async () => {
   const image = styles.match(/\.ouw25-sheet-tabs > button\.active:hover:not\(:disabled\)\s*\{\s*background: url\("\.\/([^"]+)"\)/)?.[1];
@@ -11,6 +12,20 @@ test("the active actor tab uses a bundled WebP background", async () => {
   const asset = await readFile(new URL(`../dist/ouw25/styles/${image}`, import.meta.url));
   assert.equal(asset.toString("ascii", 8, 12), "WEBP");
 });
+
+test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {
+  assert.match(template, /<div class="ouw25-portrait-frame">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
+  assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*200px;[^}]*block-size:\s*200px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);
+  assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*180px;[^}]*block-size:\s*170px;[^}]*translate:\s*0 -10px;/s);
+  assert.match(styles, /\.ouw25-portrait-view::before\s*\{[^}]*background:\s*url\("\.\/images\/bugger\.webp"\)/s);
+  assert.match(styles, /\.ouw25-portrait-view:hover::before\s*\{\s*transform:\s*rotate\(-2deg\) scale\(1\.035\);/);
+  assert.match(styles, /button:not\(:disabled\):not\(\.ouw25-roll-icon\):not\(\.ouw25-trait-icon\):not\(\.ouw25-portrait\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
+  for (const image of ["bugger.webp", "smallphoto_frame.webp"]) {
+    const asset = await readFile(new URL(`../dist/ouw25/styles/images/${image}`, import.meta.url));
+    assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+  }
+});
+
 const module = await readFile(new URL("../dist/ouw25/module/ouw25.mjs", import.meta.url), "utf8");
 const manifest = JSON.parse(await readFile(new URL("../dist/ouw25/system.json", import.meta.url), "utf8"));
 

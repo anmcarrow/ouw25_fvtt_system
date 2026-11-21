@@ -81,7 +81,7 @@ body.game .application.ouw25 .form-footer button {
   padding: 0.45rem 0.7rem;
 }
 
-body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled),
+body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(.ouw25-roll-icon):not(.ouw25-trait-icon):not(.ouw25-portrait),
 body.game .application.ouw25 .dialog-content button:hover:not(:disabled),
 body.game .application.ouw25 .form-footer button:hover:not(:disabled) {
   background: var(--ouw25-color-accent-soft);
@@ -98,12 +98,12 @@ body.game .application.ouw25 .form-footer button:disabled {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  body.game .application.ouw25 .ouw25-notes button:not(:disabled) {
+  body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(.ouw25-roll-icon):not(.ouw25-trait-icon):not(.ouw25-portrait) {
     transition: translate 150ms ease, scale 150ms ease, filter 150ms ease;
     scale: 1;
   }
 
-  body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled) {
+  body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(.ouw25-roll-icon):not(.ouw25-trait-icon):not(.ouw25-portrait) {
     scale: 1.025;
   }
 }
@@ -304,14 +304,44 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-portrait {
-  inline-size: 200px;
-  block-size: 200px;
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+  position: relative;
+  z-index: 1;
   padding: 0;
   margin: 0;
-  border: 1px solid var(--ouw25-color-accent);
-  border-radius: 0.25rem;
-  background: var(--ouw25-surface-translucent);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.ouw25 .ouw25-portrait-view {
+  position: relative;
+  inline-size: 180px;
+  block-size: 170px;
+  translate: 0 -10px;
+  border-radius: 0.35rem;
   overflow: hidden;
+}
+
+.ouw25 .ouw25-portrait-frame {
+  inline-size: 200px;
+  block-size: 200px;
+  display: grid;
+  place-items: center;
+  background: url("./images/smallphoto_frame.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 2px 6px rgba(20, 15, 12, 0.24);
+}
+
+.ouw25 .ouw25-portrait-view::before {
+  position: absolute;
+  z-index: 0;
+  content: "";
+  inset: 0;
+  border-radius: inherit;
+  background: url("./images/bugger.webp") center / cover no-repeat;
+  pointer-events: none;
 }
 
 .ouw25 .ouw25-portrait,
@@ -320,9 +350,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait {
 }
 
 .ouw25 .ouw25-portrait > img {
+  position: relative;
+  z-index: 1;
   inline-size: 100%;
   block-size: 100%;
   border: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body.game .application.ouw25 .ouw25-notes .ouw25-portrait-view::before {
+    transition: transform 160ms ease;
+  }
+
+  body.game .application.ouw25 .ouw25-notes .ouw25-portrait-view:hover::before {
+    transform: rotate(-2deg) scale(1.035);
+  }
 }
 
 .ouw25 .ouw25-merchant-profile-fields > fieldset {

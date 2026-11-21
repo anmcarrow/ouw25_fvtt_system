@@ -1278,18 +1278,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage > .ouw25-condition-
   background-color: var(--ouw25-color-surface);
 }
 
-body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo) .ouw25-debt-table {
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table {
   border: 0;
   border-collapse: separate;
   border-spacing: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo) .ouw25-debt-table thead {
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead {
   background: transparent;
   border: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo) .ouw25-debt-table thead th {
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead th {
   border: 0;
   border-block-end: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;

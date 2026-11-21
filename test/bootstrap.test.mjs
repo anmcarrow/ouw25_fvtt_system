@@ -337,6 +337,13 @@ test("identity rolls use independent name indices and preserve the Roll20 table 
   assert.throws(() => hiringFromRoll(0), RangeError);
 });
 
+test("the built styles reference the packaged paper background", async () => {
+  const styles = await readFile(new URL("styles/ouw25.css", dist), "utf8");
+  const background = await readFile(new URL("styles/images/sheet_bgr.webp", dist));
+  assert.match(styles, /background-image: url\("\.\/images\/sheet_bgr\.webp"\)/);
+  assert.equal(background.subarray(8, 12).toString(), "WEBP");
+});
+
 test("trait rolls follow the Roll20 ranges and have localized names and help", async () => {
   const { MERCHANT_TRAITS, traitFromRoll } = await import(new URL("module/traits.mjs", dist));
   assert.equal(traitFromRoll("merit", 3), "stress_resistant");

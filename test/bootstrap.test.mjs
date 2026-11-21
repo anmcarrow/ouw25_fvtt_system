@@ -54,6 +54,12 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.match(template, /type="submit"/);
   assert.match(template, /data-autosave-status/);
   assert.match(template, /<output\b[^>]*ouw25-hold-status[^>]*>[^<]*occupied=ship\.hold\.occupied capacity=ship\.hold\.capacity/);
+  const recordActions = template.match(/\{\{#\*inline "ouw25-record-actions"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
+  assert.ok(recordActions);
+  for (const [action, label] of [["editRecord", "Edit"], ["deleteRecord", "Delete"]]) {
+    assert.match(recordActions, new RegExp(`class="ouw25-trait-icon" data-action="${action}"[^>]*aria-label="\\{\\{localize "OUW25\\.Debt\\.${label}"\\}\\}"`));
+  }
+  assert.match(template, /<fieldset class="ouw25-cooperative-budget">[\s\S]*?heading="OUW25\.Finance\.Budget"[\s\S]*?\{\{> ouw25-money-input\}\}/);
   for (const type of types) {
     assert.ok(CONFIG.Actor.dataModels[type].defineSchema().notes);
     const sheet = new Sheet();

@@ -6,8 +6,8 @@
 {{/inline}}
 {{#*inline "ouw25-record-actions"}}
   <div class="ouw25-record-actions">
-    <button type="button" data-action="editRecord" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Edit"}}</button>
-    <button type="button" data-action="deleteRecord" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Debt.Delete"}}</button>
+    <button type="button" class="ouw25-trait-icon" data-action="editRecord" data-record-type="{{recordType}}" data-record-id="{{id}}" aria-label="{{localize "OUW25.Debt.Edit"}}" data-tooltip="{{localize "OUW25.Debt.Edit"}}"><span aria-hidden="true">&#x270F;&#xFE0F;</span></button>
+    <button type="button" class="ouw25-trait-icon" data-action="deleteRecord" data-record-type="{{recordType}}" data-record-id="{{id}}" aria-label="{{localize "OUW25.Debt.Delete"}}" data-tooltip="{{localize "OUW25.Debt.Delete"}}"><span aria-hidden="true">&#x1F5D1;&#xFE0F;</span></button>
   </div>
 {{/inline}}
 {{#*inline "ouw25-money-input"}}
@@ -89,10 +89,11 @@
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-cooperative-layout"}}
     <div class="ouw25-sheet-column">
       <div class="ouw25-cooperative-budget-column">
-        <div class="ouw25-cooperative-budget">
-          <label>{{localize "OUW25.Finance.Budget"}}: {{> ouw25-money-input}} {{localize "OUW25.Finance.Currency"}}</label>
+        <fieldset class="ouw25-cooperative-budget">
+          {{> ouw25-block-heading heading="OUW25.Finance.Budget"}}
+          <div class="ouw25-cooperative-budget-controls">{{> ouw25-money-input}} <span>{{localize "OUW25.Finance.Currency"}}</span></div>
           {{#unless (eq contacts.total "0")}}<p>{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>{{/unless}}
-        </div>
+        </fieldset>
         <fieldset>
           {{> ouw25-block-heading heading="OUW25.Cooperative.Reputation.Title"}}
           <select name="system.reputation" aria-label="{{localize "OUW25.Cooperative.Reputation.Title"}}" {{#unless editable}}disabled{{/unless}}>

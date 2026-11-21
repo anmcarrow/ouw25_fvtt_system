@@ -388,6 +388,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  position: relative;
+  inset-block-start: 2px;
 }
 
 .ouw25 .ouw25-cooperative-budget input {
@@ -400,6 +402,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h
   display: flex;
   font-family: var(--ouw25-font-accent);
   font-size: 1.6em;
+  position: relative;
+  inset-block-start: -5px;
   justify-content: flex-end;
   line-height: 1;
   inline-size: calc(100% + 2 * (var(--ouw25-fieldset-padding) + var(--ouw25-fieldset-border)));
@@ -414,9 +418,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h
 
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes textarea {
   box-sizing: border-box;
-  block-size: 350px;
+  flex: 1 1 0;
+  min-block-size: 350px;
   inline-size: 100%;
-  margin: calc(0.25rem + var(--ouw25-cooperative-heading-height) / 2) 0 0;
+  margin: calc(0.25rem + var(--ouw25-cooperative-heading-height) / 2 - 1px) 0 20px;
 }
 
 .ouw25 .ouw25-merchant-profile {

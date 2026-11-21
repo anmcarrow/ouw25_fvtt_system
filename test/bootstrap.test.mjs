@@ -9,7 +9,7 @@ test("the built package registers models and an editable notes sheet for its dec
   const types = Object.keys(manifest.documentTypes.Actor);
   const registration = [];
   globalThis.Hooks = { once(event, callback) { if (event === "init") callback(); } };
-  globalThis.CONFIG = { Actor: { dataModels: {} }, Item: { dataModels: {} } };
+  globalThis.CONFIG = { Actor: { dataModels: {}, documentClass: null }, Item: { dataModels: {} } };
   globalThis.foundry = {
     abstract: { TypeDataModel: class { static migrateData(source) { return source; } } },
     data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {} } },
@@ -26,7 +26,10 @@ test("the built package registers models and an editable notes sheet for its dec
         async _processSubmitData(_event, _form, data) { return data; }
       } }
     },
-    documents: { collections: { Actors: { registerSheet: (...args) => registration.push(args) } } }
+    documents: {
+      Actor: class { static getDefaultArtwork() { return { img: "icons/svg/mystery-man.svg" }; } },
+      collections: { Actors: { registerSheet: (...args) => registration.push(args) } }
+    }
   };
   globalThis.game = { i18n: { localize: key => key } };
 
@@ -34,6 +37,13 @@ test("the built package registers models and an editable notes sheet for its dec
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   assert.deepEqual(Object.keys(CONFIG.Item.dataModels), Object.keys(manifest.documentTypes.Item));
+  for (const [type, image] of Object.entries({
+    merchant: "systems/ouw25/styles/images/bugger_transp.webp",
+    cooperative: "systems/ouw25/styles/images/ship_logo.webp"
+  })) {
+    assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type }), { img: image, texture: { src: image } });
+  }
+  assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type: "base" }), { img: "icons/svg/mystery-man.svg" });
   const [[id, Sheet, options]] = registration;
   assert.equal(id, manifest.id);
   assert.deepEqual(options.types, types);

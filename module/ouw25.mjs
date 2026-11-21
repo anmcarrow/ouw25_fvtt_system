@@ -15,6 +15,10 @@ import { personalActions, personalOutcome, provisionFormula } from "./personal-a
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
+const DEFAULT_ACTOR_ARTWORK = {
+  merchant: "systems/ouw25/styles/images/bugger_transp.webp",
+  cooperative: "systems/ouw25/styles/images/ship_logo.webp"
+};
 const WOUND_SLOTS = [1, 2, 3, 4];
 const RELATION_KINDS = ["friend", "enemy"];
 const SHEET_TABS = {
@@ -57,6 +61,14 @@ for (const kind of Object.keys(MERCHANT_TRAITS)) {
 }
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
+
+class Ouw25Actor extends foundry.documents.Actor {
+  static getDefaultArtwork(actorData = {}) {
+    const img = Object.hasOwn(DEFAULT_ACTOR_ARTWORK, actorData.type)
+      ? DEFAULT_ACTOR_ARTWORK[actorData.type] : null;
+    return img ? { img, texture: { src: img } } : super.getDefaultArtwork(actorData);
+  }
+}
 
 class NotesModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
@@ -1256,6 +1268,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
 Hooks.once("init", () => {
   const models = { merchant: MerchantModel, cooperative: CooperativeModel };
+  CONFIG.Actor.documentClass = Ouw25Actor;
   Object.assign(CONFIG.Actor.dataModels, models);
   CONFIG.Item.dataModels.debt = DebtModel;
   CONFIG.Item.dataModels.relationship = RelationshipModel;

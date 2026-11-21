@@ -29,7 +29,7 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(utilityIconRule, /scale:\s*1;/);
   assert.doesNotMatch(utilityIconRule, /transform:\s*none;/);
   assert.match(styles, /\.ouw25-notes \.ouw25-portrait\s*\{[^}]*transition:\s*none;[^}]*scale:\s*1;/s);
-  for (const image of ["bugger.webp", "smallphoto_frame.webp"]) {
+  for (const image of ["bugger.webp", "smallphoto_frame.webp", "bugger_transp.webp", "ship_logo.webp"]) {
     const asset = await readFile(new URL(`../dist/ouw25/styles/images/${image}`, import.meta.url));
     assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   }

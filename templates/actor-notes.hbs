@@ -199,8 +199,7 @@
   {{#> ouw25-tab tab=tabs.contacts}}
     <div class="ouw25-sheet-column">
   {{#if contacts}}
-    <fieldset class="ouw25-contacts">
-      {{> ouw25-block-heading heading="OUW25.Contact.Title"}}
+    <fieldset class="ouw25-contacts" aria-label="{{localize "OUW25.Contact.Title"}}">
       <p>{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contact.Title"}}">
         <thead>
@@ -238,8 +237,7 @@
   {{#> ouw25-tab tab=tabs.contracts}}
     <div class="ouw25-sheet-column">
   {{#if showContracts}}
-    <fieldset class="ouw25-contracts">
-      {{> ouw25-block-heading heading="OUW25.Contract.Title"}}
+    <fieldset class="ouw25-contracts" aria-label="{{localize "OUW25.Contract.Title"}}">
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contract.Title"}}">
         <thead>
           <tr>
@@ -415,12 +413,11 @@
   {{#*inline "ouw25-creditors"}}
     <div class="ouw25-sheet-column">
   {{#if ledger}}
-    <fieldset class="ouw25-ledger">
-      {{> ouw25-block-heading heading="OUW25.Debt.Title"}}
+    <fieldset class="ouw25-ledger" aria-label="{{localize "OUW25.Debt.Title"}}">
       <p>{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
       {{#each ledger.groups}}
         <table class="ouw25-debt-table">
-          <caption>{{localize label}}</caption>
+          <caption><h4>{{localize label}}</h4></caption>
           <thead>
             <tr>
               <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
@@ -456,9 +453,8 @@
   {{/inline}}
   {{#*inline "ouw25-relationship-list"}}
     <div class="ouw25-sheet-column">
-    <fieldset class="ouw25-relationships">
-      {{> ouw25-block-heading heading=tab.label}}
-        <table class="ouw25-debt-table">
+    <fieldset class="ouw25-relationships" aria-label="{{localize tab.label}}">
+        <table class="ouw25-debt-table" aria-label="{{localize tab.label}}">
           <thead>
             <tr>
               <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
@@ -491,8 +487,7 @@
   {{#*inline "ouw25-items"}}
     <div class="ouw25-sheet-column">
   {{#if possessions}}
-    <fieldset class="ouw25-possessions">
-      {{> ouw25-block-heading heading="OUW25.Possession.Title"}}
+    <fieldset class="ouw25-possessions" aria-label="{{localize "OUW25.Possession.Title"}}">
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Possession.Title"}}">
         <thead>
           <tr>

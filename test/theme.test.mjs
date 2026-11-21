@@ -14,6 +14,17 @@ test("the active actor tab uses a bundled WebP background", async () => {
   assert.equal(asset.toString("ascii", 8, 12), "WEBP");
 });
 
+test("record tables retain accessible names without visible block headings", () => {
+  for (const kind of ["contacts", "contracts", "ledger", "relationships", "possessions"]) {
+    const block = template.match(new RegExp(`<fieldset class="ouw25-${kind}"([^>]*)>([\\s\\S]*?)</fieldset>`));
+    assert.ok(block, `missing ${kind} block`);
+    assert.match(block[1], /aria-label=/);
+    assert.doesNotMatch(block[2], /<legend\b|ouw25-block-heading/);
+  }
+  assert.match(template, /<caption><h4>\{\{localize label\}\}<\/h4><\/caption>/);
+  assert.match(template, /<fieldset class="ouw25-cargo">\s*<legend>/);
+});
+
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {
   assert.match(template, /<div class="ouw25-portrait-frame">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
   assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*200px;[^}]*block-size:\s*200px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);

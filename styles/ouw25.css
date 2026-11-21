@@ -586,6 +586,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-identity > .ouw25-roll-icon {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-choice-row:has(> .ouw25-roll-icon[data-creation="specialty"]) {
+  column-gap: calc(0.5rem - 2px);
   padding-inline-end: 4px;
 }
 

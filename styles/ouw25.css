@@ -314,6 +314,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait {
   border: 0;
   border-radius: inherit;
   background: transparent;
+  transition: none;
+  transform: none;
+  translate: none;
+  scale: 1;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
+  background: transparent;
+  filter: none;
 }
 
 .ouw25 .ouw25-portrait-view {
@@ -430,6 +439,14 @@ body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-tra
   margin: 0;
   padding: 0.25rem;
   inline-size: auto;
+  transition: none;
+  transform: none;
+  translate: none;
+  scale: 1;
+}
+
+body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-trait-icon):hover:not(:disabled) {
+  filter: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions {

@@ -20,6 +20,8 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(styles, /\.ouw25-portrait-view::before\s*\{[^}]*background:\s*url\("\.\/images\/bugger\.webp"\)/s);
   assert.match(styles, /\.ouw25-portrait-view:hover::before\s*\{\s*transform:\s*rotate\(-2deg\) scale\(1\.035\);/);
   assert.match(styles, /button:not\(:disabled\):not\(\.ouw25-roll-icon\):not\(\.ouw25-trait-icon\):not\(\.ouw25-portrait\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
+  assert.match(styles, /\.ouw25-notes button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\)\s*\{[^}]*transition:\s*none;[^}]*scale:\s*1;/s);
+  assert.match(styles, /\.ouw25-notes \.ouw25-portrait\s*\{[^}]*transition:\s*none;[^}]*scale:\s*1;/s);
   for (const image of ["bugger.webp", "smallphoto_frame.webp"]) {
     const asset = await readFile(new URL(`../dist/ouw25/styles/images/${image}`, import.meta.url));
     assert.equal(asset.subarray(8, 12).toString(), "WEBP");

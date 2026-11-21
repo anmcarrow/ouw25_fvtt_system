@@ -53,7 +53,7 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.match(template, /name="system\.notes"/);
   assert.match(template, /type="submit"/);
   assert.match(template, /data-autosave-status/);
-  assert.match(template, /<output\b[^>]*ouw25-hold-status[^>]*>[^<]*occupied=ship\.hold\.occupied capacity=ship\.hold\.capacity/);
+  assert.match(template, /<output\b[^>]*ouw25-hold-status[^>]*occupied=ship\.hold\.occupied capacity=ship\.hold\.capacity/);
   const recordActions = template.match(/\{\{#\*inline "ouw25-record-actions"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
   assert.ok(recordActions);
   for (const [action, label] of [["editRecord", "Edit"], ["deleteRecord", "Delete"]]) {
@@ -279,6 +279,34 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.deepEqual(sheet.updates[3], { "system.notes": "Updated notes" });
   await change({ target: { dataset: { deposit: "" }, value: "100" } });
   assert.equal(sheet.updates.length, 4);
+
+  sheet.actor.system.illuminationMode = false;
+  let pendingIllumination;
+  const illumination = {
+    name: "system.illuminationMode", type: "checkbox", checked: false, disabled: false, readOnly: false,
+    dataset: {}, checkValidity: () => true,
+    click() {
+      this.checked = !this.checked;
+      pendingIllumination = change({ target: this });
+    }
+  };
+  const toggle = { setAttribute: (name, value) => { toggle[name] = value; } };
+  sheet._element.querySelector = selector => selector === "[data-autosave-status]" ? autosaveStatus
+    : selector === 'input[name="system.illuminationMode"]' ? illumination : null;
+  for (const expected of [true, false]) {
+    Sheet.DEFAULT_OPTIONS.actions.toggleIlluminationMode.call(sheet, null, toggle);
+    await pendingIllumination;
+    assert.equal(sheet.actor.system.illuminationMode, expected);
+    assert.equal(toggle["aria-pressed"], String(expected));
+  }
+  sheet.isEditable = false;
+  Sheet.DEFAULT_OPTIONS.actions.toggleIlluminationMode.call(sheet, null, toggle);
+  assert.equal(illumination.checked, false);
+  sheet.isEditable = true;
+  illumination.disabled = true;
+  Sheet.DEFAULT_OPTIONS.actions.toggleIlluminationMode.call(sheet, null, toggle);
+  assert.equal(illumination.checked, false);
+  illumination.disabled = false;
 
   let releaseUpdate;
   sheet.actor.update = async data => {

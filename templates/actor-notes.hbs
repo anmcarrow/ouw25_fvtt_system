@@ -115,27 +115,23 @@
     </div>
   {{/ouw25-tab}}
   {{#*inline "ouw25-ship-basics"}}
-    <fieldset class="ouw25-ship">
-      {{> ouw25-block-heading heading="OUW25.Ship.Title"}}
+    <div class="ouw25-ship">
       <div class="ouw25-ship-pair">
-      <div>
-      <label>
-        {{localize "OUW25.Ship.Name"}}
-        <input type="text" name="system.shipName" value="{{ship.name}}" {{#unless editable}}readonly{{/unless}}>
-      </label>
-      <label>
-        {{localize "OUW25.Ship.Class"}}
-        <select name="system.shipClass" {{#unless editable}}disabled{{/unless}}>
-          {{#each ship.classes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
+      <div class="ouw25-ship-heading">
+        <span>{{localize "OUW25.Ship.Prefix"}}</span>
+        <select name="system.shipClass" aria-label="{{localize "OUW25.Ship.Class"}}" {{#unless editable}}disabled{{/unless}}>
+          {{#each ship.classes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize "OUW25.Ship.ClassNumber" number=value}}</option>{{/each}}
         </select>
-      </label>
+        <span>«</span><input type="text" name="system.shipName" aria-label="{{localize "OUW25.Ship.Name"}}" value="{{ship.name}}" {{#unless editable}}readonly{{/unless}}><span>»</span>
       </div>
       {{> ouw25-ship-damage}}
       </div>
       <div class="ouw25-ship-stats">
-        <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
-        <p>{{localize "OUW25.Ship.FreeMounts" count=ship.freeMounts}}</p>
-        <output class="ouw25-hold-status">{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}</output>
+        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong>{{ship.voyage.speed}}</strong></div>
+        <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong>{{ship.voyage.fuelPerSector}}</strong></div>
+        <div><span>{{localize "OUW25.Ship.ProvisionsRate"}}</span><strong>{{ship.voyage.provisionsPerSector}}</strong></div>
+        <div><span>{{localize "OUW25.Ship.FreeMountsLabel"}}</span><strong>{{ship.freeMounts}}</strong></div>
+        <div><span>{{localize "OUW25.Ship.HoldLabel"}}</span><output class="ouw25-hold-status" aria-label="{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}">{{ship.hold.occupied}} / {{ship.hold.capacity}}</output></div>
       </div>
       {{#each ship.qualities}}
         {{#if holdBonuses}}
@@ -176,12 +172,12 @@
       {{else if ship.hold.nearFull}}
         <p role="status">{{localize "OUW25.Ship.NearFull"}}</p>
       {{/if}}
-    </fieldset>
+    </div>
   {{/inline}}
   {{#*inline "ouw25-ship-qualities"}}
     {{#each ship.qualities}}
-      <section class="ouw25-ship-qualities" aria-label="{{localize title}}">
-        <h3>{{localize title}}</h3>
+      <fieldset class="ouw25-ship-qualities ouw25-traits">
+        {{> ouw25-block-heading heading=title}}
         {{#each slots}}
           <label>
             {{localize ../slotLabel number=number}}
@@ -192,11 +188,12 @@
         {{/each}}
         {{#if duplicates}}<p role="status">{{localize "OUW25.ShipQuality.Duplicates"}}</p>{{/if}}
         {{#if help}}
-          <ul>
-            {{#each help}}<li><strong>{{localize name}}:</strong> {{localize text}}</li>{{/each}}
-          </ul>
+          {{#each help}}
+            <h4 class="ouw25-trait-name">{{localize name}}</h4>
+            <p class="ouw25-trait-description">{{localize text}}</p>
+          {{/each}}
         {{/if}}
-      </section>
+      </fieldset>
     {{/each}}
   {{/inline}}
   {{#> ouw25-tab tab=tabs.contacts}}
@@ -332,42 +329,42 @@
       </section>
   {{/inline}}
   {{#*inline "ouw25-ship-damage"}}
-      <fieldset class="ouw25-ship-condition">
-        {{> ouw25-block-heading heading="OUW25.ShipCondition.Title"}}
-        <p>{{localize "OUW25.ShipCondition.Durability" damaged=ship.condition.damaged durability=ship.condition.durability}}</p>
+      <div class="ouw25-ship-condition">
+        <h3>{{localize "OUW25.ShipCondition.Title"}}</h3>
         <div class="ouw25-ship-damage">
           {{#each ship.condition.slots}}
-            <label>
-              <span class="ouw25-condition-check">
-                <input type="checkbox" name="system.damage{{number}}" {{checked marked}} {{#unless @root.editable}}disabled{{/unless}}>
+            <label class="ouw25-condition-check">
+                <input type="checkbox" name="system.damage{{number}}" aria-label="{{#if beyondLimit}}{{localize "OUW25.ShipCondition.BeyondLimit" number=number}}{{else}}{{localize "OUW25.ShipCondition.Damage" number=number}}{{/if}}" {{checked marked}} {{#unless @root.editable}}disabled{{/unless}}>
                 <span aria-hidden="true">{{#if critical}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>
-              </span>
-              {{#if beyondLimit}}
-                {{localize "OUW25.ShipCondition.BeyondLimit" number=number}}
-              {{else}}
-                {{localize "OUW25.ShipCondition.Damage" number=number}}
-              {{/if}}
             </label>
           {{/each}}
         </div>
         {{#if ship.condition.overLimit}}<p role="status">{{localize "OUW25.ShipCondition.OverLimit"}}</p>{{/if}}
-      </fieldset>
+      </div>
   {{/inline}}
   {{#> ouw25-tab tab=tabs.ship layout="ouw25-ship-layout"}}
     <div class="ouw25-sheet-column">
       {{> ouw25-ship-basics}}
       <fieldset class="ouw25-voyage">
         {{> ouw25-block-heading heading="OUW25.Voyage.Title"}}
+        <div class="ouw25-voyage-actions">
+          {{#if editable}}
+            <button type="button" data-action="toggleForcedMode" aria-pressed="{{#if ship.forcedMode}}true{{else}}false{{/if}}" {{#if ship.forcedDisabled}}disabled{{/if}}>
+              {{#if ship.forcedMode}}{{localize "OUW25.Voyage.DisableForced"}}{{else}}{{localize "OUW25.Voyage.EnableForced"}}{{/if}}
+            </button>
+          {{/if}}
+          <input type="checkbox" name="system.illuminationMode" {{checked ship.illuminationMode}} {{#unless editable}}disabled{{/unless}} hidden>
+          <button type="button" data-action="toggleIlluminationMode" aria-pressed="{{#if ship.illuminationMode}}true{{else}}false{{/if}}" {{#unless editable}}disabled{{/unless}}>{{localize "OUW25.Voyage.IlluminationMode"}}</button>
+          {{#if editable}}
+            <button type="button" data-action="travelSector" {{#unless ship.canTravel}}disabled{{/unless}}>{{localize "OUW25.Voyage.TravelSector"}}</button>
+            <button type="button" data-action="undoSector" {{#unless ship.canUndoTransition}}disabled{{/unless}}>{{localize "OUW25.Voyage.UndoSector"}}</button>
+            <button type="button" data-action="resetVoyage">{{localize "OUW25.Voyage.ResetCounters"}}</button>
+            <button type="button" data-action="psychotherapy">{{localize "OUW25.Voyage.Psychotherapy"}}</button>
+            <button type="button" data-action="increaseUnrest">{{localize "OUW25.Voyage.IncreaseUnrest"}}</button>
+          {{/if}}
+        </div>
         <p>{{#if ship.forcedMode}}{{localize "OUW25.Voyage.ForcedOn"}}{{else}}{{localize "OUW25.Voyage.ForcedOff"}}{{/if}}</p>
-        {{#if editable}}
-          <button type="button" data-action="toggleForcedMode" {{#if ship.forcedDisabled}}disabled{{/if}}>
-            {{#if ship.forcedMode}}{{localize "OUW25.Voyage.DisableForced"}}{{else}}{{localize "OUW25.Voyage.EnableForced"}}{{/if}}
-          </button>
-        {{/if}}
-        <label>
-          {{localize "OUW25.Voyage.IlluminationMode"}}
-          <input type="checkbox" name="system.illuminationMode" {{checked ship.illuminationMode}} {{#unless editable}}disabled{{/unless}}>
-        </label>
+        <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
         {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
         {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
         {{#if ship.voyage.wornEngine}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
@@ -376,24 +373,15 @@
         {{#each ship.voyage.shortages}}<p role="status">{{localize this}}</p>{{/each}}
         <p>{{localize "OUW25.Voyage.TravelInfo"}}</p>
         <p>{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}}</p>
-        {{#if editable}}
-          <div class="ouw25-voyage-actions">
-            <button type="button" data-action="travelSector" {{#unless ship.canTravel}}disabled{{/unless}}>{{localize "OUW25.Voyage.TravelSector"}}</button>
-            <button type="button" data-action="undoSector" {{#unless ship.canUndoTransition}}disabled{{/unless}}>{{localize "OUW25.Voyage.UndoSector"}}</button>
-            <button type="button" data-action="resetVoyage">{{localize "OUW25.Voyage.ResetCounters"}}</button>
-            <button type="button" data-action="psychotherapy">{{localize "OUW25.Voyage.Psychotherapy"}}</button>
-            <button type="button" data-action="increaseUnrest">{{localize "OUW25.Voyage.IncreaseUnrest"}}</button>
-          </div>
-        {{/if}}
         {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
       </fieldset>
-      <div class="ouw25-ship-group ouw25-ship-pair">
+      <div class="ouw25-ship-pair">
         {{> ouw25-ship-qualities}}
       </div>
-      <div class="ouw25-ship-group ouw25-ship-pair">
+      <div class="ouw25-ship-pair">
         <div class="ouw25-sheet-column">
-          <section class="ouw25-ship-mounts" aria-label="{{localize "OUW25.Ship.Mounts"}}">
-            <h3>{{localize "OUW25.Ship.Mounts"}}</h3>
+          <fieldset class="ouw25-ship-mounts ouw25-traits">
+            {{> ouw25-block-heading heading="OUW25.Ship.Mounts"}}
             {{#each ship.mounts}}
               <label>
                 {{localize "OUW25.Ship.Mount" number=number}}
@@ -402,11 +390,11 @@
                 </select>
               </label>
             {{/each}}
-          </section>
+          </fieldset>
           {{> ouw25-ship-gear}}
         </div>
-        <section class="ouw25-ship-compartments" aria-label="{{localize "OUW25.Ship.Compartments"}}">
-          <h3>{{localize "OUW25.Ship.Compartments"}}</h3>
+        <fieldset class="ouw25-ship-compartments ouw25-traits">
+          {{> ouw25-block-heading heading="OUW25.Ship.Compartments"}}
           {{#each ship.compartments}}
             <label>
               {{localize "OUW25.Ship.Compartment" number=number}}
@@ -416,7 +404,7 @@
             </label>
           {{/each}}
           <p>{{localize "OUW25.Ship.CompartmentSpace" volume=ship.compartmentSpace}}</p>
-        </section>
+        </fieldset>
       </div>
     </div>
   {{/ouw25-tab}}

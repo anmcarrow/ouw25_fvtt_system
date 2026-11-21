@@ -335,6 +335,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord,
       toggleForcedMode: Ouw25ActorSheet.toggleForcedMode,
+      toggleIlluminationMode: Ouw25ActorSheet.toggleIlluminationMode,
       travelSector: Ouw25ActorSheet.travelSector,
       undoSector: Ouw25ActorSheet.undoSector,
       resetVoyage: Ouw25ActorSheet.resetVoyage,
@@ -901,6 +902,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       target.disabled = false;
       this.#depositPending = false;
     }
+  }
+
+  static toggleIlluminationMode(event, target) {
+    if (!this.isEditable || this.actor.type !== "cooperative") return;
+    const input = this.element?.querySelector('input[name="system.illuminationMode"]');
+    if (!input || input.disabled) return;
+    input.click();
+    target.setAttribute("aria-pressed", String(input.checked));
   }
 
   static async toggleForcedMode(event, target) {

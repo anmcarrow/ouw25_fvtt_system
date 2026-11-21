@@ -120,29 +120,19 @@
       <div class="ouw25-ship-heading">
         <span>{{localize "OUW25.Ship.Prefix"}}</span>
         <select name="system.shipClass" aria-label="{{localize "OUW25.Ship.Class"}}" {{#unless editable}}disabled{{/unless}}>
-          {{#each ship.classes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize "OUW25.Ship.ClassNumber" number=value}}</option>{{/each}}
+          {{#each ship.classes}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
         </select>
         <span>«</span><input type="text" name="system.shipName" aria-label="{{localize "OUW25.Ship.Name"}}" value="{{ship.name}}" {{#unless editable}}readonly{{/unless}}><span>»</span>
       </div>
       {{> ouw25-ship-damage}}
       </div>
       <div class="ouw25-ship-stats">
-        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong>{{ship.voyage.speed}}</strong></div>
-        <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong>{{ship.voyage.fuelPerSector}}</strong></div>
-        <div><span>{{localize "OUW25.Ship.ProvisionsRate"}}</span><strong>{{ship.voyage.provisionsPerSector}}</strong></div>
-        <div><span>{{localize "OUW25.Ship.FreeMountsLabel"}}</span><strong>{{ship.freeMounts}}</strong></div>
-        <div><span>{{localize "OUW25.Ship.HoldLabel"}}</span><output class="ouw25-hold-status" aria-label="{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}">{{ship.hold.occupied}} / {{ship.hold.capacity}}</output></div>
+        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong><span>{{ship.voyage.speed}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong><span>{{ship.voyage.fuelPerSector}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.ProvisionsRate"}}</span><strong><span>{{ship.voyage.provisionsPerSector}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.FreeMountsLabel"}}</span><strong><span>{{ship.freeMounts}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.HoldLabel"}}</span><output class="ouw25-hold-status" aria-label="{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}"><span>{{ship.hold.occupied}}</span> / <span>{{ship.hold.capacity}}</span></output></div>
       </div>
-      {{#each ship.qualities}}
-        {{#if holdBonuses}}
-          <label>
-            {{localize "OUW25.ShipQuality.HoldBonus"}}
-            <select name="system.holdBonus" {{#unless @root.editable}}disabled{{/unless}}>
-              {{#each holdBonuses}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
-            </select>
-          </label>
-        {{/if}}
-      {{/each}}
       <div class="ouw25-ship-resources">
       <label>
         {{localize "OUW25.Voyage.Crew"}}
@@ -165,6 +155,16 @@
         <input type="number" name="system.unrest" min="0" max="25" step="1" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
       </label>
       </div>
+      {{#each ship.qualities}}
+        {{#if holdBonuses}}
+          <label>
+            {{localize "OUW25.ShipQuality.HoldBonus"}}
+            <select name="system.holdBonus" {{#unless @root.editable}}disabled{{/unless}}>
+              {{#each holdBonuses}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}
+            </select>
+          </label>
+        {{/if}}
+      {{/each}}
       <p>{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}</p>
       <p>{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}</p>
       {{#if ship.hold.overloaded}}
@@ -206,8 +206,8 @@
   {{#> ouw25-tab tab=tabs.contacts}}
     <div class="ouw25-sheet-column">
   {{#if contacts}}
+    <p class="ouw25-contacts-total">{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>
     <fieldset class="ouw25-contacts" aria-label="{{localize "OUW25.Contact.Title"}}">
-      <p>{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contact.Title"}}">
         <thead>
           <tr>

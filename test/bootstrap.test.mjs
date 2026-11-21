@@ -140,6 +140,9 @@ test("the built package registers models and an editable notes sheet for its dec
         assert.equal(traits, null);
         assert.equal(identity, null);
         assert.equal(ship.freeMounts, 2);
+        assert.deepEqual(ship.classes.map(({ value, label }) => ({ value, label })),
+          Array.from({ length: 7 }, (_, value) => ({ value, label: `OUW25.Ship.ClassNames.${value}` })));
+        assert.equal(ship.classes.find(({ selected }) => selected).value, 0);
         assert.equal(ship.compartmentSpace, 420);
         assert.deepEqual(ship.hold, { occupied: 452.25, capacity: 1600, nearFull: false, overloaded: false });
         assert.deepEqual(ship.hold, { capacity: 1600, occupied: 452.25, nearFull: false, overloaded: false });

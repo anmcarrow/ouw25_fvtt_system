@@ -191,9 +191,10 @@ body.game .application.ouw25 .dialog-content :is(input, select, textarea):focus-
 
 body.game .application.ouw25 .ouw25-notes .ouw25-hold-status {
   display: block;
-  padding: 0.25rem 0.5rem;
-  border-inline-start: 2px solid var(--ouw25-color-accent);
-  background: var(--ouw25-color-surface);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow-x: auto;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-condition-check {
@@ -995,7 +996,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship > .ouw25-ship-pair {
-  grid-template-columns: minmax(0, 1fr) 150px;
+  grid-template-columns: minmax(0, 80%) minmax(0, 1fr);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-heading {
@@ -1007,7 +1008,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-heading {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-heading > select {
-  flex: 0 0 9rem;
+  flex: 0 0 27ch;
   min-inline-size: 0;
 }
 
@@ -1036,8 +1037,9 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition > h3 {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr)) fit-content(55%);
   align-items: stretch;
+  inline-size: 80%;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div {
@@ -1050,19 +1052,38 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div {
   border-image: var(--ouw25-border-gradient) 1;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div > span {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats :is(strong, output) {
   font-family: var(--ouw25-font-accent);
-  font-size: 1.4em;
+  font-size: 1.725rem;
+  font-weight: 700;
   line-height: 1.1;
+  white-space: nowrap;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats :is(strong, output) > span {
+  font-size: 1.875em;
+  line-height: 0;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
+  inline-size: 80%;
+  margin-block-start: 2em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   grid-template-columns: minmax(0, 1fr);
+  gap: 0.5em;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label > input {
+  margin-block: 0;
 }
 
 .ouw25 .ouw25-sheet-column {
@@ -1072,7 +1093,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   min-width: 0;
 }
 
-.ouw25 .ouw25-ledger-totals {
+.ouw25 .ouw25-ledger-totals,
+.ouw25 .ouw25-contacts-total {
   margin: 0 0 -0.5rem;
 }
 
@@ -1135,7 +1157,8 @@ body.game .application.ouw25 .dialog-content option {
   font-family: var(--ouw25-font-input);
 }
 
-body.game .application.ouw25 :is(.ouw25-merchant-layout, .ouw25-ship-layout) :is(h4.ouw25-trait-name, select.ouw25-choice-heading) {
+body.game .application.ouw25 .ouw25-notes h4,
+body.game .application.ouw25 :is(.ouw25-merchant-layout, .ouw25-ship-layout) select.ouw25-choice-heading {
   font-family: var(--ouw25-font-heading);
   font-size: calc(var(--font-h4-size, 1.25rem) / 1.5 * 1.15);
   font-weight: 400;
@@ -1198,6 +1221,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  margin-block: 0.5rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button {

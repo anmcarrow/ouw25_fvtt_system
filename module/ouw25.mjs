@@ -415,7 +415,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       ship: ship && {
         name: system.shipName,
         classes: Array.from({ length: MAX_SHIP_CLASS + 1 }, (_, value) => ({
-          value, selected: value === system.shipClass,
+          value, label: `OUW25.Ship.ClassNames.${value}`, selected: value === system.shipClass,
           crew: SHIP_CLASS_STATS[value].crew, durability: SHIP_CLASS_STATS[value].durability
         })),
         freeMounts: ship.freeMounts, compartmentSpace: ship.compartmentSpace,

@@ -290,6 +290,7 @@
       "Name": "Ship name",
       "Class": "Ship class",
       "ClassNumber": "class {number}",
+      "ClassNames": { "0": "of class zero", "1": "of class one", "2": "of class two", "3": "of class three", "4": "of class four", "5": "of class five", "6": "of class six" },
       "Speed": "Speed",
       "FuelRate": "Fuel use",
       "ProvisionsRate": "Provisions use",

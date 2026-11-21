@@ -24,6 +24,7 @@ test("record tables retain accessible names without visible block headings", () 
   assert.match(template, /<caption><h4>\{\{localize label\}\}<\/h4><\/caption>/);
   assert.match(template, /<fieldset class="ouw25-cargo">\s*<legend>/);
   assert.match(template, /<p class="ouw25-ledger-totals">[\s\S]*?<\/p>\s*<fieldset class="ouw25-ledger"/);
+  assert.match(template, /<p class="ouw25-contacts-total">[\s\S]*?<\/p>\s*<fieldset class="ouw25-contacts"/);
 });
 
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {

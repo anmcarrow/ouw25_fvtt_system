@@ -5,6 +5,7 @@ import test from "node:test";
 const styles = await readFile(new URL("../dist/ouw25/styles/ouw25.css", import.meta.url), "utf8");
 const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", import.meta.url), "utf8");
 const template = await readFile(new URL("../dist/ouw25/templates/actor-notes.hbs", import.meta.url), "utf8");
+const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/actor-create.hbs", import.meta.url), "utf8");
 
 test("the active actor tab uses a bundled WebP background", async () => {
   const image = styles.match(/\.ouw25-sheet-tabs > button\.active:hover:not\(:disabled\)\s*\{\s*background: url\("\.\/([^"]+)"\)/)?.[1];
@@ -17,6 +18,9 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(template, /<div class="ouw25-portrait-frame">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
   assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*200px;[^}]*block-size:\s*200px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);
   assert.match(template, /\{\{#if identity\.hasPortrait\}\}\s*<img src="\{\{identity\.img\}\}"/);
+  assert.match(actorCreateTemplate, /<input type="radio" name="type" value="\{\{type\}\}"/);
+  assert.match(actorCreateTemplate, /<img src="\{\{icon\}\}" alt="" aria-hidden="true">/);
+  assert.match(module, /static async createDialog\(data = \{\}, createOptions = \{\}, dialogOptions = \{\}\)/);
   assert.match(module, /DEFAULT_ACTOR_IMAGE = "icons\/svg\/mystery-man\.svg"/);
   assert.match(module, /hasPortrait:\s*Boolean\(this\.actor\.img && this\.actor\.img !== DEFAULT_ACTOR_IMAGE\)/);
   assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*180px;[^}]*block-size:\s*170px;[^}]*translate:\s*0 -5px;/s);

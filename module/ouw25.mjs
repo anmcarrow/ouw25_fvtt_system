@@ -68,6 +68,44 @@ class Ouw25Actor extends foundry.documents.Actor {
       ? DEFAULT_ACTOR_ARTWORK[actorData.type] : null;
     return img ? { img, texture: { src: img } } : super.getDefaultArtwork(actorData);
   }
+
+  static async createDialog(data = {}, createOptions = {}, dialogOptions = {}) {
+    const types = Object.keys(DEFAULT_ACTOR_ARTWORK)
+      .filter(type => !createOptions.types || createOptions.types.includes(type));
+    if (!types.length) throw new Error("No actor types are available to create.");
+
+    const defaultType = types.includes(data.type) ? data.type : types[0];
+    const typeOptions = types.map(type => ({
+      type,
+      icon: this.getDefaultArtwork({ type }).img,
+      label: game.i18n.localize(CONFIG.Actor.typeLabels[type]),
+      selected: type === defaultType
+    }));
+    const content = await foundry.applications.handlebars.renderTemplate(
+      `systems/${SYSTEM_ID}/templates/actor-create.hbs`,
+      { name: data.name ?? "", types: typeOptions }
+    );
+    const title = game.i18n.format("DOCUMENT.Create", {
+      type: game.i18n.localize("DOCUMENT.Actor")
+    });
+    const dialogConfig = {
+      ...dialogOptions,
+      classes: ["ouw25", ...(dialogOptions.classes ?? [])],
+      window: { ...dialogOptions.window, title },
+      content,
+      rejectClose: false,
+      ok: { icon: "fa-solid fa-check", label: title, ...dialogOptions.ok }
+    };
+    const result = await foundry.applications.api.DialogV2.input(dialogConfig);
+    if (!result) return;
+
+    const type = types.includes(result.type) ? result.type : defaultType;
+    const name = String(result.name ?? "").trim() || game.i18n.localize(CONFIG.Actor.typeLabels[type]);
+    const actorData = { ...data, name, type };
+    const options = { ...createOptions, renderSheet: createOptions.renderSheet ?? true };
+    delete options.types;
+    return this.create(actorData, options);
+  }
 }
 
 class NotesModel extends foundry.abstract.TypeDataModel {

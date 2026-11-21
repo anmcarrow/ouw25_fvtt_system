@@ -124,6 +124,36 @@ body.game .application.ouw25 .dialog-content .form-group {
   margin-block: 0.5rem;
 }
 
+body.game .application.ouw25 .ouw25-create-actor-types {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.game .application.ouw25 .ouw25-create-actor-types label {
+  align-items: center;
+  background: var(--ouw25-color-paper);
+  border: 1px solid var(--ouw25-color-accent);
+  border-radius: 0.25rem;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  padding: 0.35rem 0.5rem;
+}
+
+body.game .application.ouw25 .ouw25-create-actor-types label:has(input:checked) {
+  background: var(--ouw25-color-surface);
+  border-color: var(--ouw25-color-accent-calm);
+}
+
+body.game .application.ouw25 .ouw25-create-actor-types img {
+  block-size: 2rem;
+  inline-size: 2rem;
+  object-fit: contain;
+}
+
 .ouw25 .dialog-content .form-group > label {
   color: var(--ouw25-color-ink);
 }

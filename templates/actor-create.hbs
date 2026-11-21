@@ -1,0 +1,22 @@
+<div class="ouw25-create-actor">
+  <div class="form-group">
+    <label for="ouw25-create-actor-name">{{localize "DOCUMENT.Name"}}</label>
+    <div class="form-fields">
+      <input id="ouw25-create-actor-name" type="text" name="name" value="{{name}}" autofocus>
+    </div>
+  </div>
+  <fieldset>
+    <legend>{{localize "DOCUMENT.Type"}}</legend>
+    <ul class="ouw25-create-actor-types">
+      {{#each types}}
+        <li>
+          <label>
+            <img src="{{icon}}" alt="" aria-hidden="true">
+            <span>{{label}}</span>
+            <input type="radio" name="type" value="{{type}}" {{#if selected}}checked{{/if}} required>
+          </label>
+        </li>
+      {{/each}}
+    </ul>
+  </fieldset>
+</div>

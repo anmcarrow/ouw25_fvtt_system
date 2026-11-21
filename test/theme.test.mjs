@@ -26,7 +26,7 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*180px;[^}]*block-size:\s*170px;[^}]*translate:\s*0 -5px;/s);
   assert.match(styles, /\.ouw25-portrait-view::before\s*\{[^}]*background:\s*url\("\.\/images\/bugger\.webp"\)/s);
   assert.match(styles, /\.ouw25-portrait-frame:hover\s*\{\s*transform:\s*rotate\(-2deg\) scale\(1\.035\);/);
-  assert.match(styles, /button:not\(:disabled\):not\(\.ouw25-roll-icon\):not\(\.ouw25-trait-icon\):not\(\.ouw25-portrait\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
+  assert.match(styles, /button:not\(:disabled\):not\(:where\(\.ouw25-roll-icon, \.ouw25-trait-icon, \.ouw25-portrait, \[data-action="tab"\]\)\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
   const utilityIconRule = styles.match(/\.ouw25-notes button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\)\s*\{[^}]*\}/s)?.[0];
   assert.ok(utilityIconRule);
   assert.match(utilityIconRule, /transition:\s*none;/);
@@ -37,6 +37,14 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
     const asset = await readFile(new URL(`../dist/ouw25/styles/images/${image}`, import.meta.url));
     assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   }
+});
+
+test("actor sheet hover and panel styles retain their distinct visual roles", () => {
+  assert.match(styles, /\.ouw25-portrait-view::after\s*\{[^}]*box-shadow:\s*inset /s);
+  assert.match(styles, /\.ouw25-create-actor-types img\s*\{[^}]*filter:\s*invert\(1\)/s);
+  assert.match(template, /data-action="tab"[^>]*><span>\{\{localize label\}\}<\/span><\/button>/);
+  assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*transform:\s*scale\(1\.025\);/);
+  assert.match(styles, /background:\s*linear-gradient\(90deg, color-mix\(in srgb, var\(--ouw25-button-color/);
 });
 
 const module = await readFile(new URL("../dist/ouw25/module/ouw25.mjs", import.meta.url), "utf8");

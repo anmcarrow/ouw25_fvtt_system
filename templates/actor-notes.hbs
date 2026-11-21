@@ -81,7 +81,7 @@
   </header>
   <nav class="tabs ouw25-sheet-tabs" aria-label="{{localize "OUW25.Tabs.Label"}}">
     {{#each tabs}}
-      <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}">{{localize label}}</button>
+      <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span>{{localize label}}</span></button>
     {{/each}}
   </nav>
   <div class="ouw25-tab-stack">

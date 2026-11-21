@@ -81,7 +81,15 @@ body.game .application.ouw25 .form-footer button {
   padding: 0.45rem 0.7rem;
 }
 
-body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(.ouw25-roll-icon):not(.ouw25-trait-icon):not(.ouw25-portrait),
+body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"])) {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), white 18%), var(--ouw25-button-color, var(--ouw25-color-accent-soft)) 50%, color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), white 18%));
+}
+
+body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"])) {
+  color: #fff8ee;
+  filter: brightness(1.08) drop-shadow(0 2px 2px rgba(55, 15, 0, 0.18));
+}
+
 body.game .application.ouw25 .dialog-content button:hover:not(:disabled),
 body.game .application.ouw25 .form-footer button:hover:not(:disabled) {
   background: var(--ouw25-color-accent-soft);
@@ -98,12 +106,12 @@ body.game .application.ouw25 .form-footer button:disabled {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(.ouw25-roll-icon):not(.ouw25-trait-icon):not(.ouw25-portrait) {
+  body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"])) {
     transition: translate 150ms ease, scale 150ms ease, filter 150ms ease;
     scale: 1;
   }
 
-  body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(.ouw25-roll-icon):not(.ouw25-trait-icon):not(.ouw25-portrait) {
+  body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"])) {
     scale: 1.025;
   }
 }
@@ -150,6 +158,7 @@ body.game .application.ouw25 .ouw25-create-actor-types label:has(input:checked) 
 
 body.game .application.ouw25 .ouw25-create-actor-types img {
   block-size: 2rem;
+  filter: invert(1);
   inline-size: 2rem;
   object-fit: contain;
 }
@@ -279,6 +288,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:hover:not(:
   box-shadow: none;
   text-shadow: none;
   filter: none;
+  scale: 1;
+  transition: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active,
@@ -288,6 +299,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:hove
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:not(:focus-visible) {
   outline: none;
+}
+
+.ouw25 .ouw25-sheet-tabs > button > span {
+  display: inline-block;
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ouw25 .ouw25-sheet-tabs > button:not(.active) > span {
+    transition: transform 150ms ease;
+  }
+
+  .ouw25 .ouw25-sheet-tabs > button:not(.active):hover > span {
+    transform: scale(1.025);
+  }
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
@@ -383,6 +409,16 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   pointer-events: none;
 }
 
+.ouw25 .ouw25-portrait-view::after {
+  position: absolute;
+  z-index: 2;
+  content: "";
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 2px 7px rgba(20, 15, 12, 0.28);
+  pointer-events: none;
+}
+
 .ouw25 .ouw25-portrait,
 .ouw25 .ouw25-portrait > img {
   object-fit: contain;
@@ -446,7 +482,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button:not(:disabled) {
-  background: var(--ouw25-past-button-bg);
+  --ouw25-button-color: var(--ouw25-past-button-bg);
 }
 
 .ouw25-personal-actions > button:nth-child(4n + 1) { --ouw25-past-button-bg: #546e7a; }
@@ -615,7 +651,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
 }
 
 body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-luck-actions) > button:not(:disabled) {
-  background: linear-gradient(90deg, #485d78, #32445e 16%, #32445e 84%, #485d78);
+  background: linear-gradient(90deg, #485d78, #32445e 50%, #485d78);
   color: #edcd79;
 }
 
@@ -725,7 +761,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds {
   border-image: var(--ouw25-border-gradient) 1;
   display: grid;
   justify-items: center;
-  padding: 12.6px 15px;
+  margin-block-start: calc(var(--ouw25-sidebar-gap) * 0.1);
+  padding: 8.69px 15px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds:has(.ouw25-wound-slots[data-count="4"]) {
+  padding-block: 6.735px;
 }
 
 .ouw25 .ouw25-wound-slots {
@@ -787,7 +828,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + spa
 }
 
 .ouw25 .ouw25-merchant-sidebar > .ouw25-merchant-wounds + .ouw25-sidebar-card {
-  margin-block-start: var(--ouw25-sidebar-gap);
+  margin-block-start: calc(var(--ouw25-sidebar-gap) * 1.2);
 }
 
 .ouw25 :is(.ouw25-sidebar-card, .ouw25-pension-reference) > summary {

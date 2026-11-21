@@ -14,6 +14,7 @@ import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
 const SYSTEM_ID = "ouw25";
+const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
 const WOUND_SLOTS = [1, 2, 3, 4];
 const RELATION_KINDS = ["friend", "enemy"];
 const SHEET_TABS = {
@@ -427,7 +428,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         }))
       } : null,
       identity: merchant ? {
-        name: this.actor.name, img: this.actor.img, dream: system.dream,
+        name: this.actor.name, img: this.actor.img,
+        hasPortrait: Boolean(this.actor.img && this.actor.img !== DEFAULT_ACTOR_IMAGE), dream: system.dream,
         hiring: MERCHANT_HIRING.map(value => ({
           value, label: `OUW25.Identity.Hiring.${value}`, selected: value === (system.hiring ?? "unset")
         })),

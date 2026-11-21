@@ -329,7 +329,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   position: relative;
   inline-size: 180px;
   block-size: 170px;
-  translate: 0 -10px;
+  translate: 0 -5px;
   border-radius: 0.35rem;
   overflow: hidden;
 }
@@ -367,11 +367,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  body.game .application.ouw25 .ouw25-notes .ouw25-portrait-view::before {
+  body.game .application.ouw25 .ouw25-notes .ouw25-portrait-frame {
     transition: transform 160ms ease;
   }
 
-  body.game .application.ouw25 .ouw25-notes .ouw25-portrait-view:hover::before {
+  body.game .application.ouw25 .ouw25-notes .ouw25-portrait-frame:hover {
     transform: rotate(-2deg) scale(1.035);
   }
 }

@@ -92,21 +92,21 @@
         <fieldset class="ouw25-cooperative-budget">
           {{> ouw25-block-heading heading="OUW25.Finance.Budget"}}
           <div class="ouw25-cooperative-budget-controls">{{> ouw25-money-input}} <span>{{localize "OUW25.Finance.Currency"}}</span></div>
-          {{#unless (eq contacts.total "0")}}<p>{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>{{/unless}}
+          {{#unless (eq contacts.total "0")}}<p><span>{{localize "OUW25.Contact.Total" amount=contacts.total}}</span></p>{{/unless}}
         </fieldset>
         <fieldset>
           {{> ouw25-block-heading heading="OUW25.Cooperative.Reputation.Title"}}
           <select name="system.reputation" aria-label="{{localize "OUW25.Cooperative.Reputation.Title"}}" {{#unless editable}}disabled{{/unless}}>
             {{#each cooperative.reputation.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
           </select>
-          {{#if cooperative.reputation.help}}<p>{{localize cooperative.reputation.help}}</p>{{/if}}
+          {{#if cooperative.reputation.help}}<p class="ouw25-trait-description">{{localize cooperative.reputation.help}}</p>{{/if}}
         </fieldset>
         <fieldset>
           {{> ouw25-block-heading heading="OUW25.Cooperative.Memory.Title"}}
           <select name="system.memory" aria-label="{{localize "OUW25.Cooperative.Memory.Title"}}" {{#unless editable}}disabled{{/unless}}>
             {{#each cooperative.memory.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
           </select>
-          {{#if cooperative.memory.help}}<p>{{localize cooperative.memory.help}}</p>{{/if}}
+          {{#if cooperative.memory.help}}<p class="ouw25-trait-description">{{localize cooperative.memory.help}}</p>{{/if}}
         </fieldset>
       </div>
     </div>

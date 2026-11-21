@@ -355,6 +355,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
+  --ouw25-cooperative-heading-height: calc(1.1rem / 1.5 * 2 + 0.5rem);
   grid-template-columns: repeat(2, minmax(0, 1fr));
   min-inline-size: 39rem;
   gap: 1.2rem;
@@ -379,6 +380,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
   margin-inline: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h3 {
+  line-height: 1;
+}
+
 .ouw25 .ouw25-cooperative-budget-controls {
   display: flex;
   align-items: center;
@@ -392,18 +397,26 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
 
 .ouw25 .ouw25-cooperative-budget p {
   color: var(--ouw25-color-warning);
+  display: flex;
   font-family: var(--ouw25-font-accent);
-  font-size: 2em;
+  font-size: 1.6em;
+  justify-content: flex-end;
   line-height: 1;
-  margin: 0.125rem 0 0 50%;
-  overflow-wrap: anywhere;
+  inline-size: calc(100% + 2 * (var(--ouw25-fieldset-padding) + var(--ouw25-fieldset-border)));
+  margin: 0.125rem calc(-1 * (var(--ouw25-fieldset-padding) + var(--ouw25-fieldset-border))) 0;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.ouw25 .ouw25-cooperative-budget p > span {
+  flex: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes textarea {
   box-sizing: border-box;
   block-size: 350px;
   inline-size: 100%;
-  margin: 0;
+  margin: calc(0.25rem + var(--ouw25-cooperative-heading-height) / 2) 0 0;
 }
 
 .ouw25 .ouw25-merchant-profile {
@@ -587,7 +600,8 @@ body.game .application.ouw25 .ouw25-notes :is(.ouw25-trait-actions, .ouw25-recor
   inset-block-start: 4px;
 }
 
-.ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description, .ouw25-trait-name) {
+.ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description, .ouw25-trait-name),
+.ouw25 .ouw25-cooperative-layout .ouw25-trait-description {
   margin-inline-start: calc(24px - var(--ouw25-fieldset-border) - var(--ouw25-fieldset-padding));
 }
 

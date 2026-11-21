@@ -32,6 +32,9 @@ body.game .application.ouw25:has(.ouw25-notes) {
 
 .ouw25 .ouw25-notes {
   box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   color-scheme: light;
   color: var(--ouw25-color-ink);
   background-color: var(--ouw25-color-paper);
@@ -92,6 +95,17 @@ body.game .application.ouw25 .form-footer button:disabled {
   background: var(--ouw25-color-paper);
   color: var(--ouw25-color-ink);
   opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body.game .application.ouw25 .ouw25-notes button:not(:disabled) {
+    transition: translate 150ms ease, scale 150ms ease, filter 150ms ease;
+    scale: 1;
+  }
+
+  body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled) {
+    scale: 1.025;
+  }
 }
 
 .ouw25 :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
@@ -250,6 +264,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
   display: none;
 }
 
+.ouw25 .ouw25-notes > .ouw25-tab.active {
+  flex: 1 0 auto;
+}
+
 .ouw25 .ouw25-sheet-columns {
   display: grid;
   grid-auto-flow: column;
@@ -260,6 +278,43 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
   grid-template-columns: minmax(0, 67fr) minmax(0, 33fr);
   min-inline-size: 39rem;
+}
+
+.ouw25 .ouw25-merchant-profile {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.ouw25 .ouw25-merchant-profile-fields {
+  min-inline-size: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-portrait {
+  inline-size: 200px;
+  block-size: 200px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--ouw25-color-accent);
+  border-radius: 0.25rem;
+  background: var(--ouw25-surface-translucent);
+  overflow: hidden;
+}
+
+.ouw25 .ouw25-portrait,
+.ouw25 .ouw25-portrait > img {
+  object-fit: contain;
+}
+
+.ouw25 .ouw25-portrait > img {
+  inline-size: 100%;
+  block-size: 100%;
+  border: 0;
+}
+
+.ouw25 .ouw25-merchant-profile-fields > fieldset {
+  margin-inline: 0;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair {
@@ -460,13 +515,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
   max-inline-size: 65%;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button:not(:disabled) {
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-luck-actions) > button:not(:disabled) {
   background: linear-gradient(90deg, #485d78, #32445e 16%, #32445e 84%, #485d78);
   color: #edcd79;
 }
 
 @supports (background-clip: text) {
-  body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button:not(:disabled) > span {
+  body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-luck-actions) > button:not(:disabled) > span {
     background: linear-gradient(90deg, #edcd79, #ed9d79, #ede579, #edbd79);
     background-clip: text;
     color: transparent;
@@ -539,6 +594,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   pointer-events: none;
+}
+
+.ouw25 .ouw25-luck-value > span {
+  position: relative;
+  inset-block-start: calc(3px / var(--ouw25-luck-scale));
 }
 
 @supports (background-clip: text) {

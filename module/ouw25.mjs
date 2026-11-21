@@ -272,6 +272,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       rollCollision: Ouw25ActorSheet.rollCollision,
       depositPension: Ouw25ActorSheet.depositPension,
       changeLuck: Ouw25ActorSheet.changeLuck,
+      editPortrait: Ouw25ActorSheet.editPortrait,
       rollCreation: Ouw25ActorSheet.rollCreation,
       rollPersonalAction: Ouw25ActorSheet.rollPersonalAction,
       editTrait: Ouw25ActorSheet.editTrait,
@@ -426,7 +427,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         }))
       } : null,
       identity: merchant ? {
-        name: this.actor.name, dream: system.dream,
+        name: this.actor.name, img: this.actor.img, dream: system.dream,
         hiring: MERCHANT_HIRING.map(value => ({
           value, label: `OUW25.Identity.Hiring.${value}`, selected: value === (system.hiring ?? "unset")
         })),
@@ -776,6 +777,19 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       this.#creationRollPending = false;
       target.disabled = false;
     }
+  }
+
+  static async editPortrait() {
+    const actor = this.actor;
+    if (!this.isEditable || actor.type !== "merchant") return;
+    const { FilePicker } = foundry.applications.apps;
+    const picker = new FilePicker.implementation({
+      type: "image",
+      current: actor.img,
+      document: actor,
+      callback: path => this.isEditable && actor.update({ img: path })
+    });
+    await picker.browse();
   }
 
   static async changeLuck(event, target) {

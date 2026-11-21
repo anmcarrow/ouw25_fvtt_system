@@ -439,6 +439,7 @@
     "Identity": {
       "Title": "Character details",
       "Name": "Given name and surname",
+      "EditPortrait": "Change character portrait",
       "Dream": "Big dream",
       "HiringTitle": "Hiring story",
       "Dreams": {

@@ -540,7 +540,15 @@
   {{/inline}}
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-merchant-layout"}}
     <div class="ouw25-sheet-column">
-      <div>
+      <div class="ouw25-merchant-profile">
+        {{#if editable}}
+          <button type="button" class="ouw25-portrait" data-action="editPortrait" aria-label="{{localize "OUW25.Identity.EditPortrait"}}" data-tooltip="{{localize "OUW25.Identity.EditPortrait"}}">
+            <img src="{{identity.img}}" alt="">
+          </button>
+        {{else}}
+          <img class="ouw25-portrait" src="{{identity.img}}" alt="{{identity.name}}">
+        {{/if}}
+        <div class="ouw25-merchant-profile-fields">
         {{#if identity}}
           <div class="ouw25-choice-row ouw25-identity ouw25-rolled-input">
             <input type="text" name="name" aria-label="{{localize "OUW25.Identity.Name"}}" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
@@ -561,7 +569,6 @@
           {{#if condition.specialtyRestriction}}<p>{{localize condition.specialtyRestriction}}</p>{{/if}}
           {{#if condition.specialtyConflict}}<p role="status">{{localize "OUW25.Specialty.Conflict"}}</p>{{/if}}
         {{/if}}
-      </div>
   {{#if identity}}
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Identity.Dream"}}
@@ -571,6 +578,8 @@
       </div>
     </fieldset>
   {{/if}}
+        </div>
+      </div>
     <div class="ouw25-merchant-pair">
       {{> ouw25-merchant-traits}}
     </div>
@@ -613,8 +622,8 @@
       <output class="ouw25-luck-value" tabindex="0" aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{localize "OUW25.Condition.LuckHelp"}}"><span>{{condition.luck}}</span></output>
       {{#if editable}}
         <div class="ouw25-luck-actions">
-          <button type="button" data-action="changeLuck" data-luck="add" aria-label="{{localize "OUW25.Condition.AddLuck"}}" data-tooltip="{{localize "OUW25.Condition.AddLuck"}}" {{#unless condition.canAdd}}disabled{{/unless}}>+</button>
-          <button type="button" data-action="changeLuck" data-luck="spend" aria-label="{{localize "OUW25.Condition.SpendLuck"}}" data-tooltip="{{localize "OUW25.Condition.SpendLuck"}}" {{#unless condition.canSpend}}disabled{{/unless}}>&minus;</button>
+          <button type="button" data-action="changeLuck" data-luck="add" aria-label="{{localize "OUW25.Condition.AddLuck"}}" data-tooltip="{{localize "OUW25.Condition.AddLuck"}}" {{#unless condition.canAdd}}disabled{{/unless}}><span>+</span></button>
+          <button type="button" data-action="changeLuck" data-luck="spend" aria-label="{{localize "OUW25.Condition.SpendLuck"}}" data-tooltip="{{localize "OUW25.Condition.SpendLuck"}}" {{#unless condition.canSpend}}disabled{{/unless}}><span>&minus;</span></button>
         </div>
       {{/if}}
     </div>

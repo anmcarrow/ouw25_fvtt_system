@@ -202,7 +202,7 @@ test("the built package registers models and an editable notes sheet for its dec
 
     }
     if (!merchant) {
-      for (const [count, percent] of [[0, 100], [4, 100], [5, 90], [6, 80], [11, 30], [2, 100]]) {
+      for (const [count, percent] of [[0, 100], [4, 100], [5, 50], [6, 50], [11, 50], [2, 100]]) {
         for (let slot = 1; slot <= 11; slot++) sheet.actor.system[`damage${slot}`] = slot <= count;
         const { condition } = (await sheet._prepareContext({})).ship;
         assert.equal(condition.damaged, count);

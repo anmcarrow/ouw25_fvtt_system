@@ -328,9 +328,20 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:not(
   display: inline-block;
 }
 
-.ouw25 .ouw25-tab-damage {
-  display: inline-flex;
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button[data-tab="ship"]:has(> .ouw25-tab-damage) {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(1.5em, 1fr);
+  column-gap: 0.25em;
+}
+
+.ouw25 .ouw25-sheet-tabs > button[data-tab="ship"] > span:first-child {
+  overflow-wrap: anywhere;
+}
+
+.ouw25 .ouw25-sheet-tabs > button > .ouw25-tab-damage {
+  display: flex;
   flex-wrap: wrap;
+  min-inline-size: 0;
   max-inline-size: 100%;
   gap: 0.25em;
 }

@@ -97,7 +97,9 @@ test("cooperative tab labels show discovered ports, occupied hold and marked dam
   assert.ok(nav);
   assert.match(nav, /\{\{#if \(eq id "ports"\)\}\} \(\{\{@root\.ports\.discovered\}\}\/\{\{@root\.ports\.total\}\}\)/);
   assert.match(nav, /\{\{#if \(eq id "cargo"\)\}\} \(\{\{@root\.ship\.hold\.occupied\}\}\)/);
+  assert.match(nav, /<\/span>\{\{#if \(eq id "ship"\)\}\}[\s\S]*?<span class="ouw25-tab-damage"/);
   assert.match(nav, /class="ouw25-tab-damage" style="font-size: \{\{@root\.ship\.condition\.tabIconPercent\}\}%"[\s\S]*?\{\{#each @root\.ship\.condition\.slots\}\}\{\{#if marked\}\}[\s\S]*?\{\{#if critical\}\}&#x1F480;\{\{else\}\}&#x1F4A5;/);
+  assert.match(styles, /button\[data-tab="ship"\]:has\(> \.ouw25-tab-damage\)\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:/s);
   assert.match(styles, /\.ouw25-tab-damage\s*\{[^}]*gap:\s*0\.25em;/s);
   assert.match(styles, /\.ouw25-tab\[data-tab="ship"\]\s*\{[^}]*margin-block-start:\s*-0\.75rem;[^}]*padding-block-start:\s*0\.75rem;[^}]*overflow-y:\s*clip;/s);
 });

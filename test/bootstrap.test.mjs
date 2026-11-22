@@ -47,11 +47,11 @@ test("the built package registers models and an editable notes sheet for its dec
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   assert.deepEqual(Object.keys(CONFIG.Item.dataModels), Object.keys(manifest.documentTypes.Item));
-  for (const [type, image] of Object.entries({
-    merchant: "systems/ouw25/styles/images/bugger_transp.webp",
-    cooperative: "systems/ouw25/styles/images/ship_logo.webp"
+  for (const [type, [image, token]] of Object.entries({
+    merchant: ["systems/ouw25/styles/images/bugger_transp.webp", "systems/ouw25/styles/images/bugger_transp.webp"],
+    cooperative: ["systems/ouw25/styles/images/ship_logo.webp", "systems/ouw25/styles/images/ship_token.webp"]
   })) {
-    assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type }), { img: image, texture: { src: image } });
+    assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type }), { img: image, texture: { src: token } });
   }
   assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type: "base" }), { img: "icons/svg/mystery-man.svg" });
   const [[id, Sheet, options]] = registration;
@@ -102,6 +102,48 @@ test("the built package registers models and an editable notes sheet for its dec
     } },
     { type: "cargo", id: "cargo-1", name: "Crates", system: { quantity: 3, volume: 12.5 } },
     { type: "cargo", id: "cargo-2", name: "Bales", system: { quantity: 5, volume: 2.25 } }];
+    if (!merchant) {
+      let permitted = true;
+      let opened = 0;
+      let tokenOpened = 0;
+      const prototype = {};
+      globalThis.game.user = { can: permission => permission === "TOKEN_CONFIGURE" && permitted };
+      CONFIG.Token = { prototypeSheetClass: class {
+        constructor(options) { assert.equal(options.prototype, prototype); }
+        render(options) { assert.deepEqual(options, { force: true }); opened++; }
+      } };
+      Object.assign(sheet.actor, {
+        isOwner: true, prototypeToken: prototype,
+        token: { sheet: { render(options) { assert.deepEqual(options, { force: true }); tokenOpened++; } } }
+      });
+      const configure = () => Sheet.DEFAULT_OPTIONS.actions.configureShipToken.call(sheet);
+      sheet.isEditable = true;
+      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, true);
+      configure();
+      assert.equal(opened, 1);
+      sheet.actor.isToken = true;
+      configure();
+      assert.equal(tokenOpened, 1);
+      sheet.actor.isToken = false;
+      permitted = false;
+      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, false);
+      configure();
+      permitted = true;
+      sheet.actor.isOwner = false;
+      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, false);
+      configure();
+      sheet.actor.isOwner = true;
+      sheet.isEditable = false;
+      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, false);
+      configure();
+      sheet.isEditable = true;
+      sheet.actor.type = "merchant";
+      configure();
+      assert.equal(opened, 1);
+      assert.equal(tokenOpened, 1);
+      sheet.actor.type = type;
+      sheet.actor.isOwner = false;
+    }
     assert.deepEqual(sheet._getTabsConfig("sheet").tabs.map(({ id }) => id), merchant
       ? ["attributes", "items", "friends", "illwishers", "creditors", "notes"]
       : ["attributes", "contacts", "contracts", "ports", "ship", "cargo"]);
@@ -129,12 +171,15 @@ test("the built package registers models and an editable notes sheet for its dec
           id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
         }]);
       } else {
+        assert.equal(ship.tokenIcon, "systems/ouw25/styles/images/ship_token.webp");
+        assert.equal(ship.canConfigureToken, false);
         assert.equal(cooperative.reputation.choices.find(choice => choice.selected).value, "hunters");
         assert.equal(cooperative.reputation.help, "OUW25.Cooperative.Reputation.Help.hunters");
         assert.equal(cooperative.memory.choices.find(choice => choice.selected).value, "rescue");
         assert.equal(cooperative.memory.help, "OUW25.Cooperative.Memory.Help.rescue");
         for (const language of ["en", "ru"]) {
           const texts = JSON.parse(await readFile(new URL(`lang/${language}.json`, dist), "utf8"));
+          assert.ok(texts.OUW25.Ship.ConfigureToken);
           for (const code of ["slagthrower", "harpoon", "water_cannon", "winch", "passenger", "premium", "diving", "sandshoes", "tow"]) {
             assert.ok(texts.OUW25.Ship.EquipmentEffects[code], `${language}: missing equipment effect ${code}`);
           }

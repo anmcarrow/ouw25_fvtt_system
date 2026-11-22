@@ -319,6 +319,7 @@
     },
     "Ship": {
       "Title": "Ship",
+      "ConfigureToken": "Configure ship token",
       "Prefix": "HMS",
       "Name": "Ship name",
       "Class": "Ship class",

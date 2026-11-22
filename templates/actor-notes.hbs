@@ -72,7 +72,14 @@
   </section>
 {{/inline}}
 <section class="ouw25-notes">
-  <header class="ouw25-sheet-heading">
+  <header class="ouw25-sheet-heading{{#if ship}} ouw25-cooperative-heading{{/if}}">
+    {{#if ship}}
+      {{#if ship.canConfigureToken}}
+        <button type="button" class="ouw25-cooperative-token" data-action="configureShipToken" aria-label="{{localize "OUW25.Ship.ConfigureToken"}}" data-tooltip="{{localize "OUW25.Ship.ConfigureToken"}}"><img src="{{ship.tokenIcon}}" alt=""></button>
+      {{else}}
+        <img class="ouw25-cooperative-token" src="{{ship.tokenIcon}}" alt="">
+      {{/if}}
+    {{/if}}
     <h2>{{localize actorTypeLabel}}</h2>
     <span class="ouw25-save-status" data-autosave-status data-state="{{autosaveStatusState}}" role="status" aria-live="polite">{{autosaveStatus}}</span>
     {{#if editable}}

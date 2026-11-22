@@ -201,9 +201,10 @@ class CooperativeModel extends NotesModel {
   }
 
   static defineSchema() {
-    const { BooleanField, NumberField, StringField } = foundry.data.fields;
+    const { ArrayField, BooleanField, DocumentUUIDField, NumberField, StringField } = foundry.data.fields;
     const fields = {
       ...super.defineSchema(), budget: counterField(),
+      founders: new ArrayField(new DocumentUUIDField({ type: "Actor", nullable: false })),
       reputation: new StringField({ initial: "unset", choices: COOPERATIVE_REPUTATIONS }),
       memory: new StringField({ initial: "unset", choices: COOPERATIVE_MEMORIES }),
       shipName: new StringField({ initial: "" }),
@@ -328,6 +329,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #autosaveRevisions = new Map();
   #submitRejected = false;
   #autosaveStatus = "Saved";
+  #founderPending = false;
+  #founderHooks = [];
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
@@ -345,6 +348,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       deleteShipEntry: Ouw25ActorSheet.deleteShipEntry,
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord,
+      openFounder: Ouw25ActorSheet.openFounder,
+      removeFounder: Ouw25ActorSheet.removeFounder,
       toggleForcedMode: Ouw25ActorSheet.toggleForcedMode,
       toggleIlluminationMode: Ouw25ActorSheet.toggleIlluminationMode,
       travelSector: Ouw25ActorSheet.travelSector,
@@ -372,7 +377,66 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   _toggleDisabled(disabled) {
     super._toggleDisabled(disabled);
     if (disabled) {
-      for (const tab of this.element.querySelectorAll(".ouw25-sheet-tabs button")) tab.disabled = false;
+      for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait")) button.disabled = false;
+    }
+  }
+
+  async _onFirstRender(context, options) {
+    await super._onFirstRender(context, options);
+    if (this.actor.type !== "cooperative") return;
+    for (const event of ["updateActor", "deleteActor", "createItem", "updateItem", "deleteItem"]) {
+      const hook = Hooks.on(event, document => {
+        const uuid = event.endsWith("Item") ? document.parent?.uuid : document.uuid;
+        if (this.actor.system.founders?.includes(uuid)) this.render();
+      });
+      this.#founderHooks.push([event, hook]);
+    }
+  }
+
+  _onClose(options) {
+    for (const [event, hook] of this.#founderHooks) Hooks.off(event, hook);
+    this.#founderHooks = [];
+    return super._onClose(options);
+  }
+
+  async _onDropDocument(event, document) {
+    if (event.target.closest(".ouw25-founders") && document.documentName !== "Actor") return null;
+    return super._onDropDocument(event, document);
+  }
+
+  async _onDropActor(event, actor) {
+    if (!event.target.closest(".ouw25-founders") || this.actor.type !== "cooperative"
+      || !this.isEditable || this.#founderPending || actor?.type !== "merchant" || !actor.uuid
+      || !actor.testUserPermission(game.user, "LIMITED")) return null;
+    const founders = this.actor.system.founders ?? [];
+    if (founders.includes(actor.uuid)) return null;
+    this.#founderPending = true;
+    try {
+      await this.actor.update({ "system.founders": [...founders, actor.uuid] });
+      return actor;
+    } finally {
+      this.#founderPending = false;
+    }
+  }
+
+  static async openFounder(_event, target) {
+    const uuid = target.dataset.uuid;
+    if (this.actor.type !== "cooperative" || !this.actor.system.founders?.includes(uuid)) return;
+    const actor = await fromUuid(uuid);
+    if (actor?.type === "merchant" && actor.testUserPermission(game.user, "LIMITED")) {
+      await actor.sheet.render({ force: true });
+    }
+  }
+
+  static async removeFounder(_event, target) {
+    const uuid = target.dataset.uuid;
+    if (this.actor.type !== "cooperative" || !this.isEditable || this.#founderPending
+      || !this.actor.system.founders?.includes(uuid)) return;
+    this.#founderPending = true;
+    try {
+      await this.actor.update({ "system.founders": this.actor.system.founders.filter(value => value !== uuid) });
+    } finally {
+      this.#founderPending = false;
     }
   }
 
@@ -396,6 +460,29 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const ports = ship ? this.actor.items.filter(item => item.type === "port").map(item => ({
       id: item.id, name: item.name, region: item.system.region, description: item.system.description
     })) : null;
+    const founderDocuments = ship ? await Promise.all((system.founders ?? []).map(async uuid => {
+      try { return await fromUuid(uuid); } catch { return null; }
+    })) : [];
+    const founders = ship ? (system.founders ?? []).map((uuid, index) => {
+      const actor = founderDocuments[index];
+      if (actor?.type !== "merchant" || !actor.testUserPermission(game.user, "LIMITED")) return { uuid };
+      const member = { uuid, name: actor.name, img: actor.img, canView: true };
+      if (!actor.testUserPermission(game.user, "OBSERVER")) return member;
+      const debts = actor.items.filter(item => item.type === "debt" && item.system.direction === "payable");
+      const relationships = actor.items.filter(item => item.type === "relationship");
+      return {
+        ...member, stats: {
+          specialty: `OUW25.Specialty.${actor.system.specialty ?? "unset"}`,
+          past: `OUW25.Past.${actor.system.past ?? "unset"}`,
+          money: actor.system.pocketMoney,
+          debt: debtTotals(debts.map(item => item.system)).payable,
+          savings: actor.system.pensionBalance,
+          friends: relationships.filter(item => item.system.direction === "friend").length,
+          enemies: relationships.filter(item => item.system.direction === "enemy").length,
+          creditors: debts.length
+        }
+      };
+    }) : null;
     const listedVolume = cargo?.reduce((total, entry) => total + entry.volume, 0);
     const shipList = kind => {
       const { slots, labels, help, title } = shipListDefinition(system, kind);
@@ -468,7 +555,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       },
       cooperative: ship && {
         reputation: cooperativeChoices(COOPERATIVE_REPUTATIONS, system.reputation, "Reputation"),
-        memory: cooperativeChoices(COOPERATIVE_MEMORIES, system.memory, "Memory")
+        memory: cooperativeChoices(COOPERATIVE_MEMORIES, system.memory, "Memory"),
+        founders
       },
       contracts: type === "cooperative" ? this.actor.items.filter(item => item.type === "contract").map(item => ({
         id: item.id, name: item.name, location: item.system.location, deadline: item.system.deadline, amount: item.system.amount

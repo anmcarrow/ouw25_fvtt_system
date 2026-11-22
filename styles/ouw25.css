@@ -398,6 +398,66 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
   margin-inline: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-founders ul {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--ouw25-color-surface);
+}
+
+body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-card {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.35rem;
+  background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-card h4 {
+  margin: 0 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-card dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.1rem 0.5rem;
+  margin: 0;
+  font-size: 0.8em;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-card :is(dt, dd) {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h3 {
   line-height: 1;
 }

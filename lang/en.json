@@ -16,6 +16,18 @@
       "Error": "Couldn't save changes.",
       "Invalid": "Fix the highlighted value before continuing."
     },
+    "Founders": {
+      "Title": "Founders",
+      "Role": "Ship role",
+      "Debt": "Debt, og.",
+      "Savings": "Savings, og.",
+      "Creditors": "Creditors",
+      "Empty": "No founders yet.",
+      "DropHint": "Drag a Merchant here to add them.",
+      "HiddenStats": "Statistics are not accessible.",
+      "Unavailable": "Merchant unavailable.",
+      "Remove": "Remove founder"
+    },
     "Port": {
       "Title": "Ports",
       "Name": "Name",

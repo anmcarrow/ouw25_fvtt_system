@@ -8,11 +8,16 @@ test("the built package registers models and an editable notes sheet for its dec
   const manifest = JSON.parse(await readFile(new URL("system.json", dist), "utf8"));
   const types = Object.keys(manifest.documentTypes.Actor);
   const registration = [];
-  globalThis.Hooks = { once(event, callback) { if (event === "init") callback(); } };
+  const hooks = new Map();
+  globalThis.Hooks = {
+    once(event, callback) { if (event === "init") callback(); },
+    on(event, callback) { hooks.set(event, callback); return callback; },
+    off(event, callback) { if (hooks.get(event) === callback) hooks.delete(event); }
+  };
   globalThis.CONFIG = { Actor: { dataModels: {}, documentClass: null }, Item: { dataModels: {} } };
   globalThis.foundry = {
     abstract: { TypeDataModel: class { static migrateData(source) { return source; } } },
-    data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {} } },
+    data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {}, ArrayField: class {}, DocumentUUIDField: class {} } },
     applications: {
       api: { HandlebarsApplicationMixin: base => base },
       ux: { FormDataExtended: class {} },
@@ -20,6 +25,11 @@ test("the built package registers models and an editable notes sheet for its dec
         get element() { return this._element; }
         get form() { return this._form; }
         async _prepareContext() { return {}; }
+        async _onRender() {}
+        async _onFirstRender() {}
+        _onClose() {}
+        _toggleDisabled() {}
+        async _onDropDocument() { return "base"; }
         _getTabsConfig(group) { return this.constructor.TABS[group]; }
         _onChangeForm() {}
         async _onClickAction() { this.actionInvoked = true; }
@@ -482,6 +492,84 @@ test("the built package registers models and an editable notes sheet for its dec
   await deleteShip("mount", "mount1");
   assert.equal(shipSystem.mount1, "harpoon");
   assert.equal(warnings.pop(), "OUW25.Creation.Changed");
+
+  const memberSheet = new Sheet();
+  memberSheet.id = "founder-sheet";
+  memberSheet.isEditable = true;
+  let renders = 0;
+  memberSheet.render = () => { renders++; };
+  const memberSystem = { ...shipSystem, founders: [] };
+  memberSheet.actor = {
+    type: "cooperative", system: memberSystem, items: [],
+    async update(changes) { memberSystem.founders = changes["system.founders"]; }
+  };
+  game.user = { id: "viewer" };
+  let permission = "OBSERVER";
+  let opened = 0;
+  const merchant = {
+    uuid: "Actor.merchant1", type: "merchant", name: "Merchant", img: "portrait.webp", apps: {},
+    system: { specialty: "mechanic", past: "veteran", pocketMoney: 24, pensionBalance: 30000 },
+    items: [
+      { type: "debt", system: { direction: "payable", amount: 17 } },
+      { type: "debt", system: { direction: "receivable", amount: 999 } },
+      { type: "relationship", system: { direction: "friend" } },
+      { type: "relationship", system: { direction: "enemy" } }
+    ],
+    testUserPermission: (_user, level) => permission === "OBSERVER" || (permission === "LIMITED" && level === "LIMITED"),
+    sheet: { async render() { opened++; } }
+  };
+  globalThis.fromUuid = async uuid => uuid === merchant.uuid ? merchant : null;
+  const inside = { target: { closest: () => true } };
+  const outside = { target: { closest: () => null } };
+  assert.equal(await memberSheet._onDropDocument(inside, { documentName: "Item" }), null);
+  assert.equal(await memberSheet._onDropDocument(outside, { documentName: "Item" }), "base");
+  const portraitButton = { disabled: true };
+  memberSheet._element = { querySelectorAll: () => [portraitButton] };
+  memberSheet._toggleDisabled(true);
+  assert.equal(portraitButton.disabled, false);
+  await memberSheet._onDropActor(outside, merchant);
+  assert.deepEqual(memberSystem.founders, []);
+  await memberSheet._onDropActor(inside, { ...merchant, type: "cooperative" });
+  assert.deepEqual(memberSystem.founders, []);
+  await memberSheet._onDropActor(inside, merchant);
+  await memberSheet._onDropActor(inside, merchant);
+  assert.deepEqual(memberSystem.founders, [merchant.uuid]);
+  let memberContext = await memberSheet._prepareContext({});
+  assert.deepEqual(memberContext.cooperative.founders[0].stats, {
+    specialty: "OUW25.Specialty.mechanic", past: "OUW25.Past.veteran", money: 24,
+    debt: "17", savings: 30000, friends: 1, enemies: 1, creditors: 1
+  });
+  await memberSheet._onFirstRender(memberContext, {});
+  hooks.get("updateActor")(merchant);
+  hooks.get("updateItem")({ parent: { uuid: merchant.uuid } });
+  hooks.get("deleteItem")({ parent: { uuid: "Actor.other" } });
+  assert.equal(renders, 2);
+  merchant.system.pocketMoney = 40;
+  assert.equal((await memberSheet._prepareContext({})).cooperative.founders[0].stats.money, 40);
+  merchant.items.push({ type: "debt", system: { direction: "payable", amount: Number.MAX_SAFE_INTEGER } });
+  const updatedStats = (await memberSheet._prepareContext({})).cooperative.founders[0].stats;
+  assert.equal(updatedStats.debt, "9007199254741008");
+  assert.equal(updatedStats.creditors, 2);
+  await Sheet.DEFAULT_OPTIONS.actions.openFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
+  assert.equal(opened, 1);
+  permission = "LIMITED";
+  memberContext = await memberSheet._prepareContext({});
+  assert.equal(memberContext.cooperative.founders[0].stats, undefined);
+  permission = "NONE";
+  memberContext = await memberSheet._prepareContext({});
+  assert.deepEqual(memberContext.cooperative.founders[0], { uuid: merchant.uuid });
+  await Sheet.DEFAULT_OPTIONS.actions.openFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
+  assert.equal(opened, 1);
+  memberSheet.isEditable = false;
+  await Sheet.DEFAULT_OPTIONS.actions.removeFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
+  assert.equal(memberSystem.founders.length, 1);
+  memberSheet.isEditable = true;
+  await Sheet.DEFAULT_OPTIONS.actions.removeFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
+  assert.deepEqual(memberSystem.founders, []);
+  hooks.get("deleteActor")(merchant);
+  assert.equal(renders, 2);
+  await memberSheet._onClose({});
+  assert.equal(hooks.size, 0);
 
   const placeSheet = new Sheet();
   placeSheet.isEditable = true;

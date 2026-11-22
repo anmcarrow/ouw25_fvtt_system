@@ -89,6 +89,45 @@
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-cooperative-layout"}}
     <div class="ouw25-sheet-column">
       <div class="ouw25-cooperative-budget-column">
+        <fieldset class="ouw25-founders">
+          {{> ouw25-block-heading heading="OUW25.Founders.Title"}}
+          {{#if cooperative.founders}}
+            <ul>
+              {{#each cooperative.founders}}
+                <li class="ouw25-founder">
+                  {{#if canView}}
+                    <button type="button" class="ouw25-founder-portrait" data-action="openFounder" data-uuid="{{uuid}}" aria-label="{{name}}" data-tooltip="{{name}}"><img src="{{img}}" alt=""></button>
+                    <div class="ouw25-founder-card">
+                      <h4>{{name}}</h4>
+                      {{#if stats}}
+                        <dl>
+                          <dt>{{localize "OUW25.Founders.Role"}}</dt><dd>{{localize stats.specialty}}</dd>
+                          <dt>{{localize "OUW25.Past.Title"}}</dt><dd>{{localize stats.past}}</dd>
+                          <dt>{{localize "OUW25.Finance.PocketMoney"}}</dt><dd>{{stats.money}}</dd>
+                          <dt>{{localize "OUW25.Founders.Debt"}}</dt><dd>{{stats.debt}}</dd>
+                          <dt>{{localize "OUW25.Founders.Savings"}}</dt><dd>{{stats.savings}}</dd>
+                          <dt>{{localize "OUW25.Tabs.friends"}}</dt><dd>{{stats.friends}}</dd>
+                          <dt>{{localize "OUW25.Tabs.illwishers"}}</dt><dd>{{stats.enemies}}</dd>
+                          <dt>{{localize "OUW25.Founders.Creditors"}}</dt><dd>{{stats.creditors}}</dd>
+                        </dl>
+                      {{else}}
+                        <p>{{localize "OUW25.Founders.HiddenStats"}}</p>
+                      {{/if}}
+                    </div>
+                  {{else}}
+                    <p>{{localize "OUW25.Founders.Unavailable"}}</p>
+                  {{/if}}
+                  {{#if @root.editable}}
+                    <button type="button" class="ouw25-trait-icon" data-action="removeFounder" data-uuid="{{uuid}}" aria-label="{{localize "OUW25.Founders.Remove"}}" data-tooltip="{{localize "OUW25.Founders.Remove"}}"><span aria-hidden="true">&#x1F5D1;&#xFE0F;</span></button>
+                  {{/if}}
+                </li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <p>{{localize "OUW25.Founders.Empty"}}</p>
+          {{/if}}
+          {{#if editable}}<p>{{localize "OUW25.Founders.DropHint"}}</p>{{/if}}
+        </fieldset>
         <fieldset class="ouw25-cooperative-budget">
           {{> ouw25-block-heading heading="OUW25.Finance.Budget"}}
           <div class="ouw25-cooperative-budget-controls">{{> ouw25-money-input}} <span>{{localize "OUW25.Finance.Currency"}}</span></div>

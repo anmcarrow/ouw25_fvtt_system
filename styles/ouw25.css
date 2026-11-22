@@ -1498,7 +1498,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-block: 0.5rem;
+  margin-block: 0.25rem 0.65rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-action-label {
+  margin: 0.5rem 0 0;
+  font-weight: bold;
+  font-size: 0.8em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button {
@@ -1706,16 +1712,7 @@ body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts,
 
 .ouw25 .ouw25-ports-table {
   width: 100%;
-  table-layout: fixed;
-}
-
-.ouw25 .ouw25-ports-table col:nth-child(1),
-.ouw25 .ouw25-ports-table col:nth-child(2) {
-  width: 20%;
-}
-
-.ouw25 .ouw25-ports-table col:nth-child(3) {
-  width: 60%;
+  table-layout: auto;
 }
 
 .ouw25 .ouw25-port-description {
@@ -1751,6 +1748,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-debt-table tbody td.ouw25-debt-
 
 .ouw25 .ouw25-debt-table .ouw25-debt-actions {
   inline-size: 1%;
+}
+
+.ouw25 .ouw25-debt-table .ouw25-record-note {
+  inline-size: 1%;
+  text-align: center;
+  white-space: nowrap;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
@@ -1802,6 +1805,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
 
 .ouw25-record-search {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   gap: 0.35rem;
   margin-bottom: 0.35rem;
@@ -1816,6 +1820,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
   width: 100%;
 }
 
+.ouw25-record-search select {
+  width: 100%;
+}
+
 .ouw25-record-search button {
   flex: 0 0 auto;
 }
@@ -1824,19 +1832,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
   display: none;
 }
 
-.ouw25-record-journal {
-  display: block;
-  margin: 0.25rem 0;
-  font-weight: normal;
+.ouw25-journal-index {
+  margin: 0.35rem 0;
 }
 
-.ouw25-record-journal summary {
+.ouw25-journal-index summary {
   cursor: pointer;
 }
 
-.ouw25-record-journal p {
+.ouw25-journal-index ul,
+.ouw25-journal-index [data-backlinks] ul {
   margin: 0.25rem 0;
-  overflow-wrap: anywhere;
+  padding-inline-start: 1.5rem;
 }
 
 .ouw25-check-card .ouw25-check-result {
@@ -1847,6 +1854,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
 .ouw25-check-card .ouw25-check-state {
   margin: 0.35rem 0 0;
   font-style: italic;
+}
+
+.ouw25-check-card details {
+  margin-top: 0.5rem;
 }
 
 .ouw25-check-assistant {

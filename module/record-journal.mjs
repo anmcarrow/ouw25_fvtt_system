@@ -34,7 +34,136 @@ export async function journalPresentation(item, user) {
   const element = document.createElement("template");
   element.innerHTML = html;
   const preview = element.content.textContent.replace(/\s+/g, " ").trim().slice(0, 200);
-  return { available: true, preview, needsCopy: page.parent.flags?.ouw25?.tableKey !== journalTableKey(item) };
+  const flags = page.parent.flags?.ouw25;
+  return { available: true, preview, needsCopy: flags?.tableKey !== journalTableKey(item)
+    || Boolean(item.parent && flags?.actorUuid !== item.parent.uuid) };
+}
+
+function canObserve(document, user) {
+  return Boolean(document?.testUserPermission?.(user, "OBSERVER")
+    && (!document.parent || document.parent.testUserPermission?.(user, "OBSERVER")));
+}
+
+export function journalIndexForActor(actor, user, journals) {
+  const entries = [];
+  for (const journal of journals ?? []) {
+    const flags = journal.flags?.ouw25;
+    if (flags?.actorUuid !== actor.uuid || !flags.tableKey || !canObserve(journal, user)) continue;
+    for (const page of journal.pages ?? []) {
+      if (canObserve(page, user)) entries.push({
+        uuid: page.uuid, name: page.name, table: `OUW25.Journal.Tables.${flags.tableKey}`
+      });
+    }
+  }
+  return entries;
+}
+
+export async function clearDeletedJournalLinks(document, journalDeleted, actors) {
+  const uuid = document.uuid;
+  if (!uuid) return;
+  for (const actor of actors ?? []) {
+    if (!actor.isOwner) continue;
+    for (const item of actor.items) {
+      const linked = item.flags?.ouw25?.journalPageUuid;
+      if (linked && (journalDeleted ? linked.startsWith(`${uuid}.JournalEntryPage.`) : linked === uuid)) {
+        await item.unsetFlag(SYSTEM_ID, "journalPageUuid");
+      }
+    }
+    if (!journalDeleted) continue;
+    const tables = actor.flags?.ouw25?.journalTables;
+    if (!tables || !Object.values(tables).includes(uuid)) continue;
+    const updates = Object.fromEntries(Object.entries(tables)
+      .filter(([, value]) => value === uuid)
+      .map(([key]) => [`flags.${SYSTEM_ID}.journalTables.-=${key}`, null]));
+    await actor.update(updates);
+  }
+}
+
+function stringsIn(value, seen = new Set()) {
+  if (typeof value === "string") return [value];
+  if (!value || typeof value !== "object" || seen.has(value)) return [];
+  seen.add(value);
+  return Object.values(value).flatMap(entry => stringsIn(entry, seen));
+}
+
+async function containsVisibleLink(content, uuid, source, owner) {
+  if (!content.includes(uuid) && !/@(?:UUID|Embed)\[\./i.test(content) && !/data-uuid=["']\./i.test(content)) return false;
+  const html = await foundry.applications.ux.TextEditor.enrichHTML(content, {
+    secrets: owner, documents: false, links: false, embeds: false, rolls: false, custom: false
+  });
+  const element = document.createElement("template");
+  element.innerHTML = html;
+  const refs = [
+    ...[...element.content.querySelectorAll("[data-uuid]")].map(link => link.dataset.uuid),
+    ...[...element.content.textContent.matchAll(/@(UUID|Embed)\[([^\]]+)\]/gi)].map(([, type, value]) => {
+      if (type.toLowerCase() === "uuid") return value;
+      const named = value.match(/(?:^|\s)uuid=(?:"([^"]+)"|'([^']+)'|(\S+))/);
+      return named ? (named[1] ?? named[2] ?? named[3]) : value.split(/\s+/)[0];
+    })
+  ];
+  for (const reference of refs) {
+    if (typeof reference !== "string") continue;
+    const ref = reference.split("#")[0];
+    if (ref === uuid) return true;
+    if (ref.startsWith(".")) {
+      try {
+        if ((await fromUuid(ref, { relative: source }))?.uuid === uuid) return true;
+      } catch { /* invalid relative reference */ }
+    }
+  }
+  return false;
+}
+
+export async function findJournalBacklinks(item, user) {
+  const uuid = item.flags?.ouw25?.journalPageUuid;
+  if (!uuid) return [];
+  let page;
+  try { page = await fromUuid(uuid); } catch { return []; }
+  if (page?.documentName !== "JournalEntryPage" || !canObserve(page, user)) return [];
+
+  const sources = [];
+  for (const journal of game.journal ?? []) {
+    if (!canObserve(journal, user)) continue;
+    for (const source of journal.pages ?? []) {
+      if (source.uuid !== uuid && canObserve(source, user) && source.type === "text") {
+        sources.push({ document: source, name: `${journal.name} — ${source.name}`, texts: [source.text?.content ?? ""] });
+      }
+    }
+  }
+  const addItem = source => {
+    if (canObserve(source, user)) {
+      sources.push({ document: source, name: source.parent ? `${source.parent.name} — ${source.name}` : source.name,
+        texts: stringsIn(source.system?.toObject?.() ?? source.system) });
+    }
+  };
+  for (const actor of game.actors ?? []) {
+    if (!canObserve(actor, user)) continue;
+    sources.push({ document: actor, name: actor.name, texts: stringsIn(actor.system?.toObject?.() ?? actor.system) });
+    for (const source of actor.items ?? []) addItem(source);
+  }
+  for (const source of game.items ?? []) addItem(source);
+
+  const links = [];
+  for (const { document: source, name, texts } of sources) {
+    const owner = source.testUserPermission(user, "OWNER");
+    for (const text of texts) {
+      if (await containsVisibleLink(text, uuid, source, owner)) {
+        links.push({ uuid: source.uuid, name });
+        break;
+      }
+    }
+  }
+  return links;
+}
+
+export async function openJournalBacklink(uuid, user) {
+  let source;
+  try { source = await fromUuid(uuid); } catch { return; }
+  if (!canObserve(source, user)) return;
+  if (source.documentName === "JournalEntryPage") {
+    return source.parent.sheet.render({ force: true, pageId: source.id });
+  }
+  return source.sheet?.render({ force: true });
 }
 
 export async function openRecordJournal(actor, item, editable, copy = false) {
@@ -50,7 +179,8 @@ export async function openRecordJournal(actor, item, editable, copy = false) {
       ui.notifications.warn(game.i18n.localize("OUW25.Journal.Unavailable"));
       return;
     }
-    if (source.parent.flags?.ouw25?.tableKey === tableKey || !editable || !copy) {
+    const sourceFlags = source.parent.flags?.ouw25;
+    if ((sourceFlags?.tableKey === tableKey && sourceFlags?.actorUuid === actor.uuid) || !editable || !copy) {
       return source.parent.sheet.render({ force: true, pageId: source.id });
     }
     if (!source.testUserPermission(game.user, "OWNER")) {

@@ -378,7 +378,7 @@ test("the built package registers models and an editable notes sheet for its dec
         assert.equal(ship.gear.canAdd, true);
       }
       assert.deepEqual(context, {
-        notes: "test note", autosaveStatus: "OUW25.SaveStatus.Saved", autosaveStatusState: "saved",
+        notes: "test note", journalIndex: [], autosaveStatus: "OUW25.SaveStatus.Saved", autosaveStatusState: "saved",
         actorTypeLabel: `TYPES.Actor.${type}`, editable,
         showCollision: editable && merchant,
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
@@ -1011,8 +1011,96 @@ test("record search filters text without changing record data or confusing empty
   assert.equal((template.match(/<tr data-record-row/g) ?? []).length, 7);
 });
 
+test("record sorting is stable, reversible and independent of search", async () => {
+  const { sortRecordTable, filterRecordTable } = await import(new URL("module/record-search.mjs", dist));
+  const rows = [
+    { dataset: { searchText: "pear", sortName: "pear", sortNumber: "2.5" } },
+    { dataset: { searchText: "apple", sortName: "apple", sortNumber: "12" } },
+    { dataset: { searchText: "apricot", sortName: "apricot", sortNumber: "12" } }
+  ];
+  const marker = { hidden: true, parentNode: { insertBefore(row) {
+    rows.splice(rows.indexOf(row), 1);
+    rows.push(row);
+  } } };
+  const container = { querySelectorAll: () => rows, querySelector: () => marker };
+  filterRecordTable(container, "ap");
+  sortRecordTable(container, "number");
+  assert.deepEqual(rows.map(row => row.dataset.sortName), ["apple", "apricot", "pear"]);
+  assert.deepEqual(rows.map(row => row.hidden), [false, false, true]);
+  sortRecordTable(container, "name");
+  assert.deepEqual(rows.map(row => row.dataset.sortName), ["apple", "apricot", "pear"]);
+  sortRecordTable(container, "original");
+  assert.deepEqual(rows.map(row => row.dataset.sortName), ["pear", "apple", "apricot"]);
+  assert.deepEqual(rows.map(row => row.dataset.sortNumber), ["2.5", "12", "12"]);
+});
+
+test("backlinks only reveal accessible visible explicit references and recheck access on opening", async () => {
+  const { findJournalBacklinks, journalIndexForActor, openJournalBacklink } = await import(new URL("module/record-journal.mjs", dist));
+  const user = {};
+  const uuid = "JournalEntry.j.JournalEntryPage.target";
+  const permission = (observable = true, owner = false) => (_user, level) => level === "OWNER" ? owner : observable;
+  const journal = { name: "Journal", testUserPermission: permission(), pages: [] };
+  const target = { uuid, id: "target", name: "target", documentName: "JournalEntryPage", parent: journal, testUserPermission: permission() };
+  const page = (id, content, observable = true, owner = false) => ({
+    id, uuid: `JournalEntry.j.JournalEntryPage.${id}`, name: id, documentName: "JournalEntryPage",
+    parent: journal, type: "text", text: { content }, testUserPermission: permission(observable, owner)
+  });
+  journal.pages = [
+    target,
+    page("visible", `<a data-uuid="${uuid}">link</a>`),
+    page("hidden", `@UUID[${uuid}]`, false),
+    page("secret", `<section class="secret">@UUID[${uuid}]</section>`),
+    page("plain", `not a link: ${uuid}`),
+    page("heading", `@UUID[${uuid}#heading]{Heading}`),
+    page("embedded", `@Embed[uuid=${uuid} inline]`),
+    page("relative", "@UUID[.JournalEntryPage.target]")
+  ];
+  const actor = { name: "Actor", uuid: "Actor.a", system: { notes: `@UUID[${uuid}]` },
+    testUserPermission: permission(), items: [] };
+  const item = { name: "Item", uuid: "Actor.a.Item.i", parent: actor, system: { description: `@UUID[${uuid}]{Note}` },
+    testUserPermission: permission() };
+  actor.items.push(item);
+  const inaccessibleActor = { name: "Hidden actor", uuid: "Actor.hidden", system: { notes: `@UUID[${uuid}]` },
+    testUserPermission: permission(false), items: [] };
+  const worldItem = { name: "World item", uuid: "Item.i", system: { description: `@UUID[${uuid}]` },
+    testUserPermission: permission() };
+  journal.flags = { ouw25: { actorUuid: actor.uuid, tableKey: "cargo" } };
+  assert.deepEqual(journalIndexForActor(actor, user, [journal]).map(entry => entry.name),
+    ["target", "visible", "secret", "plain", "heading", "embedded", "relative"]);
+  assert.deepEqual(journalIndexForActor({ uuid: "Actor.other" }, user, [journal]), []);
+  globalThis.game = { journal: [journal], actors: [actor, inaccessibleActor], items: [worldItem] };
+  globalThis.fromUuid = async id => id === ".JournalEntryPage.target" ? target
+    : [target, ...journal.pages, actor, item, worldItem].find(doc => doc.uuid === id);
+  globalThis.foundry = { applications: { ux: { TextEditor: { async enrichHTML(html, options) {
+    return options.secrets ? html : html.replace(/<section class="secret">.*?<\/section>/g, "");
+  } } } } };
+  globalThis.document = { createElement: () => ({
+    set innerHTML(html) {
+      this.content = {
+        textContent: html.replace(/<[^>]*>/g, ""),
+        querySelectorAll: () => [...html.matchAll(/data-uuid="([^"]+)"/g)].map(match => ({ dataset: { uuid: match[1] } }))
+      };
+    }
+  }) };
+  const record = { flags: { ouw25: { journalPageUuid: uuid } } };
+  assert.deepEqual((await findJournalBacklinks(record, user)).map(link => link.name),
+    ["Journal — visible", "Journal — heading", "Journal — embedded", "Journal — relative", "Actor", "Actor — Item", "World item"]);
+  journal.pages[3].testUserPermission = permission(true, true);
+  assert.ok((await findJournalBacklinks(record, user)).some(link => link.name === "Journal — secret"));
+  target.testUserPermission = permission(false);
+  assert.deepEqual(await findJournalBacklinks(record, user), []);
+  let opened = false;
+  item.sheet = { render: () => { opened = true; } };
+  item.testUserPermission = permission(false);
+  await openJournalBacklink(item.uuid, user);
+  assert.equal(opened, false);
+  item.testUserPermission = permission();
+  await openJournalBacklink(item.uuid, user);
+  assert.equal(opened, true);
+});
+
 test("extended notes create journals lazily, recover links, and copy moved records only on request", async () => {
-  const { openRecordJournal, copyPageOwnership, journalPresentation } = await import(new URL("module/record-journal.mjs", dist));
+  const { openRecordJournal, copyPageOwnership, journalPresentation, clearDeletedJournalLinks } = await import(new URL("module/record-journal.mjs", dist));
   assert.deepEqual(copyPageOwnership({
     ownership: { default: -1 }, parent: { ownership: { default: 0 }, getUserLevel: user => user.id === "owner" ? 3 : 1 },
     getUserLevel: user => user.id === "owner" ? 3 : 0
@@ -1022,19 +1110,26 @@ test("extended notes create journals lazily, recover links, and copy moved recor
   const pages = new Map();
   const messages = [];
   const user = { id: "owner", can: () => true };
+  class Items extends Map {
+    [Symbol.iterator]() { return this.values(); }
+  }
   const actor = {
     uuid: "Actor.a", name: "Company", isOwner: true, ownership: { default: 0, owner: 3, reader: 2 },
-    items: new Map(), flags: {},
-    async setFlag(_scope, key, value) { this.flags.ouw25 = { ...this.flags.ouw25, [key]: value }; }
+    items: new Items(), flags: {},
+    async setFlag(_scope, key, value) { this.flags.ouw25 = { ...this.flags.ouw25, [key]: value }; },
+    async update(changes) {
+      for (const key of Object.keys(changes)) delete this.flags.ouw25.journalTables[key.split("-=")[1]];
+    }
   };
   let linkFails = false;
   const record = (id, type, direction) => {
     const item = {
-      id, uuid: `Actor.a.Item.${id}`, name: id, type, system: { direction }, flags: {},
+      id, uuid: `Actor.a.Item.${id}`, parent: actor, name: id, type, system: { direction }, flags: {},
       async setFlag(_scope, key, value) {
         if (linkFails) throw new Error("link failure");
         this.flags.ouw25 = { [key]: value };
-      }
+      },
+      async unsetFlag(_scope, key) { delete this.flags.ouw25[key]; }
     };
     actor.items.set(id, item);
     return item;
@@ -1047,14 +1142,16 @@ test("extended notes create journals lazily, recover links, and copy moved recor
     info: value => messages.push(value), warn: value => messages.push(value), error: value => messages.push(value)
   } };
   globalThis.fromUuid = async uuid => pages.get(uuid) ?? journals.find(journal => journal.uuid === uuid);
+  let journalId = 0;
+  let pageId = 0;
   globalThis.foundry = { documents: { JournalEntry: { async create(data) {
     const journal = {
-      ...data, id: `j${journals.length}`, uuid: `JournalEntry.j${journals.length}`, documentName: "JournalEntry",
+      ...data, id: `j${journalId}`, uuid: `JournalEntry.j${journalId++}`, documentName: "JournalEntry",
       pages: [], sheet: { async render(options) { messages.push(options.pageId); } },
       testUserPermission: () => true, getUserLevel: () => 3,
       async createEmbeddedDocuments(_type, [data]) {
         const page = {
-          ...data, id: `p${pages.size}`, uuid: `JournalEntry.${this.id}.JournalEntryPage.p${pages.size}`,
+          ...data, id: `p${pageId}`, uuid: `JournalEntry.${this.id}.JournalEntryPage.p${pageId++}`,
           documentName: "JournalEntryPage", parent: this, _stats: { modifiedTime: 1 },
           testUserPermission: () => true, getUserLevel: () => 3,
           ownership: data.ownership ?? { default: -1 }
@@ -1119,6 +1216,77 @@ test("extended notes create journals lazily, recover links, and copy moved recor
   assert.equal(enrichOptions.secrets, false);
   copied.testUserPermission = () => false;
   assert.deepEqual(await journalPresentation(first, user), { unavailable: true });
+  assert.equal(first.flags.ouw25.journalPageUuid, copied.uuid);
+
+  pages.delete(copied.uuid);
+  journals[1].pages.splice(0, 1);
+  await clearDeletedJournalLinks(copied, false, [actor]);
+  assert.equal(first.flags.ouw25.journalPageUuid, undefined);
+  assert.equal(journals[1].pages.length, 0);
+  await openRecordJournal(actor, first, true);
+  assert.equal(journals[1].pages.length, 1);
+  assert.notEqual(first.flags.ouw25.journalPageUuid, copied.uuid);
+
+  const deletedJournal = journals.pop();
+  for (const page of deletedJournal.pages) pages.delete(page.uuid);
+  await clearDeletedJournalLinks(deletedJournal, true, [actor]);
+  assert.equal(first.flags.ouw25.journalPageUuid, undefined);
+  assert.equal(actor.flags.ouw25.journalTables["debt-receivable"], undefined);
+  assert.equal(journals.length, 1);
+  await openRecordJournal(actor, first, true);
+  assert.equal(journals.length, 2);
+  assert.notEqual(journals[1].uuid, deletedJournal.uuid);
+  assert.equal(journals[1].pages.length, 1);
+
+  const otherActor = {
+    uuid: "Actor.b", name: "Other", isOwner: true, ownership: actor.ownership,
+    items: new Items(), flags: {},
+    async setFlag(_scope, key, value) { this.flags.ouw25 = { ...this.flags.ouw25, [key]: value }; }
+  };
+  const moved = { ...first, uuid: "Actor.b.Item.first", parent: otherActor, flags: structuredClone(first.flags) };
+  otherActor.items.set(moved.id, moved);
+  assert.equal((await journalPresentation(moved, user)).needsCopy, true);
+  await openRecordJournal(otherActor, moved, true);
+  assert.equal(journals.length, 2);
+  await openRecordJournal(otherActor, moved, true, true);
+  assert.equal(journals.length, 3);
+  assert.equal(journals[2].flags.ouw25.actorUuid, otherActor.uuid);
+  assert.equal(journals[2].pages.length, 1);
+  assert.equal(journals[1].pages.length, 1);
+});
+
+test("deleting a journal page or journal clears only its links so notes can be recreated", async () => {
+  const { clearDeletedJournalLinks } = await import(new URL("module/record-journal.mjs", dist));
+  const item = uuid => ({
+    flags: { ouw25: { journalPageUuid: uuid } },
+    async unsetFlag(scope, key) {
+      assert.equal(scope, "ouw25");
+      delete this.flags.ouw25[key];
+    }
+  });
+  const first = item("JournalEntry.a.JournalEntryPage.one");
+  const second = item("JournalEntry.a.JournalEntryPage.two");
+  const other = item("JournalEntry.b.JournalEntryPage.three");
+  const hidden = item("JournalEntry.a.JournalEntryPage.one");
+  const actor = {
+    isOwner: true, items: [first, second, other],
+    flags: { ouw25: { journalTables: { cargo: "JournalEntry.a", port: "JournalEntry.b" } } },
+    async update(changes) {
+      for (const key of Object.keys(changes)) {
+        delete this.flags.ouw25.journalTables[key.split("-=")[1]];
+      }
+    }
+  };
+  const notOwner = { isOwner: false, items: [hidden] };
+  await clearDeletedJournalLinks({ uuid: "JournalEntry.a.JournalEntryPage.one" }, false, [actor, notOwner]);
+  assert.equal(first.flags.ouw25.journalPageUuid, undefined);
+  assert.equal(second.flags.ouw25.journalPageUuid, "JournalEntry.a.JournalEntryPage.two");
+  assert.ok(hidden.flags.ouw25.journalPageUuid);
+  assert.equal(actor.flags.ouw25.journalTables.cargo, "JournalEntry.a");
+  await clearDeletedJournalLinks({ uuid: "JournalEntry.a" }, true, [actor, notOwner]);
+  assert.equal(second.flags.ouw25.journalPageUuid, undefined);
+  assert.equal(other.flags.ouw25.journalPageUuid, "JournalEntry.b.JournalEntryPage.three");
+  assert.deepEqual(actor.flags.ouw25.journalTables, { port: "JournalEntry.b" });
 });
 
 test("identity rolls use independent name indices and preserve the Roll20 table boundaries", async () => {

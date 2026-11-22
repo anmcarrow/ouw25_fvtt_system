@@ -14,3 +14,18 @@ export function filterRecordTable(container, query) {
   const noMatches = container.querySelector("[data-search-no-matches]");
   if (noMatches) noMatches.hidden = !query.trim() || !rows.length || visible > 0;
 }
+
+export function sortRecordTable(container, order) {
+  const rows = [...container.querySelectorAll("[data-record-row]")];
+  for (const [index, row] of rows.entries()) {
+    if (row.dataset.sortOriginal === undefined) row.dataset.sortOriginal = String(index);
+  }
+  rows.sort((a, b) => {
+    const original = Number(a.dataset.sortOriginal) - Number(b.dataset.sortOriginal);
+    if (order === "name") return a.dataset.sortName.localeCompare(b.dataset.sortName, undefined, { sensitivity: "base", numeric: true }) || original;
+    if (order === "number") return Number(b.dataset.sortNumber) - Number(a.dataset.sortNumber) || original;
+    return original;
+  });
+  const marker = container.querySelector("[data-search-no-matches]");
+  for (const row of rows) marker.parentNode.insertBefore(row, marker);
+}

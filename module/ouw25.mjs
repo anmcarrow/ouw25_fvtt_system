@@ -14,8 +14,8 @@ import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
-import { filterRecordTable } from "./record-search.mjs";
-import { journalPresentation, openRecordJournal } from "./record-journal.mjs";
+import { filterRecordTable, sortRecordTable } from "./record-search.mjs";
+import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink } from "./record-journal.mjs";
 import { ASSISTANT_BONUSES, ASSISTANT_COMPLICATIONS, calculateCollisionAssistant } from "./collision-assistant.mjs";
 
 const SYSTEM_ID = "ouw25";
@@ -394,6 +394,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #founderPending = false;
   #founderHooks = [];
   #recordSearches = new Map();
+  #recordSorts = new Map();
   #journalPending = false;
   #assistantInputs = {};
   #assistantApplied = null;
@@ -416,6 +417,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord,
       recordJournal: Ouw25ActorSheet.recordJournal,
+      showJournalBacklinks: Ouw25ActorSheet.showJournalBacklinks,
+      openJournalBacklink: Ouw25ActorSheet.openJournalBacklink,
       applyCollisionAssistant: Ouw25ActorSheet.applyCollisionAssistant,
       openFounder: Ouw25ActorSheet.openFounder,
       removeFounder: Ouw25ActorSheet.removeFounder,
@@ -446,7 +449,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   _toggleDisabled(disabled) {
     super._toggleDisabled(disabled);
     if (disabled) {
-      for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait, [data-search-input], [data-search-clear], [data-action='recordJournal']")) button.disabled = false;
+      for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait, [data-search-input], [data-search-clear], [data-sort-select], [data-action='recordJournal'], [data-action='showJournalBacklinks'], [data-action='openJournalBacklink']")) button.disabled = false;
     }
   }
 
@@ -455,7 +458,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     for (const container of this.element.querySelectorAll("[data-search-key]")) {
       const input = container.querySelector("[data-search-input]");
       const clear = container.querySelector("[data-search-clear]");
+      const sort = container.querySelector("[data-sort-select]");
       input.value = this.#recordSearches.get(container.dataset.searchKey) ?? "";
+      sort.value = this.#recordSorts.get(container.dataset.searchKey) ?? "original";
       const filter = () => {
         this.#recordSearches.set(container.dataset.searchKey, input.value);
         filterRecordTable(container, input.value);
@@ -466,9 +471,17 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         filter();
         input.focus();
       });
+      sort.addEventListener("change", () => {
+        this.#recordSorts.set(container.dataset.searchKey, sort.value);
+        sortRecordTable(container, sort.value);
+      });
       filter();
+      sortRecordTable(container, sort.value);
     }
     const assistant = this.element.querySelector("[data-collision-assistant]");
+    for (const input of this.element.querySelectorAll("[data-dice], [data-deduction]")) {
+      input.addEventListener("input", () => { this.#assistantApplied = null; });
+    }
     if (assistant) {
       for (const input of assistant.querySelectorAll("[data-assist-field]")) {
         const saved = this.#assistantInputs[input.dataset.assistField];
@@ -493,6 +506,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         }
       };
       assistant.addEventListener("input", update);
+      assistant.addEventListener("input", () => { this.#assistantApplied = null; });
       update();
     }
   }
@@ -505,9 +519,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
-    for (const event of ["updateJournalEntryPage", "deleteJournalEntryPage", "updateJournalEntry"]) {
+    for (const event of ["updateJournalEntryPage", "deleteJournalEntryPage", "updateJournalEntry", "deleteJournalEntry"]) {
       const hook = Hooks.on(event, document => {
-        const journal = event === "updateJournalEntry" ? document : document.parent;
+        const journal = event.endsWith("JournalEntry") ? document : document.parent;
         if (journal?.flags?.ouw25?.actorUuid === this.actor.uuid) this.render();
       });
       this.#founderHooks.push([event, hook]);
@@ -645,9 +659,23 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       })),
       help: selected && selected !== "unset" ? `OUW25.Cooperative.${category}.Help.${selected}` : null
     });
+    const journalIndex = journalIndexForActor(this.actor, game.user, game.journal);
+    if (this.isEditable) {
+      for (const item of this.actor.items) {
+        if (!journalStates.get(item.id)?.needsCopy) continue;
+        const uuid = item.flags.ouw25.journalPageUuid;
+        let entry = journalIndex.find(note => note.uuid === uuid);
+        if (!entry) {
+          entry = { uuid, name: item.name, table: `OUW25.Journal.Tables.${journalTableKey(item)}` };
+          journalIndex.push(entry);
+        }
+        (entry.copies ??= []).push({ id: item.id, type: item.type });
+      }
+    }
     return {
       ...await super._prepareContext(options),
       notes: system.notes,
+      journalIndex,
       autosaveStatus: game.i18n.localize(`OUW25.SaveStatus.${this.#autosaveStatus}`),
       autosaveStatusState: this.#autosaveStatus.toLowerCase(),
       actorTypeLabel: `TYPES.Actor.${type}`,
@@ -927,6 +955,43 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     } finally {
       this.#journalPending = false;
     }
+  }
+
+  static async showJournalBacklinks(_event, target) {
+    const uuid = target.dataset.uuid;
+    if (!uuid || target.disabled) return;
+    const container = target.closest(".ouw25-journal-index-entry");
+    const results = container.querySelector("[data-backlinks]");
+    target.disabled = true;
+    try {
+      const links = await findJournalBacklinks({ flags: { ouw25: { journalPageUuid: uuid } } }, game.user);
+      results.replaceChildren();
+      if (!links.length) {
+        results.textContent = game.i18n.localize("OUW25.Journal.NoBacklinks");
+      } else {
+        const list = document.createElement("ul");
+        for (const link of links) {
+          const entry = document.createElement("li");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.action = "openJournalBacklink";
+          button.dataset.uuid = link.uuid;
+          button.textContent = link.name;
+          entry.append(button);
+          list.append(entry);
+        }
+        results.append(list);
+      }
+    } catch (error) {
+      console.error(error);
+      results.textContent = game.i18n.localize("OUW25.Journal.BacklinksError");
+    } finally {
+      target.disabled = false;
+    }
+  }
+
+  static async openJournalBacklink(_event, target) {
+    await openJournalBacklink(target.dataset.uuid, game.user);
   }
 
   static applyCollisionAssistant(_event, target) {
@@ -1717,7 +1782,17 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           remaining
       });
       const applied = this.#assistantApplied;
-      const sources = applied?.diceCount === input.diceCount && applied.deduction === input.deduction ? applied.details : [];
+      const sources = applied?.diceCount === input.diceCount && applied.deduction === input.deduction
+        ? [
+          { label: "OUW25.CheckAssistant.Base", value: "4d6" },
+          ...applied.details.map(detail => ({
+            ...detail,
+            value: detail.label.endsWith(".donation")
+              ? game.i18n.format("OUW25.CheckAssistant.DonationDice", { dice: Math.floor(detail.value / 180), amount: detail.value })
+              : detail.label.startsWith("OUW25.CheckAssistant.Penalty.")
+                ? `−${detail.value}` : `+${detail.value}d6`
+          }))
+        ] : [];
       await roll.toMessage({
         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
         flavor: await checkCard(this.actor, title ?? game.i18n.localize("OUW25.Collision.Title"), result, [
@@ -1733,6 +1808,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 }
 
 Hooks.once("init", () => {
+  for (const event of ["deleteJournalEntryPage", "deleteJournalEntry"]) {
+    Hooks.on(event, (document, _options, userId) => {
+      if (game.users.activeGM ? !game.user.isActiveGM : userId !== game.user.id) return;
+      clearDeletedJournalLinks(document, event === "deleteJournalEntry", game.actors).catch(error => {
+        console.error("OUW25 | Could not clear deleted journal links", error);
+      });
+    });
+  }
   game.settings.register(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION, {
     scope: "world", config: false, type: Boolean, default: false
   });

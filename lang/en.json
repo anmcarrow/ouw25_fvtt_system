@@ -215,6 +215,9 @@
     },
     "Voyage": {
       "Title": "Set sail",
+      "TravelActions": "Travel",
+      "Modes": "Modes",
+      "OtherActions": "Other actions",
       "Crew": "Crew count",
       "Capacity": "of {capacity}",
       "CrewSummary": "Crew: {crew} / {capacity} ({band})",
@@ -635,6 +638,8 @@
       "Advantages": "Additional dice",
       "Complications": "Complications",
       "Dream": "Pursuing the dream (+4d6)",
+      "Base": "Base dice",
+      "DonationDice": "+{dice}d6 ({amount} og.)",
       "Summary": "Total: {dice}d6; complications: {complications}.",
       "Invalid": "Enter nonnegative whole numbers within the field limits; the total must be between 4 and 100 dice.",
       "Apply": "Use for check",
@@ -659,19 +664,30 @@
       }
     },
     "CheckCard": {
+      "Details": "Check details",
       "Applied": "Changes applied.",
       "NotApplied": "Changes not applied."
     },
     "Search": {
       "Label": "Search",
       "Clear": "Clear",
+      "Sort": "Sort",
+      "Original": "Original order",
+      "ByName": "Name",
+      "ByAmount": "Amount, highest first",
+      "ByVolume": "Volume, highest first",
       "NoMatches": "No matches."
     },
     "Journal": {
       "Name": "{actor} — {table}",
+      "Index": "Notes index",
+      "Backlinks": "Find references",
+      "NoBacklinks": "No accessible references found.",
+      "BacklinksError": "Could not search for references.",
       "Note": "Extended note",
-      "Create": "Add note",
-      "Open": "Open journal",
+      "Column": "Notes",
+      "Create": "Make note",
+      "Open": "Open or edit note",
       "Copy": "Copy to this table's journal",
       "Empty": "The note is empty.",
       "Unavailable": "The note is unavailable or has been deleted.",

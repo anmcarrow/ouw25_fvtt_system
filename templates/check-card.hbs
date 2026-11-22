@@ -3,13 +3,16 @@
     <h3>{{title}}</h3>
     <p>{{actorName}}</p>
   </header>
-  {{#if details}}
-    <dl>
-      {{#each details}}
-        <div><dt>{{localize label}}</dt><dd>{{value}}</dd></div>
-      {{/each}}
-    </dl>
-  {{/if}}
   <p class="ouw25-check-result">{{result}}</p>
   {{#if state}}<p class="ouw25-check-state">{{localize state}}</p>{{/if}}
+  {{#if details}}
+    <details>
+      <summary>{{localize "OUW25.CheckCard.Details"}}</summary>
+      <dl>
+        {{#each details}}
+          <div><dt>{{localize label}}</dt><dd>{{value}}</dd></div>
+        {{/each}}
+      </dl>
+    </details>
+  {{/if}}
 </article>

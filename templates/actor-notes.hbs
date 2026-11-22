@@ -97,20 +97,22 @@
                 <li class="ouw25-founder">
                   {{#if canView}}
                     <div class="ouw25-founder-card">
-                      <button type="button" class="ouw25-founder-portrait" data-action="openFounder" data-uuid="{{uuid}}" aria-label="{{name}}" data-tooltip="{{name}}"><img src="{{img}}" alt=""></button>
+                      <button type="button" class="ouw25-founder-portrait" data-action="openFounder" data-uuid="{{uuid}}" aria-label="{{name}}{{#if stats.wounds}}, {{localize "OUW25.Founders.Wounds" count=stats.wounds.length}}{{/if}}" data-tooltip="{{name}}">
+                        <img src="{{img}}" alt="">
+                        {{#if stats.wounds}}<span class="ouw25-founder-wounds" aria-hidden="true">{{#each stats.wounds}}{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}{{/each}}</span>{{/if}}
+                      </button>
                       <div class="ouw25-founder-details">
                         <h4>{{name}}</h4>
                         {{#if stats}}
                           <p>
-                            <span role="img" aria-label="{{localize "OUW25.Founders.Wounds" count=stats.wounds.length}}" title="{{localize "OUW25.Founders.Wounds" count=stats.wounds.length}}">{{#each stats.wounds}}{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}{{else}}—{{/each}}</span>;
                             {{localize "OUW25.Founders.Role"}} – {{localize stats.specialty}};
                             {{localize "OUW25.Past.Title"}} – {{localize stats.past}};
-                            {{localize "OUW25.Finance.PocketMoney"}} – {{stats.money}};
-                            {{localize "OUW25.Founders.Debt"}} – {{stats.debt}};
-                            {{localize "OUW25.Founders.Savings"}} – {{stats.savings}};
-                            {{localize "OUW25.Tabs.friends"}} – {{stats.friends}};
-                            {{localize "OUW25.Tabs.illwishers"}} – {{stats.enemies}};
-                            {{localize "OUW25.Founders.Creditors"}} – {{stats.creditors}}
+                            {{#if stats.money}}{{localize "OUW25.Finance.PocketMoney"}} – {{stats.money}} {{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoMoney"}}{{/if}};
+                            {{#unless (eq stats.debt "0")}}{{localize "OUW25.Founders.Debt"}} – {{stats.debt}} {{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoDebt"}}{{/unless}};
+                            {{#if stats.savings}}{{localize "OUW25.Founders.Savings"}} – {{stats.savings}} {{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoSavings"}}{{/if}};
+                            {{#if stats.friends}}{{localize "OUW25.Tabs.friends"}} – {{stats.friends}}{{else}}{{localize "OUW25.Founders.NoFriends"}}{{/if}};
+                            {{#if stats.enemies}}{{localize "OUW25.Tabs.illwishers"}} – {{stats.enemies}}{{else}}{{localize "OUW25.Founders.NoEnemies"}}{{/if}};
+                            {{#if stats.creditors}}{{localize "OUW25.Founders.Creditors"}} – {{stats.creditors}}{{else}}{{localize "OUW25.Founders.NoCreditors"}}{{/if}}
                           </p>
                         {{else}}
                           <p>{{localize "OUW25.Founders.HiddenStats"}}</p>

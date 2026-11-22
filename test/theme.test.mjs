@@ -73,7 +73,8 @@ test("cooperative attributes put founders on the left and other blocks above the
   assert.doesNotMatch(left, /OUW25\.Finance\.Budget|OUW25\.Cooperative\.(Reputation|Memory)\.Title|ouw25-journal/);
   assert.match(right, /OUW25\.Finance\.Budget[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*\{\{> ouw25-journal\}\}/);
   assert.doesNotMatch(right, /OUW25\.Founders\.Title/);
-  assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*1 1 6rem;[^}]*min-block-size:\s*6rem;/s);
+  assert.match(styles, /\.ouw25-sheet-column\.ouw25-cooperative-notes\s*\{\s*gap:\s*20px;/);
+  assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*0 0 auto;[^}]*block-size:\s*5px;/s);
 });
 
 test("cooperative tab labels show discovered ports, occupied hold and marked damage", () => {
@@ -81,8 +82,9 @@ test("cooperative tab labels show discovered ports, occupied hold and marked dam
   assert.ok(nav);
   assert.match(nav, /\{\{#if \(eq id "ports"\)\}\} \(\{\{@root\.ports\.discovered\}\}\/\{\{@root\.ports\.total\}\}\)/);
   assert.match(nav, /\{\{#if \(eq id "cargo"\)\}\} \(\{\{@root\.ship\.hold\.occupied\}\}\)/);
-  assert.match(nav, /\{\{#each @root\.ship\.condition\.slots\}\}\{\{#if marked\}\}[\s\S]*?\{\{#if critical\}\}&#x1F480;\{\{else\}\}&#x1F4A5;/);
-  assert.match(styles, /\.ouw25-tab\[data-tab="ship"\]\s*\{\s*overflow-y:\s*clip;/);
+  assert.match(nav, /class="ouw25-tab-damage" style="font-size: \{\{@root\.ship\.condition\.tabIconPercent\}\}%"[\s\S]*?\{\{#each @root\.ship\.condition\.slots\}\}\{\{#if marked\}\}[\s\S]*?\{\{#if critical\}\}&#x1F480;\{\{else\}\}&#x1F4A5;/);
+  assert.match(styles, /\.ouw25-tab-damage\s*\{[^}]*gap:\s*0\.25em;/s);
+  assert.match(styles, /\.ouw25-tab\[data-tab="ship"\]\s*\{[^}]*margin-block-start:\s*-0\.75rem;[^}]*padding-block-start:\s*0\.75rem;[^}]*overflow-y:\s*clip;/s);
 });
 
 test("ship resource capacities accompany their inputs while retaining calculated summaries", () => {

@@ -328,6 +328,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:not(
   display: inline-block;
 }
 
+.ouw25 .ouw25-tab-damage {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-inline-size: 100%;
+  gap: 0.25em;
+}
+
 .ouw25 .ouw25-sheet-tabs > button:not(.active):hover > span {
   color: color-mix(in srgb, var(--ouw25-color-ink) 85%, white);
 }
@@ -343,6 +350,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-tab[data-tab="ship"] {
+  margin-block-start: -0.75rem;
+  padding-block-start: 0.75rem;
   overflow-y: clip;
 }
 
@@ -532,10 +541,19 @@ body.game .application.ouw25 .ouw25-notes :is(
   resize: vertical;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes > textarea[name="system.notes"] {
-  flex: 1 1 6rem;
-  block-size: auto;
-  min-block-size: 6rem;
+.ouw25 .ouw25-sheet-column.ouw25-cooperative-notes {
+  gap: 20px;
+}
+
+.ouw25 .ouw25-cooperative-notes > .ouw25-cooperative-budget-column > fieldset:last-child {
+  margin-block-end: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-columns.ouw25-cooperative-layout .ouw25-sheet-column.ouw25-cooperative-notes > textarea[name="system.notes"] {
+  flex: 0 0 auto;
+  block-size: 5px;
+  min-block-size: 0;
+  padding-block: 0;
   margin: 0;
 }
 
@@ -1258,7 +1276,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > span {
 }
 
 .ouw25 .ouw25-ledger-totals,
-.ouw25 .ouw25-contacts-total {
+.ouw25 .ouw25-contacts-total,
+.ouw25 .ouw25-cargo-summary {
   margin: 0 0 -0.5rem;
 }
 

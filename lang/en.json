@@ -49,6 +49,7 @@
     "Cargo": {
       "Title": "Cargo",
       "Heading": "Cargo – {volume} st.",
+      "HoldSummary": "Listed cargo: {listed} st.; unlisted cargo: {unlisted} st.; special compartments: {compartments} st.; fuel: {fuel} st.; provisions: {provisions} st.",
       "Name": "Name",
       "Quantity": "Quantity",
       "Volume": "Volume, st.",

@@ -58,10 +58,13 @@ export function shipHold(ship, listedVolume, compartmentSpace) {
   const { shipClass, cargoLoad, fuelStock, provisionsStock, holdBonus } = ship;
   const largeHold = shipQualitySlots(ship, "merit").some(({ value }) => value === "large_hold");
   const capacity = SHIP_CLASS_STATS[shipClass].hold + (largeHold && HOLD_BONUSES.includes(holdBonus) ? holdBonus : 0);
-  const occupied = (cargoLoad ?? 0) + listedVolume + (fuelStock ?? 0)
-    + Math.ceil((provisionsStock ?? 0) / 18) + compartmentSpace;
+  const breakdown = {
+    listed: listedVolume, unlisted: cargoLoad ?? 0, compartments: compartmentSpace,
+    fuel: fuelStock ?? 0, provisions: Math.ceil((provisionsStock ?? 0) / 18)
+  };
+  const occupied = breakdown.unlisted + breakdown.listed + breakdown.fuel + breakdown.provisions + breakdown.compartments;
   const free = capacity - occupied;
-  return { capacity, occupied, nearFull: free >= 0 && free <= 100, overloaded: free < 0 };
+  return { capacity, occupied, nearFull: free >= 0 && free <= 100, overloaded: free < 0, breakdown };
 }
 
 export function shipSelectionError(ship, changes, listedVolume) {

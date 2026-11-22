@@ -540,6 +540,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           .map(({ value }) => `OUW25.Ship.EquipmentEffects.${value}`),
         condition: condition && {
           ...condition,
+          tabIconPercent: Math.max(0, 100 - 10 * Math.max(0, condition.damaged - 4)),
           slots: condition.slots.map(slot => ({ ...slot, critical: slot.number >= condition.durability }))
         },
         qualities: Object.keys(SHIP_QUALITIES).map(kind => {

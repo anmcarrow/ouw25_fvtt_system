@@ -49,6 +49,7 @@
     "Cargo": {
       "Title": "Груз",
       "Heading": "Груз – {volume} ст.",
+      "HoldSummary": "Груз по ведомости: {listed} ст.; груз вне ведомости: {unlisted} ст.; спец. отсеки: {compartments} ст.; топливо: {fuel} ст.; провиант: {provisions} ст.",
       "Name": "Наименование",
       "Quantity": "Количество",
       "Volume": "Объём, ст.",

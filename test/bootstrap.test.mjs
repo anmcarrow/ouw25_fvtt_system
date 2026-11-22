@@ -161,8 +161,10 @@ test("the built package registers models and an editable notes sheet for its dec
           Array.from({ length: 7 }, (_, value) => ({ value, label: `OUW25.Ship.ClassNames.${value}` })));
         assert.equal(ship.classes.find(({ selected }) => selected).value, 0);
         assert.equal(ship.compartmentSpace, 420);
-        assert.deepEqual(ship.hold, { occupied: 452.25, capacity: 1600, nearFull: false, overloaded: false });
-        assert.deepEqual(ship.hold, { capacity: 1600, occupied: 452.25, nearFull: false, overloaded: false });
+        assert.deepEqual(ship.hold, {
+          occupied: 452.25, capacity: 1600, nearFull: false, overloaded: false,
+          breakdown: { listed: 14.75, unlisted: 5, compartments: 420, fuel: 10.5, provisions: 2 }
+        });
         assert.deepEqual(ship.mounts.entries, []);
         assert.deepEqual(ship.gear.entries, [{
           field: "gear1", name: "OUW25.ShipGear.Names.sandshoes", help: "OUW25.ShipGear.Help.sandshoes"
@@ -200,6 +202,13 @@ test("the built package registers models and an editable notes sheet for its dec
 
     }
     if (!merchant) {
+      for (const [count, percent] of [[0, 100], [4, 100], [5, 90], [6, 80], [11, 30], [2, 100]]) {
+        for (let slot = 1; slot <= 11; slot++) sheet.actor.system[`damage${slot}`] = slot <= count;
+        const { condition } = (await sheet._prepareContext({})).ship;
+        assert.equal(condition.damaged, count);
+        assert.equal(condition.tabIconPercent, percent);
+      }
+      for (let slot = 1; slot <= 11; slot++) sheet.actor.system[`damage${slot}`] = false;
       Object.assign(sheet.actor.system, { reputation: "unset", memory: "unset" });
       const { cooperative } = await sheet._prepareContext({});
       assert.equal(cooperative.reputation.choices.find(choice => choice.selected).value, "unset");
@@ -743,6 +752,15 @@ test("ship class hides slots without counting or erasing their loadout", async (
   assert.equal(ship.compartment8, "diving");
 });
 
+test("hold breakdown reflects cargo, compartments, fuel and rounded provisions", async () => {
+  const { shipHold } = await import(new URL("module/ship.mjs", dist));
+  for (const [stock, provisions] of [[0, 0], [18, 1], [18.1, 2], [36, 2]]) {
+    const hold = shipHold({ shipClass: 0, cargoLoad: 5, fuelStock: 10.5, provisionsStock: stock }, 14.75, 420);
+    assert.deepEqual(hold.breakdown, { listed: 14.75, unlisted: 5, compartments: 420, fuel: 10.5, provisions });
+    assert.equal(hold.occupied, 450.25 + provisions);
+  }
+});
+
 test("hold warns at 100 st. free and distinguishes overload from exact capacity", async () => {
   const { shipHold } = await import(new URL("module/ship.mjs", dist));
   const ship = { shipClass: 0, cargoLoad: 1498, fuelStock: 0, provisionsStock: 18 };
@@ -760,7 +778,10 @@ test("a spacious hold applies the saved bonus once and only while selected", asy
   const ship = { shipClass: 0, cargoLoad: 1601, fuelStock: 0, provisionsStock: 0, holdBonus: 200 };
   assert.equal(shipHold(ship, 0, 0).overloaded, true);
   const expanded = { ...ship, merit2: "large_hold", merit4: "large_hold" };
-  assert.deepEqual(shipHold(expanded, 0, 0), { capacity: 1800, occupied: 1601, nearFull: false, overloaded: false });
+  assert.deepEqual(shipHold(expanded, 0, 0), {
+    capacity: 1800, occupied: 1601, nearFull: false, overloaded: false,
+    breakdown: { listed: 0, unlisted: 1601, compartments: 0, fuel: 0, provisions: 0 }
+  });
   assert.equal(shipHold({ ...expanded, holdBonus: 150 }, 0, 0).capacity, 1600);
 });
 

@@ -92,7 +92,7 @@ test("the built package registers models and an editable notes sheet for its dec
     CONFIG.Actor.documentClass.create = async (data, options) => ({ data, options });
     for (const [type, supplied, expected] of [
       ["cooperative", "", "LLC W'Ell"], ["cooperative", "My company", "My company"],
-      ["merchant", "", "merchant-label"]
+      ["merchant", "", "Brrg Caddck"], ["merchant", "My merchant", "My merchant"]
     ]) {
       response = { type, name: supplied };
       const created = await CONFIG.Actor.documentClass.createDialog();

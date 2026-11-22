@@ -17,6 +17,7 @@ import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
 const DEFAULT_COOPERATIVE_NAME = "LLC W'Ell";
+const DEFAULT_MERCHANT_NAME = "Brrg Caddck";
 const DEFAULT_ACTOR_TOKENS = {
   merchant: "systems/ouw25/styles/images/pc_token.webp",
   cooperative: "systems/ouw25/styles/images/ship_token.webp"
@@ -155,7 +156,7 @@ class Ouw25Actor extends foundry.documents.Actor {
 
     const type = types.includes(result.type) ? result.type : defaultType;
     const name = String(result.name ?? "").trim() || (type === "cooperative"
-      ? DEFAULT_COOPERATIVE_NAME : game.i18n.localize(CONFIG.Actor.typeLabels[type]));
+      ? DEFAULT_COOPERATIVE_NAME : DEFAULT_MERCHANT_NAME);
     const actorData = { ...data, name, type };
     const options = { ...createOptions, renderSheet: createOptions.renderSheet ?? true };
     delete options.types;

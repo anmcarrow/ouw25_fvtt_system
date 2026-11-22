@@ -4,7 +4,7 @@
       "merchant": "Merchant",
       "cooperative": "Cooperative"
     },
-    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait", "contact": "Cooperative contact", "contract": "Cooperative contract", "cargo": "Cooperative cargo" }
+    "Item": { "debt": "Debt record", "relationship": "Relationship", "possession": "Personal possession", "trait": "Merchant trait", "contact": "Cooperative contact", "contract": "Cooperative contract", "cargo": "Cooperative cargo", "port": "Cooperative place" }
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
@@ -15,6 +15,17 @@
       "Saved": "Saved",
       "Error": "Couldn't save changes.",
       "Invalid": "Fix the highlighted value before continuing."
+    },
+    "Port": {
+      "Title": "Ports",
+      "Name": "Name",
+      "Region": "Region",
+      "Description": "Description",
+      "Discovered": "Discovered: {count} of {total} ports",
+      "Add": "Add place",
+      "Empty": "No places yet.",
+      "Invalid": "Enter a place name.",
+      "ConfirmDelete": "Delete this place?"
     },
     "Cargo": {
       "Title": "Cargo",
@@ -583,7 +594,8 @@
       "contacts": "Contacts",
       "contracts": "Contracts",
       "ship": "Ship",
-      "cargo": "Hold"
+      "cargo": "Hold",
+      "ports": "Ports"
     },
     "Bargain": {
       "Title": "Dramatic bargain",

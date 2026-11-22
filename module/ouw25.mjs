@@ -12,6 +12,7 @@ import {
 import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, shipGearSlots, shipListDefinition } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
+import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
@@ -25,7 +26,7 @@ const COOPERATIVE_MEMORIES = ["unset", "rescue", "lost_profit", "scandal", "secr
 const RELATION_KINDS = ["friend", "enemy"];
 const SHEET_TABS = {
   merchant: ["attributes", "items", "friends", "illwishers", "creditors", "notes"],
-  cooperative: ["attributes", "contacts", "contracts", "ship", "cargo"]
+  cooperative: ["attributes", "contacts", "contracts", "ship", "cargo", "ports"]
 };
 const RECORD_LABELS = new Map([
   ["debt", "OUW25.Debt"],
@@ -34,9 +35,10 @@ const RECORD_LABELS = new Map([
   ["trait", "OUW25.Trait"],
   ["contact", "OUW25.Contact"],
   ["contract", "OUW25.Contract"],
+  ["port", "OUW25.Port"],
   ["cargo", "OUW25.Cargo"]
 ]);
-const COOPERATIVE_RECORDS = new Set(["contact", "contract", "cargo"]);
+const COOPERATIVE_RECORDS = new Set(["contact", "contract", "cargo", "port"]);
 const PENDING_VOYAGE_OPERATIONS = new Set();
 const VOYAGE_STATE_FIELDS = [
   "shipClass", "crewCount", "forcedMode", "illuminationMode", "unrest", "fuelStock",
@@ -278,6 +280,13 @@ class ContractModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+class PortModel extends foundry.abstract.TypeDataModel {
+  static defineSchema() {
+    const { StringField } = foundry.data.fields;
+    return { region: new StringField({ initial: "" }), description: new StringField({ initial: "" }) };
+  }
+}
+
 class CargoModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
@@ -384,6 +393,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const cargo = ship ? this.actor.items.filter(item => item.type === "cargo").map(item => ({
       id: item.id, name: item.name, quantity: item.system.quantity, volume: item.system.volume
     })) : null;
+    const ports = ship ? this.actor.items.filter(item => item.type === "port").map(item => ({
+      id: item.id, name: item.name, region: item.system.region, description: item.system.description
+    })) : null;
     const listedVolume = cargo?.reduce((total, entry) => total + entry.volume, 0);
     const shipList = kind => {
       const { slots, labels, help, title } = shipListDefinition(system, kind);
@@ -462,6 +474,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         id: item.id, name: item.name, location: item.system.location, deadline: item.system.deadline, amount: item.system.amount
       })) : null,
       showContracts: type === "cooperative",
+      ports: ports && { entries: ports, discovered: discoveredPorts(ports.map(({ name }) => name)), total: PORT_COUNT },
       cargo: cargo && {
         entries: cargo,
         volume: listedVolume
@@ -658,6 +671,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const contact = type === "contact";
     const contract = type === "contract";
     const cargo = type === "cargo";
+    const port = type === "port";
     if (!this.isEditable || actor.type !== (COOPERATIVE_RECORDS.has(type) ? "cooperative" : "merchant") || this.#recordPending) return;
     const key = RECORD_LABELS.get(type);
     if (!key || type === "trait") return;
@@ -672,14 +686,15 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const direction = item?.system.direction ?? (directions.includes(recordDirection) ? recordDirection : directions[0]);
       const content = await foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/record-form.hbs`, {
         rootId: `ouw25-record-${foundry.utils.randomID()}`,
-        showLocation: !possession && !cargo, contract, cargo, hasAmount,
+        showLocation: !possession && !cargo && !port, contract, cargo, port, hasAmount,
         hasReason: type === "relationship" || contact, directionLabel: `${key}.Direction`,
-        nameLabel: cargo ? `${key}.Name` : contract ? `${key}.Subject` : possession ? `${key}.Description` : "OUW25.Debt.Counterparty",
+        nameLabel: cargo || port ? `${key}.Name` : contract ? `${key}.Subject` : possession ? `${key}.Description` : "OUW25.Debt.Counterparty",
         locationLabel: contract ? `${key}.Destination` : "OUW25.Debt.Location",
         amountLabel: contact ? `${key}.Debt` : possession || contract ? `${key}.Cost` : "OUW25.Debt.Amount",
         reasonLabel: contact ? `${key}.Relation` : "OUW25.Relationship.Reason", reason: item?.system.reason ?? "",
         name: item?.name ?? "", location: item?.system.location ?? "", amount: item?.system.amount ?? 0,
         deadline: item?.system.deadline ?? "",
+        region: item?.system.region ?? "", description: item?.system.description ?? "",
         quantity: item?.system.quantity ?? 0, volume: item?.system.volume ?? 0,
         directions: directions.map(value => ({
           value, label: `${key}.${value}`, selected: value === direction
@@ -703,11 +718,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         return;
       }
       const location = String(data.location ?? "").trim();
-      const system = possession || cargo ? {} : { location };
+      const system = possession || cargo || port ? {} : { location };
       if (directions.length) system.direction = data.direction;
       if (hasAmount) system.amount = amount;
       if (type === "relationship" || contact) system.reason = String(data.reason ?? "").trim();
       if (contract) system.deadline = String(data.deadline ?? "").trim();
+      if (port) Object.assign(system, { region: String(data.region ?? "").trim(), description: String(data.description ?? "").trim() });
       if (cargo) Object.assign(system, { quantity, volume });
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name, system }]);
       else await actor.createEmbeddedDocuments("Item", [{ type, name, system }]);
@@ -1413,6 +1429,7 @@ Hooks.once("init", () => {
   CONFIG.Item.dataModels.trait = TraitModel;
   CONFIG.Item.dataModels.contact = ContactModel;
   CONFIG.Item.dataModels.contract = ContractModel;
+  CONFIG.Item.dataModels.port = PortModel;
   CONFIG.Item.dataModels.cargo = CargoModel;
   foundry.documents.collections.Actors.registerSheet(SYSTEM_ID, Ouw25ActorSheet, {
     types: Object.keys(models),

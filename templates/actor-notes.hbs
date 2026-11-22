@@ -243,6 +243,37 @@
   {{/if}}
     </div>
   {{/ouw25-tab}}
+  {{#> ouw25-tab tab=tabs.ports}}
+    <div class="ouw25-sheet-column">
+      {{#if ports}}
+        <p>{{localize "OUW25.Port.Discovered" count=ports.discovered total=ports.total}}</p>
+        <fieldset class="ouw25-ports" aria-label="{{localize "OUW25.Port.Title"}}">
+          <table class="ouw25-debt-table ouw25-ports-table" aria-label="{{localize "OUW25.Port.Title"}}">
+            <colgroup><col><col><col></colgroup>
+            <thead><tr>
+              <th scope="col">{{localize "OUW25.Port.Name"}}</th>
+              <th scope="col">{{localize "OUW25.Port.Region"}}</th>
+              <th scope="col">{{localize "OUW25.Port.Description"}}</th>
+            </tr></thead>
+            <tbody>
+              {{#each ports.entries}}
+                <tr>
+                  <td>{{name}}</td>
+                  <td>{{region}}</td>
+                  <td><div class="ouw25-port-description"><span>{{description}}</span>
+                    {{#if @root.editable}}{{> ouw25-record-actions recordType="port"}}{{/if}}
+                  </div></td>
+                </tr>
+              {{else}}
+                <tr><td colspan="3">{{localize "OUW25.Port.Empty"}}</td></tr>
+              {{/each}}
+            </tbody>
+          </table>
+          {{#if editable}}<button type="button" data-action="editRecord" data-record-type="port">{{localize "OUW25.Port.Add"}}</button>{{/if}}
+        </fieldset>
+      {{/if}}
+    </div>
+  {{/ouw25-tab}}
   {{#> ouw25-tab tab=tabs.contracts}}
     <div class="ouw25-sheet-column">
   {{#if showContracts}}

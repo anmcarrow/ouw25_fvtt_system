@@ -1325,6 +1325,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses {
   margin-block-start: 1rem;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p:is([role="status"], [role="alert"]) {
+  font-weight: 700;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   box-sizing: border-box;
   flex: 0 1 240px;
@@ -1485,22 +1489,47 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card > p {
   background-color: var(--ouw25-color-surface);
 }
 
-body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table {
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-ports, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table {
   border: 0;
   border-collapse: separate;
   border-spacing: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead {
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-ports, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead {
   background: transparent;
   border: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead th {
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-ports, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead th {
   border: 0;
   border-block-end: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   font-weight: 700;
+}
+
+.ouw25 .ouw25-ports-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.ouw25 .ouw25-ports-table col:nth-child(1),
+.ouw25 .ouw25-ports-table col:nth-child(2) {
+  width: 20%;
+}
+
+.ouw25 .ouw25-ports-table col:nth-child(3) {
+  width: 60%;
+}
+
+.ouw25 .ouw25-port-description {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ouw25 .ouw25-port-description > span {
+  min-inline-size: 0;
+  white-space: pre-wrap;
 }
 
 .ouw25 .ouw25-debt-table :is(th, td) {

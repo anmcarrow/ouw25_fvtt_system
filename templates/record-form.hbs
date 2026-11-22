@@ -18,6 +18,16 @@
   <input id="{{rootId}}-location" name="location" type="text" value="{{location}}">
 </div>
 {{/if}}
+{{#if port}}
+<div class="form-group">
+  <label for="{{rootId}}-region">{{localize "OUW25.Port.Region"}}</label>
+  <input id="{{rootId}}-region" name="region" type="text" value="{{region}}">
+</div>
+<div class="form-group">
+  <label for="{{rootId}}-description">{{localize "OUW25.Port.Description"}}</label>
+  <textarea id="{{rootId}}-description" name="description">{{description}}</textarea>
+</div>
+{{/if}}
 {{#if cargo}}
   <div class="form-group">
     <label for="{{rootId}}-quantity">{{localize "OUW25.Cargo.Quantity"}}</label>

@@ -22,7 +22,7 @@ test("actor type headings use the bundled Roll20 header background", async () =>
 });
 
 test("record tables retain accessible names without visible block headings", () => {
-  for (const kind of ["contacts", "contracts", "ledger", "relationships", "possessions"]) {
+  for (const kind of ["contacts", "contracts", "ports", "ledger", "relationships", "possessions"]) {
     const block = template.match(new RegExp(`<fieldset class="ouw25-${kind}"([^>]*)>([\\s\\S]*?)</fieldset>`));
     assert.ok(block, `missing ${kind} block`);
     assert.match(block[1], /aria-label=/);

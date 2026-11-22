@@ -94,14 +94,15 @@ test("the built package registers models and an editable notes sheet for its dec
     { type: "cargo", id: "cargo-2", name: "Bales", system: { quantity: 5, volume: 2.25 } }];
     assert.deepEqual(sheet._getTabsConfig("sheet").tabs.map(({ id }) => id), merchant
       ? ["attributes", "items", "friends", "illwishers", "creditors", "notes"]
-      : ["attributes", "contacts", "contracts", "ship", "cargo"]);
+      : ["attributes", "contacts", "contracts", "ship", "cargo", "ports"]);
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, cooperative, ...context } = await sheet._prepareContext({});
+      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ports, cooperative, ...context } = await sheet._prepareContext({});
       assert.equal(showContracts, !merchant);
       assert.equal(pastMoves, null);
       if (merchant) {
         assert.equal(cargo, null);
+        assert.equal(ports, null);
         assert.equal(contracts, null);
         assert.equal(contacts, null);
         assert.equal(cooperative, null);
@@ -135,6 +136,7 @@ test("the built package registers models and an editable notes sheet for its dec
           }
         }
         assert.equal(cargo.volume, 14.75);
+        assert.deepEqual(ports, { entries: [], discovered: 0, total: 67 });
         assert.deepEqual(cargo.entries[0], { id: "cargo-1", name: "Crates", quantity: 3, volume: 12.5 });
         assert.deepEqual(contracts, [{
           id: "contract-1", name: "Deliver supplies", location: "Harbor", deadline: "Before the next tide", amount: 45
@@ -220,6 +222,19 @@ test("the built package registers models and an editable notes sheet for its dec
       Object.assign(sheet.actor.system, { mount1: "none", mount2: "none", compartment1: "none",
         compartment2: "none", gear1: "none" });
       assert.deepEqual((await sheet._prepareContext({})).ship.equipmentEffects, []);
+      sheet.actor.items.push(
+        { type: "port", id: "p1", name: "Олъм", system: { region: "Олъм Нде", description: "Столица" } },
+        { type: "port", id: "p2", name: "ОЛЪМ", system: { region: "", description: "" } },
+        { type: "port", id: "p3", name: "Мой остров", system: { region: "", description: "" } }
+      );
+      let places = (await sheet._prepareContext({})).ports;
+      assert.equal(places.discovered, 1);
+      assert.deepEqual(places.entries[0], { id: "p1", name: "Олъм", region: "Олъм Нде", description: "Столица" });
+      sheet.actor.items.find(item => item.id === "p2").name = "Салайф";
+      places = (await sheet._prepareContext({})).ports;
+      assert.equal(places.discovered, 2);
+      sheet.actor.items = sheet.actor.items.filter(item => item.id !== "p1");
+      assert.equal((await sheet._prepareContext({})).ports.discovered, 1);
     }
     let updates = 0;
     sheet.actor.update = async data => {
@@ -468,6 +483,40 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.equal(shipSystem.mount1, "harpoon");
   assert.equal(warnings.pop(), "OUW25.Creation.Changed");
 
+  const placeSheet = new Sheet();
+  placeSheet.isEditable = true;
+  const places = [];
+  places.get = id => places.find(item => item.id === id);
+  placeSheet.actor = {
+    type: "cooperative", items: places,
+    async createEmbeddedDocuments(_type, [item]) { places.push({ ...item, id: "port-1" }); },
+    async updateEmbeddedDocuments(_type, [update]) {
+      Object.assign(places.get(update._id), { name: update.name, system: update.system });
+    },
+    async deleteEmbeddedDocuments(_type, [id]) { places.splice(places.findIndex(item => item.id === id), 1); }
+  };
+  foundry.utils = { randomID: () => "test" };
+  foundry.applications.api.DialogV2.confirm = async () => true;
+  response = { name: " Олъм ", region: " Остров ", description: " Порт " };
+  const editPlace = id => Sheet.DEFAULT_OPTIONS.actions.editRecord.call(placeSheet, null, {
+    dataset: { recordType: "port", ...(id && { recordId: id }) }
+  });
+  const deletePlace = () => Sheet.DEFAULT_OPTIONS.actions.deleteRecord.call(placeSheet, null, {
+    dataset: { recordType: "port", recordId: "port-1" }
+  });
+  await editPlace();
+  assert.deepEqual(places[0], { type: "port", id: "port-1", name: "Олъм", system: { region: "Остров", description: "Порт" } });
+  response = { name: "Салайф", region: "Другое", description: "Текст" };
+  await editPlace("port-1");
+  assert.equal(places[0].name, "Салайф");
+  assert.equal(places[0].system.description, "Текст");
+  placeSheet.isEditable = false;
+  await deletePlace();
+  assert.equal(places.length, 1);
+  placeSheet.isEditable = true;
+  await deletePlace();
+  assert.equal(places.length, 0);
+
   shipSystem.flaw1 = "none";
   shipSystem.forcedMode = false;
   shipSystem.travelStatus = "previous result";
@@ -490,6 +539,14 @@ test("the built package registers models and an editable notes sheet for its dec
 
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));
+});
+
+test("discovered ports count unique canonical names and known spelling variants", async () => {
+  const { PORT_COUNT, discoveredPorts } = await import(new URL("module/ports.mjs", dist));
+  assert.equal(PORT_COUNT, 67);
+  assert.equal(discoveredPorts([" Олъм ", "ОЛЪМ", "Н’те Поа", "Н`те Поа", "Пэнллн", "Пенллн", "Ррэф", "Неизвестный порт"]), 4);
+  assert.equal(discoveredPorts(["Салайф", "Костегрыз", "Кра'Кас"]), 3);
+  assert.equal(discoveredPorts(["почти Олъм", "", "несуществующий"]), 0);
 });
 
 test("identity rolls use independent name indices and preserve the Roll20 table boundaries", async () => {

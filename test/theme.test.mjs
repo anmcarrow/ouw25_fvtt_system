@@ -83,6 +83,7 @@ test("cooperative attributes put founders on the left and other blocks above the
   assert.ok(attributes);
   const [left, right] = attributes.split('<div class="ouw25-sheet-column ouw25-cooperative-notes">');
   assert.ok(right);
+  assert.match(left, /<div class="ouw25-choice-row ouw25-identity">\s*<input type="text" name="name" aria-label="\{\{localize "OUW25\.Cooperative\.Name"\}\}" value="\{\{cooperative\.name\}\}" required \{\{#unless editable\}\}readonly\{\{\/unless\}\}>\s*<\/div>\s*<fieldset class="ouw25-founders">/);
   assert.match(left, /OUW25\.Founders\.Title/);
   assert.doesNotMatch(left, /OUW25\.Finance\.Budget|OUW25\.Cooperative\.(Reputation|Memory)\.Title|ouw25-journal/);
   assert.match(right, /OUW25\.Finance\.Budget[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*\{\{> ouw25-journal\}\}/);

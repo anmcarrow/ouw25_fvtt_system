@@ -10,14 +10,15 @@ test("the built package registers models and an editable notes sheet for its dec
   const registration = [];
   const hooks = new Map();
   globalThis.Hooks = {
-    once(event, callback) { if (event === "init") callback(); },
+    once(event, callback) { if (event === "init") callback(); else hooks.set(event, callback); },
     on(event, callback) { hooks.set(event, callback); return callback; },
     off(event, callback) { if (hooks.get(event) === callback) hooks.delete(event); }
   };
   globalThis.CONFIG = { Actor: { dataModels: {}, documentClass: null }, Item: { dataModels: {} } };
+  globalThis.CONST = { TOKEN_DISPLAY_MODES: { ALWAYS: 50 } };
   globalThis.foundry = {
     abstract: { TypeDataModel: class { static migrateData(source) { return source; } } },
-    data: { fields: { StringField: class {}, NumberField: class {}, BooleanField: class {}, ArrayField: class {}, DocumentUUIDField: class {} } },
+    data: { fields: { StringField: class { constructor(options) { this.options = options; } }, NumberField: class {}, BooleanField: class {}, ArrayField: class {}, DocumentUUIDField: class {} } },
     applications: {
       api: { HandlebarsApplicationMixin: base => base },
       ux: { FormDataExtended: class {} },
@@ -37,11 +38,36 @@ test("the built package registers models and an editable notes sheet for its dec
       } }
     },
     documents: {
-      Actor: class { static getDefaultArtwork() { return { img: "icons/svg/mystery-man.svg" }; } },
+      Actor: class {
+        static getDefaultArtwork() { return { img: "icons/svg/mystery-man.svg" }; }
+        async _preCreate(data) {
+          if (this.veto) return false;
+          if (!this.prototypeToken.texture.src || this.prototypeToken.texture.src === "icons/svg/mystery-man.svg") {
+            const src = "img" in data ? this.img : this.constructor.getDefaultArtwork({ type: this.type }).texture.src;
+            this.prototypeToken.updateSource({ texture: { src } });
+          }
+        }
+        async _preUpdate(changed) {
+          if (this.veto) return false;
+          if (changed.img && !changed.prototypeToken?.texture?.src
+            && this.prototypeToken.texture.src === this.constructor.getDefaultArtwork({ type: this.type }).texture.src) {
+            changed.prototypeToken ??= {};
+            changed.prototypeToken.texture ??= {};
+            changed.prototypeToken.texture.src = changed.img;
+          }
+        }
+        async getTokenDocument(data, options) {
+          return { texture: { ...this.prototypeToken.texture, ...data.texture }, options };
+        }
+      },
       collections: { Actors: { registerSheet: (...args) => registration.push(args) } }
     }
   };
-  globalThis.game = { i18n: { localize: key => key } };
+  const registeredSettings = [];
+  globalThis.game = { i18n: { localize: key => key }, settings: {
+    register: (...args) => registeredSettings.push(args),
+    get: () => false
+  } };
 
   await import(new URL(manifest.esmodules[0], dist));
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
@@ -54,6 +80,133 @@ test("the built package registers models and an editable notes sheet for its dec
     assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type }), { img: image, texture: { src: token } });
   }
   assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type: "base" }), { img: "icons/svg/mystery-man.svg" });
+  assert.equal(registeredSettings[0][1], "tokenDefaultsMigrated");
+  assert.equal(registeredSettings[0][2].scope, "world");
+  assert.equal(CONFIG.Actor.dataModels.cooperative.defineSchema().shipName.options.initial, "Бежетка");
+  {
+    let response;
+    CONFIG.Actor.typeLabels = { merchant: "merchant-label", cooperative: "cooperative-label" };
+    game.i18n.format = key => key;
+    foundry.applications.handlebars = { renderTemplate: async () => "" };
+    foundry.applications.api.DialogV2 = { input: async () => response };
+    CONFIG.Actor.documentClass.create = async (data, options) => ({ data, options });
+    for (const [type, supplied, expected] of [
+      ["cooperative", "", "ООО Н'Такоэ"], ["cooperative", "My company", "My company"],
+      ["merchant", "", "merchant-label"]
+    ]) {
+      response = { type, name: supplied };
+      const created = await CONFIG.Actor.documentClass.createDialog();
+      assert.equal(created.data.name, expected);
+      assert.equal(created.data.type, type);
+    }
+  }
+  for (const [type, token, portrait] of [
+    ["merchant", "systems/ouw25/styles/images/pc_token.webp", "systems/ouw25/styles/images/bugger_transp.webp"],
+    ["cooperative", "systems/ouw25/styles/images/ship_token.webp", "systems/ouw25/styles/images/ship_logo.webp"]
+  ]) {
+    const makeActor = (src = "icons/svg/mystery-man.svg", randomImg = false) => {
+      const actor = new CONFIG.Actor.documentClass();
+      actor.type = type;
+      actor.img = "custom-portrait.webp";
+      actor.prototypeToken = {
+        randomImg, displayName: 0, texture: { src },
+        updateSource(update) {
+          Object.assign(this.texture, update.texture);
+          if (Object.hasOwn(update, "displayName")) this.displayName = update.displayName;
+        }
+      };
+      return actor;
+    };
+    for (const data of [{}, { img: "custom-portrait.webp" }]) {
+      const actor = makeActor();
+      await actor._preCreate(data, {}, {});
+      assert.equal(actor.prototypeToken.texture.src, token);
+      assert.equal(actor.prototypeToken.displayName, 50);
+    }
+    const custom = makeActor("custom-token.webp");
+    await custom._preCreate({ prototypeToken: { texture: { src: "custom-token.webp" } } }, {}, {});
+    assert.equal(custom.prototypeToken.texture.src, "custom-token.webp");
+    const wildcard = makeActor("tokens/*.webp", true);
+    await wildcard._preCreate({ prototypeToken: { randomImg: true, texture: { src: "tokens/*.webp" } } }, {}, {});
+    assert.equal(wildcard.prototypeToken.texture.src, "tokens/*.webp");
+    assert.equal(wildcard.prototypeToken.displayName, 50);
+    const hiddenName = makeActor("custom-token.webp");
+    await hiddenName._preCreate({ prototypeToken: { displayName: 0, texture: { src: "custom-token.webp" } } }, {}, {});
+    assert.equal(hiddenName.prototypeToken.displayName, 0);
+    const imported = makeActor(portrait);
+    await imported._preCreate({ prototypeToken: { texture: { src: portrait } } }, { fromCompendium: true }, {});
+    assert.equal(imported.prototypeToken.texture.src, token);
+    const explicitlySelected = makeActor(portrait);
+    await explicitlySelected._preCreate({ prototypeToken: { texture: { src: portrait } } }, {}, {});
+    assert.equal(explicitlySelected.prototypeToken.texture.src, portrait);
+    const dropOptions = { parent: "scene" };
+    const dropped = await explicitlySelected.getTokenDocument({ texture: { scaleX: 2 } }, dropOptions);
+    assert.deepEqual(dropped, { texture: { src: token, scaleX: 2 }, options: dropOptions });
+    assert.equal(explicitlySelected.prototypeToken.texture.src, portrait);
+    assert.equal((await explicitlySelected.getTokenDocument({ texture: { src: "chosen-token.webp" } })).texture.src, "chosen-token.webp");
+    assert.equal((await custom.getTokenDocument()).texture.src, "custom-token.webp");
+    assert.equal((await wildcard.getTokenDocument()).texture.src, "tokens/*.webp");
+    globalThis.game.settings.get = () => true;
+    assert.equal((await explicitlySelected.getTokenDocument()).texture.src, portrait);
+    globalThis.game.settings.get = () => false;
+    const vetoed = makeActor();
+    vetoed.veto = true;
+    assert.equal(await vetoed._preCreate({}, {}, {}), false);
+    assert.equal(vetoed.prototypeToken.texture.src, "icons/svg/mystery-man.svg");
+    const actor = makeActor(token);
+    const portraitChange = { img: "new-portrait.webp", prototypeToken: { width: 2 } };
+    await actor._preUpdate(portraitChange, {}, {});
+    assert.deepEqual(portraitChange, { img: "new-portrait.webp", prototypeToken: { width: 2 } });
+    const explicitChange = { img: "new-portrait.webp", prototypeToken: { texture: { src: "chosen-token.webp" } } };
+    await actor._preUpdate(explicitChange, {}, {});
+    assert.equal(explicitChange.prototypeToken.texture.src, "chosen-token.webp");
+  }
+  {
+    let migrated = false;
+    let fail = true;
+    const notifications = [];
+    const records = [
+      ["merchant", "systems/ouw25/styles/images/bugger_transp.webp", false],
+      ["cooperative", "icons/svg/mystery-man.svg", false],
+      ["merchant", "custom-token.webp", false],
+      ["cooperative", "systems/ouw25/styles/images/ship_logo.webp", true],
+      ["other", "icons/svg/mystery-man.svg", false]
+    ].map(([type, src, randomImg], id) => ({
+      id, type, prototypeToken: { texture: { src }, randomImg },
+      async update(changed) {
+        if (fail) throw new Error("simulated failure");
+        this.prototypeToken.texture.src = changed["prototypeToken.texture.src"];
+        return this;
+      }
+    }));
+    globalThis.game.actors = records;
+    globalThis.game.user = { isActiveGM: false };
+    globalThis.game.settings.get = () => migrated;
+    globalThis.game.settings.set = async (_system, _key, value) => { migrated = value; };
+    globalThis.ui = { notifications: { error: message => notifications.push(message) } };
+    const ready = hooks.get("ready");
+    await ready();
+    assert.equal(migrated, false);
+    globalThis.game.user.isActiveGM = true;
+    const originalConsoleError = console.error;
+    try {
+      console.error = () => {};
+      await ready();
+    } finally { console.error = originalConsoleError; }
+    assert.equal(migrated, false);
+    assert.deepEqual(notifications, ["OUW25.TokenMigrationError"]);
+    fail = false;
+    await ready();
+    assert.equal(migrated, true);
+    assert.deepEqual(records.map(actor => actor.prototypeToken.texture.src), [
+      "systems/ouw25/styles/images/pc_token.webp", "systems/ouw25/styles/images/ship_token.webp",
+      "custom-token.webp", "systems/ouw25/styles/images/ship_logo.webp", "icons/svg/mystery-man.svg"
+    ]);
+    records[0].prototypeToken.texture.src = "systems/ouw25/styles/images/bugger_transp.webp";
+    await ready();
+    assert.equal(records[0].prototypeToken.texture.src, "systems/ouw25/styles/images/bugger_transp.webp");
+    hooks.delete("ready");
+  }
   const [[id, Sheet, options]] = registration;
   assert.equal(id, manifest.id);
   assert.deepEqual(options.types, types);
@@ -176,6 +329,7 @@ test("the built package registers models and an editable notes sheet for its dec
           id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
         }]);
       } else {
+        assert.equal(cooperative.name, "Original");
         assert.equal(cooperative.reputation.choices.find(choice => choice.selected).value, "hunters");
         assert.equal(cooperative.reputation.help, "OUW25.Cooperative.Reputation.Help.hunters");
         assert.equal(cooperative.memory.choices.find(choice => choice.selected).value, "rescue");

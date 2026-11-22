@@ -94,6 +94,9 @@
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-cooperative-layout"}}
     <div class="ouw25-sheet-column">
       <div class="ouw25-cooperative-budget-column">
+        <div class="ouw25-choice-row ouw25-identity">
+          <input type="text" name="name" aria-label="{{localize "OUW25.Cooperative.Name"}}" value="{{cooperative.name}}" required {{#unless editable}}readonly{{/unless}}>
+        </div>
         <fieldset class="ouw25-founders">
           {{> ouw25-block-heading heading="OUW25.Founders.Title"}}
           {{#if cooperative.founders}}

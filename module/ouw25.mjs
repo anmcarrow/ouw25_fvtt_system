@@ -16,6 +16,7 @@ import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
+const DEFAULT_COOPERATIVE_NAME = "ООО Н'Такоэ";
 const DEFAULT_ACTOR_TOKENS = {
   merchant: "systems/ouw25/styles/images/pc_token.webp",
   cooperative: "systems/ouw25/styles/images/ship_token.webp"
@@ -24,6 +25,7 @@ const DEFAULT_ACTOR_ARTWORK = {
   merchant: "systems/ouw25/styles/images/bugger_transp.webp",
   cooperative: "systems/ouw25/styles/images/ship_logo.webp"
 };
+const TOKEN_DEFAULTS_MIGRATION = "tokenDefaultsMigrated";
 const WOUND_SLOTS = [1, 2, 3, 4];
 const COOPERATIVE_REPUTATIONS = ["unset", "profiteers", "hunters", "purists", "smart", "daredevils", "ordinary"];
 const COOPERATIVE_MEMORIES = ["unset", "rescue", "lost_profit", "scandal", "secret", "fame", "blood"];
@@ -70,12 +72,54 @@ for (const kind of Object.keys(MERCHANT_TRAITS)) {
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
+function hasLegacyTokenArtwork(type, prototypeToken) {
+  if (!Object.hasOwn(DEFAULT_ACTOR_TOKENS, type) || prototypeToken?.randomImg) return false;
+  return [null, undefined, "", DEFAULT_ACTOR_IMAGE, DEFAULT_ACTOR_ARTWORK[type]].includes(prototypeToken?.texture?.src);
+}
+
 class Ouw25Actor extends foundry.documents.Actor {
   static getDefaultArtwork(actorData = {}) {
     const img = Object.hasOwn(DEFAULT_ACTOR_ARTWORK, actorData.type)
       ? DEFAULT_ACTOR_ARTWORK[actorData.type] : null;
     return img ? { img, texture: { src: DEFAULT_ACTOR_TOKENS[actorData.type] } }
       : super.getDefaultArtwork(actorData);
+  }
+
+  async _preCreate(data, options, user) {
+    const allowed = await super._preCreate(data, options, user);
+    if (allowed === false) return false;
+    if (!Object.hasOwn(DEFAULT_ACTOR_TOKENS, this.type)) return;
+    const updates = {};
+    const explicitTexture = Object.hasOwn(data.prototypeToken?.texture ?? {}, "src");
+    if (!this.prototypeToken.randomImg
+      && (!explicitTexture || (options.fromCompendium && hasLegacyTokenArtwork(this.type, this.prototypeToken)))) {
+      updates.texture = { src: DEFAULT_ACTOR_TOKENS[this.type] };
+    }
+    if (!Object.hasOwn(data.prototypeToken ?? {}, "displayName")) updates.displayName = CONST.TOKEN_DISPLAY_MODES.ALWAYS;
+    if (Object.keys(updates).length) this.prototypeToken.updateSource(updates);
+  }
+
+  async _preUpdate(changed, options, user) {
+    const hasExplicitTexture = Object.hasOwn(changed.prototypeToken?.texture ?? {}, "src")
+      || Object.hasOwn(changed, "prototypeToken.texture.src");
+    const keepDefaultToken = Object.hasOwn(DEFAULT_ACTOR_TOKENS, this.type) && !hasExplicitTexture
+      && this.prototypeToken.texture.src === DEFAULT_ACTOR_TOKENS[this.type];
+    const allowed = await super._preUpdate(changed, options, user);
+    if (allowed === false) return false;
+    if (keepDefaultToken && changed.img && changed.prototypeToken?.texture?.src === changed.img) {
+      delete changed.prototypeToken.texture.src;
+      if (!Object.keys(changed.prototypeToken.texture).length) delete changed.prototypeToken.texture;
+      if (!Object.keys(changed.prototypeToken).length) delete changed.prototypeToken;
+    }
+  }
+
+  async getTokenDocument(data = {}, options = {}) {
+    if (!game.settings.get(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION)
+      && hasLegacyTokenArtwork(this.type, this.prototypeToken)
+      && !Object.hasOwn(data.texture ?? {}, "src")) {
+      data = { ...data, texture: { ...data.texture, src: DEFAULT_ACTOR_TOKENS[this.type] } };
+    }
+    return super.getTokenDocument(data, options);
   }
 
   static async createDialog(data = {}, createOptions = {}, dialogOptions = {}) {
@@ -109,7 +153,8 @@ class Ouw25Actor extends foundry.documents.Actor {
     if (!result) return;
 
     const type = types.includes(result.type) ? result.type : defaultType;
-    const name = String(result.name ?? "").trim() || game.i18n.localize(CONFIG.Actor.typeLabels[type]);
+    const name = String(result.name ?? "").trim() || (type === "cooperative"
+      ? DEFAULT_COOPERATIVE_NAME : game.i18n.localize(CONFIG.Actor.typeLabels[type]));
     const actorData = { ...data, name, type };
     const options = { ...createOptions, renderSheet: createOptions.renderSheet ?? true };
     delete options.types;
@@ -212,7 +257,7 @@ class CooperativeModel extends NotesModel {
       founders: new ArrayField(new DocumentUUIDField({ type: "Actor", nullable: false })),
       reputation: new StringField({ initial: "unset", choices: COOPERATIVE_REPUTATIONS }),
       memory: new StringField({ initial: "unset", choices: COOPERATIVE_MEMORIES }),
-      shipName: new StringField({ initial: "" }),
+      shipName: new StringField({ initial: "Бежетка" }),
       cargoLoad: counterField(), fuelStock: resourceField(10), provisionsStock: resourceField(10),
       holdBonus: new NumberField({
         required: true, nullable: false, initial: 0, integer: true, choices: HOLD_BONUSES
@@ -573,6 +618,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         total: String(contacts.reduce((total, { amount }) => total + BigInt(amount), 0n))
       },
       cooperative: ship && {
+        name: this.actor.name,
         reputation: cooperativeChoices(COOPERATIVE_REPUTATIONS, system.reputation, "Reputation"),
         memory: cooperativeChoices(COOPERATIVE_MEMORIES, system.memory, "Memory"),
         founders
@@ -1533,6 +1579,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 }
 
 Hooks.once("init", () => {
+  game.settings.register(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION, {
+    scope: "world", config: false, type: Boolean, default: false
+  });
   const models = { merchant: MerchantModel, cooperative: CooperativeModel };
   CONFIG.Actor.documentClass = Ouw25Actor;
   Object.assign(CONFIG.Actor.dataModels, models);
@@ -1549,4 +1598,19 @@ Hooks.once("init", () => {
     makeDefault: true,
     label: "OUW25.ActorSheet"
   });
+});
+
+Hooks.once("ready", async () => {
+  if (!game.user.isActiveGM || game.settings.get(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION)) return;
+  try {
+    for (const actor of game.actors) {
+      if (!hasLegacyTokenArtwork(actor.type, actor.prototypeToken)) continue;
+      const updated = await actor.update({ "prototypeToken.texture.src": DEFAULT_ACTOR_TOKENS[actor.type] });
+      if (!updated) throw new Error(`Failed to update actor ${actor.id}`);
+    }
+    await game.settings.set(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION, true);
+  } catch (error) {
+    console.error("OUW25 | Token artwork migration failed", error);
+    ui.notifications.error(game.i18n.localize("OUW25.TokenMigrationError"));
+  }
 });

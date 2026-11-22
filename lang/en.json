@@ -8,6 +8,7 @@
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
+    "TokenMigrationError": "Couldn't update default token images. The system will retry when a GM next opens the world.",
     "Notes": "Notes",
     "Save": "Save",
     "SaveStatus": {
@@ -62,6 +63,7 @@
       "ConfirmDelete": "Delete this cargo record?"
     },
     "Cooperative": {
+      "Name": "Cooperative name",
       "Reputation": {
         "Title": "Reputation",
         "Names": {

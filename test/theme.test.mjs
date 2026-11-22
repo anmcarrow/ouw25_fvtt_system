@@ -7,6 +7,10 @@ const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", impo
 const template = await readFile(new URL("../dist/ouw25/templates/actor-notes.hbs", import.meta.url), "utf8");
 const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/actor-create.hbs", import.meta.url), "utf8");
 
+test("the sheet minimum height does not interfere with Foundry window minimization", () => {
+  assert.match(styles, /\.application\.ouw25:has\(\.ouw25-notes\):not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-block-size:\s*60vh;/);
+});
+
 test("the active actor tab uses a bundled WebP background", async () => {
   const image = styles.match(/\.ouw25-sheet-tabs > button\.active:hover:not\(:disabled\)\s*\{\s*background: url\("\.\/([^"]+)"\)/)?.[1];
   assert.ok(image);

@@ -94,7 +94,7 @@ test("the built package registers models and an editable notes sheet for its dec
     { type: "cargo", id: "cargo-2", name: "Bales", system: { quantity: 5, volume: 2.25 } }];
     assert.deepEqual(sheet._getTabsConfig("sheet").tabs.map(({ id }) => id), merchant
       ? ["attributes", "items", "friends", "illwishers", "creditors", "notes"]
-      : ["attributes", "contacts", "contracts", "ship", "cargo", "ports"]);
+      : ["attributes", "contacts", "contracts", "ports", "ship", "cargo"]);
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
       const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ports, cooperative, ...context } = await sheet._prepareContext({});

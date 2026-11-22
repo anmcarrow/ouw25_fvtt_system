@@ -26,7 +26,7 @@ const COOPERATIVE_MEMORIES = ["unset", "rescue", "lost_profit", "scandal", "secr
 const RELATION_KINDS = ["friend", "enemy"];
 const SHEET_TABS = {
   merchant: ["attributes", "items", "friends", "illwishers", "creditors", "notes"],
-  cooperative: ["attributes", "contacts", "contracts", "ship", "cargo", "ports"]
+  cooperative: ["attributes", "contacts", "contracts", "ports", "ship", "cargo"]
 };
 const RECORD_LABELS = new Map([
   ["debt", "OUW25.Debt"],

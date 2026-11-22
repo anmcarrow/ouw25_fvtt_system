@@ -33,8 +33,11 @@
 }
 
 body.game .application.ouw25:has(.ouw25-notes) {
-  min-block-size: 60vh;
   max-inline-size: min(1120px, 100vw);
+}
+
+body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .maximizing) {
+  min-block-size: 60vh;
 }
 
 .ouw25 .ouw25-notes {

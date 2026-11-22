@@ -131,7 +131,7 @@
         <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong><span>{{ship.voyage.fuelPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.ProvisionsRate"}}</span><strong><span>{{ship.voyage.provisionsPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.FreeMountsLabel"}}</span><strong><span>{{ship.freeMounts}}</span></strong></div>
-        <div><span>{{localize "OUW25.Ship.HoldLabel"}}</span><output class="ouw25-hold-status" aria-label="{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}"><span>{{ship.hold.occupied}}</span> / <span>{{ship.hold.capacity}}</span></output></div>
+        <div><span>{{localize "OUW25.Ship.HoldLabel"}}</span><output class="ouw25-hold-status" aria-label="{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}"><span{{#if ship.hold.nearFull}} class="ouw25-hold-warning"{{/if}}{{#if ship.hold.overloaded}} class="ouw25-hold-warning"{{/if}}>{{ship.hold.occupied}}</span> / <span>{{ship.hold.capacity}}</span></output></div>
       </div>
       <div class="ouw25-ship-resources">
       <label>

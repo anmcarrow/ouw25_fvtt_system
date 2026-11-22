@@ -1101,6 +1101,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats :is(strong, output) 
   line-height: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-hold-status > .ouw25-hold-warning {
+  color: var(--ouw25-color-warning);
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats strong > span.ouw25-speed-forced {
   color: var(--ouw25-color-danger);
   font-size: 2.34375em;
@@ -1199,10 +1203,12 @@ body.game .application.ouw25 .dialog-content :is(h2, h3) {
 }
 
 body.game .application.ouw25 .ouw25-sheet-heading h2 {
+  background: url("./images/header_strip1.webp") center / 100% 100% no-repeat;
   color: var(--ouw25-color-accent);
   font-size: 1.7rem;
   line-height: 1.2;
   margin: 0;
+  padding: calc(0.28125lh + 5.25px) 3px calc(0.28125lh + 5.25px) 6px;
 }
 
 body.game .application.ouw25 .ouw25-notes fieldset > legend > h3 {

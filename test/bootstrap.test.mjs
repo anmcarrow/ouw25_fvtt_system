@@ -54,6 +54,7 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.match(template, /type="submit"/);
   assert.match(template, /data-autosave-status/);
   assert.match(template, /<output\b[^>]*ouw25-hold-status[^>]*occupied=ship\.hold\.occupied capacity=ship\.hold\.capacity/);
+  assert.match(template, /\{\{#if ship\.hold\.nearFull\}\} class="ouw25-hold-warning"\{\{\/if\}\}\{\{#if ship\.hold\.overloaded\}\} class="ouw25-hold-warning"\{\{\/if\}\}>\{\{ship\.hold\.occupied\}\}/);
   assert.match(template, /<h4 class="ouw25-trait-name"\{\{#if tooltip\}\} tabindex="0" data-tooltip="\{\{localize tooltip\}\}"/);
   const recordActions = template.match(/\{\{#\*inline "ouw25-record-actions"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
   assert.ok(recordActions);
@@ -594,7 +595,9 @@ test("hold warns at 100 st. free and distinguishes overload from exact capacity"
   const ship = { shipClass: 0, cargoLoad: 1498, fuelStock: 0, provisionsStock: 18 };
   assert.equal(shipHold(ship, 0, 0).nearFull, false);
   assert.equal(shipHold(ship, 1, 0).nearFull, true);
+  assert.equal(shipHold(ship, 101, 0).nearFull, true);
   assert.equal(shipHold(ship, 101, 0).overloaded, false);
+  assert.equal(shipHold(ship, 101.5, 0).nearFull, false);
   assert.equal(shipHold(ship, 101.5, 0).overloaded, true);
   assert.equal(shipHold({ ...ship, shipClass: 4 }, 0, 0).capacity, 25200);
 });

@@ -14,6 +14,13 @@ test("the active actor tab uses a bundled WebP background", async () => {
   assert.equal(asset.toString("ascii", 8, 12), "WEBP");
 });
 
+test("actor type headings use the bundled Roll20 header background", async () => {
+  assert.match(template, /<header class="ouw25-sheet-heading">\s*<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
+  assert.match(styles, /\.ouw25-sheet-heading h2\s*\{[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) center \/ 100% 100% no-repeat/s);
+  const asset = await readFile(new URL("../dist/ouw25/styles/images/header_strip1.webp", import.meta.url));
+  assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+});
+
 test("record tables retain accessible names without visible block headings", () => {
   for (const kind of ["contacts", "contracts", "ledger", "relationships", "possessions"]) {
     const block = template.match(new RegExp(`<fieldset class="ouw25-${kind}"([^>]*)>([\\s\\S]*?)</fieldset>`));

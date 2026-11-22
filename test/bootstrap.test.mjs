@@ -189,6 +189,16 @@ test("the built package registers models and an editable notes sheet for its dec
       assert.equal(cooperative.memory.choices.find(choice => choice.selected).value, "unset");
       assert.equal(cooperative.reputation.help, null);
       assert.equal(cooperative.memory.help, null);
+      Object.assign(sheet.actor.system, { fuelStock: 0, crewCount: 0, provisionsStock: 0,
+        travelStatus: "OUW25.Voyage.EnableForced: earlier check" });
+      sheet.isEditable = true;
+      const { ship } = await sheet._prepareContext({});
+      assert.equal(ship.travelStatus, "");
+      assert.equal(ship.canTravel, false);
+      assert.ok(ship.voyage.shortages.includes("OUW25.Voyage.FuelShortage"));
+      assert.deepEqual(ship.voyage.displayShortages, ["OUW25.Voyage.NoCrew", "OUW25.Voyage.NoProvisions"]);
+      sheet.actor.system.travelStatus = "Travel completed";
+      assert.equal((await sheet._prepareContext({})).ship.travelStatus, "Travel completed");
     }
     let updates = 0;
     sheet.actor.update = async data => {
@@ -436,6 +446,26 @@ test("the built package registers models and an editable notes sheet for its dec
   await deleteShip("mount", "mount1");
   assert.equal(shipSystem.mount1, "harpoon");
   assert.equal(warnings.pop(), "OUW25.Creation.Changed");
+
+  shipSystem.flaw1 = "none";
+  shipSystem.forcedMode = false;
+  shipSystem.travelStatus = "previous result";
+  response = { additionalDice: 0, complications: 0 };
+  game.i18n.format = (key, values) => `${key} ${JSON.stringify(values)}`;
+  game.settings = { get: () => "publicroll" };
+  foundry.dice = { Roll: class {
+    async evaluate() {
+      this.dice = [{ results: [6, 4, 2, 1].map(result => ({ active: true, result })) }];
+      return this;
+    }
+  } };
+  let chatMessage;
+  foundry.documents.ChatMessage = {
+    getSpeaker: () => ({}), applyRollMode() {}, create: async message => { chatMessage = message; }
+  };
+  await Sheet.DEFAULT_OPTIONS.actions.toggleForcedMode.call(shipSheet, null, { disabled: false });
+  assert.equal(shipSystem.travelStatus, "");
+  assert.ok(chatMessage.flavor.includes("OUW25.Collision.Result"));
 
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));

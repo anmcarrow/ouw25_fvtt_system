@@ -180,7 +180,7 @@
       "OverLimit": "Damage exceeds the ship's durability."
     },
     "Voyage": {
-      "Title": "Modes and supplies",
+      "Title": "Set sail",
       "Crew": "Crew count",
       "Capacity": "of {capacity}",
       "CrewSummary": "Crew: {crew} / {capacity} ({band})",

@@ -1038,13 +1038,14 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
   inset-inline-start: 50%;
   inline-size: 345px;
   block-size: 345px;
-  transform: translate(-50%, calc(-50% + 90px));
+  transform: translate(-50%, calc(-50% + 75px));
   z-index: -1;
   background: url("./images/fuel.webp") center / contain no-repeat;
   pointer-events: none;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition > h3 {
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition > h4 {
+  color: var(--ouw25-color-paper);
   text-align: center;
   margin: 0 0 0.4rem;
 }
@@ -1089,10 +1090,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats :is(strong, output) 
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, max-content);
   align-items: end;
+  justify-content: space-between;
+  column-gap: 0;
   inline-size: calc(70% - 10px);
   margin-block-start: 2em;
+  overflow-x: auto;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
@@ -1100,7 +1104,9 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   gap: 0.5em;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label > input {
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources :is(label > input, .ouw25-ship-resource-value > input) {
+  box-sizing: border-box;
+  inline-size: calc(8ch + 2.5rem);
   margin-block: 0;
 }
 
@@ -1114,8 +1120,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > input {
   min-inline-size: 0;
-  inline-size: 100%;
-  margin-block: 0;
+  flex: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > span {
@@ -1287,6 +1292,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   border: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   overflow-wrap: anywhere;
+  font-size: 0.8em;
 }
 
 .ouw25-voyage-actions > [data-action="toggleForcedMode"] { --ouw25-button-color: #805d54; }

@@ -171,9 +171,7 @@
           </label>
         {{/if}}
       {{/each}}
-      {{#if ship.hold.overloaded}}
-        <p role="status">{{localize "OUW25.Ship.Overloaded"}}</p>
-      {{else if ship.hold.nearFull}}
+      {{#if ship.hold.nearFull}}
         <p role="status">{{localize "OUW25.Ship.NearFull"}}</p>
       {{/if}}
     </div>
@@ -318,7 +316,7 @@
   {{/inline}}
   {{#*inline "ouw25-ship-damage"}}
       <div class="ouw25-ship-condition">
-        <h3>{{localize "OUW25.ShipCondition.Title"}}</h3>
+        <h4>{{localize "OUW25.ShipCondition.Title"}}</h4>
         <div class="ouw25-ship-damage">
           {{#each ship.condition.slots}}
             <label class="ouw25-condition-check">
@@ -359,7 +357,8 @@
           {{#if ship.voyage.wornEngine}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
           {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
           {{#if ship.voyage.provisionsLow}}<p role="status">{{localize "OUW25.Voyage.ProvisionsLow"}}</p>{{/if}}
-          {{#each ship.voyage.shortages}}<p role="status">{{localize this}}</p>{{/each}}
+          {{#if ship.hold.overloaded}}<p role="status">{{localize "OUW25.Ship.Overloaded"}}</p>{{/if}}
+          {{#each ship.voyage.displayShortages}}<p role="status">{{localize this}}</p>{{/each}}
           <p>{{localize "OUW25.Voyage.TravelInfo"}}</p>
           {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
         </div>

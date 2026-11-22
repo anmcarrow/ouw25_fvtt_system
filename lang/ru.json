@@ -180,7 +180,7 @@
       "OverLimit": "Число поломов превышает запас прочности."
     },
     "Voyage": {
-      "Title": "Режимы судна и запасы",
+      "Title": "В путь",
       "Crew": "Экипаж, шт.",
       "Capacity": "из {capacity}",
       "CrewSummary": "Экипаж: {crew} / {capacity} ({band})",

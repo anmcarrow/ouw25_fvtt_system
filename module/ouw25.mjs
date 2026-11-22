@@ -423,9 +423,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         crewCount: system.crewCount, forcedMode: system.forcedMode,
         illuminationMode: system.illuminationMode, unrestInput: system.unrest,
         travelSectors: system.travelSectors, travelWatches: system.travelWatches,
-        travelStatus: system.travelStatus, canTravel: this.isEditable && !voyage.travelBlocked,
+        travelStatus: ["EnableForced", "DisableForced"].some(key =>
+          (system.travelStatus ?? "").startsWith(`${game.i18n.localize(`OUW25.Voyage.${key}`)}:`)
+        ) ? "" : system.travelStatus,
+        canTravel: this.isEditable && !voyage.travelBlocked,
         canUndoTransition: this.isEditable && Boolean(system.lastTransition),
-        voyage,
+        voyage: { ...voyage, displayShortages: voyage.shortages.filter(key => key !== "OUW25.Voyage.FuelShortage") },
         forcedDisabled: voyage.wornEngine && !system.forcedMode,
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: shipList("mount"), compartments: shipList("compartment"), gear: shipList("gear"),
@@ -1042,7 +1045,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const status = `${summary} ${mode}${damage}`;
       await actor.update({
         "system.forcedMode": forcedMode,
-        "system.travelStatus": status,
+        "system.travelStatus": "",
         ...(damageSlot ? { [`system.damage${damageSlot}`]: true } : {})
       });
       await publishVoyageRoll(actor, status, [roll], true);

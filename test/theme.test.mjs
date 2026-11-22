@@ -34,7 +34,8 @@ test("voyage status cards follow a single travel summary", () => {
   for (const key of ["ForcedBlocked", "FuelLow", "ProvisionsLow", "TravelInfo"]) {
     assert.match(voyage, new RegExp(`<div class="ouw25-voyage-statuses">[\\s\\S]*?OUW25\\.Voyage\\.${key}`));
   }
-  assert.match(voyage, /\{\{#each ship\.voyage\.shortages\}\}<p role="status">/);
+  assert.match(voyage, /\{\{#each ship\.voyage\.displayShortages\}\}<p role="status">/);
+  assert.match(voyage, /\{\{#if ship\.hold\.overloaded\}\}<p role="status">\{\{localize "OUW25\.Ship\.Overloaded"\}\}/);
   assert.match(voyage, /\{\{#if ship\.travelStatus\}\}<p role="status">\{\{ship\.travelStatus\}\}<\/p>/);
 });
 

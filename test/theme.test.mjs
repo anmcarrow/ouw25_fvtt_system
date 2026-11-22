@@ -19,7 +19,7 @@ test("the active actor tab uses a bundled WebP background", async () => {
 });
 
 test("actor type headings use the bundled Roll20 header background", async () => {
-  assert.match(template, /<header class="ouw25-sheet-heading ouw25-token-heading">[\s\S]*?<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
+  assert.match(template, /<header class="ouw25-sheet-heading ouw25-token-heading\{\{#if identity\}\} ouw25-merchant-heading\{\{\/if\}\}">[\s\S]*?<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
   assert.match(styles, /\.ouw25-sheet-heading::before\s*\{[^}]*inset-inline:\s*-10px -1rem;[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) left center \/ calc\(100% \+ 1rem - 10px\) 100% no-repeat/s);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/header_strip1.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
@@ -28,7 +28,10 @@ test("actor type headings use the bundled Roll20 header background", async () =>
 test("actor headings use bundled tokens as accessible configuration buttons", async () => {
   assert.match(template, /\{\{#if token\.canConfigure\}\}\s*<button type="button" class="ouw25-actor-token" data-action="configureActorToken" aria-label="\{\{localize token\.label\}\}"/);
   assert.match(template, /\{\{else\}\}\s*<img class="ouw25-actor-token" src="\{\{token\.icon\}\}" alt="">/);
-  assert.match(styles, /\.ouw25-token-heading \.ouw25-actor-token\s*\{[^}]*inset-block-start:\s*-18px;[^}]*inset-inline-start:\s*-18px;[^}]*inline-size:\s*100px;[^}]*block-size:\s*100px;/s);
+  assert.match(styles, /\.ouw25-token-heading \.ouw25-actor-token\s*\{[^}]*inset-block-start:\s*-16px;[^}]*inset-inline-start:\s*-16px;[^}]*inline-size:\s*100px;[^}]*block-size:\s*100px;/s);
+  assert.match(styles, /\.ouw25-merchant-heading \.ouw25-actor-token\s*\{\s*inset-block-start:\s*-14px;\s*inset-inline-start:\s*-14px;/);
+  assert.match(styles, /\.ouw25-token-heading \.ouw25-actor-token\s*\{[^}]*transform:\s*rotate\(-2deg\);/s);
+  assert.match(styles, /\.ouw25-token-heading \.ouw25-actor-token:hover\s*\{\s*transform:\s*rotate\(0deg\) scale\(1\.035\);/);
   assert.match(styles, /\.ouw25-sheet-heading\.ouw25-token-heading h2\s*\{\s*padding-inline-start:\s*90px;/);
   for (const token of ["ship", "pc"]) {
     const asset = await readFile(new URL(`../dist/ouw25/styles/images/${token}_token.webp`, import.meta.url));

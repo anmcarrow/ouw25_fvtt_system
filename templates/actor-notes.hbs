@@ -72,7 +72,7 @@
   </section>
 {{/inline}}
 <section class="ouw25-notes">
-  <header class="ouw25-sheet-heading ouw25-token-heading">
+  <header class="ouw25-sheet-heading ouw25-token-heading{{#if identity}} ouw25-merchant-heading{{/if}}">
     {{#if token.canConfigure}}
       <button type="button" class="ouw25-actor-token" data-action="configureActorToken" aria-label="{{localize token.label}}" data-tooltip="{{localize token.label}}"><img src="{{token.icon}}" alt=""></button>
     {{else}}

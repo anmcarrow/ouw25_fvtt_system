@@ -1,0 +1,14 @@
+<article class="ouw25-chat-card">
+  <header>
+    <h3>{{localize title}}</h3>
+    <p>{{actorName}} · {{shipName}}</p>
+  </header>
+  <dl>
+    {{#each fields}}
+      <div>
+        <dt>{{localize label}}</dt>
+        <dd>{{before}} → {{after}} <span>({{#if positive}}+{{/if}}{{delta}})</span></dd>
+      </div>
+    {{/each}}
+  </dl>
+</article>

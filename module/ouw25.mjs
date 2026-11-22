@@ -13,6 +13,10 @@ import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, s
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
+import { publishVoyageCard } from "./voyage-chat.mjs";
+import { filterRecordTable } from "./record-search.mjs";
+import { journalPresentation, openRecordJournal } from "./record-journal.mjs";
+import { ASSISTANT_BONUSES, ASSISTANT_COMPLICATIONS, calculateCollisionAssistant } from "./collision-assistant.mjs";
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
@@ -206,15 +210,21 @@ function hasUnsavedVoyageInputs(target, system) {
   });
 }
 
-async function publishVoyageRoll(actor, flavor, rolls, stateApplied) {
-  const { ChatMessage } = foundry.documents;
-  const message = {
-    speaker: ChatMessage.getSpeaker({ actor }),
-    flavor,
-    rolls: rolls.filter(Boolean)
-  };
-  ChatMessage.applyRollMode(message, game.settings.get("core", "messageMode"));
+async function checkCard(actor, title, result, details = [], state = null) {
+  return foundry.applications.handlebars.renderTemplate(`systems/${SYSTEM_ID}/templates/check-card.hbs`, {
+    actorName: actor.name, title, result, details, state
+  });
+}
+
+async function publishVoyageRoll(actor, result, rolls, stateApplied, title, details = []) {
   try {
+    const { ChatMessage } = foundry.documents;
+    const message = {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flavor: await checkCard(actor, title, result, details, `OUW25.CheckCard.${stateApplied ? "Applied" : "NotApplied"}`),
+      rolls: rolls.filter(Boolean)
+    };
+    ChatMessage.applyRollMode(message, game.settings.get("core", "messageMode"));
     await ChatMessage.create(message);
   } catch (error) {
     console.error(error);
@@ -383,6 +393,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #autosaveStatus = "Saved";
   #founderPending = false;
   #founderHooks = [];
+  #recordSearches = new Map();
+  #journalPending = false;
+  #assistantInputs = {};
+  #assistantApplied = null;
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
@@ -401,6 +415,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       deleteShipEntry: Ouw25ActorSheet.deleteShipEntry,
       editRecord: Ouw25ActorSheet.editRecord,
       deleteRecord: Ouw25ActorSheet.deleteRecord,
+      recordJournal: Ouw25ActorSheet.recordJournal,
+      applyCollisionAssistant: Ouw25ActorSheet.applyCollisionAssistant,
       openFounder: Ouw25ActorSheet.openFounder,
       removeFounder: Ouw25ActorSheet.removeFounder,
       toggleForcedMode: Ouw25ActorSheet.toggleForcedMode,
@@ -430,12 +446,72 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   _toggleDisabled(disabled) {
     super._toggleDisabled(disabled);
     if (disabled) {
-      for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait")) button.disabled = false;
+      for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait, [data-search-input], [data-search-clear], [data-action='recordJournal']")) button.disabled = false;
     }
+  }
+
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+    for (const container of this.element.querySelectorAll("[data-search-key]")) {
+      const input = container.querySelector("[data-search-input]");
+      const clear = container.querySelector("[data-search-clear]");
+      input.value = this.#recordSearches.get(container.dataset.searchKey) ?? "";
+      const filter = () => {
+        this.#recordSearches.set(container.dataset.searchKey, input.value);
+        filterRecordTable(container, input.value);
+      };
+      input.addEventListener("input", filter);
+      clear.addEventListener("click", () => {
+        input.value = "";
+        filter();
+        input.focus();
+      });
+      filter();
+    }
+    const assistant = this.element.querySelector("[data-collision-assistant]");
+    if (assistant) {
+      for (const input of assistant.querySelectorAll("[data-assist-field]")) {
+        const saved = this.#assistantInputs[input.dataset.assistField];
+        if (saved !== undefined) {
+          if (input.type === "checkbox") input.checked = saved;
+          else input.value = saved;
+        }
+      }
+      const update = () => {
+        this.#assistantInputs = this.#readAssistant(assistant);
+        const summary = assistant.querySelector("[data-assist-summary]");
+        const apply = assistant.querySelector("[data-action='applyCollisionAssistant']");
+        try {
+          const result = calculateCollisionAssistant(this.#assistantInputs);
+          summary.textContent = game.i18n.format("OUW25.CheckAssistant.Summary", {
+            dice: result.diceCount, complications: result.deduction
+          });
+          apply.disabled = false;
+        } catch {
+          summary.textContent = game.i18n.localize("OUW25.CheckAssistant.Invalid");
+          apply.disabled = true;
+        }
+      };
+      assistant.addEventListener("input", update);
+      update();
+    }
+  }
+
+  #readAssistant(container) {
+    return Object.fromEntries([...container.querySelectorAll("[data-assist-field]")].map(input => [
+      input.dataset.assistField, input.type === "checkbox" ? input.checked : input.value
+    ]));
   }
 
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
+    for (const event of ["updateJournalEntryPage", "deleteJournalEntryPage", "updateJournalEntry"]) {
+      const hook = Hooks.on(event, document => {
+        const journal = event === "updateJournalEntry" ? document : document.parent;
+        if (journal?.flags?.ouw25?.actorUuid === this.actor.uuid) this.render();
+      });
+      this.#founderHooks.push([event, hook]);
+    }
     if (this.actor.type !== "cooperative") return;
     for (const event of ["updateActor", "deleteActor", "createItem", "updateItem", "deleteItem"]) {
       const hook = Hooks.on(event, document => {
@@ -495,6 +571,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   async _prepareContext(options) {
     const { type, system } = this.actor;
+    const journalStates = new Map(await Promise.all(this.actor.items
+      .filter(item => item.flags?.ouw25?.journalPageUuid)
+      .map(async item => [item.id, await journalPresentation(item, game.user)])));
+    const journal = item => journalStates.has(item.id) ? { journal: journalStates.get(item.id) } : {};
     const merchant = type === "merchant";
     const pension = merchant ? pensionProgress(system.pensionBalance) : null;
     const lethal = merchant ? lethalWoundSlot(system.past, system.fragile) : null;
@@ -505,13 +585,16 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const traits = merchant ? this.actor.items.filter(item => item.type === "trait") : [];
     const ship = type === "cooperative" ? shipConfiguration(system) : null;
     const contacts = ship ? this.actor.items.filter(item => item.type === "contact").map(item => ({
-      id: item.id, name: item.name, location: item.system.location, reason: item.system.reason, amount: item.system.amount
+      id: item.id, name: item.name, location: item.system.location, reason: item.system.reason, amount: item.system.amount,
+      ...journal(item)
     })) : null;
     const cargo = ship ? this.actor.items.filter(item => item.type === "cargo").map(item => ({
-      id: item.id, name: item.name, quantity: item.system.quantity, volume: item.system.volume
+      id: item.id, name: item.name, quantity: item.system.quantity, volume: item.system.volume,
+      ...journal(item)
     })) : null;
     const ports = ship ? this.actor.items.filter(item => item.type === "port").map(item => ({
-      id: item.id, name: item.name, region: item.system.region, description: item.system.description
+      id: item.id, name: item.name, region: item.system.region, description: item.system.description,
+      ...journal(item)
     })) : null;
     const founderDocuments = ship ? await Promise.all((system.founders ?? []).map(async uuid => {
       try { return await fromUuid(uuid); } catch { return null; }
@@ -570,6 +653,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       actorTypeLabel: `TYPES.Actor.${type}`,
       editable: this.isEditable,
       showCollision: this.isEditable && merchant,
+      collisionAssistant: merchant ? {
+        bonuses: ASSISTANT_BONUSES.map(id => ({
+          id, label: `OUW25.CheckAssistant.Bonus.${id}`, maxOne: ["specialty", "shipMerit"].includes(id)
+        })),
+        complications: ASSISTANT_COMPLICATIONS.map(id => ({
+          id, label: `OUW25.CheckAssistant.Penalty.${id}`, maxOne: id === "equipment"
+        }))
+      } : null,
       token: {
         icon: DEFAULT_ACTOR_TOKENS[type],
         label: merchant ? "OUW25.Identity.ConfigureToken" : "OUW25.Ship.ConfigureToken",
@@ -626,7 +717,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         founders
       },
       contracts: type === "cooperative" ? this.actor.items.filter(item => item.type === "contract").map(item => ({
-        id: item.id, name: item.name, location: item.system.location, deadline: item.system.deadline, amount: item.system.amount
+        id: item.id, name: item.name, location: item.system.location, deadline: item.system.deadline, amount: item.system.amount,
+        ...journal(item)
       })) : null,
       showContracts: type === "cooperative",
       ports: ports && { entries: ports, discovered: discoveredPorts(ports.map(({ name }) => name)), total: PORT_COUNT },
@@ -644,19 +736,22 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         groups: DEBT_DIRECTIONS.map(direction => ({
           label: `OUW25.Debt.${direction}`,
           entries: debts.filter(item => item.system.direction === direction).map(item => ({
-            id: item.id, name: item.name, location: item.system.location, amount: item.system.amount
+            id: item.id, name: item.name, location: item.system.location, amount: item.system.amount,
+            ...journal(item)
           }))
         }))
       } : null,
       relationships: merchant ? RELATION_KINDS.map(kind => ({
         kind, tab: kind === "friend" ? "friends" : "illwishers", label: `OUW25.Relationship.${kind}`,
         entries: relationships.filter(item => item.system.direction === kind).map(item => ({
-          id: item.id, name: item.name, location: item.system.location, reason: item.system.reason
+          id: item.id, name: item.name, location: item.system.location, reason: item.system.reason,
+          ...journal(item)
         }))
       })) : null,
       possessions: merchant ? {
         entries: this.actor.items.filter(item => item.type === "possession").map(item => ({
-          id: item.id, name: item.name, amount: item.system.amount
+          id: item.id, name: item.name, amount: item.system.amount,
+          ...journal(item)
         }))
       } : null,
       identity: merchant ? {
@@ -818,6 +913,35 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   #listedCargoVolume() {
     return this.actor.items.filter(item => item.type === "cargo").reduce((total, item) => total + item.system.volume, 0);
+  }
+
+  static async recordJournal(_event, target) {
+    const item = this.actor.items.get(target.dataset.recordId);
+    if (!item || item.type !== target.dataset.recordType || this.#journalPending) return;
+    this.#journalPending = true;
+    try {
+      await openRecordJournal(this.actor, item, this.isEditable, target.dataset.copy === "true");
+    } catch (error) {
+      console.error(error);
+      ui.notifications.error(game.i18n.localize("OUW25.Journal.Error"));
+    } finally {
+      this.#journalPending = false;
+    }
+  }
+
+  static applyCollisionAssistant(_event, target) {
+    if (!this.isEditable || this.actor.type !== "merchant") return;
+    const assistant = target.closest("[data-collision-assistant]");
+    const collision = target.closest(".ouw25-collision");
+    try {
+      const result = calculateCollisionAssistant(this.#readAssistant(assistant));
+      collision.querySelector("[data-dice]").value = result.diceCount;
+      collision.querySelector("[data-deduction]").value = result.deduction;
+      this.#assistantApplied = result;
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      ui.notifications.warn(game.i18n.localize("OUW25.CheckAssistant.Invalid"));
+    }
   }
 
   static async editRecord(event, target) {
@@ -1083,10 +1207,16 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name: result, "system.code": value }]);
       else if (actorName) await actor.update({ name: value });
       else await actor.update({ [`system.${field}`]: storeLabel ? result : value });
-      await roll.toMessage({
-        speaker: foundry.documents.ChatMessage.getSpeaker({ actor }),
-        flavor: i18n.format(`OUW25.Creation.Result${key}`, { result })
-      }, { messageMode: game.settings.get("core", "messageMode") });
+      try {
+        await roll.toMessage({
+          speaker: foundry.documents.ChatMessage.getSpeaker({ actor }),
+          flavor: await checkCard(actor, i18n.localize(`OUW25.Creation.Roll${key}`),
+            i18n.format(`OUW25.Creation.Result${key}`, { result }), [], "OUW25.CheckCard.Applied")
+        }, { messageMode: game.settings.get("core", "messageMode") });
+      } catch (error) {
+        console.error(error);
+        ui.notifications.error(i18n.localize("OUW25.Voyage.ChatFailedApplied"));
+      }
     } finally {
       this.#creationRollPending = false;
       target.disabled = false;
@@ -1209,6 +1339,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const roll = await new Roll(`${4 + additionalDice}d6`).evaluate({ allowInteractive: false });
       const dice = roll.dice.flatMap(term => term.results.filter(({ active }) => active).map(({ result }) => result));
       const { outcome, remaining } = resolveCollision(dice, complications);
+      const details = [
+        { label: "OUW25.Collision.Dice", value: 4 + additionalDice },
+        { label: "OUW25.Collision.Deduction", value: complications }
+      ];
       const result = i18n.format("OUW25.Collision.Result", {
         outcome: i18n.localize(`OUW25.Collision.${outcome}`), remaining
       });
@@ -1216,7 +1350,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!this.isEditable || forcedModeFingerprint(actor.system) !== fingerprint) {
         const warning = i18n.localize("OUW25.Voyage.StateChanged");
         ui.notifications.warn(warning);
-        await publishVoyageRoll(actor, `${summary} ${warning}`, [roll], false);
+        await publishVoyageRoll(actor, `${summary} ${warning}`, [roll], false, title, details);
         return;
       }
       const { forcedMode, damageSlot } = resolveForcedMode(actor.system, remaining);
@@ -1229,7 +1363,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         "system.travelStatus": "",
         ...(damageSlot ? { [`system.damage${damageSlot}`]: true } : {})
       });
-      await publishVoyageRoll(actor, status, [roll], true);
+      await publishVoyageRoll(actor, status, [roll], true, title, details);
     } finally {
       PENDING_VOYAGE_OPERATIONS.delete(actor.id);
       target.disabled = false;
@@ -1263,7 +1397,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const update = Object.fromEntries(Object.entries(transition.update)
         .map(([field, value]) => [`system.${field}`, value]));
       update["system.travelStatus"] = i18n.format("OUW25.Voyage.TransitionDone", transition.costs);
+      const before = Object.fromEntries(["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"]
+        .map(field => [field, actor.system[field]]));
       await actor.update(update);
+      await publishVoyageCard(actor, before, transition.update, false);
     } catch (error) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));
@@ -1301,7 +1438,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         .filter(([field]) => field !== "costs")
         .map(([field, value]) => [`system.${field}`, value]));
       update["system.travelStatus"] = i18n.localize("OUW25.Voyage.TransitionUndone");
+      const before = Object.fromEntries(["fuelStock", "provisionsStock", "unrest", "travelSectors", "travelWatches"]
+        .map(field => [field, actor.system[field]]));
       await actor.update(update);
+      await publishVoyageCard(actor, before, rollback, true);
     } catch (error) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));
@@ -1389,11 +1529,15 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const successes = successRoll.dice.flatMap(term => term.results)
         .filter(({ active, result }) => active && result >= 6).length - complications;
       const outcome = resolvePsychotherapy(startingUnrest, successes, reliefRoll.total);
+      const details = [
+        { label: "OUW25.Collision.Dice", value: 4 + additionalDice },
+        { label: "OUW25.Collision.Deduction", value: complications }
+      ];
       if (!this.isEditable || voyageStateFingerprint(actor.system) !== fingerprint) {
         ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
         await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.TherapyNotApplied", {
           successes, relief: outcome.relief
-        }), [successRoll, reliefRoll], false);
+        }), [successRoll, reliefRoll], false, i18n.localize("OUW25.Voyage.Psychotherapy"), details);
         return;
       }
       await actor.update({
@@ -1402,7 +1546,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       });
       await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.TherapyChat", {
         successes, relief: outcome.relief
-      }), [successRoll, reliefRoll], true);
+      }), [successRoll, reliefRoll], true, i18n.localize("OUW25.Voyage.Psychotherapy"), details);
     } catch (error) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));
@@ -1463,7 +1607,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
         await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.IncreaseNotApplied", {
           increase: outcome.increase
-        }), [roll], false);
+        }), [roll], false, i18n.localize("OUW25.Voyage.IncreaseUnrest"));
         return;
       }
       await actor.update({
@@ -1474,7 +1618,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       });
       await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.IncreaseChat", {
         increase: outcome.increase
-      }), [roll], true);
+      }), [roll], true, i18n.localize("OUW25.Voyage.IncreaseUnrest"));
     } catch (error) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));
@@ -1498,6 +1642,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     target.disabled = true;
     try {
       let formula = action.formula;
+      const details = [];
       if (action.supplies) {
         const label = i18n.localize("OUW25.PersonalAction.Successes");
         const data = await foundry.applications.api.DialogV2.input({
@@ -1509,6 +1654,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         if (!data) return;
         try {
           formula = provisionFormula(data.successes);
+          details.push({ label: "OUW25.PersonalAction.Successes", value: data.successes });
         } catch (error) {
           if (!(error instanceof RangeError)) throw error;
           ui.notifications.warn(i18n.localize("OUW25.PersonalAction.InvalidSuccesses"));
@@ -1532,7 +1678,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const result = i18n.format(outcome.key, data);
       const message = {
         speaker: ChatMessage.getSpeaker({ actor }),
-        flavor: i18n.format("OUW25.PersonalAction.Result", { title, result }),
+        flavor: await checkCard(actor, title, result, details),
         rolls
       };
       ChatMessage.applyRollMode(message, messageMode);
@@ -1563,16 +1709,22 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const { Roll } = foundry.dice;
       const { ChatMessage } = foundry.documents;
       const messageMode = game.settings.get("core", "messageMode");
-      const roll = await new Roll(`${input.diceCount}d6`).evaluate({ allowInteractive: messageMode !== "blind" });
+      const roll = await new Roll(`${input.diceCount}d6`).evaluate({ allowInteractive: !["blind", "blindroll"].includes(messageMode) });
       const dice = roll.dice.flatMap(term => term.results.filter(result => result.active).map(result => result.result));
       const { outcome, remaining } = resolveCollision(dice, input.deduction);
       const result = game.i18n.format("OUW25.Collision.Result", {
           outcome: game.i18n.localize(`OUW25.Collision.${outcome}`),
           remaining
       });
+      const applied = this.#assistantApplied;
+      const sources = applied?.diceCount === input.diceCount && applied.deduction === input.deduction ? applied.details : [];
       await roll.toMessage({
         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        flavor: title ? game.i18n.format("OUW25.PersonalAction.Result", { title, result }) : result
+        flavor: await checkCard(this.actor, title ?? game.i18n.localize("OUW25.Collision.Title"), result, [
+          { label: "OUW25.Collision.Dice", value: input.diceCount },
+          { label: "OUW25.Collision.Deduction", value: input.deduction },
+          ...sources
+        ])
       }, { messageMode });
     } finally {
       target.disabled = false;

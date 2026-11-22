@@ -10,6 +10,30 @@
     <button type="button" class="ouw25-trait-icon" data-action="deleteRecord" data-record-type="{{recordType}}" data-record-id="{{id}}" aria-label="{{localize "OUW25.Debt.Delete"}}" data-tooltip="{{localize "OUW25.Debt.Delete"}}"><span aria-hidden="true">&#x1F5D1;&#xFE0F;</span></button>
   </div>
 {{/inline}}
+{{#*inline "ouw25-record-search"}}
+  <div class="ouw25-record-search">
+    <label><span>{{localize "OUW25.Search.Label"}}</span><input type="search" data-search-input aria-label="{{localize "OUW25.Search.Label"}}"></label>
+    <button type="button" data-search-clear>{{localize "OUW25.Search.Clear"}}</button>
+  </div>
+{{/inline}}
+{{#*inline "ouw25-record-journal"}}
+  {{#if journal.available}}
+    <details class="ouw25-record-journal">
+      <summary>{{localize "OUW25.Journal.Note"}}</summary>
+      <p>{{#if journal.preview}}{{journal.preview}}{{else}}{{localize "OUW25.Journal.Empty"}}{{/if}}</p>
+      <button type="button" data-action="recordJournal" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Journal.Open"}}</button>
+      {{#if journal.needsCopy}}{{#if @root.editable}}
+        <button type="button" data-action="recordJournal" data-record-type="{{recordType}}" data-record-id="{{id}}" data-copy="true">{{localize "OUW25.Journal.Copy"}}</button>
+      {{/if}}{{/if}}
+    </details>
+  {{else}}
+    {{#if journal.unavailable}}
+      <p class="ouw25-record-journal">{{localize "OUW25.Journal.Unavailable"}}</p>
+    {{else}}
+      {{#if @root.editable}}<button type="button" class="ouw25-record-journal" data-action="recordJournal" data-record-type="{{recordType}}" data-record-id="{{id}}">{{localize "OUW25.Journal.Create"}}</button>{{/if}}
+    {{/if}}
+  {{/if}}
+{{/inline}}
 {{#*inline "ouw25-money-input"}}
   <input type="number" name="system.{{money.field}}" aria-label="{{localize money.label}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
 {{/inline}}
@@ -263,6 +287,8 @@
   {{#if contacts}}
     <p class="ouw25-contacts-total">{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>
     <fieldset class="ouw25-contacts" aria-label="{{localize "OUW25.Contact.Title"}}">
+      <div data-search-key="contact">
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contact.Title"}}">
         <thead>
           <tr>
@@ -275,8 +301,8 @@
         </thead>
         <tbody>
           {{#each contacts.entries}}
-            <tr>
-              <td>{{name}}</td>
+            <tr data-record-row data-search-text="{{name}} {{location}} {{reason}}">
+              <td>{{name}}{{> ouw25-record-journal recordType="contact"}}</td>
               <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
               <td>{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
               <td class="ouw25-debt-amount">{{amount}}</td>
@@ -289,8 +315,10 @@
           {{else}}
             <tr><td colspan="{{#if editable}}5{{else}}4{{/if}}">{{localize "OUW25.Contact.Empty"}}</td></tr>
           {{/each}}
+          <tr data-search-no-matches hidden><td colspan="{{#if editable}}5{{else}}4{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
         </tbody>
       </table>
+      </div>
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contact">{{localize "OUW25.Contact.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
@@ -301,6 +329,8 @@
       {{#if ports}}
         <p>{{localize "OUW25.Port.Discovered" count=ports.discovered total=ports.total}}</p>
         <fieldset class="ouw25-ports" aria-label="{{localize "OUW25.Port.Title"}}">
+          <div data-search-key="port">
+          {{> ouw25-record-search}}
           <table class="ouw25-debt-table ouw25-ports-table" aria-label="{{localize "OUW25.Port.Title"}}">
             <colgroup><col><col><col></colgroup>
             <thead><tr>
@@ -310,8 +340,8 @@
             </tr></thead>
             <tbody>
               {{#each ports.entries}}
-                <tr>
-                  <td>{{name}}</td>
+                <tr data-record-row data-search-text="{{name}} {{region}} {{description}}">
+                  <td>{{name}}{{> ouw25-record-journal recordType="port"}}</td>
                   <td>{{region}}</td>
                   <td><div class="ouw25-port-description"><span>{{description}}</span>
                     {{#if @root.editable}}{{> ouw25-record-actions recordType="port"}}{{/if}}
@@ -320,8 +350,10 @@
               {{else}}
                 <tr><td colspan="3">{{localize "OUW25.Port.Empty"}}</td></tr>
               {{/each}}
+              <tr data-search-no-matches hidden><td colspan="3">{{localize "OUW25.Search.NoMatches"}}</td></tr>
             </tbody>
           </table>
+          </div>
           {{#if editable}}<button type="button" data-action="editRecord" data-record-type="port">{{localize "OUW25.Port.Add"}}</button>{{/if}}
         </fieldset>
       {{/if}}
@@ -331,6 +363,8 @@
     <div class="ouw25-sheet-column">
   {{#if showContracts}}
     <fieldset class="ouw25-contracts" aria-label="{{localize "OUW25.Contract.Title"}}">
+      <div data-search-key="contract">
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contract.Title"}}">
         <thead>
           <tr>
@@ -343,8 +377,8 @@
         </thead>
         <tbody>
           {{#each contracts}}
-            <tr>
-              <td>{{name}}</td>
+            <tr data-record-row data-search-text="{{name}} {{location}} {{deadline}}">
+              <td>{{name}}{{> ouw25-record-journal recordType="contract"}}</td>
               <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
               <td>{{#if deadline}}{{deadline}}{{else}}—{{/if}}</td>
               <td class="ouw25-debt-amount">{{amount}}</td>
@@ -357,8 +391,10 @@
           {{else}}
             <tr><td colspan="{{#if editable}}5{{else}}4{{/if}}">{{localize "OUW25.Contract.Empty"}}</td></tr>
           {{/each}}
+          <tr data-search-no-matches hidden><td colspan="{{#if editable}}5{{else}}4{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
         </tbody>
       </table>
+      </div>
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="contract">{{localize "OUW25.Contract.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
@@ -369,6 +405,8 @@
   {{#if cargo}}
     <p class="ouw25-cargo-summary">{{localize "OUW25.Cargo.HoldSummary" listed=ship.hold.breakdown.listed unlisted=ship.hold.breakdown.unlisted compartments=ship.hold.breakdown.compartments fuel=ship.hold.breakdown.fuel provisions=ship.hold.breakdown.provisions}}</p>
     <fieldset class="ouw25-cargo" aria-label="{{localize "OUW25.Cargo.Title"}}">
+      <div data-search-key="cargo">
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Cargo.Title"}}">
         <thead>
           <tr>
@@ -380,8 +418,8 @@
         </thead>
         <tbody>
           {{#each cargo.entries}}
-            <tr>
-              <td>{{name}}</td>
+            <tr data-record-row data-search-text="{{name}}">
+              <td>{{name}}{{> ouw25-record-journal recordType="cargo"}}</td>
               <td class="ouw25-debt-amount">{{quantity}}</td>
               <td class="ouw25-debt-amount">{{volume}}</td>
               {{#if @root.editable}}
@@ -391,8 +429,10 @@
               {{/if}}
             </tr>
           {{/each}}
+          <tr data-search-no-matches hidden><td colspan="{{#if editable}}4{{else}}3{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
         </tbody>
       </table>
+      </div>
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="cargo">{{localize "OUW25.Cargo.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
@@ -474,6 +514,8 @@
     <p class="ouw25-ledger-totals">{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
     <fieldset class="ouw25-ledger" aria-label="{{localize "OUW25.Debt.Title"}}">
       {{#each ledger.groups}}
+        <div data-search-key="debt-{{label}}">
+        {{> ouw25-record-search}}
         <table class="ouw25-debt-table">
           <caption><h4>{{localize label}}</h4></caption>
           <thead>
@@ -488,8 +530,8 @@
           </thead>
           <tbody>
             {{#each entries}}
-              <tr>
-                <th scope="row">{{name}}</th>
+              <tr data-record-row data-search-text="{{name}} {{location}}">
+                <th scope="row">{{name}}{{> ouw25-record-journal recordType="debt"}}</th>
                 <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
                 <td class="ouw25-debt-amount">{{amount}}</td>
                 {{#if @root.editable}}
@@ -501,8 +543,10 @@
             {{else}}
               <tr><td colspan="{{#if @root.editable}}4{{else}}3{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
             {{/each}}
+            <tr data-search-no-matches hidden><td colspan="{{#if @root.editable}}4{{else}}3{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
           </tbody>
         </table>
+        </div>
       {{/each}}
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="debt">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
     </fieldset>
@@ -512,6 +556,8 @@
   {{#*inline "ouw25-relationship-list"}}
     <div class="ouw25-sheet-column">
     <fieldset class="ouw25-relationships" aria-label="{{localize tab.label}}">
+        <div data-search-key="relationship-{{kind}}">
+        {{> ouw25-record-search}}
         <table class="ouw25-debt-table" aria-label="{{localize tab.label}}">
           <thead>
             <tr>
@@ -523,8 +569,8 @@
           </thead>
           <tbody>
             {{#each entries}}
-              <tr>
-                <th scope="row">{{name}}</th>
+              <tr data-record-row data-search-text="{{name}} {{location}} {{reason}}">
+                <th scope="row">{{name}}{{> ouw25-record-journal recordType="relationship"}}</th>
                 <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
                 <td>{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
                 {{#if @root.editable}}
@@ -536,8 +582,10 @@
             {{else}}
               <tr><td colspan="{{#if @root.editable}}4{{else}}3{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
             {{/each}}
+            <tr data-search-no-matches hidden><td colspan="{{#if @root.editable}}4{{else}}3{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
           </tbody>
         </table>
+        </div>
       {{#if @root.editable}}<button type="button" data-action="editRecord" data-record-type="relationship" data-record-direction="{{kind}}">{{localize "OUW25.Relationship.Add"}}</button>{{/if}}
     </fieldset>
     </div>
@@ -546,6 +594,8 @@
     <div class="ouw25-sheet-column">
   {{#if possessions}}
     <fieldset class="ouw25-possessions" aria-label="{{localize "OUW25.Possession.Title"}}">
+      <div data-search-key="possession">
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Possession.Title"}}">
         <thead>
           <tr>
@@ -556,8 +606,8 @@
         </thead>
         <tbody>
           {{#each possessions.entries}}
-            <tr>
-              <th scope="row">{{name}}</th>
+            <tr data-record-row data-search-text="{{name}}">
+              <th scope="row">{{name}}{{> ouw25-record-journal recordType="possession"}}</th>
               <td class="ouw25-debt-amount">{{amount}}</td>
               {{#if @root.editable}}
                 <td class="ouw25-debt-actions">
@@ -568,8 +618,10 @@
           {{else}}
             <tr><td colspan="{{#if editable}}3{{else}}2{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
           {{/each}}
+          <tr data-search-no-matches hidden><td colspan="{{#if editable}}3{{else}}2{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
         </tbody>
       </table>
+      </div>
       {{#if editable}}<button type="button" data-action="editRecord" data-record-type="possession">{{localize "OUW25.Possession.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
@@ -724,6 +776,26 @@
         <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
         <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
       </div>
+      <details class="ouw25-check-assistant" data-collision-assistant>
+        <summary>{{localize "OUW25.CheckAssistant.Title"}}</summary>
+        <p>{{localize "OUW25.CheckAssistant.Help"}}</p>
+        <p>{{localize "OUW25.CheckAssistant.Context"}}:
+          {{#each condition.specialties}}{{#if selected}}{{localize label}}{{/if}}{{/each}} ·
+          {{#each condition.pasts}}{{#if selected}}{{localize label}}{{/if}}{{/each}} ·
+          {{#if identity.dream}}{{identity.dream}}{{else}}—{{/if}}
+        </p>
+        <h4>{{localize "OUW25.CheckAssistant.Advantages"}}</h4>
+        {{#each collisionAssistant.bonuses}}
+          <label>{{localize label}} <input type="number" min="0" {{#if maxOne}}max="1"{{/if}} step="1" value="0" data-assist-field="{{id}}"></label>
+        {{/each}}
+        <label><input type="checkbox" data-assist-field="dream"> {{localize "OUW25.CheckAssistant.Dream"}}</label>
+        <h4>{{localize "OUW25.CheckAssistant.Complications"}}</h4>
+        {{#each collisionAssistant.complications}}
+          <label>{{localize label}} <input type="number" min="0" {{#if maxOne}}max="1"{{/if}} step="1" value="0" data-assist-field="{{id}}"></label>
+        {{/each}}
+        <p data-assist-summary role="status"></p>
+        <button type="button" data-action="applyCollisionAssistant">{{localize "OUW25.CheckAssistant.Apply"}}</button>
+      </details>
     </details>
   {{/if}}
     </div>

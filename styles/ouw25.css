@@ -1757,3 +1757,111 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
   display: inline-flex;
   vertical-align: middle;
 }
+
+.ouw25-chat-card {
+  padding: 0.6rem;
+  color: #370f00;
+  background: #f3efe3 url("./images/smallpaper5.webp") center / cover;
+  border: 1px solid #6f4a30;
+  border-radius: 0.35rem;
+  font-family: "PT Sans", Arial, sans-serif;
+}
+
+.ouw25-chat-card header {
+  border-bottom: 1px solid #a48b72;
+}
+
+.ouw25-chat-card h3 {
+  margin: 0;
+  font-family: "Viaoda Libre", Georgia, serif;
+  font-weight: bold;
+}
+
+.ouw25-chat-card header p {
+  margin: 0.2rem 0 0.4rem;
+}
+
+.ouw25-chat-card dl {
+  margin: 0.4rem 0 0;
+}
+
+.ouw25-chat-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ouw25-chat-card dt {
+  font-weight: bold;
+}
+
+.ouw25-chat-card dd {
+  margin: 0;
+  text-align: right;
+}
+
+.ouw25-record-search {
+  display: flex;
+  align-items: end;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.ouw25-record-search label {
+  flex: 1;
+  min-width: 0;
+}
+
+.ouw25-record-search input {
+  width: 100%;
+}
+
+.ouw25-record-search button {
+  flex: 0 0 auto;
+}
+
+.ouw25-notes [data-search-key] tr[hidden] {
+  display: none;
+}
+
+.ouw25-record-journal {
+  display: block;
+  margin: 0.25rem 0;
+  font-weight: normal;
+}
+
+.ouw25-record-journal summary {
+  cursor: pointer;
+}
+
+.ouw25-record-journal p {
+  margin: 0.25rem 0;
+  overflow-wrap: anywhere;
+}
+
+.ouw25-check-card .ouw25-check-result {
+  margin: 0.5rem 0 0;
+  font-weight: bold;
+}
+
+.ouw25-check-card .ouw25-check-state {
+  margin: 0.35rem 0 0;
+  font-style: italic;
+}
+
+.ouw25-check-assistant {
+  margin-top: 0.5rem;
+}
+
+.ouw25-check-assistant label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.ouw25-check-assistant input[type="number"] {
+  width: 5rem;
+  flex: 0 0 5rem;
+}

@@ -305,7 +305,7 @@ test("the built package registers models and an editable notes sheet for its dec
       : ["attributes", "contacts", "contracts", "ports", "ship", "cargo"]);
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { token, ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ports, cooperative, ...context } = await sheet._prepareContext({});
+      const { token, ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ports, cooperative, collisionAssistant, ...context } = await sheet._prepareContext({});
       assert.deepEqual(token, {
         icon: `systems/ouw25/styles/images/${merchant ? "pc" : "ship"}_token.webp`,
         label: merchant ? "OUW25.Identity.ConfigureToken" : "OUW25.Ship.ConfigureToken",
@@ -845,7 +845,7 @@ test("the built package registers models and an editable notes sheet for its dec
   shipSystem.travelStatus = "previous result";
   response = { additionalDice: 0, complications: 0 };
   game.i18n.format = (key, values) => `${key} ${JSON.stringify(values)}`;
-  game.settings = { get: () => "publicroll" };
+  game.settings = { get: () => "public" };
   foundry.dice = { Roll: class {
     async evaluate() {
       this.dice = [{ results: [6, 4, 2, 1].map(result => ({ active: true, result })) }];
@@ -854,11 +854,83 @@ test("the built package registers models and an editable notes sheet for its dec
   } };
   let chatMessage;
   foundry.documents.ChatMessage = {
-    getSpeaker: () => ({}), applyRollMode() {}, create: async message => { chatMessage = message; }
+    getSpeaker: () => ({}), applyRollMode() {}, applyMode() {}, create: async message => { chatMessage = message; }
+  };
+  let checkCard;
+  foundry.applications.handlebars.renderTemplate = async (_path, data) => {
+    checkCard = data;
+    return "check card";
   };
   await Sheet.DEFAULT_OPTIONS.actions.toggleForcedMode.call(shipSheet, null, { disabled: false });
   assert.equal(shipSystem.travelStatus, "");
-  assert.ok(chatMessage.flavor.includes("OUW25.Collision.Result"));
+  assert.equal(chatMessage.flavor, "check card");
+  assert.ok(checkCard.result.includes("OUW25.Collision.Result"));
+  assert.equal(checkCard.state, "OUW25.CheckCard.Applied");
+  assert.equal(chatMessage.rolls.length, 1);
+
+  Object.assign(shipSystem, {
+    shipName: "Ship", crewCount: 10, forcedMode: false, illuminationMode: false,
+    fuelStock: 10, provisionsStock: 10, unrest: 25, travelSectors: 0, travelWatches: 0,
+    illuminationUnrestPending: false, lastTransition: ""
+  });
+  shipSheet.actor.name = "Cooperative";
+  shipSheet.actor.testUserPermission = user => user.id === "operator";
+  game.users = [{ id: "operator" }, { id: "stranger" }, { id: "gm", isGM: true }];
+  foundry.applications.handlebars.renderTemplate = async (_path, data) => {
+    assert.equal(data.fields[2].delta, 0);
+    return "voyage card";
+  };
+  const messages = [];
+  foundry.documents.ChatMessage.create = async message => messages.push(message);
+  const voyageButton = { disabled: false, closest: () => ({ elements: { namedItem: () => null } }) };
+  foundry.applications.api.DialogV2.confirm = async () => false;
+  await Sheet.DEFAULT_OPTIONS.actions.travelSector.call(shipSheet, null, voyageButton);
+  assert.equal(messages.length, 0);
+  assert.equal(shipSystem.fuelStock, 10);
+  foundry.applications.api.DialogV2.confirm = async () => true;
+  await Sheet.DEFAULT_OPTIONS.actions.travelSector.call(shipSheet, null, voyageButton);
+  assert.equal(shipSystem.fuelStock, 9);
+  assert.equal(messages[0].content, "voyage card");
+  assert.deepEqual(messages[0].whisper, ["operator", "gm"]);
+  await Sheet.DEFAULT_OPTIONS.actions.undoSector.call(shipSheet, null, voyageButton);
+  assert.equal(shipSystem.fuelStock, 10);
+  assert.equal(messages.length, 2);
+
+  const checkSheet = new Sheet();
+  checkSheet.isEditable = true;
+  checkSheet.actor = { type: "merchant", name: "Merchant" };
+  const assistantInputs = [
+    { dataset: { assistField: "specialty" }, type: "number", value: "1" },
+    { dataset: { assistField: "equipment" }, type: "number", value: "1" },
+    { dataset: { assistField: "dream" }, type: "checkbox", checked: true }
+  ];
+  const assistant = { querySelectorAll: () => assistantInputs };
+  const diceInput = { value: "4" };
+  const deductionInput = { value: "0" };
+  const collisionSection = { querySelector: selector => selector === "[data-dice]" ? diceInput : deductionInput };
+  const useAssistant = { closest: selector => selector === "[data-collision-assistant]" ? assistant : collisionSection };
+  Sheet.DEFAULT_OPTIONS.actions.applyCollisionAssistant.call(checkSheet, null, useAssistant);
+  assert.equal(diceInput.value, 9);
+  assert.equal(deductionInput.value, 1);
+  let interactive;
+  let rollMessage;
+  game.settings.get = () => "blind";
+  foundry.dice.Roll = class {
+    constructor(formula) { this.formula = formula; }
+    async evaluate(options) {
+      interactive = options.allowInteractive;
+      this.dice = [{ results: [{ active: true, result: 6 }] }];
+      return this;
+    }
+    async toMessage(message, options) { rollMessage = { message, options }; }
+  };
+  foundry.applications.handlebars.renderTemplate = async (_path, data) => { checkCard = data; return "check card"; };
+  const rollTarget = { disabled: false, closest: () => ({ querySelector: () => collisionSection }) };
+  await Sheet.DEFAULT_OPTIONS.actions.rollCollision.call(checkSheet, null, rollTarget);
+  assert.equal(interactive, false);
+  assert.equal(rollMessage.options.messageMode, "blind");
+  assert.equal(rollMessage.message.flavor, "check card");
+  assert.ok(checkCard.details.some(detail => detail.label === "OUW25.CheckAssistant.Dream"));
 
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));
@@ -870,6 +942,183 @@ test("discovered ports count unique canonical names and known spelling variants"
   assert.equal(discoveredPorts([" Олъм ", "ОЛЪМ", "Н’те Поа", "Н`те Поа", "Пэнллн", "Пенллн", "Ррэф", "Неизвестный порт"]), 4);
   assert.equal(discoveredPorts(["Салайф", "Костегрыз", "Кра'Кас"]), 3);
   assert.equal(discoveredPorts(["почти Олъм", "", "несуществующий"]), 0);
+});
+
+test("voyage cards report actual deltas and never widen message recipients", async () => {
+  const { voyageCardData, restrictVoyageRecipients, publishVoyageCard } = await import(new URL("module/voyage-chat.mjs", dist));
+  const before = { fuelStock: 9, provisionsStock: 4, unrest: 25, travelSectors: 0, travelWatches: 0 };
+  const after = { fuelStock: 10, provisionsStock: 5, unrest: 24, travelSectors: 0, travelWatches: 0 };
+  const actor = {
+    name: "Cooperative", system: { shipName: "Ship" },
+    testUserPermission: user => user.id === "observer"
+  };
+  const card = voyageCardData(actor, before, after, true);
+  assert.equal(card.title, "OUW25.Voyage.UndoSector");
+  assert.deepEqual(card.fields.map(field => field.delta), [1, 1, -1, 0, 0]);
+  const users = [{ id: "gm", isGM: true }, { id: "observer" }, { id: "stranger" }];
+  const publicMessage = {};
+  restrictVoyageRecipients(publicMessage, users, actor);
+  assert.deepEqual(publicMessage.whisper, ["gm", "observer"]);
+  const privateMessage = { whisper: ["gm", "stranger"] };
+  restrictVoyageRecipients(privateMessage, users, actor, "gm");
+  assert.deepEqual(privateMessage.whisper, ["gm"]);
+  assert.throws(() => restrictVoyageRecipients({ whisper: ["stranger"] }, users, actor, "gm"));
+  assert.throws(() => restrictVoyageRecipients({}, users, actor, "blind"));
+
+  const errors = [];
+  globalThis.game = { users, settings: { get: () => "public" }, i18n: { localize: key => key } };
+  globalThis.ui = { notifications: { error: value => errors.push(value) } };
+  globalThis.foundry = {
+    applications: { handlebars: { renderTemplate: async () => "<article>card</article>" } },
+    documents: { ChatMessage: {
+      getSpeaker: () => ({}), applyMode() {}, create: async () => { throw new Error("chat unavailable"); }
+    } }
+  };
+  const originalError = console.error;
+  try {
+    console.error = () => {};
+    await publishVoyageCard(actor, before, after, false);
+  } finally { console.error = originalError; }
+  assert.deepEqual(errors, ["OUW25.Voyage.CardFailedApplied"]);
+});
+
+test("record search filters text without changing record data or confusing empty tables", async () => {
+  const { filterRecordTable } = await import(new URL("module/record-search.mjs", dist));
+  const rows = ["Олъм Северный порт", "Салайф Архипелаг"].map(searchText => ({ dataset: { searchText } }));
+  const noMatches = { hidden: true };
+  const container = {
+    querySelectorAll: () => rows,
+    querySelector: () => noMatches
+  };
+  filterRecordTable(container, " ПОРТ ");
+  assert.deepEqual(rows.map(row => row.hidden), [false, true]);
+  assert.equal(noMatches.hidden, true);
+  filterRecordTable(container, "нет");
+  assert.deepEqual(rows.map(row => row.hidden), [true, true]);
+  assert.equal(noMatches.hidden, false);
+  filterRecordTable(container, "");
+  assert.deepEqual(rows.map(row => row.hidden), [false, false]);
+  assert.equal(noMatches.hidden, true);
+  assert.equal(rows[0].dataset.searchText, "Олъм Северный порт");
+  container.querySelectorAll = () => [];
+  filterRecordTable(container, "нет");
+  assert.equal(noMatches.hidden, true);
+
+  const template = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
+  for (const entries of ["contacts.entries", "ports.entries", "contracts", "cargo.entries", "possessions.entries"]) {
+    assert.match(template, new RegExp(`{{#each ${entries.replaceAll(".", "\\.")}}}\\s*<tr data-record-row`));
+  }
+  assert.equal((template.match(/<tr data-record-row/g) ?? []).length, 7);
+});
+
+test("extended notes create journals lazily, recover links, and copy moved records only on request", async () => {
+  const { openRecordJournal, copyPageOwnership, journalPresentation } = await import(new URL("module/record-journal.mjs", dist));
+  assert.deepEqual(copyPageOwnership({
+    ownership: { default: -1 }, parent: { ownership: { default: 0 }, getUserLevel: user => user.id === "owner" ? 3 : 1 },
+    getUserLevel: user => user.id === "owner" ? 3 : 0
+  }, { ownership: { default: 2 }, getUserLevel: () => 3 }, [{ id: "owner" }, { id: "reader" }]),
+  { default: 0, owner: 3, reader: 0 });
+  const journals = [];
+  const pages = new Map();
+  const messages = [];
+  const user = { id: "owner", can: () => true };
+  const actor = {
+    uuid: "Actor.a", name: "Company", isOwner: true, ownership: { default: 0, owner: 3, reader: 2 },
+    items: new Map(), flags: {},
+    async setFlag(_scope, key, value) { this.flags.ouw25 = { ...this.flags.ouw25, [key]: value }; }
+  };
+  let linkFails = false;
+  const record = (id, type, direction) => {
+    const item = {
+      id, uuid: `Actor.a.Item.${id}`, name: id, type, system: { direction }, flags: {},
+      async setFlag(_scope, key, value) {
+        if (linkFails) throw new Error("link failure");
+        this.flags.ouw25 = { [key]: value };
+      }
+    };
+    actor.items.set(id, item);
+    return item;
+  };
+  globalThis.game = {
+    user, users: [user], journal: journals,
+    i18n: { localize: key => key, format: key => key }
+  };
+  globalThis.ui = { notifications: {
+    info: value => messages.push(value), warn: value => messages.push(value), error: value => messages.push(value)
+  } };
+  globalThis.fromUuid = async uuid => pages.get(uuid) ?? journals.find(journal => journal.uuid === uuid);
+  globalThis.foundry = { documents: { JournalEntry: { async create(data) {
+    const journal = {
+      ...data, id: `j${journals.length}`, uuid: `JournalEntry.j${journals.length}`, documentName: "JournalEntry",
+      pages: [], sheet: { async render(options) { messages.push(options.pageId); } },
+      testUserPermission: () => true, getUserLevel: () => 3,
+      async createEmbeddedDocuments(_type, [data]) {
+        const page = {
+          ...data, id: `p${pages.size}`, uuid: `JournalEntry.${this.id}.JournalEntryPage.p${pages.size}`,
+          documentName: "JournalEntryPage", parent: this, _stats: { modifiedTime: 1 },
+          testUserPermission: () => true, getUserLevel: () => 3,
+          ownership: data.ownership ?? { default: -1 }
+        };
+        this.pages.push(page);
+        pages.set(page.uuid, page);
+        return [page];
+      }
+    };
+    journals.push(journal);
+    return journal;
+  } } } };
+
+  const first = record("first", "debt", "payable");
+  assert.equal(journals.length, 0);
+  await openRecordJournal(actor, first, true);
+  assert.equal(journals.length, 1);
+  assert.deepEqual(journals[0].ownership, actor.ownership);
+  assert.equal(journals[0].pages.length, 1);
+  await openRecordJournal(actor, first, true);
+  assert.equal(journals[0].pages.length, 1);
+  const second = record("second", "debt", "payable");
+  linkFails = true;
+  const originalError = console.error;
+  try {
+    console.error = () => {};
+    await openRecordJournal(actor, second, true);
+  } finally { console.error = originalError; }
+  assert.equal(journals[0].pages.length, 2);
+  linkFails = false;
+  await openRecordJournal(actor, second, true);
+  assert.equal(journals[0].pages.length, 2);
+  assert.ok(second.flags.ouw25.journalPageUuid);
+  const third = record("third", "debt", "payable");
+  actor.flags.ouw25.journalTables["debt-payable"] = "JournalEntry.inaccessible";
+  await openRecordJournal(actor, third, true);
+  assert.equal(journals.length, 1);
+  assert.equal(journals[0].pages.length, 2);
+  actor.flags.ouw25.journalTables["debt-payable"] = journals[0].uuid;
+
+  const original = pages.get(first.flags.ouw25.journalPageUuid);
+  original.text.content = "<p>Existing note</p>";
+  first.system.direction = "receivable";
+  await openRecordJournal(actor, first, true);
+  assert.equal(journals.length, 1);
+  await openRecordJournal(actor, first, true, true);
+  assert.equal(journals.length, 2);
+  assert.equal(journals[1].pages[0].text.content, "<p>Existing note</p>");
+  assert.equal(journals[0].pages[0], original);
+  assert.equal(first.flags.ouw25.journalPageUuid, journals[1].pages[0].uuid);
+  const copied = journals[1].pages[0];
+  let enrichOptions;
+  foundry.applications = { ux: { TextEditor: { async enrichHTML(_content, options) {
+    enrichOptions = options;
+    return "Visible note";
+  } } } };
+  globalThis.document = { createElement: () => ({
+    set innerHTML(value) { this.content = { textContent: value }; }
+  }) };
+  copied.testUserPermission = (_user, level) => level === "OBSERVER";
+  assert.deepEqual(await journalPresentation(first, user), { available: true, preview: "Visible note", needsCopy: false });
+  assert.equal(enrichOptions.secrets, false);
+  copied.testUserPermission = () => false;
+  assert.deepEqual(await journalPresentation(first, user), { unavailable: true });
 });
 
 test("identity rolls use independent name indices and preserve the Roll20 table boundaries", async () => {
@@ -932,6 +1181,22 @@ test("collision distinguishes outcomes after deductions", async () => {
   const dice = [6, 6, 3, 1];
   for (const [deduction, remaining, outcome] of [[0, 2, "Success"], [1, 1, "Partial"], [3, -1, "Failure"]]) {
     assert.deepEqual(resolveCollision(dice, deduction), { remaining, outcome });
+  }
+});
+
+test("collision assistant accounts for chosen sources without applying their consequences", async () => {
+  const { calculateCollisionAssistant } = await import(new URL("module/collision-assistant.mjs", dist));
+  assert.deepEqual(calculateCollisionAssistant({}), { diceCount: 4, deduction: 0, details: [] });
+  const result = calculateCollisionAssistant({
+    specialty: "1", shipMerit: "1", dream: true, preparation: "2", wounds: "1",
+    donation: "359", equipment: "1", personalFlaws: "2"
+  });
+  assert.equal(result.diceCount, 14);
+  assert.equal(result.deduction, 3);
+  assert.ok(result.details.some(({ label, value }) => label.endsWith(".donation") && value === 359));
+  for (const invalid of [{ specialty: 2 }, { equipment: 2 }, { preparation: -1 }, { other: "1.5" },
+    { preparation: 97 }, { donation: Number.MAX_SAFE_INTEGER }]) {
+    assert.throws(() => calculateCollisionAssistant(invalid), RangeError);
   }
 });
 

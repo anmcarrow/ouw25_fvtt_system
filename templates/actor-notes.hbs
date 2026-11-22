@@ -347,17 +347,18 @@
             <button type="button" data-action="increaseUnrest">{{localize "OUW25.Voyage.IncreaseUnrest"}}</button>
           {{/if}}
         </div>
-        <p>{{#if ship.forcedMode}}{{localize "OUW25.Voyage.ForcedOn"}}{{else}}{{localize "OUW25.Voyage.ForcedOff"}}{{/if}}</p>
-        <p>{{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
-        {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
-        {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
-        {{#if ship.voyage.wornEngine}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
-        {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
-        {{#if ship.voyage.provisionsLow}}<p role="status">{{localize "OUW25.Voyage.ProvisionsLow"}}</p>{{/if}}
-        {{#each ship.voyage.shortages}}<p role="status">{{localize this}}</p>{{/each}}
-        <p>{{localize "OUW25.Voyage.TravelInfo"}}</p>
-        <p>{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}}</p>
-        {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
+        <p class="ouw25-voyage-summary">{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}} {{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
+        <div class="ouw25-voyage-statuses">
+          <p>{{#if ship.forcedMode}}{{localize "OUW25.Voyage.ForcedOn"}}{{else}}{{localize "OUW25.Voyage.ForcedOff"}}{{/if}}</p>
+          {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
+          {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
+          {{#if ship.voyage.wornEngine}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
+          {{#if ship.voyage.fuelLow}}<p role="status">{{localize "OUW25.Voyage.FuelLow" sectors=ship.voyage.fuelSectors}}</p>{{/if}}
+          {{#if ship.voyage.provisionsLow}}<p role="status">{{localize "OUW25.Voyage.ProvisionsLow"}}</p>{{/if}}
+          {{#each ship.voyage.shortages}}<p role="status">{{localize this}}</p>{{/each}}
+          <p>{{localize "OUW25.Voyage.TravelInfo"}}</p>
+          {{#if ship.travelStatus}}<p role="status">{{ship.travelStatus}}</p>{{/if}}
+        </div>
       </fieldset>
       <div class="ouw25-ship-pair">
         {{#each ship.qualities}}{{> ouw25-ship-list list=this}}{{/each}}

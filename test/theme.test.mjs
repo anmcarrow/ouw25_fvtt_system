@@ -27,6 +27,17 @@ test("record tables retain accessible names without visible block headings", () 
   assert.match(template, /<p class="ouw25-contacts-total">[\s\S]*?<\/p>\s*<fieldset class="ouw25-contacts"/);
 });
 
+test("voyage status cards follow a single travel summary", () => {
+  const voyage = template.match(/<fieldset class="ouw25-voyage">([\s\S]*?)<\/fieldset>/)?.[1];
+  assert.ok(voyage);
+  assert.match(voyage, /<p class="ouw25-voyage-summary">[\s\S]*?OUW25\.Voyage\.TravelCounters[\s\S]*?OUW25\.Voyage\.TravelRates[\s\S]*?<\/p>\s*<div class="ouw25-voyage-statuses">/);
+  for (const key of ["ForcedBlocked", "FuelLow", "ProvisionsLow", "TravelInfo"]) {
+    assert.match(voyage, new RegExp(`<div class="ouw25-voyage-statuses">[\\s\\S]*?OUW25\\.Voyage\\.${key}`));
+  }
+  assert.match(voyage, /\{\{#each ship\.voyage\.shortages\}\}<p role="status">/);
+  assert.match(voyage, /\{\{#if ship\.travelStatus\}\}<p role="status">\{\{ship\.travelStatus\}\}<\/p>/);
+});
+
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {
   assert.match(template, /<div class="ouw25-portrait-frame">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
   assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*200px;[^}]*block-size:\s*200px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);

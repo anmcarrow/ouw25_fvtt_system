@@ -336,15 +336,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button[data-tab="s
 
 .ouw25 .ouw25-sheet-tabs > button[data-tab="ship"] > span:first-child {
   overflow-wrap: anywhere;
-  position: relative;
 }
 
-.ouw25 .ouw25-tab-skull {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+.ouw25 .ouw25-sheet-tabs > button > .ouw25-tab-ship-destroyed {
+  text-decoration: line-through;
 }
 
 .ouw25 .ouw25-sheet-tabs > button > .ouw25-tab-damage {
@@ -469,12 +464,16 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait img {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-founder-wounds {
   position: absolute;
-  inset-inline: 0;
+  inset-inline-start: 50%;
   bottom: 6px;
-  font-size: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  inline-size: 3em;
+  max-inline-size: 100%;
+  font-size: 1.125rem;
   line-height: 1;
-  text-align: center;
-  white-space: nowrap;
+  transform: translateX(-50%);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-founder-card {

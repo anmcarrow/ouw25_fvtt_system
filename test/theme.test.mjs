@@ -97,11 +97,11 @@ test("cooperative tab labels show discovered ports, occupied hold and marked dam
   assert.ok(nav);
   assert.match(nav, /\{\{#if \(eq id "ports"\)\}\} \(\{\{@root\.ports\.discovered\}\}\/\{\{@root\.ports\.total\}\}\)/);
   assert.match(nav, /\{\{#if \(eq id "cargo"\)\}\} \(\{\{@root\.ship\.hold\.occupied\}\}\)/);
-  assert.match(nav, /\{\{#with @root\.ship\.condition\.tabSkull\}\}<span class="ouw25-tab-skull"[\s\S]*?&#x1F480;<\/span>\{\{\/with\}\}/);
+  assert.match(nav, /\{\{#if @root\.ship\.condition\.tabDestroyed\}\} class="ouw25-tab-ship-destroyed"/);
   assert.match(nav, /<\/span>\{\{#if \(eq id "ship"\)\}\}[\s\S]*?<span class="ouw25-tab-damage"/);
-  assert.match(nav, /class="ouw25-tab-damage" style="font-size: \{\{@root\.ship\.condition\.tabIconPercent\}\}%"[\s\S]*?\{\{#each @root\.ship\.condition\.tabDamage\}\}[\s\S]*?\{\{#if critical\}\}&#x1F480;\{\{else\}\}&#x1F4A5;/);
+  assert.match(nav, /class="ouw25-tab-damage" style="font-size: \{\{@root\.ship\.condition\.tabIconPercent\}\}%"[\s\S]*?\{\{#each @root\.ship\.condition\.tabDamage\}\}[\s\S]*?\{\{#if @root\.ship\.condition\.tabDestroyed\}\}&#x1F480;\{\{else\}\}&#x1F4A5;/);
   assert.match(styles, /button\[data-tab="ship"\]:has\(> \.ouw25-tab-damage\)\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:/s);
-  assert.match(styles, /\.ouw25-tab-skull\s*\{[^}]*position:\s*absolute;[^}]*inset-block-start:\s*50%;[^}]*inset-inline-start:\s*50%;/s);
+  assert.match(styles, /\.ouw25-tab-ship-destroyed\s*\{\s*text-decoration:\s*line-through;/);
   assert.match(styles, /\.ouw25-tab-damage\s*\{[^}]*gap:\s*0\.25em;[^}]*line-height:\s*1\.2;/s);
   assert.match(styles, /\.ouw25-tab\[data-tab="ship"\]\s*\{[^}]*margin-block-start:\s*-0\.75rem;[^}]*padding-block-start:\s*0\.75rem;[^}]*overflow-y:\s*clip;/s);
 });
@@ -146,7 +146,7 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
 test("actor sheet hover and panel styles retain their distinct visual roles", () => {
   assert.match(styles, /\.ouw25-portrait-view::after\s*\{[^}]*box-shadow:\s*inset /s);
   assert.match(styles, /\.ouw25-create-actor-types img\s*\{[^}]*filter:\s*invert\(1\)/s);
-  assert.match(template, /data-action="tab"[^>]*><span>\{\{localize label\}\}/);
+  assert.match(template, /data-action="tab"[^>]*><span[\s\S]*?>\{\{localize label\}\}/);
   assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*color:\s*color-mix\(/);
   assert.match(styles, /background:\s*radial-gradient\(ellipse at center, var\(--ouw25-button-color/);
   assert.match(styles, /background:\s*radial-gradient\(ellipse at center, #32445e, #485d78\)/);

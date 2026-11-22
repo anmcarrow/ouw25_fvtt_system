@@ -1034,7 +1034,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition {
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
   content: "";
   position: absolute;
-  inset-block-start: 50%;
+  inset-block-start: calc(50% - 1.35rem);
   inset-inline-start: 50%;
   inline-size: 345px;
   block-size: 345px;
@@ -1045,7 +1045,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition > h4 {
-  color: var(--ouw25-color-paper);
+  color: var(--ouw25-color-ink);
   text-align: center;
   margin: 0 0 0.4rem;
 }
@@ -1101,7 +1101,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.5em;
+  gap: 0.35em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources :is(label > input, .ouw25-ship-resource-value > input) {
@@ -1275,6 +1275,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button {
   white-space: nowrap;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-summary {
+  margin-block-start: 1rem;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses {
   display: flex;
   flex-wrap: wrap;
@@ -1335,8 +1339,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
 
 .ouw25 .ouw25-ship-damage {
   display: grid;
-  grid-template-columns: repeat(3, 1.8rem);
-  grid-template-rows: repeat(3, 1.8rem);
+  grid-template-columns: repeat(3, 2.7rem);
+  grid-template-rows: repeat(3, 2.7rem);
   align-content: start;
   justify-content: center;
   gap: 0.25rem;
@@ -1345,15 +1349,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
 }
 
 .ouw25 .ouw25-ship-damage:has(> label:nth-child(10)) {
-  grid-template-columns: repeat(4, 1.8rem);
+  grid-template-columns: repeat(4, 2.7rem);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage > .ouw25-condition-check {
   display: inline-grid;
   grid-template-columns: none;
   gap: 0;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 2.7rem;
+  height: 2.7rem;
   margin: 0;
   translate: 0 2px;
 }
@@ -1372,13 +1376,28 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-ch
   position: absolute;
   inset: 1px;
   z-index: -1;
-  background: var(--ouw25-field-background);
+  background: var(--ouw25-color-surface);
   clip-path: inherit;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > input:checked + span {
+  font-size: 1.5em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check:has(input:focus-visible) {
   outline: 2px solid var(--ouw25-color-accent-calm);
   outline-offset: 2px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card {
+  background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
+  border-radius: 0.35rem;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+  padding: calc(0.8rem + 10px);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card :is(h4, p) {
+  margin: 0.5rem 0;
 }
 
 .ouw25 .ouw25-debt-table caption {

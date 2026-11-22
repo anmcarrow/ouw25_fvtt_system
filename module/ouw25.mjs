@@ -9,7 +9,7 @@ import {
   resolveForcedMode, resolvePsychotherapy, rollbackSectorTransition,
   SHIP_CLASS_STATS, SHIP_QUALITIES, SHIP_QUALITY_SLOTS, shipQualitySlots, shipSelectionError
 } from "./ship.mjs";
-import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, shipListDefinition } from "./ship.mjs";
+import { SHIP_DAMAGE_SLOTS, SHIP_GEAR_CHOICES, SHIP_GEAR_SLOTS, shipCondition, shipGearSlots, shipListDefinition } from "./ship.mjs";
 import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 
@@ -432,6 +432,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         forcedDisabled: voyage.wornEngine && !system.forcedMode,
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: shipList("mount"), compartments: shipList("compartment"), gear: shipList("gear"),
+        equipmentEffects: [...ship.mounts, ...ship.compartments, ...shipGearSlots(system)]
+          .filter(({ value }) => value && value !== "none")
+          .map(({ value }) => `OUW25.Ship.EquipmentEffects.${value}`),
         condition: condition && {
           ...condition,
           slots: condition.slots.map(slot => ({ ...slot, critical: slot.number >= condition.durability }))

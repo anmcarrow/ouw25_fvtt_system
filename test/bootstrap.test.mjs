@@ -122,6 +122,9 @@ test("the built package registers models and an editable notes sheet for its dec
         assert.equal(cooperative.memory.help, "OUW25.Cooperative.Memory.Help.rescue");
         for (const language of ["en", "ru"]) {
           const texts = JSON.parse(await readFile(new URL(`lang/${language}.json`, dist), "utf8"));
+          for (const code of ["slagthrower", "harpoon", "water_cannon", "winch", "passenger", "premium", "diving", "sandshoes", "tow"]) {
+            assert.ok(texts.OUW25.Ship.EquipmentEffects[code], `${language}: missing equipment effect ${code}`);
+          }
           for (const [category, selection] of Object.entries({ Reputation: cooperative.reputation, Memory: cooperative.memory })) {
             for (const { value } of selection.choices) {
               assert.ok(texts.OUW25.Cooperative[category].Names[value]);
@@ -199,6 +202,16 @@ test("the built package registers models and an editable notes sheet for its dec
       assert.deepEqual(ship.voyage.displayShortages, ["OUW25.Voyage.NoCrew", "OUW25.Voyage.NoProvisions"]);
       sheet.actor.system.travelStatus = "Travel completed";
       assert.equal((await sheet._prepareContext({})).ship.travelStatus, "Travel completed");
+      Object.assign(sheet.actor.system, { mount1: "harpoon", mount2: "harpoon", mount3: "winch",
+        compartment1: "passenger", compartment2: "passenger", compartment5: "diving", gear1: "tow" });
+      assert.deepEqual((await sheet._prepareContext({})).ship.equipmentEffects, [
+        "OUW25.Ship.EquipmentEffects.harpoon", "OUW25.Ship.EquipmentEffects.harpoon",
+        "OUW25.Ship.EquipmentEffects.passenger", "OUW25.Ship.EquipmentEffects.passenger",
+        "OUW25.Ship.EquipmentEffects.tow"
+      ]);
+      Object.assign(sheet.actor.system, { mount1: "none", mount2: "none", compartment1: "none",
+        compartment2: "none", gear1: "none" });
+      assert.deepEqual((await sheet._prepareContext({})).ship.equipmentEffects, []);
     }
     let updates = 0;
     sheet.actor.update = async data => {

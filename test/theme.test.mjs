@@ -36,7 +36,12 @@ test("voyage status cards follow a single travel summary", () => {
   }
   assert.match(voyage, /\{\{#each ship\.voyage\.displayShortages\}\}<p role="status">/);
   assert.match(voyage, /\{\{#if ship\.hold\.overloaded\}\}<p role="status">\{\{localize "OUW25\.Ship\.Overloaded"\}\}/);
+  assert.match(voyage, /\{\{#if ship\.hold\.overloaded\}\}<p role="status">[\s\S]*?\{\{\/if\}\}\s*<\/div>\s*$/);
   assert.match(voyage, /\{\{#if ship\.travelStatus\}\}<p role="status">\{\{ship\.travelStatus\}\}<\/p>/);
+});
+
+test("equipment effects follow the compartment list", () => {
+  assert.match(template, /\{\{> ouw25-ship-list list=ship\.compartments showSpace=true\}\}\s*<section class="ouw25-ship-equipment-card">[\s\S]*?\{\{#each ship\.equipmentEffects\}\}/);
 });
 
 test("ship resource capacities accompany their inputs while retaining calculated summaries", () => {

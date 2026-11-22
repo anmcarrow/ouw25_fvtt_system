@@ -300,6 +300,18 @@
       "FreeMounts": "Free mounts: {count}",
       "Mounts": "Mounts",
       "Compartments": "Special compartments",
+      "EquipmentEffectsTitle": "Equipment effects",
+      "EquipmentEffects": {
+        "passenger": "A passenger compartment occupies 420 st. of hold space.",
+        "premium": "A premium passenger compartment occupies 525 st. of hold space.",
+        "diving": "A diving compartment occupies 800 st. of hold space.",
+        "slagthrower": "A slagthrower is installed on a mount and works while fuel remains.",
+        "harpoon": "A harpoon gun requires separately purchased harpoons.",
+        "water_cannon": "A water cannon delivers a powerful jet of water.",
+        "winch": "A motorized winch pulls objects and can be used with a harpoon gun.",
+        "sandshoes": "Sand shoes let the ship free itself from shallow ground.",
+        "tow": "The towing rig lets the ship tow floating objects."
+      },
       "CompartmentSpace": "Hold space taken by special compartments: {volume}",
       "CargoLoad": "Unlisted cargo, st.",
       "FuelStock": "Fuel stock, st.",

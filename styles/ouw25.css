@@ -486,6 +486,19 @@ body.game .application.ouw25 .ouw25-notes .ouw25-founder-details p {
   overflow-wrap: anywhere;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-summary {
+  overflow-wrap: normal;
+  text-transform: lowercase;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-summary::first-letter {
+  text-transform: uppercase;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-summary > span {
+  white-space: nowrap;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-budget > legend > h3 {
   line-height: 1;
 }
@@ -551,7 +564,7 @@ body.game .application.ouw25 .ouw25-notes :is(
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-columns.ouw25-cooperative-layout .ouw25-sheet-column.ouw25-cooperative-notes > textarea[name="system.notes"] {
   flex: 0 0 auto;
-  block-size: 5px;
+  block-size: 10em;
   min-block-size: 0;
   padding-block: 0;
   margin: 0;

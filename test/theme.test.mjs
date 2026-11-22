@@ -74,7 +74,22 @@ test("cooperative attributes put founders on the left and other blocks above the
   assert.match(right, /OUW25\.Finance\.Budget[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*\{\{> ouw25-journal\}\}/);
   assert.doesNotMatch(right, /OUW25\.Founders\.Title/);
   assert.match(styles, /\.ouw25-sheet-column\.ouw25-cooperative-notes\s*\{\s*gap:\s*20px;/);
-  assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*0 0 auto;[^}]*block-size:\s*5px;/s);
+  assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*0 0 auto;[^}]*block-size:\s*10em;/s);
+});
+
+test("founder summary keeps each localized subblock together", async () => {
+  const summary = template.match(/<p class="ouw25-founder-summary">([\s\S]*?)<\/p>/)?.[1];
+  assert.ok(summary);
+  assert.equal((summary.match(/<span>/g) ?? []).length, 6);
+  assert.doesNotMatch(summary, / – /);
+  assert.match(styles, /\.ouw25-founder-summary > span\s*\{\s*white-space:\s*nowrap;/);
+  for (const language of ["en", "ru"]) {
+    const { OUW25: { Founders: founders } } = JSON.parse(await readFile(new URL(`../dist/ouw25/lang/${language}.json`, import.meta.url), "utf8"));
+    for (const key of ["Money", "NoMoney", "NoDebt", "NoSavings", "NoFriends", "NoEnemies", "NoCreditors"]) {
+      assert.match(founders[key], /\u00a0/);
+      assert.doesNotMatch(founders[key], / /);
+    }
+  }
 });
 
 test("cooperative tab labels show discovered ports, occupied hold and marked damage", () => {

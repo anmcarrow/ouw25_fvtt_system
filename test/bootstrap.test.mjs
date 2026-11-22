@@ -91,7 +91,7 @@ test("the built package registers models and an editable notes sheet for its dec
     foundry.applications.api.DialogV2 = { input: async () => response };
     CONFIG.Actor.documentClass.create = async (data, options) => ({ data, options });
     for (const [type, supplied, expected] of [
-      ["cooperative", "", "ООО Н'Такоэ"], ["cooperative", "My company", "My company"],
+      ["cooperative", "", "LLC W'Ell"], ["cooperative", "My company", "My company"],
       ["merchant", "", "merchant-label"]
     ]) {
       response = { type, name: supplied };
@@ -109,10 +109,11 @@ test("the built package registers models and an editable notes sheet for its dec
       actor.type = type;
       actor.img = "custom-portrait.webp";
       actor.prototypeToken = {
-        randomImg, displayName: 0, texture: { src },
+        randomImg, displayName: 0, lockRotation: false, texture: { src },
         updateSource(update) {
           Object.assign(this.texture, update.texture);
           if (Object.hasOwn(update, "displayName")) this.displayName = update.displayName;
+          if (Object.hasOwn(update, "lockRotation")) this.lockRotation = update.lockRotation;
         }
       };
       return actor;
@@ -122,6 +123,7 @@ test("the built package registers models and an editable notes sheet for its dec
       await actor._preCreate(data, {}, {});
       assert.equal(actor.prototypeToken.texture.src, token);
       assert.equal(actor.prototypeToken.displayName, 50);
+      assert.equal(actor.prototypeToken.lockRotation, true);
     }
     const custom = makeActor("custom-token.webp");
     await custom._preCreate({ prototypeToken: { texture: { src: "custom-token.webp" } } }, {}, {});
@@ -131,8 +133,9 @@ test("the built package registers models and an editable notes sheet for its dec
     assert.equal(wildcard.prototypeToken.texture.src, "tokens/*.webp");
     assert.equal(wildcard.prototypeToken.displayName, 50);
     const hiddenName = makeActor("custom-token.webp");
-    await hiddenName._preCreate({ prototypeToken: { displayName: 0, texture: { src: "custom-token.webp" } } }, {}, {});
+    await hiddenName._preCreate({ prototypeToken: { displayName: 0, lockRotation: false, texture: { src: "custom-token.webp" } } }, {}, {});
     assert.equal(hiddenName.prototypeToken.displayName, 0);
+    assert.equal(hiddenName.prototypeToken.lockRotation, false);
     const imported = makeActor(portrait);
     await imported._preCreate({ prototypeToken: { texture: { src: portrait } } }, { fromCompendium: true }, {});
     assert.equal(imported.prototypeToken.texture.src, token);

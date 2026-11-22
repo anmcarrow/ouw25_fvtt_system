@@ -16,7 +16,7 @@ import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
-const DEFAULT_COOPERATIVE_NAME = "ООО Н'Такоэ";
+const DEFAULT_COOPERATIVE_NAME = "LLC W'Ell";
 const DEFAULT_ACTOR_TOKENS = {
   merchant: "systems/ouw25/styles/images/pc_token.webp",
   cooperative: "systems/ouw25/styles/images/ship_token.webp"
@@ -96,6 +96,7 @@ class Ouw25Actor extends foundry.documents.Actor {
       updates.texture = { src: DEFAULT_ACTOR_TOKENS[this.type] };
     }
     if (!Object.hasOwn(data.prototypeToken ?? {}, "displayName")) updates.displayName = CONST.TOKEN_DISPLAY_MODES.ALWAYS;
+    if (!Object.hasOwn(data.prototypeToken ?? {}, "lockRotation")) updates.lockRotation = true;
     if (Object.keys(updates).length) this.prototypeToken.updateSource(updates);
   }
 

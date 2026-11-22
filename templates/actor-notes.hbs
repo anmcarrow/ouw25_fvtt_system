@@ -104,7 +104,7 @@
                       <div class="ouw25-founder-details">
                         <h4>{{name}}</h4>
                         {{#if stats}}
-                          <p>{{localize stats.specialty}}, {{localize stats.past}}.</p>
+                          <p><strong>{{localize stats.specialty}}, {{localize stats.past}}.</strong></p>
                           <p class="ouw25-founder-summary">
                             <span>{{#if stats.money}}{{localize "OUW25.Founders.Money"}}&nbsp;–&nbsp;{{stats.money}}&nbsp;{{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoMoney"}}{{/if}};</span>
                             <span>{{#unless (eq stats.debt "0")}}{{localize "OUW25.Founders.Debt"}}&nbsp;–&nbsp;{{stats.debt}}&nbsp;{{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoDebt"}}{{/unless}};</span>

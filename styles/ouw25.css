@@ -339,7 +339,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button[data-tab="s
 }
 
 .ouw25 .ouw25-sheet-tabs > button > .ouw25-tab-ship-destroyed {
-  text-decoration: line-through;
+  text-decoration: line-through double;
 }
 
 .ouw25 .ouw25-sheet-tabs > button > .ouw25-tab-damage {
@@ -504,6 +504,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-founder-details p {
   margin: 0;
   font-size: 0.8em;
   overflow-wrap: anywhere;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-details p > strong {
+  font-weight: 700;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-founder-summary {

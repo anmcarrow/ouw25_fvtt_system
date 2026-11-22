@@ -54,6 +54,7 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.match(template, /type="submit"/);
   assert.match(template, /data-autosave-status/);
   assert.match(template, /<output\b[^>]*ouw25-hold-status[^>]*occupied=ship\.hold\.occupied capacity=ship\.hold\.capacity/);
+  assert.match(template, /<h4 class="ouw25-trait-name"\{\{#if tooltip\}\} tabindex="0" data-tooltip="\{\{localize tooltip\}\}"/);
   const recordActions = template.match(/\{\{#\*inline "ouw25-record-actions"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
   assert.ok(recordActions);
   for (const [action, label] of [["editRecord", "Edit"], ["deleteRecord", "Delete"]]) {
@@ -204,6 +205,12 @@ test("the built package registers models and an editable notes sheet for its dec
       assert.equal((await sheet._prepareContext({})).ship.travelStatus, "Travel completed");
       Object.assign(sheet.actor.system, { mount1: "harpoon", mount2: "harpoon", mount3: "winch",
         compartment1: "passenger", compartment2: "passenger", compartment5: "diving", gear1: "tow" });
+      for (const code of ["slagthrower", "harpoon", "water_cannon", "winch"]) {
+        sheet.actor.system.mount1 = code;
+        const [entry] = (await sheet._prepareContext({})).ship.mounts.entries;
+        assert.equal(entry.tooltip, `OUW25.Ship.EquipmentEffects.${code}`);
+      }
+      sheet.actor.system.mount1 = "harpoon";
       assert.deepEqual((await sheet._prepareContext({})).ship.equipmentEffects, [
         "OUW25.Ship.EquipmentEffects.harpoon", "OUW25.Ship.EquipmentEffects.harpoon",
         "OUW25.Ship.EquipmentEffects.passenger", "OUW25.Ship.EquipmentEffects.passenger",

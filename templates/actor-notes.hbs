@@ -177,14 +177,14 @@
     </div>
   {{/inline}}
   {{#*inline "ouw25-ship-list"}}
-    <fieldset class="ouw25-ship-list ouw25-traits">
+    <fieldset class="ouw25-ship-list ouw25-traits" data-ship-list="{{list.kind}}">
       {{> ouw25-block-heading heading=list.title}}
       {{#if list.entries}}
         <ul>
           {{#each list.entries}}
             <li>
               <div class="ouw25-choice-row">
-                <h4 class="ouw25-trait-name">{{localize name}}</h4>
+                <h4 class="ouw25-trait-name"{{#if tooltip}} tabindex="0" data-tooltip="{{localize tooltip}}"{{/if}}>{{localize name}}</h4>
                 {{#if @root.editable}}
                   <div class="ouw25-trait-actions">
                     <button type="button" class="ouw25-trait-icon" data-action="editShipEntry" data-kind="{{../list.kind}}" data-field="{{field}}" aria-label="{{localize "OUW25.Debt.Edit"}}" data-tooltip="{{localize "OUW25.Debt.Edit"}}"><span aria-hidden="true">&#x270F;&#xFE0F;</span></button>

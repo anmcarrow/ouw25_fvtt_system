@@ -391,7 +391,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         kind, title, add: `OUW25.ShipList.Add.${kind}`,
         canAdd: slots.some(({ value }) => !value || value === "none"),
         entries: slots.filter(({ value }) => value && value !== "none").map(({ field, value }) => ({
-          field, name: `${labels}.${value}`, help: help && `${help}.${value}`
+          field, name: `${labels}.${value}`, help: help && `${help}.${value}`,
+          ...(kind === "mount" ? { tooltip: `OUW25.Ship.EquipmentEffects.${value}` } : {})
         }))
       };
     };

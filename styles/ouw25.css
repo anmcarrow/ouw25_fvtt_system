@@ -551,6 +551,16 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair {
   list-style: none;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-list[data-ship-list="mount"] > ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-list[data-ship-list="mount"] .ouw25-trait-name {
+  overflow-wrap: anywhere;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-choice-row,
 body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions {
   display: flex;
@@ -1414,7 +1424,14 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   border-image: none;
   border-radius: 0.35rem;
   box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card {
   padding: calc(0.8rem + 10px);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
+  padding: 5px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card > p {

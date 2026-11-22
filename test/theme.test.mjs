@@ -16,7 +16,7 @@ test("the active actor tab uses a bundled WebP background", async () => {
 
 test("actor type headings use the bundled Roll20 header background", async () => {
   assert.match(template, /<header class="ouw25-sheet-heading">\s*<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
-  assert.match(styles, /\.ouw25-sheet-heading h2\s*\{[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) center \/ 100% 100% no-repeat/s);
+  assert.match(styles, /\.ouw25-sheet-heading::before\s*\{[^}]*inset-inline:\s*-10px -1rem;[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) left center \/ calc\(100% \+ 1rem - 10px\) 100% no-repeat/s);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/header_strip1.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
 });

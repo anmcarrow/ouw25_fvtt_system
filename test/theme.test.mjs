@@ -26,14 +26,13 @@ test("actor type headings use the bundled Roll20 header background", async () =>
 });
 
 test("record tables retain accessible names without visible block headings", () => {
-  for (const kind of ["contacts", "contracts", "ports", "ledger", "relationships", "possessions"]) {
+  for (const kind of ["contacts", "contracts", "ports", "cargo", "ledger", "relationships", "possessions"]) {
     const block = template.match(new RegExp(`<fieldset class="ouw25-${kind}"([^>]*)>([\\s\\S]*?)</fieldset>`));
     assert.ok(block, `missing ${kind} block`);
     assert.match(block[1], /aria-label=/);
     assert.doesNotMatch(block[2], /<legend\b|ouw25-block-heading/);
   }
   assert.match(template, /<caption><h4>\{\{localize label\}\}<\/h4><\/caption>/);
-  assert.match(template, /<fieldset class="ouw25-cargo">\s*<legend>/);
   assert.match(template, /<p class="ouw25-ledger-totals">[\s\S]*?<\/p>\s*<fieldset class="ouw25-ledger"/);
   assert.match(template, /<p class="ouw25-contacts-total">[\s\S]*?<\/p>\s*<fieldset class="ouw25-contacts"/);
 });
@@ -77,6 +76,15 @@ test("cooperative attributes put founders on the left and other blocks above the
   assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*1 1 6rem;[^}]*min-block-size:\s*6rem;/s);
 });
 
+test("cooperative tab labels show discovered ports, occupied hold and marked damage", () => {
+  const nav = template.match(/<nav class="tabs ouw25-sheet-tabs"[\s\S]*?<\/nav>/)?.[0];
+  assert.ok(nav);
+  assert.match(nav, /\{\{#if \(eq id "ports"\)\}\} \(\{\{@root\.ports\.discovered\}\}\/\{\{@root\.ports\.total\}\}\)/);
+  assert.match(nav, /\{\{#if \(eq id "cargo"\)\}\} \(\{\{@root\.ship\.hold\.occupied\}\}\)/);
+  assert.match(nav, /\{\{#each @root\.ship\.condition\.slots\}\}\{\{#if marked\}\}[\s\S]*?\{\{#if critical\}\}&#x1F480;\{\{else\}\}&#x1F4A5;/);
+  assert.match(styles, /\.ouw25-tab\[data-tab="ship"\]\s*\{\s*overflow-y:\s*clip;/);
+});
+
 test("ship resource capacities accompany their inputs while retaining calculated summaries", () => {
   const basics = template.match(/\{\{#\*inline "ouw25-ship-basics"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
   assert.ok(basics);
@@ -117,7 +125,7 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
 test("actor sheet hover and panel styles retain their distinct visual roles", () => {
   assert.match(styles, /\.ouw25-portrait-view::after\s*\{[^}]*box-shadow:\s*inset /s);
   assert.match(styles, /\.ouw25-create-actor-types img\s*\{[^}]*filter:\s*invert\(1\)/s);
-  assert.match(template, /data-action="tab"[^>]*><span>\{\{localize label\}\}<\/span><\/button>/);
+  assert.match(template, /data-action="tab"[^>]*><span>\{\{localize label\}\}/);
   assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*color:\s*color-mix\(/);
   assert.match(styles, /background:\s*radial-gradient\(ellipse at center, var\(--ouw25-button-color/);
   assert.match(styles, /background:\s*radial-gradient\(ellipse at center, #32445e, #485d78\)/);

@@ -81,7 +81,7 @@
   </header>
   <nav class="tabs ouw25-sheet-tabs" aria-label="{{localize "OUW25.Tabs.Label"}}">
     {{#each tabs}}
-      <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span>{{localize label}}</span></button>
+      <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span>{{localize label}}{{#if (eq id "ports")}} ({{@root.ports.discovered}}/{{@root.ports.total}}){{/if}}{{#if (eq id "cargo")}} ({{@root.ship.hold.occupied}}){{/if}}{{#if (eq id "ship")}}{{#each @root.ship.condition.slots}}{{#if marked}} <span role="img" aria-label="{{#if beyondLimit}}{{localize "OUW25.ShipCondition.BeyondLimit" number=number}}{{else}}{{localize "OUW25.ShipCondition.Damage" number=number}}{{/if}}">{{#if critical}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>{{/if}}{{/each}}{{/if}}</span></button>
     {{/each}}
   </nav>
   <div class="ouw25-tab-stack">
@@ -105,14 +105,13 @@
                         <h4>{{name}}</h4>
                         {{#if stats}}
                           <p>
-                            {{localize "OUW25.Founders.Role"}} – {{localize stats.specialty}};
-                            {{localize "OUW25.Past.Title"}} – {{localize stats.past}};
+                            {{localize stats.specialty}}, {{localize stats.past}}.<br>
                             {{#if stats.money}}{{localize "OUW25.Finance.PocketMoney"}} – {{stats.money}} {{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoMoney"}}{{/if}};
                             {{#unless (eq stats.debt "0")}}{{localize "OUW25.Founders.Debt"}} – {{stats.debt}} {{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoDebt"}}{{/unless}};
                             {{#if stats.savings}}{{localize "OUW25.Founders.Savings"}} – {{stats.savings}} {{localize "OUW25.Finance.Currency"}}{{else}}{{localize "OUW25.Founders.NoSavings"}}{{/if}};
                             {{#if stats.friends}}{{localize "OUW25.Tabs.friends"}} – {{stats.friends}}{{else}}{{localize "OUW25.Founders.NoFriends"}}{{/if}};
                             {{#if stats.enemies}}{{localize "OUW25.Tabs.illwishers"}} – {{stats.enemies}}{{else}}{{localize "OUW25.Founders.NoEnemies"}}{{/if}};
-                            {{#if stats.creditors}}{{localize "OUW25.Founders.Creditors"}} – {{stats.creditors}}{{else}}{{localize "OUW25.Founders.NoCreditors"}}{{/if}}
+                            {{#if stats.creditors}}{{localize "OUW25.Founders.Creditors"}} – {{stats.creditors}}{{else}}{{localize "OUW25.Founders.NoCreditors"}}{{/if}}.
                           </p>
                         {{else}}
                           <p>{{localize "OUW25.Founders.HiddenStats"}}</p>
@@ -360,8 +359,7 @@
   {{#*inline "ouw25-cargo-list"}}
     <div class="ouw25-sheet-column">
   {{#if cargo}}
-    <fieldset class="ouw25-cargo">
-      <legend><h3>{{localize "OUW25.Cargo.Heading" volume=cargo.volume}}</h3></legend>
+    <fieldset class="ouw25-cargo" aria-label="{{localize "OUW25.Cargo.Title"}}">
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Cargo.Title"}}">
         <thead>
           <tr>

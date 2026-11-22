@@ -342,6 +342,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab:not(.active) {
   display: none;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-tab[data-tab="ship"] {
+  overflow-y: clip;
+}
+
 .ouw25 .ouw25-tab-stack {
   display: grid;
   flex: 1 0 auto;
@@ -436,7 +440,7 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait img {
 body.game .application.ouw25 .ouw25-notes .ouw25-founder-wounds {
   position: absolute;
   inset-inline: 0;
-  bottom: 10px;
+  bottom: 6px;
   font-size: 0.75rem;
   line-height: 1;
   text-align: center;
@@ -450,7 +454,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-founder-card {
   flex: 1;
   min-width: 0;
   padding: 0.4rem 0.6rem;
-  padding-inline-start: 5px;
+  padding-inline-start: 7.5px;
   border-radius: 0.35rem;
   background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
   box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);

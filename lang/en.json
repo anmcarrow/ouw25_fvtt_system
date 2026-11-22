@@ -18,6 +18,7 @@
     },
     "Founders": {
       "Title": "Founders",
+      "Wounds": "Wounds: {count}",
       "Role": "Ship role",
       "Debt": "Debt, og.",
       "Savings": "Savings, og.",

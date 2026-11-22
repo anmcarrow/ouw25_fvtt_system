@@ -96,23 +96,26 @@
               {{#each cooperative.founders}}
                 <li class="ouw25-founder">
                   {{#if canView}}
-                    <button type="button" class="ouw25-founder-portrait" data-action="openFounder" data-uuid="{{uuid}}" aria-label="{{name}}" data-tooltip="{{name}}"><img src="{{img}}" alt=""></button>
                     <div class="ouw25-founder-card">
-                      <h4>{{name}}</h4>
-                      {{#if stats}}
-                        <dl>
-                          <dt>{{localize "OUW25.Founders.Role"}}</dt><dd>{{localize stats.specialty}}</dd>
-                          <dt>{{localize "OUW25.Past.Title"}}</dt><dd>{{localize stats.past}}</dd>
-                          <dt>{{localize "OUW25.Finance.PocketMoney"}}</dt><dd>{{stats.money}}</dd>
-                          <dt>{{localize "OUW25.Founders.Debt"}}</dt><dd>{{stats.debt}}</dd>
-                          <dt>{{localize "OUW25.Founders.Savings"}}</dt><dd>{{stats.savings}}</dd>
-                          <dt>{{localize "OUW25.Tabs.friends"}}</dt><dd>{{stats.friends}}</dd>
-                          <dt>{{localize "OUW25.Tabs.illwishers"}}</dt><dd>{{stats.enemies}}</dd>
-                          <dt>{{localize "OUW25.Founders.Creditors"}}</dt><dd>{{stats.creditors}}</dd>
-                        </dl>
-                      {{else}}
-                        <p>{{localize "OUW25.Founders.HiddenStats"}}</p>
-                      {{/if}}
+                      <button type="button" class="ouw25-founder-portrait" data-action="openFounder" data-uuid="{{uuid}}" aria-label="{{name}}" data-tooltip="{{name}}"><img src="{{img}}" alt=""></button>
+                      <div class="ouw25-founder-details">
+                        <h4>{{name}}</h4>
+                        {{#if stats}}
+                          <p>
+                            <span role="img" aria-label="{{localize "OUW25.Founders.Wounds" count=stats.wounds.length}}" title="{{localize "OUW25.Founders.Wounds" count=stats.wounds.length}}">{{#each stats.wounds}}{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}{{else}}—{{/each}}</span>;
+                            {{localize "OUW25.Founders.Role"}} – {{localize stats.specialty}};
+                            {{localize "OUW25.Past.Title"}} – {{localize stats.past}};
+                            {{localize "OUW25.Finance.PocketMoney"}} – {{stats.money}};
+                            {{localize "OUW25.Founders.Debt"}} – {{stats.debt}};
+                            {{localize "OUW25.Founders.Savings"}} – {{stats.savings}};
+                            {{localize "OUW25.Tabs.friends"}} – {{stats.friends}};
+                            {{localize "OUW25.Tabs.illwishers"}} – {{stats.enemies}};
+                            {{localize "OUW25.Founders.Creditors"}} – {{stats.creditors}}
+                          </p>
+                        {{else}}
+                          <p>{{localize "OUW25.Founders.HiddenStats"}}</p>
+                        {{/if}}
+                      </div>
                     </div>
                   {{else}}
                     <p>{{localize "OUW25.Founders.Unavailable"}}</p>
@@ -128,6 +131,10 @@
           {{/if}}
           {{#if editable}}<p>{{localize "OUW25.Founders.DropHint"}}</p>{{/if}}
         </fieldset>
+      </div>
+    </div>
+    <div class="ouw25-sheet-column ouw25-cooperative-notes">
+      <div class="ouw25-cooperative-budget-column">
         <fieldset class="ouw25-cooperative-budget">
           {{> ouw25-block-heading heading="OUW25.Finance.Budget"}}
           <div class="ouw25-cooperative-budget-controls">{{> ouw25-money-input}} <span>{{localize "OUW25.Finance.Currency"}}</span></div>
@@ -148,8 +155,6 @@
           {{#if cooperative.memory.help}}<p class="ouw25-trait-description">{{localize cooperative.memory.help}}</p>{{/if}}
         </fieldset>
       </div>
-    </div>
-    <div class="ouw25-sheet-column ouw25-cooperative-notes">
       {{> ouw25-journal}}
     </div>
   {{/ouw25-tab}}

@@ -470,8 +470,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!actor.testUserPermission(game.user, "OBSERVER")) return member;
       const debts = actor.items.filter(item => item.type === "debt" && item.system.direction === "payable");
       const relationships = actor.items.filter(item => item.type === "relationship");
+      const lethal = lethalWoundSlot(actor.system.past, actor.system.fragile);
       return {
         ...member, stats: {
+          wounds: WOUND_SLOTS.slice(0, lethal).filter(slot => actor.system[`wound${slot}`])
+            .map(slot => ({ slot, lethal: slot === lethal })),
           specialty: `OUW25.Specialty.${actor.system.specialty ?? "unset"}`,
           past: `OUW25.Past.${actor.system.past ?? "unset"}`,
           money: actor.system.pocketMoney,

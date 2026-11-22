@@ -536,7 +536,7 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.deepEqual(memberSystem.founders, [merchant.uuid]);
   let memberContext = await memberSheet._prepareContext({});
   assert.deepEqual(memberContext.cooperative.founders[0].stats, {
-    specialty: "OUW25.Specialty.mechanic", past: "OUW25.Past.veteran", money: 24,
+    wounds: [], specialty: "OUW25.Specialty.mechanic", past: "OUW25.Past.veteran", money: 24,
     debt: "17", savings: 30000, friends: 1, enemies: 1, creditors: 1
   });
   await memberSheet._onFirstRender(memberContext, {});
@@ -550,6 +550,14 @@ test("the built package registers models and an editable notes sheet for its dec
   const updatedStats = (await memberSheet._prepareContext({})).cooperative.founders[0].stats;
   assert.equal(updatedStats.debt, "9007199254741008");
   assert.equal(updatedStats.creditors, 2);
+  Object.assign(merchant.system, { wound1: true, wound2: false, wound3: true, wound4: true });
+  assert.deepEqual((await memberSheet._prepareContext({})).cooperative.founders[0].stats.wounds, [
+    { slot: 1, lethal: false }, { slot: 3, lethal: true }
+  ]);
+  Object.assign(merchant.system, { past: "artist", wound2: true });
+  assert.deepEqual((await memberSheet._prepareContext({})).cooperative.founders[0].stats.wounds, [
+    { slot: 1, lethal: false }, { slot: 2, lethal: true }
+  ]);
   await Sheet.DEFAULT_OPTIONS.actions.openFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
   assert.equal(opened, 1);
   permission = "LIMITED";

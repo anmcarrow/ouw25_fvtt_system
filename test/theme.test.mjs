@@ -65,6 +65,18 @@ test("cooperative titled blocks use a translucent background without fading cont
   assert.doesNotMatch(rule, /\bopacity\s*:/);
 });
 
+test("cooperative attributes put founders on the left and other blocks above the journal", () => {
+  const attributes = template.match(/\{\{#> ouw25-tab tab=tabs\.attributes layout="ouw25-cooperative-layout"\}\}([\s\S]*?)\{\{\/ouw25-tab\}\}/)?.[1];
+  assert.ok(attributes);
+  const [left, right] = attributes.split('<div class="ouw25-sheet-column ouw25-cooperative-notes">');
+  assert.ok(right);
+  assert.match(left, /OUW25\.Founders\.Title/);
+  assert.doesNotMatch(left, /OUW25\.Finance\.Budget|OUW25\.Cooperative\.(Reputation|Memory)\.Title|ouw25-journal/);
+  assert.match(right, /OUW25\.Finance\.Budget[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*\{\{> ouw25-journal\}\}/);
+  assert.doesNotMatch(right, /OUW25\.Founders\.Title/);
+  assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*1 1 6rem;[^}]*min-block-size:\s*6rem;/s);
+});
+
 test("ship resource capacities accompany their inputs while retaining calculated summaries", () => {
   const basics = template.match(/\{\{#\*inline "ouw25-ship-basics"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
   assert.ok(basics);

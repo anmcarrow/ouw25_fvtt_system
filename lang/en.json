@@ -182,6 +182,7 @@
     "Voyage": {
       "Title": "Modes and supplies",
       "Crew": "Crew count",
+      "Capacity": "of {capacity}",
       "CrewSummary": "Crew: {crew} / {capacity} ({band})",
       "CrewBand": { "above-half": "above half crew", "half": "half crew", "below-half": "below half crew" },
       "CrewOverCapacity": "Crew exceeds the ship's capacity.",

@@ -38,6 +38,14 @@ test("voyage status cards follow a single travel summary", () => {
   assert.match(voyage, /\{\{#if ship\.travelStatus\}\}<p role="status">\{\{ship\.travelStatus\}\}<\/p>/);
 });
 
+test("ship resource capacities accompany their inputs while retaining calculated summaries", () => {
+  const basics = template.match(/\{\{#\*inline "ouw25-ship-basics"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
+  assert.ok(basics);
+  assert.match(basics, /name="system\.crewCount"[\s\S]*?OUW25\.Voyage\.CrewSummary[\s\S]*?OUW25\.Voyage\.Capacity" capacity=ship\.voyage\.crewCapacity/);
+  assert.match(basics, /name="system\.unrest"[\s\S]*?OUW25\.Voyage\.UnrestCurrent" unrest=ship\.voyage\.unrest[\s\S]*?OUW25\.Voyage\.Capacity" capacity=25/);
+  assert.doesNotMatch(basics, /<p>\{\{localize "OUW25\.Voyage\.(CrewSummary|UnrestCurrent)"/);
+});
+
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {
   assert.match(template, /<div class="ouw25-portrait-frame">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
   assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*200px;[^}]*block-size:\s*200px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);

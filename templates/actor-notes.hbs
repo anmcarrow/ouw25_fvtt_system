@@ -136,7 +136,10 @@
       <div class="ouw25-ship-resources">
       <label>
         {{localize "OUW25.Voyage.Crew"}}
-        <input type="number" name="system.crewCount" min="0" max="9007199254740991" step="1" value="{{ship.crewCount}}" required {{#unless editable}}readonly{{/unless}}>
+        <span class="ouw25-ship-resource-value">
+          <input type="number" name="system.crewCount" min="0" max="9007199254740991" step="1" value="{{ship.crewCount}}" required {{#unless editable}}readonly{{/unless}}>
+          <span title="{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}">{{localize "OUW25.Voyage.Capacity" capacity=ship.voyage.crewCapacity}}</span>
+        </span>
       </label>
       <label>
         {{localize "OUW25.Ship.ProvisionsStock"}}
@@ -152,7 +155,10 @@
       </label>
       <label>
         {{localize "OUW25.Voyage.Unrest"}}
-        <input type="number" name="system.unrest" min="0" max="25" step="1" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
+        <span class="ouw25-ship-resource-value">
+          <input type="number" name="system.unrest" min="0" max="25" step="1" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
+          <span title="{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}">{{localize "OUW25.Voyage.Capacity" capacity=25}}</span>
+        </span>
       </label>
       </div>
       {{#each ship.qualities}}
@@ -165,8 +171,6 @@
           </label>
         {{/if}}
       {{/each}}
-      <p>{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}</p>
-      <p>{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}</p>
       {{#if ship.hold.overloaded}}
         <p role="status">{{localize "OUW25.Ship.Overloaded"}}</p>
       {{else if ship.hold.nearFull}}

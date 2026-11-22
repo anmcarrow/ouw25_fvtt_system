@@ -182,6 +182,7 @@
     "Voyage": {
       "Title": "Режимы судна и запасы",
       "Crew": "Экипаж, шт.",
+      "Capacity": "из {capacity}",
       "CrewSummary": "Экипаж: {crew} / {capacity} ({band})",
       "CrewBand": { "above-half": "больше половины экипажа", "half": "половина экипажа", "below-half": "меньше половины экипажа" },
       "CrewOverCapacity": "Размер экипажа превышает вместимость судна.",

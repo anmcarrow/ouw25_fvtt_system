@@ -1006,10 +1006,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-heading {
   gap: 0.35rem;
   min-inline-size: 0;
   font-family: var(--ouw25-font-heading);
+  font-size: 1.5em;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-heading > :is(input, select) {
+  font-size: inherit;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-heading > select {
-  flex: 0 0 27ch;
+  flex: 0 1 27ch;
   min-inline-size: 0;
 }
 
@@ -1033,7 +1038,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
   inset-inline-start: 50%;
   inline-size: 345px;
   block-size: 345px;
-  transform: translate(-50%, calc(-50% + 50px));
+  transform: translate(-50%, calc(-50% + 90px));
   z-index: -1;
   background: url("./images/fuel.webp") center / contain no-repeat;
   pointer-events: none;
@@ -1048,6 +1053,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats {
   grid-template-columns: repeat(4, minmax(0, 1fr)) fit-content(55%);
   align-items: stretch;
   inline-size: 70%;
+  margin-block-start: 1rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div {
@@ -1085,7 +1091,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats :is(strong, output) 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
-  inline-size: 70%;
+  inline-size: calc(70% - 10px);
   margin-block-start: 2em;
 }
 
@@ -1096,6 +1102,25 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label > input {
   margin-block: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-inline-size: 0;
+  white-space: nowrap;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > input {
+  min-inline-size: 0;
+  inline-size: 100%;
+  margin-block: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > span {
+  font-family: var(--ouw25-font-accent);
+  font-size: 1.5em;
 }
 
 .ouw25 .ouw25-sheet-column {
@@ -1248,14 +1273,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button {
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 0.75rem;
   margin-block-start: 1rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   box-sizing: border-box;
-  flex: 0 0 120px;
-  inline-size: 120px;
+  flex: 0 1 240px;
+  inline-size: 240px;
   margin: 0;
   padding: 0.35rem 0.45rem;
   border: 1px solid transparent;

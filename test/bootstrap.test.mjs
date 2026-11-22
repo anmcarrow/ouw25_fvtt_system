@@ -207,8 +207,20 @@ test("the built package registers models and an editable notes sheet for its dec
         const { condition } = (await sheet._prepareContext({})).ship;
         assert.equal(condition.damaged, count);
         assert.equal(condition.tabIconPercent, percent);
+        assert.equal(condition.tabSkull?.number, count >= 3 ? count : undefined);
+        assert.equal(condition.tabDamage.length, count - (count >= 3 ? 1 : 0));
+        assert.ok(condition.tabDamage.every(slot => slot.marked && slot !== condition.tabSkull));
       }
       for (let slot = 1; slot <= 11; slot++) sheet.actor.system[`damage${slot}`] = false;
+      Object.assign(sheet.actor.system, { damage1: true, damage5: true });
+      let condition = (await sheet._prepareContext({})).ship.condition;
+      assert.equal(condition.tabSkull.number, 5);
+      assert.deepEqual(condition.tabDamage.map(slot => slot.number), [1]);
+      Object.assign(sheet.actor.system, { damage3: true, damage5: false, merit1: "strong_hull" });
+      condition = (await sheet._prepareContext({})).ship.condition;
+      assert.equal(condition.tabSkull, undefined);
+      assert.deepEqual(condition.tabDamage.map(slot => slot.number), [1, 3]);
+      Object.assign(sheet.actor.system, { damage1: false, damage3: false, merit1: "none" });
       Object.assign(sheet.actor.system, { reputation: "unset", memory: "unset" });
       const { cooperative } = await sheet._prepareContext({});
       assert.equal(cooperative.reputation.choices.find(choice => choice.selected).value, "unset");

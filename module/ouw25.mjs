@@ -501,6 +501,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const voyage = ship && calculateVoyage(system);
     const hold = ship && shipHold(system, listedVolume, ship.compartmentSpace);
     const condition = ship && shipCondition(system);
+    const conditionSlots = condition?.slots.map(slot => ({ ...slot, critical: slot.number >= condition.durability }));
+    const tabSkull = conditionSlots?.filter(slot => slot.marked && slot.critical).at(-1);
     const cooperativeChoices = (values, selected, category) => ({
       choices: values.map(value => ({
         value, label: `OUW25.Cooperative.${category}.Names.${value}`, selected: value === (selected ?? "unset")
@@ -541,7 +543,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         condition: condition && {
           ...condition,
           tabIconPercent: condition.damaged > 4 ? 50 : 100,
-          slots: condition.slots.map(slot => ({ ...slot, critical: slot.number >= condition.durability }))
+          slots: conditionSlots,
+          tabSkull,
+          tabDamage: conditionSlots.filter(slot => slot.marked && slot !== tabSkull)
         },
         qualities: Object.keys(SHIP_QUALITIES).map(kind => {
           const unique = shipQualitySlots(system, kind).map(({ value }) => value);

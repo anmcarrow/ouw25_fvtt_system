@@ -28,7 +28,7 @@ test("actor type headings use the bundled Roll20 header background", async () =>
 test("the cooperative heading uses the bundled ship token as an accessible configuration button", async () => {
   assert.match(template, /\{\{#if ship\.canConfigureToken\}\}\s*<button type="button" class="ouw25-cooperative-token" data-action="configureShipToken" aria-label="\{\{localize "OUW25\.Ship\.ConfigureToken"\}\}"/);
   assert.match(template, /\{\{else\}\}\s*<img class="ouw25-cooperative-token" src="\{\{ship\.tokenIcon\}\}" alt="">/);
-  assert.match(styles, /\.ouw25-cooperative-heading \.ouw25-cooperative-token\s*\{[^}]*inset-block-start:\s*5px;[^}]*inset-inline-start:\s*5px;[^}]*inline-size:\s*70px;[^}]*block-size:\s*70px;/s);
+  assert.match(styles, /\.ouw25-cooperative-heading \.ouw25-cooperative-token\s*\{[^}]*inset-block-start:\s*-25px;[^}]*inset-inline-start:\s*-25px;[^}]*inline-size:\s*100px;[^}]*block-size:\s*100px;/s);
   assert.match(styles, /\.ouw25-sheet-heading\.ouw25-cooperative-heading h2\s*\{\s*padding-inline-start:\s*90px;/);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/ship_token.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");

@@ -277,10 +277,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input:focus-vis
 
 .ouw25 .ouw25-cooperative-heading .ouw25-cooperative-token {
   position: absolute;
-  inset-block-start: 5px;
-  inset-inline-start: 5px;
-  inline-size: 70px;
-  block-size: 70px;
+  inset-block-start: -25px;
+  inset-inline-start: -25px;
+  inline-size: 100px;
+  block-size: 100px;
 }
 
 body.game .application.ouw25 .ouw25-notes button.ouw25-cooperative-token:not(:disabled),

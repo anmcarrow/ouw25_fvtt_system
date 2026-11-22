@@ -38,10 +38,13 @@ test("voyage status cards follow a single travel summary", () => {
   assert.match(voyage, /\{\{#if ship\.hold\.overloaded\}\}<p role="status">\{\{localize "OUW25\.Ship\.Overloaded"\}\}/);
   assert.match(voyage, /\{\{#if ship\.hold\.overloaded\}\}<p role="status">[\s\S]*?\{\{\/if\}\}\s*<\/div>\s*$/);
   assert.match(voyage, /\{\{#if ship\.travelStatus\}\}<p role="status">\{\{ship\.travelStatus\}\}<\/p>/);
+  assert.doesNotMatch(voyage, /OUW25\.Voyage\.ForcedOn/);
+  assert.match(voyage, /\{\{#unless ship\.forcedMode\}\}<p>\{\{localize "OUW25\.Voyage\.ForcedOff"\}\}<\/p>\{\{\/unless\}\}/);
 });
 
 test("equipment effects follow the compartment list", () => {
-  assert.match(template, /\{\{> ouw25-ship-list list=ship\.compartments showSpace=true\}\}\s*<section class="ouw25-ship-equipment-card">[\s\S]*?\{\{#each ship\.equipmentEffects\}\}/);
+  assert.match(template, /\{\{> ouw25-ship-list list=ship\.compartments showSpace=true\}\}\s*<section class="ouw25-ship-equipment-card">\s*<p>\{\{#each ship\.equipmentEffects\}\}/);
+  assert.match(template, /<strong><span\{\{#if ship\.voyage\.forced\}\} class="ouw25-speed-forced"[^>]*>\{\{ship\.voyage\.speed\}\}<\/span><\/strong>/);
 });
 
 test("ship resource capacities accompany their inputs while retaining calculated summaries", () => {

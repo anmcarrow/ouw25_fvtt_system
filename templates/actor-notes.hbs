@@ -127,7 +127,7 @@
       {{> ouw25-ship-damage}}
       </div>
       <div class="ouw25-ship-stats">
-        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong><span>{{ship.voyage.speed}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong><span{{#if ship.voyage.forced}} class="ouw25-speed-forced" title="{{localize "OUW25.Voyage.ForcedOn"}}"{{/if}}>{{ship.voyage.speed}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong><span>{{ship.voyage.fuelPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.ProvisionsRate"}}</span><strong><span>{{ship.voyage.provisionsPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.FreeMountsLabel"}}</span><strong><span>{{ship.freeMounts}}</span></strong></div>
@@ -351,7 +351,7 @@
         </div>
         <p class="ouw25-voyage-summary">{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}} {{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
         <div class="ouw25-voyage-statuses">
-          <p>{{#if ship.forcedMode}}{{localize "OUW25.Voyage.ForcedOn"}}{{else}}{{localize "OUW25.Voyage.ForcedOff"}}{{/if}}</p>
+          {{#unless ship.forcedMode}}<p>{{localize "OUW25.Voyage.ForcedOff"}}</p>{{/unless}}
           {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
           {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
           {{#if ship.voyage.wornEngine}}<p role="status">{{localize "OUW25.Voyage.ForcedBlocked"}}</p>{{/if}}
@@ -374,7 +374,6 @@
         <div class="ouw25-sheet-column">
           {{> ouw25-ship-list list=ship.compartments showSpace=true}}
           <section class="ouw25-ship-equipment-card">
-            <h4>{{localize "OUW25.Ship.EquipmentEffectsTitle"}}</h4>
             <p>{{#each ship.equipmentEffects}}{{localize this}} {{else}}...{{/each}}</p>
           </section>
         </div>

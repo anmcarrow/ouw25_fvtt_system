@@ -300,7 +300,6 @@
       "FreeMounts": "Free mounts: {count}",
       "Mounts": "Mounts",
       "Compartments": "Special compartments",
-      "EquipmentEffectsTitle": "Equipment effects",
       "EquipmentEffects": {
         "passenger": "A passenger compartment occupies 420 st. of hold space.",
         "premium": "A premium passenger compartment occupies 525 st. of hold space.",

@@ -48,7 +48,7 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   assert.deepEqual(Object.keys(CONFIG.Item.dataModels), Object.keys(manifest.documentTypes.Item));
   for (const [type, [image, token]] of Object.entries({
-    merchant: ["systems/ouw25/styles/images/bugger_transp.webp", "systems/ouw25/styles/images/bugger_transp.webp"],
+    merchant: ["systems/ouw25/styles/images/bugger_transp.webp", "systems/ouw25/styles/images/pc_token.webp"],
     cooperative: ["systems/ouw25/styles/images/ship_logo.webp", "systems/ouw25/styles/images/ship_token.webp"]
   })) {
     assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type }), { img: image, texture: { src: token } });
@@ -102,7 +102,7 @@ test("the built package registers models and an editable notes sheet for its dec
     } },
     { type: "cargo", id: "cargo-1", name: "Crates", system: { quantity: 3, volume: 12.5 } },
     { type: "cargo", id: "cargo-2", name: "Bales", system: { quantity: 5, volume: 2.25 } }];
-    if (!merchant) {
+    {
       let permitted = true;
       let opened = 0;
       let tokenOpened = 0;
@@ -116,9 +116,9 @@ test("the built package registers models and an editable notes sheet for its dec
         isOwner: true, prototypeToken: prototype,
         token: { sheet: { render(options) { assert.deepEqual(options, { force: true }); tokenOpened++; } } }
       });
-      const configure = () => Sheet.DEFAULT_OPTIONS.actions.configureShipToken.call(sheet);
+      const configure = () => Sheet.DEFAULT_OPTIONS.actions.configureActorToken.call(sheet);
       sheet.isEditable = true;
-      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, true);
+      assert.equal((await sheet._prepareContext({})).token.canConfigure, true);
       configure();
       assert.equal(opened, 1);
       sheet.actor.isToken = true;
@@ -126,18 +126,18 @@ test("the built package registers models and an editable notes sheet for its dec
       assert.equal(tokenOpened, 1);
       sheet.actor.isToken = false;
       permitted = false;
-      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, false);
+      assert.equal((await sheet._prepareContext({})).token.canConfigure, false);
       configure();
       permitted = true;
       sheet.actor.isOwner = false;
-      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, false);
+      assert.equal((await sheet._prepareContext({})).token.canConfigure, false);
       configure();
       sheet.actor.isOwner = true;
       sheet.isEditable = false;
-      assert.equal((await sheet._prepareContext({})).ship.canConfigureToken, false);
+      assert.equal((await sheet._prepareContext({})).token.canConfigure, false);
       configure();
       sheet.isEditable = true;
-      sheet.actor.type = "merchant";
+      sheet.actor.type = "base";
       configure();
       assert.equal(opened, 1);
       assert.equal(tokenOpened, 1);
@@ -149,7 +149,12 @@ test("the built package registers models and an editable notes sheet for its dec
       : ["attributes", "contacts", "contracts", "ports", "ship", "cargo"]);
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
-      const { ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ports, cooperative, ...context } = await sheet._prepareContext({});
+      const { token, ship, traits, identity, pastMoves, contacts, contracts, showContracts, cargo, ports, cooperative, ...context } = await sheet._prepareContext({});
+      assert.deepEqual(token, {
+        icon: `systems/ouw25/styles/images/${merchant ? "pc" : "ship"}_token.webp`,
+        label: merchant ? "OUW25.Identity.ConfigureToken" : "OUW25.Ship.ConfigureToken",
+        canConfigure: false
+      });
       assert.equal(showContracts, !merchant);
       assert.equal(pastMoves, null);
       if (merchant) {
@@ -171,8 +176,6 @@ test("the built package registers models and an editable notes sheet for its dec
           id: "trait-1", name: "OUW25.Trait.Names.greedy", help: "OUW25.Trait.Help.greedy"
         }]);
       } else {
-        assert.equal(ship.tokenIcon, "systems/ouw25/styles/images/ship_token.webp");
-        assert.equal(ship.canConfigureToken, false);
         assert.equal(cooperative.reputation.choices.find(choice => choice.selected).value, "hunters");
         assert.equal(cooperative.reputation.help, "OUW25.Cooperative.Reputation.Help.hunters");
         assert.equal(cooperative.memory.choices.find(choice => choice.selected).value, "rescue");
@@ -180,6 +183,7 @@ test("the built package registers models and an editable notes sheet for its dec
         for (const language of ["en", "ru"]) {
           const texts = JSON.parse(await readFile(new URL(`lang/${language}.json`, dist), "utf8"));
           assert.ok(texts.OUW25.Ship.ConfigureToken);
+          assert.ok(texts.OUW25.Identity.ConfigureToken);
           for (const code of ["slagthrower", "harpoon", "water_cannon", "winch", "passenger", "premium", "diving", "sandshoes", "tow"]) {
             assert.ok(texts.OUW25.Ship.EquipmentEffects[code], `${language}: missing equipment effect ${code}`);
           }

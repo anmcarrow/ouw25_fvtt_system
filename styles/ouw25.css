@@ -271,11 +271,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input:focus-vis
   margin: 0;
 }
 
-.ouw25 .ouw25-cooperative-heading {
+.ouw25 .ouw25-token-heading {
   z-index: 1;
 }
 
-.ouw25 .ouw25-cooperative-heading .ouw25-cooperative-token {
+.ouw25 .ouw25-token-heading .ouw25-actor-token {
   position: absolute;
   inset-block-start: -18px;
   inset-inline-start: -18px;
@@ -283,8 +283,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input:focus-vis
   block-size: 100px;
 }
 
-body.game .application.ouw25 .ouw25-notes button.ouw25-cooperative-token:not(:disabled),
-body.game .application.ouw25 .ouw25-notes button.ouw25-cooperative-token:hover:not(:disabled) {
+body.game .application.ouw25 .ouw25-notes button.ouw25-actor-token:not(:disabled),
+body.game .application.ouw25 .ouw25-notes button.ouw25-actor-token:hover:not(:disabled) {
   display: block;
   padding: 0;
   margin: 0;
@@ -295,7 +295,7 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-cooperative-token:hover:n
   scale: 1;
 }
 
-.ouw25 .ouw25-cooperative-token img {
+.ouw25 .ouw25-actor-token img {
   display: block;
   inline-size: 100%;
   block-size: 100%;
@@ -1399,7 +1399,7 @@ body.game .application.ouw25 .ouw25-sheet-heading h2 {
   padding: calc(0.28125lh + 5.25px) 3px calc(0.28125lh + 5.25px) 6px;
 }
 
-body.game .application.ouw25 .ouw25-sheet-heading.ouw25-cooperative-heading h2 {
+body.game .application.ouw25 .ouw25-sheet-heading.ouw25-token-heading h2 {
   padding-inline-start: 90px;
 }
 

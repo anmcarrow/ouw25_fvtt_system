@@ -16,7 +16,10 @@ import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
-const DEFAULT_SHIP_TOKEN = "systems/ouw25/styles/images/ship_token.webp";
+const DEFAULT_ACTOR_TOKENS = {
+  merchant: "systems/ouw25/styles/images/pc_token.webp",
+  cooperative: "systems/ouw25/styles/images/ship_token.webp"
+};
 const DEFAULT_ACTOR_ARTWORK = {
   merchant: "systems/ouw25/styles/images/bugger_transp.webp",
   cooperative: "systems/ouw25/styles/images/ship_logo.webp"
@@ -71,7 +74,7 @@ class Ouw25Actor extends foundry.documents.Actor {
   static getDefaultArtwork(actorData = {}) {
     const img = Object.hasOwn(DEFAULT_ACTOR_ARTWORK, actorData.type)
       ? DEFAULT_ACTOR_ARTWORK[actorData.type] : null;
-    return img ? { img, texture: { src: actorData.type === "cooperative" ? DEFAULT_SHIP_TOKEN : img } }
+    return img ? { img, texture: { src: DEFAULT_ACTOR_TOKENS[actorData.type] } }
       : super.getDefaultArtwork(actorData);
   }
 
@@ -343,7 +346,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       depositPension: Ouw25ActorSheet.depositPension,
       changeLuck: Ouw25ActorSheet.changeLuck,
       editPortrait: Ouw25ActorSheet.editPortrait,
-      configureShipToken: Ouw25ActorSheet.configureShipToken,
+      configureActorToken: Ouw25ActorSheet.configureActorToken,
       rollCreation: Ouw25ActorSheet.rollCreation,
       rollPersonalAction: Ouw25ActorSheet.rollPersonalAction,
       editTrait: Ouw25ActorSheet.editTrait,
@@ -520,10 +523,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       actorTypeLabel: `TYPES.Actor.${type}`,
       editable: this.isEditable,
       showCollision: this.isEditable && merchant,
+      token: {
+        icon: DEFAULT_ACTOR_TOKENS[type],
+        label: merchant ? "OUW25.Identity.ConfigureToken" : "OUW25.Ship.ConfigureToken",
+        canConfigure: Boolean(this.isEditable && this.actor.isOwner && game.user.can("TOKEN_CONFIGURE"))
+      },
       ship: ship && {
         name: system.shipName,
-        tokenIcon: DEFAULT_SHIP_TOKEN,
-        canConfigureToken: Boolean(this.isEditable && this.actor.isOwner && game.user.can("TOKEN_CONFIGURE")),
         classes: Array.from({ length: MAX_SHIP_CLASS + 1 }, (_, value) => ({
           value, label: `OUW25.Ship.ClassNames.${value}`, selected: value === system.shipClass,
           crew: SHIP_CLASS_STATS[value].crew, durability: SHIP_CLASS_STATS[value].durability
@@ -1052,8 +1058,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     await picker.browse();
   }
 
-  static configureShipToken() {
-    if (this.actor.type !== "cooperative" || !this.isEditable || !this.actor.isOwner || !game.user.can("TOKEN_CONFIGURE")) return;
+  static configureActorToken() {
+    if (!Object.hasOwn(DEFAULT_ACTOR_TOKENS, this.actor.type) || !this.isEditable || !this.actor.isOwner || !game.user.can("TOKEN_CONFIGURE")) return;
     if (this.actor.isToken) return this.actor.token?.sheet?.render({ force: true });
     return new CONFIG.Token.prototypeSheetClass({ prototype: this.actor.prototypeToken }).render({ force: true });
   }

@@ -530,6 +530,7 @@
       "Title": "Character details",
       "Name": "Given name and surname",
       "EditPortrait": "Change character portrait",
+      "ConfigureToken": "Configure character token",
       "Dream": "Big dream",
       "HiringTitle": "Hiring story",
       "Dreams": {

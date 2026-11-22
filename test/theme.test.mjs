@@ -19,19 +19,21 @@ test("the active actor tab uses a bundled WebP background", async () => {
 });
 
 test("actor type headings use the bundled Roll20 header background", async () => {
-  assert.match(template, /<header class="ouw25-sheet-heading\{\{#if ship\}\} ouw25-cooperative-heading\{\{\/if\}\}">[\s\S]*?<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
+  assert.match(template, /<header class="ouw25-sheet-heading ouw25-token-heading">[\s\S]*?<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
   assert.match(styles, /\.ouw25-sheet-heading::before\s*\{[^}]*inset-inline:\s*-10px -1rem;[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) left center \/ calc\(100% \+ 1rem - 10px\) 100% no-repeat/s);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/header_strip1.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
 });
 
-test("the cooperative heading uses the bundled ship token as an accessible configuration button", async () => {
-  assert.match(template, /\{\{#if ship\.canConfigureToken\}\}\s*<button type="button" class="ouw25-cooperative-token" data-action="configureShipToken" aria-label="\{\{localize "OUW25\.Ship\.ConfigureToken"\}\}"/);
-  assert.match(template, /\{\{else\}\}\s*<img class="ouw25-cooperative-token" src="\{\{ship\.tokenIcon\}\}" alt="">/);
-  assert.match(styles, /\.ouw25-cooperative-heading \.ouw25-cooperative-token\s*\{[^}]*inset-block-start:\s*-18px;[^}]*inset-inline-start:\s*-18px;[^}]*inline-size:\s*100px;[^}]*block-size:\s*100px;/s);
-  assert.match(styles, /\.ouw25-sheet-heading\.ouw25-cooperative-heading h2\s*\{\s*padding-inline-start:\s*90px;/);
-  const asset = await readFile(new URL("../dist/ouw25/styles/images/ship_token.webp", import.meta.url));
-  assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+test("actor headings use bundled tokens as accessible configuration buttons", async () => {
+  assert.match(template, /\{\{#if token\.canConfigure\}\}\s*<button type="button" class="ouw25-actor-token" data-action="configureActorToken" aria-label="\{\{localize token\.label\}\}"/);
+  assert.match(template, /\{\{else\}\}\s*<img class="ouw25-actor-token" src="\{\{token\.icon\}\}" alt="">/);
+  assert.match(styles, /\.ouw25-token-heading \.ouw25-actor-token\s*\{[^}]*inset-block-start:\s*-18px;[^}]*inset-inline-start:\s*-18px;[^}]*inline-size:\s*100px;[^}]*block-size:\s*100px;/s);
+  assert.match(styles, /\.ouw25-sheet-heading\.ouw25-token-heading h2\s*\{\s*padding-inline-start:\s*90px;/);
+  for (const token of ["ship", "pc"]) {
+    const asset = await readFile(new URL(`../dist/ouw25/styles/images/${token}_token.webp`, import.meta.url));
+    assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+  }
 });
 
 test("record tables retain accessible names without visible block headings", () => {

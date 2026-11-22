@@ -1039,7 +1039,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
   inset-inline-start: 50%;
   inline-size: 476.1px;
   block-size: 476.1px;
-  transform: translate(-50%, calc(-50% + 95px));
+  transform: translate(-50%, calc(-50% + 115px));
   z-index: -1;
   background: url("./images/fuel.webp") center / contain no-repeat;
   pointer-events: none;
@@ -1303,9 +1303,6 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   flex: 0 1 240px;
   inline-size: 240px;
   margin: 0;
-  padding: 0.35rem 0.45rem;
-  border: 1px solid transparent;
-  border-image: var(--ouw25-border-gradient) 1;
   overflow-wrap: anywhere;
   font-size: 0.8em;
 }
@@ -1374,25 +1371,35 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage > .ouw25-condition-
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span {
+  --ouw25-octagon: polygon(29.3% 0, 70.7% 0, 100% 29.3%, 100% 70.7%, 70.7% 100%, 29.3% 100%, 0 70.7%, 0 29.3%);
   position: relative;
   isolation: isolate;
   border: 0;
   border-radius: 0;
-  background: var(--ouw25-border-gradient), var(--ouw25-color-surface);
-  clip-path: polygon(29.3% 0, 70.7% 0, 100% 29.3%, 100% 70.7%, 70.7% 100%, 29.3% 100%, 0 70.7%, 0 29.3%);
+  background: transparent;
+  clip-path: none;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::before,
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  clip-path: var(--ouw25-octagon);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::before {
-  content: "";
-  position: absolute;
+  inset: 0;
+  background: var(--ouw25-border-gradient);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::after {
   inset: 1px;
-  z-index: -1;
   background: var(--ouw25-color-surface);
-  clip-path: inherit;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > input:checked + span {
-  font-size: 1.5em;
+  font-size: 3em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check:has(input:focus-visible) {
@@ -1400,8 +1407,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-ch
   outline-offset: 2px;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card {
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card,
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
+  border: 0;
+  border-image: none;
   border-radius: 0.35rem;
   box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
   padding: calc(0.8rem + 10px);

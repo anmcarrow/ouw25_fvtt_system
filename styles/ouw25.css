@@ -1037,16 +1037,17 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
   position: absolute;
   inset-block-start: calc(50% - 1.35rem);
   inset-inline-start: 50%;
-  inline-size: 414px;
-  block-size: 414px;
-  transform: translate(-50%, calc(-50% + 75px));
+  inline-size: 476.1px;
+  block-size: 476.1px;
+  transform: translate(-50%, calc(-50% + 95px));
   z-index: -1;
   background: url("./images/fuel.webp") center / contain no-repeat;
   pointer-events: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition > h4 {
-  color: var(--ouw25-color-ink);
+  color: var(--ouw25-color-surface);
+  text-shadow: 0 0 3px var(--ouw25-color-ink), 0 1px 2px var(--ouw25-color-ink);
   text-align: center;
   margin: 0 0 0.4rem;
 }
@@ -1169,6 +1170,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > span {
 
 .ouw25 .ouw25-notes .ouw25-ship-layout fieldset.ouw25-traits {
   background-color: var(--ouw25-surface-translucent);
+}
+
+body.game .application.ouw25 .ouw25-notes:has(.ouw25-cooperative-layout) fieldset:has(> legend) {
+  background-color: color-mix(in srgb, var(--ouw25-color-surface) 70%, transparent);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(h1, h2, h3, h4, h5, h6, summary),
@@ -1375,6 +1380,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-ch
   border-radius: 0;
   background: var(--ouw25-border-gradient), var(--ouw25-color-surface);
   clip-path: polygon(29.3% 0, 70.7% 0, 100% 29.3%, 100% 70.7%, 70.7% 100%, 29.3% 100%, 0 70.7%, 0 29.3%);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  background: var(--ouw25-color-surface);
+  clip-path: inherit;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > input:checked + span {

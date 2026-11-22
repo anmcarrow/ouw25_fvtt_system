@@ -47,6 +47,13 @@ test("equipment effects follow the compartment list", () => {
   assert.match(template, /<strong><span\{\{#if ship\.voyage\.forced\}\} class="ouw25-speed-forced"[^>]*>\{\{ship\.voyage\.speed\}\}<\/span><\/strong>/);
 });
 
+test("cooperative titled blocks use a translucent background without fading content", () => {
+  const rule = styles.match(/\.ouw25-notes:has\(\.ouw25-cooperative-layout\) fieldset:has\(> legend\)\s*\{([^}]*)\}/)?.[1];
+  assert.ok(rule);
+  assert.match(rule, /background-color:\s*color-mix\(in srgb, var\(--ouw25-color-surface\) 70%, transparent\)/);
+  assert.doesNotMatch(rule, /\bopacity\s*:/);
+});
+
 test("ship resource capacities accompany their inputs while retaining calculated summaries", () => {
   const basics = template.match(/\{\{#\*inline "ouw25-ship-basics"\}\}([\s\S]*?)\{\{\/inline\}\}/)?.[1];
   assert.ok(basics);

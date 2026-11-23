@@ -64,8 +64,20 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.equal(contentPadding, "calc(0.5rem + 20px) calc(0.5rem + 12px + 20px)");
   assert.equal(footerPadding, contentPadding);
   assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height/);
-  assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{\s*background:[^;]*sheet_bgr\.webp[^;]*100% auto no-repeat;/);
+  assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{\s*background:[^;]*panel1\.webp[^;]*100% auto no-repeat;/);
   assert.match(styles, /\.ouw25-bargain-scrollbar-thumb\s*\{[^}]*background:/s);
+});
+
+test("bargain panels and headings use the accent gradient", async () => {
+  const asset = await readFile(new URL("../dist/ouw25/styles/images/panel1.webp", import.meta.url));
+  assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+  assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;/s);
+  assert.match(styles, /\.ouw25-bargain-drop::before\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);[^}]*mask-composite:\s*exclude;/s);
+  assert.match(styles, /\.ouw25-bargain-points\s*\{[^}]*background:[^;]*var\(--ouw25-border-gradient\) border-box;/s);
+  for (const selector of ["breakdown", "price"]) {
+    assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
+  }
+  assert.match(styles, /\.ouw25-bargain-enemies legend label > span[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
 });
 
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {

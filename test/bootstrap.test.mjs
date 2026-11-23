@@ -1561,7 +1561,8 @@ test("bargain locations combine the 31 Union trading ports with known places wit
 
 test("bargain dialog sorts payment fields and validates contact and partial outcome choices", async () => {
   const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
-  const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui, random: Math.random };
+  const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui,
+    getComputedStyle: globalThis.getComputedStyle, random: Math.random };
   const actor = { id: "a", uuid: "Actor.a", name: "Merchant", documentName: "Actor", type: "merchant",
     img: "portrait.webp", prototypeToken: { texture: { src: "token.webp" } },
     system: { pocketMoney: 0 }, items: Object.assign([], { get() {} }), testUserPermission: () => true };
@@ -1582,13 +1583,16 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
     '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
-    "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {}
+    "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {},
+    ".dialog-content": { clientHeight: 600 }, "[data-bargain]": { offsetHeight: 700 }
   };
   const badges = ["loan", "enemies", "friends"].map(kind => ({
     dataset: { points: kind }, setAttribute(name, value) { this[name] = value; }
   }));
-  const root = { querySelector: selector => elements[selector],
+  const root = { offsetHeight: 800, style: { setProperty(name, value) { this[name] = value; } },
+    querySelector: selector => elements[selector],
     querySelectorAll: selector => selector === "[data-points]" ? badges : [] };
+  globalThis.getComputedStyle = () => ({ paddingTop: "8px", paddingBottom: "8px" });
   globalThis.document = { createElement: () => ({
     dataset: {}, children: [], append(...children) { this.children.push(...children); }, setAttribute() {}
   }) };
@@ -1606,14 +1610,20 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       return "";
     } },
     api: { DialogV2: { input: async config => {
-      config.render(null, { element: root });
+      let positions = 0;
+      const dialog = { element: root, setPosition() { positions++; } };
+      config.render(null, dialog);
+      assert.equal(root.style["--ouw25-bargain-min-height"], "916px");
+      assert.equal(positions, 1);
       assert.equal(leader.children[0].src, "token.webp");
       assert.equal(fields.budget.disabled, true);
       assert.equal(fields.unrest.disabled, true);
       assert.equal(elements["[data-no-enemies]"].hidden, false);
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       fields.enemies = { value: "1" };
+      elements["[data-bargain]"].offsetHeight = 1200;
       form.dispatchEvent(new Event("input"));
+      assert.equal(root.style["--ouw25-bargain-min-height"], "916px");
       assert.equal(elements["[data-no-enemies]"].hidden, true);
       assert.equal(badges[1].textContent, 3);
       fields.enemies.value = "0";
@@ -1661,7 +1671,7 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       assert.equal(consequence.value, "damage");
       assert.equal(config.ok.callback(null, { form }).result.price, 1);
       actor.prototypeToken.texture.src = "tokens/*.webp";
-      config.render(null, { element: root });
+      config.render(null, dialog);
       assert.equal(leader.children[0].src, "portrait.webp");
       return null;
     } } }
@@ -1673,6 +1683,7 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
     globalThis.foundry = previous.foundry;
     globalThis.document = previous.document;
     globalThis.ui = previous.ui;
+    globalThis.getComputedStyle = previous.getComputedStyle;
     Math.random = previous.random;
   }
 });

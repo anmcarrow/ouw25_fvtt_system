@@ -1891,9 +1891,23 @@ body.game .application.ouw25.ouw25-bargain-dialog {
   max-width: 800px;
 }
 
+body.game .application.ouw25.ouw25-bargain-dialog:not(.minimizing, .minimized, .maximizing) {
+  min-height: min(var(--ouw25-bargain-min-height, 0px), calc(100vh - 1.5 * var(--hotbar-height, 0px)));
+}
+
+@media (max-height: 850px) {
+  body.game .application.ouw25.ouw25-bargain-dialog:not(.minimizing, .minimized, .maximizing) {
+    min-height: min(var(--ouw25-bargain-min-height, 0px), 100vh);
+  }
+}
+
 body.game .application.ouw25.ouw25-bargain-dialog .window-content,
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
   min-height: 0;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .window-content {
+  background: var(--ouw25-color-paper) url("./images/sheet_bgr.webp") center top / 100% auto no-repeat;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
@@ -1904,6 +1918,22 @@ body.game .application.ouw25.ouw25-bargain-dialog .dialog-content {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
+  background: transparent;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .dialog-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .dialog-content::-webkit-scrollbar-track {
+  background: var(--ouw25-color-paper);
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .dialog-content::-webkit-scrollbar-thumb {
+  background: var(--ouw25-color-accent-soft);
+  border: 2px solid var(--ouw25-color-paper);
+  border-radius: 5px;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer {
@@ -1954,7 +1984,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   gap: 0.6rem;
   border-block-end: 2px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
-  padding-block-end: 0.4rem;
+  padding-block-end: 0.46rem;
 }
 
 .ouw25-bargain-help,
@@ -2310,6 +2340,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-entry {
   max-width: 100%;
   margin: 0.25rem 0;
   padding: 0.25rem 0.7rem;
+  padding-inline-start: 0.35rem;
   border: 0;
   border-radius: 0.25rem;
   background: var(--ouw25-color-accent-soft);
@@ -2416,4 +2447,5 @@ body.game .application.ouw25 .dialog-content fieldset.ouw25-bargain-payment {
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"] {
   border: 1px solid var(--ouw25-color-accent);
+  padding-block-start: 0.225rem;
 }

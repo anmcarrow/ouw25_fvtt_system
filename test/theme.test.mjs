@@ -50,6 +50,9 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{\s*flex:\s*1 1 auto;/);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*min-height:\s*0;[^}]*overflow-y:\s*auto;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer\s*\{\s*flex:\s*0 0 auto;/);
+  assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height/);
+  assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{\s*background:[^;]*sheet_bgr\.webp[^;]*100% auto no-repeat;/);
+  assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content::-webkit-scrollbar-thumb\s*\{[^}]*background:/s);
 });
 
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {

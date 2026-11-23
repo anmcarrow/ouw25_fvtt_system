@@ -412,6 +412,13 @@ export async function openBargain(actor) {
           });
         }
         update();
+        const scrollArea = root.querySelector(".dialog-content");
+        const content = root.querySelector("[data-bargain]");
+        const style = getComputedStyle(scrollArea);
+        const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const height = root.offsetHeight - scrollArea.clientHeight + content.offsetHeight + padding;
+        root.style.setProperty("--ouw25-bargain-min-height", `${Math.ceil(height)}px`);
+        dialog.setPosition();
       }
     });
     if (!selection) return;

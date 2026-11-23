@@ -1426,6 +1426,10 @@ test("the bargain panel opens the calculator and its reference is inside the dia
     assert.match(dialog, new RegExp(`OUW25\\.Bargain\\.${key}`));
     assert.doesNotMatch(sheet, new RegExp(`OUW25\\.Bargain\\.${key}`));
   }
+  assert.match(dialog, /^<section[^>]*>\s*<div class="ouw25-bargain-toolbar">[\s\S]*?ouw25-bargain-help[\s\S]*?ouw25-bargain-switch/);
+  assert.match(dialog, /name="inflation" role="switch" aria-label="\{\{localize "OUW25\.BargainCalc\.Inflation"\}\}"/);
+  assert.match(dialog, /<label><h4>\{\{localize "OUW25\.BargainCalc\.Goal"\}\}<\/h4>/);
+  assert.doesNotMatch(dialog, /BargainCalc\.Initiator|data-leader-wounds|BargainCalc\.Wounds/);
 });
 
 test("collision assistant accounts for chosen sources without applying their consequences", async () => {

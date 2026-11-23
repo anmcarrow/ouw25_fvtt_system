@@ -1,33 +1,34 @@
 <section class="ouw25-bargain" data-bargain>
-  <details class="ouw25-bargain-help">
-    <summary>{{localize "OUW25.Bargain.Summary"}}</summary>
-    <p>{{localize "OUW25.Bargain.Price"}}</p>
-    <p>{{localize "OUW25.Bargain.Payment"}}</p>
-    <p>{{localize "OUW25.Bargain.Consequences"}}</p>
-    <p>{{localize "OUW25.Bargain.Inflation"}}</p>
-  </details>
+  <div class="ouw25-bargain-toolbar">
+    <details class="ouw25-bargain-help">
+      <summary><span aria-hidden="true">&#x1F4D7;</span> {{localize "OUW25.Bargain.Summary"}}</summary>
+      <div class="ouw25-bargain-help-content">
+        <p>{{localize "OUW25.Bargain.Price"}}</p>
+        <p>{{localize "OUW25.Bargain.Payment"}}</p>
+        <p>{{localize "OUW25.Bargain.Consequences"}}</p>
+        <p>{{localize "OUW25.Bargain.Inflation"}}</p>
+      </div>
+    </details>
+    <label class="ouw25-bargain-switch" data-tooltip="{{localize "OUW25.BargainCalc.Inflation"}}">
+      <input type="checkbox" name="inflation" role="switch" aria-label="{{localize "OUW25.BargainCalc.Inflation"}}">
+    </label>
+  </div>
   <div class="ouw25-bargain-people">
-    <p>{{localize "OUW25.BargainCalc.Initiator"}}: <strong>{{actor.name}}</strong> — {{localize "OUW25.BargainCalc.Wounds"}}: {{wounds}}</p>
-    <div class="ouw25-bargain-drop" data-drop="leader" tabindex="0">
-      {{localize "OUW25.BargainCalc.Leader"}}: <strong data-leader-name>{{actor.name}}</strong> — {{localize "OUW25.BargainCalc.Wounds"}}: <span data-leader-wounds>{{wounds}}</span>
-      <small>{{localize "OUW25.BargainCalc.DropLeader"}}</small>
+    <div class="ouw25-bargain-drop" data-drop="leader" data-tooltip="{{localize "OUW25.BargainCalc.DropLeader"}}" tabindex="0">
+      {{localize "OUW25.BargainCalc.Leader"}}: <span data-leader></span>
     </div>
-    <div class="ouw25-bargain-drop" data-drop="helpers" tabindex="0">
+    <div class="ouw25-bargain-drop" data-drop="helpers" data-tooltip="{{localize "OUW25.BargainCalc.DropHelpers"}}" tabindex="0">
       {{localize "OUW25.BargainCalc.Helpers"}}
-      <small>{{localize "OUW25.BargainCalc.DropHelpers"}}</small>
+      <small data-drop-hint>{{localize "OUW25.BargainCalc.DropHelpers"}}</small>
       <ul data-helpers></ul>
     </div>
-    <div class="ouw25-bargain-drop" data-drop="cooperative" tabindex="0">
-      {{localize "OUW25.BargainCalc.Cooperative"}}: <strong data-cooperative-name>—</strong>
-      <small>{{localize "OUW25.BargainCalc.DropCooperative"}}</small>
+    <div class="ouw25-bargain-drop" data-drop="cooperative" data-tooltip="{{localize "OUW25.BargainCalc.DropCooperative"}}" tabindex="0">
+      {{localize "OUW25.BargainCalc.Cooperative"}}: <span data-cooperative></span>
+      <small data-drop-hint>{{localize "OUW25.BargainCalc.DropCooperative"}}</small>
     </div>
   </div>
-  <label>{{localize "OUW25.BargainCalc.Goal"}}
+  <label><h4>{{localize "OUW25.BargainCalc.Goal"}}</h4>
     <input type="text" name="goal" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}">
-  </label>
-  <label class="ouw25-bargain-switch">
-    <input type="checkbox" name="inflation" role="switch">
-    <span>{{localize "OUW25.BargainCalc.Inflation"}}</span>
   </label>
   <div class="ouw25-bargain-grid">
     <label>{{localize "OUW25.BargainCalc.Outcome"}}

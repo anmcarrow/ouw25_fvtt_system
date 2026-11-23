@@ -1886,6 +1886,75 @@ body.game .application.ouw25 .ouw25-bargain {
   gap: 0.6rem;
 }
 
+body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+  --input-background-color: var(--ouw25-field-background);
+  color: var(--ouw25-color-ink);
+  background: var(--ouw25-field-background);
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  font-family: var(--ouw25-font-input);
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain input[type="number"] {
+  box-sizing: border-box;
+  width: calc(2ch + 1rem);
+  min-width: 0;
+  flex: 0 0 calc(2ch + 1rem);
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain input[type="number"]::-webkit-inner-spin-button,
+body.game .application.ouw25 .dialog-content .ouw25-bargain input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+body.game .application.ouw25 .ouw25-bargain h4 {
+  font-family: var(--ouw25-font-heading);
+  font-size: calc(var(--font-h4-size, 1.25rem) / 1.5 * 1.15);
+  font-weight: 400;
+  margin: 0;
+}
+
+.ouw25-bargain-toolbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border-block-end: 1px solid var(--ouw25-color-accent);
+  padding-block-end: 0.4rem;
+}
+
+.ouw25-bargain-help,
+.ouw25-bargain-help-content {
+  background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
+  border-radius: 0.35rem;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+.ouw25-bargain-help {
+  padding: 0.6rem;
+}
+
+.ouw25-bargain-help > summary {
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.ouw25-bargain-help-content {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 0.8rem;
+}
+
 .ouw25-bargain-grid, .ouw25-bargain-people {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
@@ -1902,6 +1971,25 @@ body.game .application.ouw25 .ouw25-bargain {
   display: block;
 }
 
+.ouw25-bargain-drop small[hidden] {
+  display: none;
+}
+
+.ouw25-bargain-participant {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  vertical-align: middle;
+}
+
+.ouw25-bargain-participant img {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .ouw25-bargain-drop ul {
   margin: 0.3rem 0 0;
   padding: 0;
@@ -1911,11 +1999,8 @@ body.game .application.ouw25 .ouw25-bargain {
 body.game .application.ouw25 .ouw25-bargain-switch {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem;
-  border: 2px solid #a34a10;
-  border-radius: 0.3rem;
-  font-weight: bold;
+  flex: 0 0 auto;
+  cursor: pointer;
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input {
@@ -1924,6 +2009,8 @@ body.game .application.ouw25 .ouw25-bargain-switch input {
   height: 1.5rem;
   flex: 0 0 3rem;
   margin: 0;
+  padding: 0;
+  border: 0;
   border-radius: 1rem;
   background: #777;
   cursor: pointer;
@@ -1932,16 +2019,23 @@ body.game .application.ouw25 .ouw25-bargain-switch input {
 body.game .application.ouw25 .ouw25-bargain-switch input::before {
   content: "";
   display: block;
+  position: static;
   width: 1.1rem;
   height: 1.1rem;
   margin: 0.15rem;
+  outline: 1px solid #888;
   border-radius: 50%;
   background: white;
   transition: transform 0.15s;
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input:checked {
-  background: #b75a0b;
+  background: #e0f5e0;
+}
+
+body.game .application.ouw25 .ouw25-bargain-switch input::after,
+body.game .application.ouw25 .ouw25-bargain-switch input:checked::after {
+  content: none;
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input:checked::before {

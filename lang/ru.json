@@ -705,6 +705,7 @@
     "BargainCalc": {
       "Open": "Открыть калькулятор",
       "Initiator": "Инициатор",
+      "WindowTitle": "{title} — {initiator}: {name}",
       "Leader": "Ведущий размена",
       "Helpers": "Помощники",
       "Wounds": "отмечено ран",

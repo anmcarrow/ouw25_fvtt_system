@@ -705,6 +705,7 @@
     "BargainCalc": {
       "Open": "Open calculator",
       "Initiator": "Initiator",
+      "WindowTitle": "{title} — {initiator}: {name}",
       "Leader": "Bargain leader",
       "Helpers": "Helpers",
       "Wounds": "wounds marked",

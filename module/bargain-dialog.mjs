@@ -1,4 +1,5 @@
 import { calculateBargain } from "./bargain.mjs";
+import { lethalWoundSlot } from "./merchant.mjs";
 import { MERCHANT_TRAITS } from "./traits.mjs";
 
 const pending = new Set();
@@ -13,8 +14,29 @@ function traitCount(actor) {
     && Object.values(MERCHANT_TRAITS).some(codes => codes.includes(item.system.code))).length;
 }
 
-function wounds(actor) {
-  return [1, 2, 3, 4].filter(number => actor.system[`wound${number}`]).length;
+function participant(actor) {
+  const element = document.createElement("span");
+  element.className = "ouw25-bargain-participant";
+  const portrait = document.createElement("img");
+  portrait.src = actor.img || "icons/svg/mystery-man.svg";
+  portrait.alt = "";
+  const name = document.createElement("strong");
+  name.textContent = actor.name;
+  element.append(portrait, name);
+  if (actor.type === "merchant") {
+    const lethal = lethalWoundSlot(actor.system.past, actor.system.fragile);
+    for (let slot = 1; slot <= lethal; slot++) {
+      if (!actor.system[`wound${slot}`]) continue;
+      const wound = document.createElement("span");
+      const label = game.i18n.format(`OUW25.Condition.${slot === lethal ? "LethalWound" : "Wound"}`, { slot });
+      wound.textContent = slot === lethal ? "💀" : "🩸";
+      wound.setAttribute("role", "img");
+      wound.setAttribute("aria-label", label);
+      wound.dataset.tooltip = label;
+      element.append(wound);
+    }
+  }
+  return element;
 }
 
 function readValues(form) {
@@ -75,12 +97,15 @@ export async function openBargain(actor) {
     .map(item => ({ id: item.id, name: item.name, amount: item.system.amount }));
   try {
     const content = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/bargain.hbs", {
-      actor, traits: traitCount(actor), wounds: wounds(actor), friends, debts,
+      actor, traits: traitCount(actor), friends, debts,
       consequences: CONSEQUENCES.map(id => ({ id, label: `OUW25.BargainCalc.Consequences.${id}` }))
     });
     const selection = await foundry.applications.api.DialogV2.input({
       classes: ["ouw25", "ouw25-bargain-dialog"],
-      window: { title: game.i18n.localize("OUW25.Bargain.Title"), resizable: true },
+      window: { title: game.i18n.format("OUW25.BargainCalc.WindowTitle", {
+        title: game.i18n.localize("OUW25.Bargain.Title"),
+        initiator: game.i18n.localize("OUW25.BargainCalc.Initiator"), name: actor.name
+      }), resizable: true },
       position: { width: 720, height: 800 }, modal: false, content, rejectClose: false,
       ok: { label: game.i18n.localize("OUW25.BargainCalc.Confirm"), callback: (_event, button) => {
         try {
@@ -97,6 +122,7 @@ export async function openBargain(actor) {
         const root = dialog.element;
         const form = root.querySelector("form");
         const submit = root.querySelector('[data-action="ok"]');
+        root.querySelector("[data-leader]").replaceChildren(participant(leader));
         const update = () => {
           const values = readValues(form);
           root.querySelector("[data-partial]").hidden = !values.partial;
@@ -141,23 +167,28 @@ export async function openBargain(actor) {
               if (!eligible(dropped, type, permission)) return;
               if (zone.dataset.drop === "leader") {
                 leader = dropped;
-                root.querySelector("[data-leader-name]").textContent = dropped.name;
-                root.querySelector("[data-leader-wounds]").textContent = wounds(dropped);
+                root.querySelector("[data-leader]").replaceChildren(participant(dropped));
                 form.elements.traits.value = traitCount(dropped);
               } else if (zone.dataset.drop === "cooperative") {
                 cooperative = dropped;
                 snapshot.budget = dropped.system.budget;
-                root.querySelector("[data-cooperative-name]").textContent = dropped.name;
+                root.querySelector("[data-cooperative]").replaceChildren(participant(dropped));
+                zone.querySelector("[data-drop-hint]").hidden = true;
               } else if (dropped.uuid !== actor.uuid && !helpers.has(dropped.uuid)) {
                 helpers.set(dropped.uuid, dropped);
                 const item = document.createElement("li");
                 const remove = document.createElement("button");
                 remove.type = "button";
-                remove.textContent = `${dropped.name} (${game.i18n.localize("OUW25.BargainCalc.Wounds")}: ${wounds(dropped)}) ×`;
+                remove.append(participant(dropped), document.createTextNode(" ×"));
                 remove.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.RemoveHelper", { name: dropped.name }));
-                remove.addEventListener("click", () => { helpers.delete(dropped.uuid); item.remove(); });
+                remove.addEventListener("click", () => {
+                  helpers.delete(dropped.uuid);
+                  item.remove();
+                  zone.querySelector("[data-drop-hint]").hidden = helpers.size > 0;
+                });
                 item.append(remove);
                 root.querySelector("[data-helpers]").append(item);
+                zone.querySelector("[data-drop-hint]").hidden = true;
               }
               update();
             } catch (error) { console.error("OUW25 | Bargain drop failed", error); }

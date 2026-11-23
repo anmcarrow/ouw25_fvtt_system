@@ -26,14 +26,18 @@ export function calculateBargain(values) {
   const money = cash + budget;
   if (![fullPrice, unitCost, loanCost, money].every(Number.isSafeInteger)) throw new RangeError("Invalid bargain input");
   if ((!traits && money) || (!captainTraits && loan)) throw new RangeError("Missing traits");
+  const moneyPoints = unitCost ? Number(BigInt(money) / BigInt(unitCost)) : 0;
+  const moneyUsed = moneyPoints * unitCost;
+  const cashUsed = money ? Number(BigInt(moneyUsed) * BigInt(cash) / BigInt(money)) : 0;
+  const moneyPayment = { cash: cashUsed, budget: moneyUsed - cashUsed, unspent: money - moneyUsed };
   const contributions = {
     advantages: Math.floor(remainingAdvantages / (values.inflation ? 8 : 12)),
-    time, unrest, money: unitCost ? Math.floor(money / unitCost) : 0,
+    time, unrest, money: moneyPoints,
     loan: loanCost ? Math.floor(loan / loanCost) : 0,
     enemies: enemies * 3, friends: friends * 4
   };
   const paid = Object.values(contributions).reduce((sum, value) => sum + value, 0);
   if (![paid, unrest * 8, enemies * 3, friends * 4].every(Number.isSafeInteger)) throw new RangeError("Invalid bargain input");
-  return { neutralized, spentAdvantages: neutralized * 4, remainingAdvantages, fullPrice, price,
+  return { neutralized, spentAdvantages: neutralized * 4, remainingAdvantages, fullPrice, price, moneyPayment,
     unitCost, loanCost, contributions, paid, remaining: Math.max(0, price - paid), excess: Math.max(0, paid - price) };
 }

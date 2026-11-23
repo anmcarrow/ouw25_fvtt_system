@@ -1917,6 +1917,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type=
   border: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   font-family: var(--ouw25-font-input);
+  text-align: left;
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain input[type="number"] {
@@ -1968,8 +1969,13 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 
 .ouw25-bargain-help {
   flex: 0 0 auto;
+  margin-inline: 0.6rem;
   padding: 0;
   border-radius: 50%;
+}
+
+.ouw25-bargain-payment-help {
+  margin-inline: 0.4rem;
 }
 
 .ouw25-bargain-summary {
@@ -2069,10 +2075,6 @@ body.game .application.ouw25 .ouw25-bargain h4 {
   text-align: right;
 }
 
-.ouw25-bargain-grid input {
-  text-align: right;
-}
-
 body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:is([name="cash"], [name="budget"]) {
   width: calc(7ch + 0.6667rem + 2px);
   flex-basis: calc(7ch + 0.6667rem + 2px);
@@ -2106,6 +2108,12 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
 
 .ouw25-bargain-consequences fieldset {
   min-width: 0;
+}
+
+.ouw25-bargain-debts > legend {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
 }
 
 .ouw25-bargain-enemies legend label {
@@ -2183,6 +2191,10 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-debt-row label > spa
   gap: 0.3rem;
 }
 
+body.game .application.ouw25 .dialog-content .ouw25-bargain-goal h4 {
+  margin-block-end: 0.25rem;
+}
+
 body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type="checkbox"]) {
   margin-block: 0;
 }
@@ -2199,7 +2211,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type
 }
 
 .ouw25-bargain-opponent > label {
-  font-size: 0.8em;
+  font-size: 1em;
 }
 
 .ouw25-bargain-opponent > small {
@@ -2228,6 +2240,10 @@ body.game .application.ouw25 .ouw25-bargain-people h4 {
 .ouw25-bargain-outcome > select {
   min-width: 0;
   width: 100%;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-outcome > select:disabled {
+  opacity: 0.5;
 }
 
 .ouw25-bargain-counter {
@@ -2304,9 +2320,9 @@ body.game .application.ouw25 .ouw25-bargain-switch {
 
 body.game .application.ouw25 .ouw25-bargain-switch input {
   appearance: none;
-  width: 3rem;
-  height: 1.5rem;
-  flex: 0 0 3rem;
+  width: 2.1rem;
+  height: 1.05rem;
+  flex: 0 0 2.1rem;
   margin: 0;
   padding: 0;
   border: 0;
@@ -2319,9 +2335,9 @@ body.game .application.ouw25 .ouw25-bargain-switch input::before {
   content: "";
   display: block;
   position: static;
-  width: 1.1rem;
-  height: 1.1rem;
-  margin: 0.15rem;
+  width: 0.77rem;
+  height: 0.77rem;
+  margin: 0.105rem;
   outline: 1px solid #888;
   border-radius: 50%;
   background: white;
@@ -2338,7 +2354,7 @@ body.game .application.ouw25 .ouw25-bargain-switch input:checked::after {
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input:checked::before {
-  transform: translateX(1.5rem);
+  transform: translateX(1.05rem);
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input:focus-visible {
@@ -2348,6 +2364,12 @@ body.game .application.ouw25 .ouw25-bargain-switch input:focus-visible {
 
 .ouw25-bargain-total {
   font-weight: bold;
+}
+
+body.game .application.ouw25 .dialog-content fieldset.ouw25-bargain-payment {
+  border: 0;
+  border-block-start: 1px solid var(--ouw25-color-accent);
+  border-radius: 0;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"] {

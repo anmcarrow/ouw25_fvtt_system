@@ -34,6 +34,13 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
 });
 
+test("bargain outcome options are prefixed and the disabled selector is faded", async () => {
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.match(bargain, /<option value="\{\{id\}\}">\+ \{\{localize label\}\}<\/option>/);
+  assert.match(bargain, /<option value="custom">\+ \{\{localize "OUW25\.BargainCalc\.Custom"\}\}<\/option>/);
+  assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{\s*opacity:\s*0\.5;/);
+});
+
 test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.application\.ouw25\.ouw25-bargain-dialog\s*\{\s*min-width:\s*800px;\s*max-width:\s*800px;/);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{\s*flex:\s*1 1 auto;/);

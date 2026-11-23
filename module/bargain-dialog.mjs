@@ -162,20 +162,22 @@ export function validatePayment(actor, cooperative, values, snapshot) {
 
 export async function applyPayment(actor, cooperative, values, snapshot) {
   if (!validatePayment(actor, cooperative, values, snapshot)) throw new Error("changed");
+  const { moneyPayment } = calculateBargain(values);
   const updates = [];
-  if (Number(values.cash)) updates.push({ _id: actor.id, "system.pocketMoney": snapshot.cash - Number(values.cash) });
-  if (Number(values.budget) || Number(values.unrest)) {
+  if (moneyPayment.cash) updates.push({ _id: actor.id, "system.pocketMoney": snapshot.cash - moneyPayment.cash });
+  if (moneyPayment.budget || Number(values.unrest)) {
     const update = { _id: cooperative.id };
-    if (Number(values.budget)) update["system.budget"] = snapshot.budget - Number(values.budget);
+    if (moneyPayment.budget) update["system.budget"] = snapshot.budget - moneyPayment.budget;
     if (Number(values.unrest)) update["system.unrest"] = snapshot.unrest + Number(values.unrest) * UNREST_PER_POINT;
     updates.push(update);
   }
   if (updates.length) await foundry.documents.Actor.updateDocuments(updates);
-  if ((Number(values.cash) && actor.system.pocketMoney !== snapshot.cash - Number(values.cash))
-    || (Number(values.budget) && cooperative.system.budget !== snapshot.budget - Number(values.budget))
+  if ((moneyPayment.cash && actor.system.pocketMoney !== snapshot.cash - moneyPayment.cash)
+    || (moneyPayment.budget && cooperative.system.budget !== snapshot.budget - moneyPayment.budget)
     || (Number(values.unrest) && cooperative.system.unrest !== snapshot.unrest + Number(values.unrest) * UNREST_PER_POINT)) {
     throw new Error("Partial payment");
   }
+  return moneyPayment;
 }
 
 export async function openBargain(actor) {
@@ -327,6 +329,9 @@ export async function openBargain(actor) {
               paid: result.paid, remaining: result.remaining, excess: result.excess,
               money: result.unitCost || "—", loan: result.loanCost || "—", unrest: Number(values.unrest) * UNREST_PER_POINT
             });
+            if (result.moneyPayment.unspent) {
+              root.querySelector("[data-summary]").textContent += ` ${game.i18n.format("OUW25.BargainCalc.MoneyUsed", result.moneyPayment)}`;
+            }
             root.querySelector("[data-breakdown]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", { ...result.contributions, sum: result.paid });
             const valid = validatePayment(leader, cooperative, values, snapshot);
             const recordsValid = validateBargainRecords(leader, values);
@@ -419,8 +424,9 @@ export async function openBargain(actor) {
     const recipients = Array.from(game.users).filter(user => user.isGM
       || documents.every(document => document.testUserPermission(user, "OBSERVER"))).map(user => user.id);
     if (!recipients.length) throw new Error("changed");
+    let moneyPayment;
     try {
-      await applyPayment(leader, cooperative, values, snapshot);
+      moneyPayment = await applyPayment(leader, cooperative, values, snapshot);
     } catch (error) {
       console.error("OUW25 | Bargain payment failed", error);
       ui.notifications.error(game.i18n.format("OUW25.BargainCalc.PaymentFailed", {
@@ -458,7 +464,7 @@ export async function openBargain(actor) {
       ["AdvantagePoints", result.contributions.advantages],
       ["PartialConsequence", consequence],
       ["Price", result.price], ["Paid", result.paid], ["Excess", result.excess],
-      ["Cash", values.cash], ["Budget", values.budget], ["Time", values.time], ["Unrest", Number(values.unrest) * UNREST_PER_POINT],
+      ["Cash", moneyPayment.cash], ["Budget", moneyPayment.budget], ["Time", values.time], ["Unrest", Number(values.unrest) * UNREST_PER_POINT],
       ["Loan", `${values.loan} ${values.existingDebt ? leader.items.get(values.existingDebt)?.name ?? "" : values.creditorName} ${values.creditorLocation}`],
       ["Enemies", values.enemyRecords.map(enemy => `${enemy.name}${enemy.location ? ` (${enemy.location})` : ""}`).join(", ") || "—"],
       ["Friends", chosenFriends || "—"]

@@ -1364,6 +1364,23 @@ test("bargain prices, advantage allocation, and mixed payments follow the select
   }
 });
 
+test("bargain money only pays for whole points, split proportionally with exact integer rounding", async () => {
+  const { calculateBargain } = await import(new URL("module/bargain.mjs", dist));
+  for (const [cash, budget, expected] of [
+    [0, 0, { cash: 0, budget: 0, unspent: 0 }],
+    [500, 0, { cash: 0, budget: 0, unspent: 500 }],
+    [6100, 0, { cash: 6000, budget: 0, unspent: 100 }],
+    [0, 6100, { cash: 0, budget: 6000, unspent: 100 }],
+    [4000, 2500, { cash: 3692, budget: 2308, unspent: 500 }]
+  ]) {
+    assert.deepEqual(calculateBargain({ traits: 2, cash, budget }).moneyPayment, expected);
+  }
+  const maximum = Number.MAX_SAFE_INTEGER;
+  const result = calculateBargain({ traits: 1, cash: maximum - 1000, budget: 1000 });
+  assert.equal(result.moneyPayment.cash + result.moneyPayment.budget + result.moneyPayment.unspent, maximum);
+  assert.ok(result.moneyPayment.budget <= 1000);
+});
+
 test("bargain payment batches only confirmed funds and rejects stale or unauthorized balances", async () => {
   const { applyPayment, validatePayment } = await import(new URL("module/bargain-dialog.mjs", dist));
   const previousGame = globalThis.game;
@@ -1386,7 +1403,7 @@ test("bargain payment batches only confirmed funds and rejects stale or unauthor
   } } } };
   try {
     const snapshot = { cash: 5000, budget: 8000, unrest: 9 };
-    const values = { cash: 2000, budget: 4000, unrest: 2 };
+    const values = { cash: 2000, budget: 4000, unrest: 2, traits: 2 };
     assert.equal(validatePayment(actor, cooperative, values, snapshot), true);
     assert.equal(validatePayment(actor, cooperative, { ...values, unrest: 3 }, snapshot), false);
     assert.equal(validatePayment(actor, null, { cash: 0, budget: 0, unrest: 1 }, snapshot), false);
@@ -1403,12 +1420,42 @@ test("bargain payment batches only confirmed funds and rejects stale or unauthor
     foundry.documents.Actor.updateDocuments = async updates => {
       actor.system.pocketMoney = updates[0]["system.pocketMoney"];
     };
-    await assert.rejects(applyPayment(actor, cooperative, { cash: 1000, budget: 1000 }, { cash: 3000, budget: 4000 }), /Partial payment/);
-    assert.equal(actor.system.pocketMoney, 2000);
+    await assert.rejects(applyPayment(actor, cooperative, { cash: 3000, budget: 3000, traits: 2 }, { cash: 3000, budget: 4000 }), /Partial payment/);
+    assert.equal(actor.system.pocketMoney, 0);
     assert.equal(cooperative.system.budget, 4000);
   } finally {
     globalThis.game = previousGame;
     globalThis.foundry = previousFoundry;
+  }
+});
+
+test("bargain confirmation leaves fractional payment amounts in their original accounts", async () => {
+  const { applyPayment } = await import(new URL("module/bargain-dialog.mjs", dist));
+  const previous = { game: globalThis.game, foundry: globalThis.foundry };
+  const actor = { id: "a", documentName: "Actor", type: "merchant", system: { pocketMoney: 5000 }, testUserPermission: () => true };
+  const cooperative = { id: "b", documentName: "Actor", type: "cooperative", system: { budget: 8000 }, testUserPermission: () => true };
+  const actors = new Map([[actor.id, actor], [cooperative.id, cooperative]]);
+  let updates = [];
+  globalThis.game = { actors, user: {} };
+  globalThis.foundry = { documents: { Actor: { async updateDocuments(batch) {
+    updates.push(batch);
+    for (const entry of batch) {
+      if ("system.pocketMoney" in entry) actor.system.pocketMoney = entry["system.pocketMoney"];
+      if ("system.budget" in entry) cooperative.system.budget = entry["system.budget"];
+    }
+  } } } };
+  try {
+    const snapshot = { cash: 5000, budget: 8000 };
+    assert.deepEqual(await applyPayment(actor, cooperative, { cash: 500, budget: 400, traits: 2 }, snapshot),
+      { cash: 0, budget: 0, unspent: 900 });
+    assert.deepEqual(updates, []);
+    assert.deepEqual(await applyPayment(actor, cooperative, { cash: 4000, budget: 2500, traits: 2 }, snapshot),
+      { cash: 3692, budget: 2308, unspent: 500 });
+    assert.equal(actor.system.pocketMoney, 1308);
+    assert.equal(cooperative.system.budget, 5692);
+  } finally {
+    globalThis.game = previous.game;
+    globalThis.foundry = previous.foundry;
   }
 });
 

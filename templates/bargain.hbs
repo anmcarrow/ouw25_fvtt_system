@@ -53,8 +53,8 @@
       <input type="checkbox" name="partial" role="switch" aria-label="{{localize "OUW25.BargainCalc.Partial"}}">
     </label>
     <select name="consequence" aria-label="{{localize "OUW25.BargainCalc.PartialConsequence"}}" data-tooltip="{{localize "OUW25.BargainCalc.PartialConsequence"}}" disabled>
-      {{#each consequences}}<option value="{{id}}">{{localize label}}</option>{{/each}}
-      <option value="custom">{{localize "OUW25.BargainCalc.Custom"}}</option>
+      {{#each consequences}}<option value="{{id}}">+ {{localize label}}</option>{{/each}}
+      <option value="custom">+ {{localize "OUW25.BargainCalc.Custom"}}</option>
     </select>
     <label class="ouw25-bargain-counter" data-tooltip="{{localize "OUW25.BargainCalc.Complications"}}">
       <span aria-hidden="true">&#x26A0;&#xFE0F;</span><input name="complications" type="number" min="0" step="1" value="0" aria-label="{{localize "OUW25.BargainCalc.Complications"}}">

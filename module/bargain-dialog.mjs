@@ -18,7 +18,8 @@ function participant(actor) {
   const element = document.createElement("span");
   element.className = "ouw25-bargain-participant";
   const portrait = document.createElement("img");
-  portrait.src = actor.img || "icons/svg/mystery-man.svg";
+  const tokenImage = actor.prototypeToken?.texture?.src;
+  portrait.src = tokenImage && !tokenImage.includes("*") ? tokenImage : actor.img || "icons/svg/mystery-man.svg";
   portrait.alt = "";
   const name = document.createElement("strong");
   name.textContent = actor.name;
@@ -42,7 +43,7 @@ function participant(actor) {
 function readValues(form) {
   const get = name => form.elements.namedItem(name)?.value ?? "0";
   return {
-    goal: get("goal").trim(), partial: get("outcome") === "partial", inflation: form.elements.inflation.checked,
+    goal: get("goal").trim(), partial: form.elements.partial.checked, inflation: form.elements.inflation.checked,
     consequence: get("consequence"), custom: get("custom").trim(),
     advantages: get("advantages"), complications: get("complications"), traits: get("traits"),
     captainTraits: get("captainTraits"), time: get("time"), unrest: get("unrest"),
@@ -125,8 +126,8 @@ export async function openBargain(actor) {
         root.querySelector("[data-leader]").replaceChildren(participant(leader));
         const update = () => {
           const values = readValues(form);
-          root.querySelector("[data-partial]").hidden = !values.partial;
-          root.querySelector("[data-custom]").hidden = values.consequence !== "custom";
+          form.elements.consequence.disabled = !values.partial;
+          root.querySelector("[data-custom]").hidden = !values.partial || values.consequence !== "custom";
           root.querySelector("[data-balances]").textContent = game.i18n.format("OUW25.BargainCalc.Balances", {
             cash: actor.system.pocketMoney, budget: cooperative?.system.budget ?? "—"
           });
@@ -152,6 +153,11 @@ export async function openBargain(actor) {
             submit.disabled = true;
           }
         };
+        form.elements.partial.addEventListener("change", () => {
+          if (form.elements.partial.checked) {
+            form.elements.consequence.value = CONSEQUENCES[Math.floor(Math.random() * CONSEQUENCES.length)];
+          }
+        });
         form.addEventListener("input", update);
         form.addEventListener("change", update);
         for (const zone of root.querySelectorAll("[data-drop]")) {
@@ -179,6 +185,7 @@ export async function openBargain(actor) {
                 const item = document.createElement("li");
                 const remove = document.createElement("button");
                 remove.type = "button";
+                remove.className = "ouw25-bargain-entry";
                 remove.append(participant(dropped), document.createTextNode(" ×"));
                 remove.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.RemoveHelper", { name: dropped.name }));
                 remove.addEventListener("click", () => {

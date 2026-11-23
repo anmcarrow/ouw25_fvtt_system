@@ -1406,6 +1406,79 @@ test("bargain payment batches only confirmed funds and rejects stale or unauthor
   }
 });
 
+test("partial bargain selects a random consequence on activation and retains manual choices", async () => {
+  const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
+  const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, random: Math.random };
+  const actor = { id: "a", uuid: "Actor.a", name: "Merchant", documentName: "Actor", type: "merchant",
+    img: "portrait.webp", prototypeToken: { texture: { src: "token.webp" } },
+    system: { pocketMoney: 0 }, items: [], testUserPermission: () => true };
+  const partial = Object.assign(new EventTarget(), { checked: false });
+  const consequence = { value: "unrest", disabled: true };
+  const fields = {
+    partial, consequence, inflation: { checked: false }, goal: { value: "" }, custom: { value: "" },
+    time: { value: "2" }
+  };
+  fields.namedItem = name => fields[name];
+  const form = Object.assign(new EventTarget(), { elements: fields, querySelectorAll: () => [] });
+  let leader;
+  const elements = {
+    form, "[data-leader]": { replaceChildren(child) { leader = child; } }, '[data-action="ok"]': { disabled: false },
+    "[data-custom]": { hidden: true }, "[data-balances]": {}, "[data-price]": {},
+    "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {}
+  };
+  const root = { querySelector: selector => elements[selector], querySelectorAll: () => [] };
+  globalThis.document = { createElement: () => ({
+    dataset: {}, children: [], append(...children) { this.children.push(...children); }, setAttribute() {}
+  }) };
+  globalThis.game = {
+    actors: new Map([[actor.id, actor]]), user: {},
+    i18n: { localize: key => key, format: key => key }
+  };
+  globalThis.foundry = { applications: {
+    handlebars: { renderTemplate: async () => "" },
+    api: { DialogV2: { input: async config => {
+      config.render(null, { element: root });
+      assert.equal(leader.children[0].src, "token.webp");
+      assert.equal(consequence.disabled, true);
+      Math.random = () => 0.999;
+      partial.checked = true;
+      partial.dispatchEvent(new Event("change"));
+      form.dispatchEvent(new Event("change"));
+      assert.equal(consequence.disabled, false);
+      assert.equal(consequence.value, "grudge");
+      consequence.value = "custom";
+      form.dispatchEvent(new Event("change"));
+      form.dispatchEvent(new Event("input"));
+      assert.equal(consequence.value, "custom");
+      assert.equal(elements["[data-custom]"].hidden, false);
+      partial.checked = false;
+      partial.dispatchEvent(new Event("change"));
+      form.dispatchEvent(new Event("change"));
+      assert.equal(consequence.disabled, true);
+      assert.equal(elements["[data-custom]"].hidden, true);
+      assert.equal(config.ok.callback(null, { form }).result.price, 2);
+      Math.random = () => 0;
+      partial.checked = true;
+      partial.dispatchEvent(new Event("change"));
+      form.dispatchEvent(new Event("change"));
+      assert.equal(consequence.value, "unrest");
+      assert.equal(config.ok.callback(null, { form }).result.price, 1);
+      actor.prototypeToken.texture.src = "tokens/*.webp";
+      config.render(null, { element: root });
+      assert.equal(leader.children[0].src, "portrait.webp");
+      return null;
+    } } }
+  } };
+  try {
+    await openBargain(actor);
+  } finally {
+    globalThis.game = previous.game;
+    globalThis.foundry = previous.foundry;
+    globalThis.document = previous.document;
+    Math.random = previous.random;
+  }
+});
+
 test("the check cheatsheet lists advantages and complications without interactive fields", async () => {
   const template = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
   const section = template.match(/<details class="ouw25-check-assistant">([\s\S]*?)<\/details>/)?.[1];
@@ -1426,8 +1499,10 @@ test("the bargain panel opens the calculator and its reference is inside the dia
     assert.match(dialog, new RegExp(`OUW25\\.Bargain\\.${key}`));
     assert.doesNotMatch(sheet, new RegExp(`OUW25\\.Bargain\\.${key}`));
   }
-  assert.match(dialog, /^<section[^>]*>\s*<div class="ouw25-bargain-toolbar">[\s\S]*?ouw25-bargain-help[\s\S]*?ouw25-bargain-switch/);
+  assert.match(dialog, /^<section[^>]*>\s*<div class="ouw25-bargain-toolbar">[\s\S]*?ouw25-bargain-switch[\s\S]*?ouw25-bargain-help/);
   assert.match(dialog, /name="inflation" role="switch" aria-label="\{\{localize "OUW25\.BargainCalc\.Inflation"\}\}"/);
+  assert.match(dialog, /name="partial" role="switch"/);
+  assert.match(dialog, /<select name="consequence"[^>]* disabled>/);
   assert.match(dialog, /<label><h4>\{\{localize "OUW25\.BargainCalc\.Goal"\}\}<\/h4>/);
   assert.doesNotMatch(dialog, /BargainCalc\.Initiator|data-leader-wounds|BargainCalc\.Wounds/);
 });

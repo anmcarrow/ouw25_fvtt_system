@@ -7,6 +7,16 @@ const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", impo
 const template = await readFile(new URL("../dist/ouw25/templates/actor-notes.hbs", import.meta.url), "utf8");
 const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/actor-create.hbs", import.meta.url), "utf8");
 
+test("bargain payment field captions are compact and bold without restyling inputs", async () => {
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  for (const key of ["Traits", "CaptainTraits", "Time", "Unrest", "Cash", "Budget", "Loan", "Enemies",
+    "EnemyDescription", "ExistingDebt", "LoanDescription"]) {
+    assert.match(bargain, new RegExp(`<label><span>\\{\\{localize "OUW25\\.BargainCalc\\.${key}"\\}\\}</span>`));
+  }
+  assert.match(bargain, /name="friend"[^>]*> <span>\{\{name\}\}<\/span>/);
+  assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
+});
+
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {
   assert.match(styles, /\.application\.ouw25:has\(\.ouw25-notes\):not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-block-size:\s*60vh;/);
 });

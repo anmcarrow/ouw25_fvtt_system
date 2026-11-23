@@ -17,10 +17,10 @@ test("bargain payment field captions are compact and bold without restyling inpu
   assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
 });
 
-test("bargain summary follows the help and the points breakdown starts payment methods", async () => {
+test("bargain summary and payment breakdown are alongside their help buttons", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
-  assert.match(bargain, /<\/details>\s*<p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"><\/p>\s*<\/div>/);
-  assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[^<]*\{\{localize "OUW25\.BargainCalc\.Payment"\}\}<\/legend>\s*<p data-breakdown><\/p>/);
+  assert.match(bargain, /<\/details>\s*<p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"><\/p>/);
+  assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[\s\S]*?BargainCalc\.PaymentHelp[\s\S]*?data-breakdown><\/span>\s*<\/legend>/);
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*0\.8em;/s);
 });
 

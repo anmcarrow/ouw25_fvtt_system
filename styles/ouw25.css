@@ -1968,7 +1968,8 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 
 .ouw25-bargain-help {
   flex: 0 0 auto;
-  padding: 0.34rem 0.6rem;
+  padding: 0;
+  border-radius: 50%;
 }
 
 .ouw25-bargain-summary {
@@ -1983,9 +1984,18 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 }
 
 .ouw25-bargain-help > summary {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
   cursor: pointer;
   font-size: 16px;
-  line-height: 1.4;
+  list-style: none;
+}
+
+.ouw25-bargain-help > summary::-webkit-details-marker {
+  display: none;
 }
 
 .ouw25-bargain-help-content {
@@ -1997,6 +2007,49 @@ body.game .application.ouw25 .ouw25-bargain h4 {
   max-height: 50vh;
   overflow: auto;
   padding: 0.8rem;
+}
+
+.ouw25-bargain-error {
+  position: absolute;
+  inset: 0 0 auto auto;
+  z-index: 3;
+  max-width: 70%;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  color: #790000;
+  background: var(--ouw25-color-surface);
+  border: 1px solid #790000;
+}
+
+.ouw25-bargain-error[hidden] {
+  display: none;
+}
+
+.ouw25-bargain-payment > legend {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+}
+
+.ouw25-bargain-payment > legend > span:first-child {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.ouw25-bargain-breakdown {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--ouw25-color-accent);
+  background: var(--ouw25-color-paper);
+  font-size: var(--font-size-14, 14px);
+  font-weight: normal;
+}
+
+.ouw25-bargain-payment-help .ouw25-bargain-help-content {
+  inset-inline: 0;
 }
 
 .ouw25-bargain-grid {
@@ -2023,6 +2076,19 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:is([name="cash"], [name="budget"]) {
   width: calc(7ch + 0.6667rem + 2px);
   flex-basis: calc(7ch + 0.6667rem + 2px);
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name="cash"]):not([name="budget"]) {
+  width: calc(3ch + 1.8rem);
+  flex-basis: calc(3ch + 1.8rem);
+  appearance: auto;
+  -moz-appearance: auto;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name="cash"]):not([name="budget"])::-webkit-inner-spin-button,
+body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name="cash"]):not([name="budget"])::-webkit-outer-spin-button {
+  -webkit-appearance: auto;
+  opacity: 1;
 }
 
 .ouw25-bargain-consequences {
@@ -2112,10 +2178,34 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-debt-row label > spa
   gap: 0.5rem;
 }
 
-.ouw25-bargain-opponent > label,
+.ouw25-bargain-goal {
+  display: grid;
+  gap: 0.3rem;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type="checkbox"]) {
+  margin-block: 0;
+}
+
+.ouw25-bargain-opponent {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
+.ouw25-bargain-opponent > input {
+  width: 100%;
+}
+
+.ouw25-bargain-opponent > label {
+  font-size: 0.8em;
+}
+
 .ouw25-bargain-opponent > small {
   display: block;
   font-size: 0.8em;
+  grid-column: 1 / -1;
 }
 
 .ouw25-bargain-people {
@@ -2176,6 +2266,10 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-entry:empty {
   display: none;
 }
 
+body.game .application.ouw25 .dialog-content [data-helpers] .ouw25-bargain-entry {
+  margin-block: 0.1875rem;
+}
+
 .ouw25-bargain-participant {
   display: inline-flex;
   align-items: center;
@@ -2194,7 +2288,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-entry:empty {
 
 .ouw25-bargain-drop ul {
   display: grid;
-  row-gap: 0.5rem;
+  row-gap: 0;
   margin: 0.3rem 0 0;
   padding: 0;
   list-style: none;
@@ -2254,4 +2348,8 @@ body.game .application.ouw25 .ouw25-bargain-switch input:focus-visible {
 
 .ouw25-bargain-total {
   font-weight: bold;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"] {
+  border: 1px solid var(--ouw25-color-accent);
 }

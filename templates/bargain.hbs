@@ -4,7 +4,7 @@
       <input type="checkbox" name="inflation" role="switch" aria-label="{{localize "OUW25.BargainCalc.Inflation"}}">
     </label>
     <details class="ouw25-bargain-help">
-      <summary><span aria-hidden="true">&#x1F4D7;</span> {{localize "OUW25.Bargain.Summary"}}</summary>
+      <summary data-tooltip="{{localize "OUW25.Bargain.Summary"}}" aria-label="{{localize "OUW25.Bargain.Summary"}}"><span aria-hidden="true">&#x2753;</span></summary>
       <div class="ouw25-bargain-help-content">
         <p>{{localize "OUW25.Bargain.Price"}}</p>
         <p>{{localize "OUW25.Bargain.Payment"}}</p>
@@ -13,6 +13,7 @@
       </div>
     </details>
     <p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"></p>
+    <p class="ouw25-bargain-error" data-error role="alert" hidden></p>
   </div>
   <div class="ouw25-bargain-people">
     <section>
@@ -36,13 +37,15 @@
       </div>
     </section>
   </div>
-  <label><h4>{{localize "OUW25.BargainCalc.Goal"}}</h4>
-    <input type="text" name="goal" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}">
-  </label>
-  <div class="ouw25-bargain-opponent">
-    <input name="enemyDescription" type="text" aria-label="{{localize "OUW25.BargainCalc.EnemyDescription"}}" placeholder="{{localize "OUW25.BargainCalc.DefaultOpponent"}}">
-    <label><span>{{localize "OUW25.BargainCalc.KnowOpponent"}}</span> <input name="knowOpponent" type="checkbox"></label>
-    <small data-contact-target></small>
+  <div class="ouw25-bargain-goal">
+    <label><h4>{{localize "OUW25.BargainCalc.Goal"}}</h4>
+      <input type="text" name="goal" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}">
+    </label>
+    <div class="ouw25-bargain-opponent">
+      <input name="enemyDescription" type="text" aria-label="{{localize "OUW25.BargainCalc.EnemyDescription"}}" placeholder="{{localize "OUW25.BargainCalc.DefaultOpponent"}}">
+      <label class="ouw25-bargain-switch"><span>{{localize "OUW25.BargainCalc.KnowOpponent"}}</span> <input name="knowOpponent" type="checkbox" role="switch" aria-label="{{localize "OUW25.BargainCalc.KnowOpponent"}}"></label>
+      <small data-contact-target></small>
+    </div>
   </div>
   <div class="ouw25-bargain-outcome">
     <label class="ouw25-bargain-switch">
@@ -63,9 +66,14 @@
   <label data-custom hidden>{{localize "OUW25.BargainCalc.CustomDescription"}} <input type="text" name="custom"></label>
   <p class="ouw25-bargain-total" data-price role="status"></p>
   <fieldset class="ouw25-bargain-payment">
-    <legend>{{localize "OUW25.BargainCalc.Payment"}}</legend>
-    <p data-breakdown></p>
-    <p>{{localize "OUW25.BargainCalc.Manual"}}</p>
+    <legend>
+      <span>{{localize "OUW25.BargainCalc.Payment"}}</span>
+      <details class="ouw25-bargain-help ouw25-bargain-payment-help">
+        <summary data-tooltip="{{localize "OUW25.BargainCalc.PaymentHelp"}}" aria-label="{{localize "OUW25.BargainCalc.PaymentHelp"}}"><span aria-hidden="true">&#x2753;</span></summary>
+        <div class="ouw25-bargain-help-content"><p>{{localize "OUW25.BargainCalc.Manual"}}</p></div>
+      </details>
+      <span class="ouw25-bargain-breakdown" data-breakdown></span>
+    </legend>
     <div class="ouw25-bargain-grid">
       {{#each paymentFields}}
         <label><span>{{localize label}}</span> <input name="{{name}}" type="number" min="0" step="1" value="{{value}}"></label>
@@ -98,5 +106,4 @@
       </div>
     </div>
   </fieldset>
-  <p data-error role="alert"></p>
 </section>

@@ -1370,7 +1370,7 @@ test("bargain payment batches only confirmed funds and rejects stale or unauthor
   const previousFoundry = globalThis.foundry;
   const actor = { id: "a", documentName: "Actor", type: "merchant", system: { pocketMoney: 5000 },
     testUserPermission: () => true };
-  const cooperative = { id: "b", documentName: "Actor", type: "cooperative", system: { budget: 8000 },
+  const cooperative = { id: "b", documentName: "Actor", type: "cooperative", system: { budget: 8000, unrest: 9 },
     testUserPermission: () => true };
   const actors = new Map([[actor.id, actor], [cooperative.id, cooperative]]);
   let batches = [];
@@ -1381,14 +1381,20 @@ test("bargain payment batches only confirmed funds and rejects stale or unauthor
       const target = actors.get(update._id);
       if ("system.pocketMoney" in update) target.system.pocketMoney = update["system.pocketMoney"];
       if ("system.budget" in update) target.system.budget = update["system.budget"];
+      if ("system.unrest" in update) target.system.unrest = update["system.unrest"];
     }
   } } } };
   try {
-    const snapshot = { cash: 5000, budget: 8000 };
-    const values = { cash: 2000, budget: 4000 };
+    const snapshot = { cash: 5000, budget: 8000, unrest: 9 };
+    const values = { cash: 2000, budget: 4000, unrest: 2 };
     assert.equal(validatePayment(actor, cooperative, values, snapshot), true);
+    assert.equal(validatePayment(actor, cooperative, { ...values, unrest: 3 }, snapshot), false);
+    assert.equal(validatePayment(actor, null, { cash: 0, budget: 0, unrest: 1 }, snapshot), false);
+    cooperative.system.unrest = 10;
+    assert.equal(validatePayment(actor, cooperative, values, snapshot), false);
+    cooperative.system.unrest = 9;
     await applyPayment(actor, cooperative, values, snapshot);
-    assert.deepEqual(batches, [[{ _id: "a", "system.pocketMoney": 3000 }, { _id: "b", "system.budget": 4000 }]]);
+    assert.deepEqual(batches, [[{ _id: "a", "system.pocketMoney": 3000 }, { _id: "b", "system.budget": 4000, "system.unrest": 25 }]]);
     assert.equal(validatePayment(actor, cooperative, values, snapshot), false);
     await assert.rejects(applyPayment(actor, cooperative, values, snapshot));
     cooperative.testUserPermission = () => false;
@@ -1406,8 +1412,8 @@ test("bargain payment batches only confirmed funds and rejects stale or unauthor
   }
 });
 
-test("bargain contacts use the chosen or uniquely owned founder cooperative without duplicates", async () => {
-  const { contactCooperative, recordBargainContact } = await import(new URL("module/bargain-dialog.mjs", dist));
+test("bargain contacts and default cooperative selection respect permissions and duplicates", async () => {
+  const { firstFounderCooperative, contactCooperative, recordBargainContact } = await import(new URL("module/bargain-dialog.mjs", dist));
   const previous = globalThis.game;
   const leader = { uuid: "Actor.leader" };
   const makeCooperative = (id, founders = [], owner = true) => ({
@@ -1427,7 +1433,13 @@ test("bargain contacts use the chosen or uniquely owned founder cooperative with
   try {
     assert.equal(contactCooperative(selected, leader), selected);
     assert.equal(contactCooperative(null, leader), founded);
+    assert.equal(firstFounderCooperative(leader), founded);
     actors.set(other.id, other);
+    assert.equal(firstFounderCooperative(leader), founded);
+    founded.testUserPermission = (_user, permission) => permission === "OBSERVER";
+    assert.equal(firstFounderCooperative(leader), founded);
+    assert.equal(contactCooperative(founded, leader), null);
+    founded.testUserPermission = () => true;
     assert.equal(contactCooperative(null, leader), null);
     actors.delete(other.id);
     await recordBargainContact(founded, "Opponent");
@@ -1511,13 +1523,15 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
   const existingDebt = Object.assign(new EventTarget(), { value: "", selectedOptions: [], replaceChildren() {} });
   const fields = {
     partial, consequence, inflation: { checked: false }, knowOpponent: { checked: false }, goal: { value: "" }, custom: { value: "" },
-    existingDebt, creditorLocation: { value: "" }, time: { value: "2" }
+    existingDebt, creditorLocation: { value: "" }, time: { value: "2" },
+    cash: { value: "0" }, budget: { value: "0" }, unrest: { value: "0" }
   };
   fields.namedItem = name => fields[name];
   const form = Object.assign(new EventTarget(), { elements: fields, querySelectorAll: () => [] });
   let leader;
   const elements = {
-    form, "[data-leader]": { replaceChildren(child) { leader = child; } }, '[data-action="ok"]': { disabled: false },
+    form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
+    '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {}
   };
@@ -1541,6 +1555,8 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
     api: { DialogV2: { input: async config => {
       config.render(null, { element: root });
       assert.equal(leader.children[0].src, "token.webp");
+      assert.equal(fields.budget.disabled, true);
+      assert.equal(fields.unrest.disabled, true);
       assert.equal(elements["[data-no-enemies]"].hidden, false);
       fields.enemies = { value: "1" };
       form.dispatchEvent(new Event("input"));
@@ -1577,7 +1593,7 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       partial.checked = true;
       partial.dispatchEvent(new Event("change"));
       form.dispatchEvent(new Event("change"));
-      assert.equal(consequence.value, "unrest");
+      assert.equal(consequence.value, "damage");
       assert.equal(config.ok.callback(null, { form }).result.price, 1);
       actor.prototypeToken.texture.src = "tokens/*.webp";
       config.render(null, { element: root });

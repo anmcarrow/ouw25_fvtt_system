@@ -5,8 +5,10 @@ import { MERCHANT_TRAITS } from "./traits.mjs";
 
 const pending = new Set();
 const MAX_ENEMIES = 20;
+const MAX_UNREST = 25;
+const UNREST_PER_POINT = 8;
 const CONSEQUENCES = [
-  "unrest", "damage", "threat", "omen", "news", "worsening",
+  "damage", "threat", "omen", "news", "worsening",
   "past", "hidden", "deadline", "responsibility", "bystanders", "grudge"
 ];
 const PAYMENT_FIELDS = [
@@ -73,6 +75,11 @@ function eligible(actor, type, permission = "OBSERVER") {
     && game.actors.get(actor.id) === actor && actor.testUserPermission(game.user, permission);
 }
 
+export function firstFounderCooperative(leader) {
+  return Array.from(game.actors.values()).find(actor => eligible(actor, "cooperative")
+    && actor.system.founders?.includes(leader.uuid)) ?? null;
+}
+
 export function contactCooperative(selected, leader) {
   if (selected) return eligible(selected, "cooperative", "OWNER") ? selected : null;
   const matches = Array.from(game.actors.values()).filter(actor => eligible(actor, "cooperative", "OWNER")
@@ -136,14 +143,19 @@ export async function recordBargainConsequences(leader, values) {
 }
 
 export function validatePayment(actor, cooperative, values, snapshot) {
-  for (const value of [values.cash, values.budget]) {
+  for (const value of [values.cash, values.budget, values.unrest ?? 0]) {
     if (!/^(0|[1-9]\d*)$/.test(String(value)) || !Number.isSafeInteger(Number(value))) return false;
   }
-  if (!eligible(actor, "merchant", "OWNER") || actor.system.pocketMoney !== snapshot.cash) return false;
-  if (Number(values.cash) > actor.system.pocketMoney) return false;
-  if (Number(values.budget)) {
-    if (!eligible(cooperative, "cooperative", "OWNER") || cooperative.system.budget !== snapshot.budget
-      || Number(values.budget) > cooperative.system.budget) return false;
+  if (!eligible(actor, "merchant")) return false;
+  if (Number(values.cash) && (!eligible(actor, "merchant", "OWNER")
+    || actor.system.pocketMoney !== snapshot.cash || Number(values.cash) > actor.system.pocketMoney)) return false;
+  if (Number(values.budget) || Number(values.unrest)) {
+    if (!eligible(cooperative, "cooperative", "OWNER")) return false;
+    if (Number(values.budget) && (cooperative.system.budget !== snapshot.budget
+      || Number(values.budget) > cooperative.system.budget)) return false;
+    if (Number(values.unrest) && (cooperative.system.unrest !== snapshot.unrest
+      || !Number.isInteger(cooperative.system.unrest) || cooperative.system.unrest < 0
+      || Number(values.unrest) * UNREST_PER_POINT > MAX_UNREST - cooperative.system.unrest)) return false;
   }
   return true;
 }
@@ -152,10 +164,16 @@ export async function applyPayment(actor, cooperative, values, snapshot) {
   if (!validatePayment(actor, cooperative, values, snapshot)) throw new Error("changed");
   const updates = [];
   if (Number(values.cash)) updates.push({ _id: actor.id, "system.pocketMoney": snapshot.cash - Number(values.cash) });
-  if (Number(values.budget)) updates.push({ _id: cooperative.id, "system.budget": snapshot.budget - Number(values.budget) });
+  if (Number(values.budget) || Number(values.unrest)) {
+    const update = { _id: cooperative.id };
+    if (Number(values.budget)) update["system.budget"] = snapshot.budget - Number(values.budget);
+    if (Number(values.unrest)) update["system.unrest"] = snapshot.unrest + Number(values.unrest) * UNREST_PER_POINT;
+    updates.push(update);
+  }
   if (updates.length) await foundry.documents.Actor.updateDocuments(updates);
   if ((Number(values.cash) && actor.system.pocketMoney !== snapshot.cash - Number(values.cash))
-    || (Number(values.budget) && cooperative.system.budget !== snapshot.budget - Number(values.budget))) {
+    || (Number(values.budget) && cooperative.system.budget !== snapshot.budget - Number(values.budget))
+    || (Number(values.unrest) && cooperative.system.unrest !== snapshot.unrest + Number(values.unrest) * UNREST_PER_POINT)) {
     throw new Error("Partial payment");
   }
 }
@@ -164,9 +182,10 @@ export async function openBargain(actor) {
   if (!eligible(actor, "merchant", "OWNER") || pending.has(actor.uuid)) return;
   pending.add(actor.uuid);
   let leader = actor;
-  let cooperative = null;
+  let cooperative = firstFounderCooperative(leader);
+  let cooperativeManual = false;
   const helpers = new Map();
-  const snapshot = { cash: actor.system.pocketMoney, budget: null };
+  const snapshot = { cash: leader.system.pocketMoney, budget: cooperative?.system.budget, unrest: cooperative?.system.unrest };
   const friends = actor.items.filter(item => item.type === "relationship" && item.system.direction === "friend")
     .map(item => ({ id: item.id, name: item.name }));
   const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
@@ -197,7 +216,7 @@ export async function openBargain(actor) {
             ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.RecordInvalid"));
             return false;
           }
-          if (result.remaining || !validatePayment(actor, cooperative, values, snapshot)) throw new Error("changed");
+          if (result.remaining || !validatePayment(leader, cooperative, values, snapshot)) throw new Error("changed");
           return { values, result };
         } catch {
           ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.InvalidPayment"));
@@ -209,6 +228,39 @@ export async function openBargain(actor) {
         const form = root.querySelector("form");
         const submit = root.querySelector('[data-action="ok"]');
         root.querySelector("[data-leader]").replaceChildren(participant(leader));
+        const showCooperative = () => {
+          root.querySelector("[data-cooperative]").replaceChildren(...(cooperative ? [participant(cooperative)] : []));
+          const hint = root.querySelector('[data-drop="cooperative"]')?.querySelector("[data-drop-hint]");
+          if (hint) hint.hidden = Boolean(cooperative);
+        };
+        const refreshLimits = () => {
+          const cashAllowed = eligible(leader, "merchant", "OWNER");
+          const coopAllowed = eligible(cooperative, "cooperative", "OWNER");
+          const limits = {
+            cash: cashAllowed ? leader.system.pocketMoney : 0,
+            budget: coopAllowed ? cooperative.system.budget : 0,
+            unrest: coopAllowed && Number.isInteger(cooperative.system.unrest)
+              ? Math.max(0, Math.floor((MAX_UNREST - cooperative.system.unrest) / UNREST_PER_POINT)) : 0
+          };
+          for (const [name, maximum] of Object.entries(limits)) {
+            const input = form.elements[name];
+            input.disabled = name === "cash" ? !cashAllowed : !coopAllowed;
+            input.max = String(maximum);
+            if (!input.disabled && Number(input.value) > maximum) input.value = String(maximum);
+          }
+        };
+        const selectCooperative = (selected, manual = false) => {
+          cooperative = selected;
+          cooperativeManual = manual;
+          snapshot.budget = selected?.system.budget;
+          snapshot.unrest = selected?.system.unrest;
+          if (!selected) {
+            form.elements.budget.value = "0";
+            form.elements.unrest.value = "0";
+          }
+          showCooperative();
+          refreshLimits();
+        };
         const option = (value, label, debt) => {
           const element = document.createElement("option");
           element.value = value;
@@ -221,7 +273,7 @@ export async function openBargain(actor) {
           return element;
         };
         const refreshLocations = () => {
-          const target = contactCooperative(cooperative, leader);
+          const target = eligible(cooperative, "cooperative") ? cooperative : contactCooperative(null, leader);
           const known = target?.items.filter(item => item.type === "port").map(item => item.name) ?? [];
           const debt = leader.items.get(form.elements.existingDebt.value);
           const locations = locationChoices(known);
@@ -242,6 +294,8 @@ export async function openBargain(actor) {
           root.querySelector("[data-new-creditor]").hidden = false;
           refreshLocations();
         };
+        showCooperative();
+        refreshLimits();
         refreshDebts();
         form.elements.existingDebt.addEventListener("change", () => {
           const debt = leader.items.get(form.elements.existingDebt.value);
@@ -250,6 +304,7 @@ export async function openBargain(actor) {
           form.elements.creditorLocation.value = debt?.system.location ?? "";
         });
         const update = () => {
+          refreshLimits();
           const values = readValues(form);
           const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
           form.elements.consequence.disabled = !values.partial;
@@ -270,19 +325,22 @@ export async function openBargain(actor) {
             });
             root.querySelector("[data-summary]").textContent = game.i18n.format("OUW25.BargainCalc.PaymentSummary", {
               paid: result.paid, remaining: result.remaining, excess: result.excess,
-              money: result.unitCost || "—", loan: result.loanCost || "—", unrest: Number(values.unrest) * 8
+              money: result.unitCost || "—", loan: result.loanCost || "—", unrest: Number(values.unrest) * UNREST_PER_POINT
             });
-            root.querySelector("[data-breakdown]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", result.contributions);
-            const valid = validatePayment(actor, cooperative, values, snapshot);
+            root.querySelector("[data-breakdown]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", { ...result.contributions, sum: result.paid });
+            const valid = validatePayment(leader, cooperative, values, snapshot);
             const recordsValid = validateBargainRecords(leader, values);
-            root.querySelector("[data-error]").textContent = !valid ? game.i18n.localize("OUW25.BargainCalc.InvalidPayment")
+            const error = root.querySelector("[data-error]");
+            error.textContent = !valid ? game.i18n.localize("OUW25.BargainCalc.InvalidPayment")
               : !recordsValid ? game.i18n.localize("OUW25.BargainCalc.RecordInvalid") : "";
+            error.hidden = !error.textContent;
             submit.disabled = !valid || !recordsValid || result.remaining > 0 || (values.knowOpponent && !target);
           } catch {
             root.querySelector("[data-price]").textContent = "";
             root.querySelector("[data-summary]").textContent = "";
             root.querySelector("[data-breakdown]").textContent = "";
             root.querySelector("[data-error]").textContent = game.i18n.localize("OUW25.BargainCalc.Invalid");
+            root.querySelector("[data-error]").hidden = false;
             submit.disabled = true;
           }
         };
@@ -306,14 +364,15 @@ export async function openBargain(actor) {
               if (!eligible(dropped, type, permission)) return;
               if (zone.dataset.drop === "leader") {
                 leader = dropped;
+                snapshot.cash = dropped.system.pocketMoney;
+                if (!eligible(leader, "merchant", "OWNER")) form.elements.cash.value = "0";
+                if (!cooperativeManual) selectCooperative(firstFounderCooperative(leader));
+                else refreshLimits();
                 root.querySelector("[data-leader]").replaceChildren(participant(dropped));
                 form.elements.traits.value = traitCount(dropped);
                 refreshDebts();
               } else if (zone.dataset.drop === "cooperative") {
-                cooperative = dropped;
-                snapshot.budget = dropped.system.budget;
-                root.querySelector("[data-cooperative]").replaceChildren(participant(dropped));
-                zone.querySelector("[data-drop-hint]").hidden = true;
+                selectCooperative(dropped, true);
                 refreshLocations();
               } else if (dropped.uuid !== actor.uuid && !helpers.has(dropped.uuid)) {
                 helpers.set(dropped.uuid, dropped);
@@ -361,11 +420,11 @@ export async function openBargain(actor) {
       || documents.every(document => document.testUserPermission(user, "OBSERVER"))).map(user => user.id);
     if (!recipients.length) throw new Error("changed");
     try {
-      await applyPayment(actor, cooperative, values, snapshot);
+      await applyPayment(leader, cooperative, values, snapshot);
     } catch (error) {
       console.error("OUW25 | Bargain payment failed", error);
       ui.notifications.error(game.i18n.format("OUW25.BargainCalc.PaymentFailed", {
-        cash: actor.system.pocketMoney, budget: cooperative?.system.budget ?? "—"
+        cash: leader.system.pocketMoney, budget: cooperative?.system.budget ?? "—", unrest: cooperative?.system.unrest ?? "—"
       }));
       return;
     }
@@ -399,7 +458,7 @@ export async function openBargain(actor) {
       ["AdvantagePoints", result.contributions.advantages],
       ["PartialConsequence", consequence],
       ["Price", result.price], ["Paid", result.paid], ["Excess", result.excess],
-      ["Cash", values.cash], ["Budget", values.budget], ["Time", values.time], ["Unrest", Number(values.unrest) * 8],
+      ["Cash", values.cash], ["Budget", values.budget], ["Time", values.time], ["Unrest", Number(values.unrest) * UNREST_PER_POINT],
       ["Loan", `${values.loan} ${values.existingDebt ? leader.items.get(values.existingDebt)?.name ?? "" : values.creditorName} ${values.creditorLocation}`],
       ["Enemies", values.enemyRecords.map(enemy => `${enemy.name}${enemy.location ? ` (${enemy.location})` : ""}`).join(", ") || "—"],
       ["Friends", chosenFriends || "—"]

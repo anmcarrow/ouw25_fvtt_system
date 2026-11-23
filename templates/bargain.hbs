@@ -17,20 +17,20 @@
   </div>
   <div class="ouw25-bargain-people">
     <section>
-      <h4>{{localize "OUW25.BargainCalc.Leader"}}</h4>
+      <h5>{{localize "OUW25.BargainCalc.Leader"}}</h5>
       <div class="ouw25-bargain-drop" data-drop="leader" data-tooltip="{{localize "OUW25.BargainCalc.DropLeader"}}" aria-label="{{localize "OUW25.BargainCalc.Leader"}}" tabindex="0">
         <span class="ouw25-bargain-entry" data-leader></span>
       </div>
     </section>
     <section>
-      <h4>{{localize "OUW25.BargainCalc.Helpers"}}</h4>
+      <h5>{{localize "OUW25.BargainCalc.Helpers"}}</h5>
       <div class="ouw25-bargain-drop" data-drop="helpers" data-tooltip="{{localize "OUW25.BargainCalc.DropHelpers"}}" aria-label="{{localize "OUW25.BargainCalc.Helpers"}}" tabindex="0">
         <small data-drop-hint>{{localize "OUW25.BargainCalc.DropHelpers"}}</small>
         <ul data-helpers></ul>
       </div>
     </section>
     <section>
-      <h4>{{localize "OUW25.BargainCalc.Cooperative"}}</h4>
+      <h5>{{localize "OUW25.BargainCalc.Cooperative"}}</h5>
       <div class="ouw25-bargain-drop" data-drop="cooperative" data-tooltip="{{localize "OUW25.BargainCalc.DropCooperative"}}" aria-label="{{localize "OUW25.BargainCalc.Cooperative"}}" tabindex="0">
         <span class="ouw25-bargain-entry" data-cooperative></span>
         <small data-drop-hint>{{localize "OUW25.BargainCalc.DropCooperative"}}</small>
@@ -38,11 +38,13 @@
     </section>
   </div>
   <div class="ouw25-bargain-goal">
-    <label><h4>{{localize "OUW25.BargainCalc.Goal"}}</h4>
+    <label class="ouw25-bargain-goal-field"><span>{{localize "OUW25.BargainCalc.GoalLabel"}}:</span>
       <input type="text" name="goal" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}">
     </label>
     <div class="ouw25-bargain-opponent">
-      <input name="enemyDescription" type="text" aria-label="{{localize "OUW25.BargainCalc.EnemyDescription"}}" placeholder="{{localize "OUW25.BargainCalc.DefaultOpponent"}}">
+      <label class="ouw25-bargain-goal-field"><span>{{localize "OUW25.BargainCalc.Opponent"}}:</span>
+        <input name="enemyDescription" type="text" placeholder="{{localize "OUW25.BargainCalc.DefaultOpponent"}}">
+      </label>
       <label class="ouw25-bargain-switch"><span>{{localize "OUW25.BargainCalc.KnowOpponent"}}</span> <input name="knowOpponent" type="checkbox" role="switch" aria-label="{{localize "OUW25.BargainCalc.KnowOpponent"}}"></label>
       <small data-contact-target></small>
     </div>
@@ -81,7 +83,7 @@
     </div>
     <div class="ouw25-bargain-consequences">
       <fieldset class="ouw25-bargain-debts">
-        <legend>{{localize "OUW25.BargainCalc.Debts"}}</legend>
+        <legend><span>{{localize "OUW25.BargainCalc.Debts"}}</span> <span class="ouw25-bargain-points" data-points="loan" role="status"></span></legend>
         <div class="ouw25-bargain-debt-row">
           <select name="existingDebt" aria-label="{{localize "OUW25.BargainCalc.ExistingDebt"}}"></select>
           <label><input name="loan" type="number" min="0" step="1" value="0" aria-label="{{localize "OUW25.BargainCalc.Loan"}}"> <span>{{localize "OUW25.BargainCalc.Currency"}}</span></label>
@@ -91,7 +93,7 @@
       </fieldset>
       <div class="ouw25-bargain-consequences-right">
         <fieldset class="ouw25-bargain-enemies">
-          <legend><label><span>{{localize "OUW25.BargainCalc.NewEnemies"}}</span> <input name="enemies" type="number" min="0" max="{{maxEnemies}}" step="1" value="0" aria-label="{{localize "OUW25.BargainCalc.Enemies"}}"></label></legend>
+          <legend><label><span>{{localize "OUW25.BargainCalc.NewEnemies"}}</span> <input name="enemies" type="number" min="0" max="{{maxEnemies}}" step="1" value="0" aria-label="{{localize "OUW25.BargainCalc.Enemies"}}"></label> <span class="ouw25-bargain-points" data-points="enemies" role="status"></span></legend>
           <p data-no-enemies>{{localize "OUW25.BargainCalc.NoNewEnemies"}}</p>
           {{#each enemySlots}}
             <div class="ouw25-bargain-enemy" data-enemy-row hidden>
@@ -100,7 +102,7 @@
             </div>
           {{/each}}
         </fieldset>
-        <fieldset><legend>{{localize "OUW25.BargainCalc.Friends"}}</legend>
+        <fieldset><legend><span>{{localize "OUW25.BargainCalc.Friends"}}</span> <span class="ouw25-bargain-points" data-points="friends" role="status"></span></legend>
           {{#each friends}}<label><input type="checkbox" name="friend" value="{{id}}"> <span>{{name}}</span></label>{{else}}<p>{{localize "OUW25.BargainCalc.NoFriends"}}</p>{{/each}}
         </fieldset>
       </div>

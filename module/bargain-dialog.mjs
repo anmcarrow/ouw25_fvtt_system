@@ -305,6 +305,15 @@ export async function openBargain(actor) {
           refreshLocations();
           form.elements.creditorLocation.value = debt?.system.location ?? "";
         });
+        const showPoints = contributions => {
+          for (const element of root.querySelectorAll("[data-points]")) {
+            const points = contributions?.[element.dataset.points] ?? "—";
+            element.textContent = points;
+            const label = game.i18n.format("OUW25.BargainCalc.PointsEarned", { points });
+            element.setAttribute("aria-label", label);
+            element.dataset.tooltip = label;
+          }
+        };
         const update = () => {
           refreshLimits();
           const values = readValues(form);
@@ -333,6 +342,7 @@ export async function openBargain(actor) {
               root.querySelector("[data-summary]").textContent += ` ${game.i18n.format("OUW25.BargainCalc.MoneyUsed", result.moneyPayment)}`;
             }
             root.querySelector("[data-breakdown]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", { ...result.contributions, sum: result.paid });
+            showPoints(result.contributions);
             const valid = validatePayment(leader, cooperative, values, snapshot);
             const recordsValid = validateBargainRecords(leader, values);
             const error = root.querySelector("[data-error]");
@@ -344,6 +354,7 @@ export async function openBargain(actor) {
             root.querySelector("[data-price]").textContent = "";
             root.querySelector("[data-summary]").textContent = "";
             root.querySelector("[data-breakdown]").textContent = "";
+            showPoints(null);
             root.querySelector("[data-error]").textContent = game.i18n.localize("OUW25.BargainCalc.Invalid");
             root.querySelector("[data-error]").hidden = false;
             submit.disabled = true;

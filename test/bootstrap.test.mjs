@@ -1574,7 +1574,9 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
     cash: { value: "0" }, budget: { value: "0" }, unrest: { value: "0" }
   };
   fields.namedItem = name => fields[name];
-  const form = Object.assign(new EventTarget(), { elements: fields, querySelectorAll: () => [] });
+  let selectedFriends = [];
+  const form = Object.assign(new EventTarget(), { elements: fields,
+    querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends : [] });
   let leader;
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
@@ -1582,7 +1584,11 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {}
   };
-  const root = { querySelector: selector => elements[selector], querySelectorAll: () => [] };
+  const badges = ["loan", "enemies", "friends"].map(kind => ({
+    dataset: { points: kind }, setAttribute(name, value) { this[name] = value; }
+  }));
+  const root = { querySelector: selector => elements[selector],
+    querySelectorAll: selector => selector === "[data-points]" ? badges : [] };
   globalThis.document = { createElement: () => ({
     dataset: {}, children: [], append(...children) { this.children.push(...children); }, setAttribute() {}
   }) };
@@ -1605,12 +1611,24 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       assert.equal(fields.budget.disabled, true);
       assert.equal(fields.unrest.disabled, true);
       assert.equal(elements["[data-no-enemies]"].hidden, false);
+      assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       fields.enemies = { value: "1" };
       form.dispatchEvent(new Event("input"));
       assert.equal(elements["[data-no-enemies]"].hidden, true);
+      assert.equal(badges[1].textContent, 3);
       fields.enemies.value = "0";
+      fields.captainTraits = { value: "2" };
+      fields.loan = { value: "10000" };
+      selectedFriends = [{ value: "friend" }];
       form.dispatchEvent(new Event("input"));
       assert.equal(elements["[data-no-enemies]"].hidden, false);
+      assert.deepEqual(badges.map(badge => badge.textContent), [1, 0, 4]);
+      fields.captainTraits.value = "0";
+      form.dispatchEvent(new Event("input"));
+      assert.deepEqual(badges.map(badge => badge.textContent), ["—", "—", "—"]);
+      fields.loan.value = "0";
+      selectedFriends = [];
+      form.dispatchEvent(new Event("input"));
       fields.knowOpponent.checked = true;
       form.dispatchEvent(new Event("change"));
       assert.equal(elements['[data-action="ok"]'].disabled, true);
@@ -1683,7 +1701,9 @@ test("the bargain panel opens the calculator and its reference is inside the dia
   assert.match(dialog, /name="inflation" role="switch" aria-label="\{\{localize "OUW25\.BargainCalc\.Inflation"\}\}"/);
   assert.match(dialog, /name="partial" role="switch"/);
   assert.match(dialog, /<select name="consequence"[^>]* disabled>/);
-  assert.match(dialog, /<label><h4>\{\{localize "OUW25\.BargainCalc\.Goal"\}\}<\/h4>/);
+  assert.match(dialog, /<label class="ouw25-bargain-goal-field"><span>\{\{localize "OUW25\.BargainCalc\.GoalLabel"\}\}:<\/span>\s*<input type="text" name="goal"/);
+  assert.match(dialog, /<label class="ouw25-bargain-goal-field"><span>\{\{localize "OUW25\.BargainCalc\.Opponent"\}\}:<\/span>\s*<input name="enemyDescription"/);
+  assert.doesNotMatch(dialog, /<h4>\{\{localize "OUW25\.BargainCalc\.Goal"\}\}/);
   assert.doesNotMatch(dialog, /BargainCalc\.Initiator|data-leader-wounds|BargainCalc\.Wounds/);
 });
 

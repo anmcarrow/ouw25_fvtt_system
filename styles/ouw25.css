@@ -1941,14 +1941,6 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   font-weight: bold;
 }
 
-body.game .application.ouw25 .ouw25-bargain h4 {
-  color: var(--ouw25-color-accent);
-  font-family: var(--ouw25-font-heading);
-  font-size: calc(var(--font-h4-size, 1.25rem) / 1.5 * 1.15);
-  font-weight: 400;
-  margin: 0;
-}
-
 .ouw25-bargain-toolbar {
   position: relative;
   display: flex;
@@ -2063,7 +2055,7 @@ body.game .application.ouw25 .ouw25-bargain h4 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, auto);
   grid-auto-flow: column;
-  gap: 0.5rem;
+  gap: 0.35rem 0.5rem;
 }
 
 .ouw25-bargain-grid > label {
@@ -2108,6 +2100,30 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
 
 .ouw25-bargain-consequences fieldset {
   min-width: 0;
+}
+
+.ouw25-bargain-consequences :is(.ouw25-bargain-debts, .ouw25-bargain-enemies) {
+  gap: calc(var(--spacer-16) / 2);
+}
+
+.ouw25-bargain-consequences legend {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ouw25-bargain-points {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 2rem;
+  aspect-ratio: 1;
+  padding: 0.2rem;
+  border: 1px solid var(--ouw25-color-accent);
+  border-radius: 50%;
+  background: var(--ouw25-color-paper);
+  font-size: var(--font-size-14, 14px);
+  font-weight: normal;
 }
 
 .ouw25-bargain-debts > legend {
@@ -2191,12 +2207,20 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-debt-row label > spa
   gap: 0.3rem;
 }
 
-body.game .application.ouw25 .dialog-content .ouw25-bargain-goal h4 {
-  margin-block-end: 0.25rem;
-}
-
 body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type="checkbox"]) {
   margin-block: 0;
+}
+
+.ouw25-bargain-goal-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ouw25-bargain-goal-field > input {
+  min-width: 0;
+  flex: 1;
 }
 
 .ouw25-bargain-opponent {
@@ -2204,10 +2228,6 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   align-items: center;
   gap: 0.25rem 0.5rem;
-}
-
-.ouw25-bargain-opponent > input {
-  width: 100%;
 }
 
 .ouw25-bargain-opponent > label {
@@ -2225,8 +2245,8 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type
   row-gap: 1rem;
 }
 
-body.game .application.ouw25 .ouw25-bargain-people h4 {
-  margin-block-end: 0.25rem;
+body.game .application.ouw25 .ouw25-bargain-people h5 {
+  margin: 0 0 0.25rem;
 }
 
 .ouw25-bargain-outcome {

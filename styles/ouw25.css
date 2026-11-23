@@ -1888,6 +1888,26 @@ body.game .application.ouw25 .ouw25-bargain {
 
 body.game .application.ouw25.ouw25-bargain-dialog {
   min-width: 800px;
+  max-width: 800px;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .window-content,
+body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
+  min-height: 0;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
+  flex: 1 1 auto;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .dialog-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .form-footer {
+  flex: 0 0 auto;
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
@@ -1981,10 +2001,73 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 
 .ouw25-bargain-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, auto);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto);
   grid-auto-flow: column;
   gap: 0.5rem;
+}
+
+.ouw25-bargain-grid > label {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  text-align: right;
+}
+
+.ouw25-bargain-grid input {
+  text-align: right;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:is([name="cash"], [name="budget"]) {
+  width: calc(7ch + 0.6667rem + 2px);
+  flex-basis: calc(7ch + 0.6667rem + 2px);
+}
+
+.ouw25-bargain-consequences {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.ouw25-bargain-consequences-right {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ouw25-bargain-consequences fieldset {
+  min-width: 0;
+}
+
+.ouw25-bargain-enemies legend label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-enemies legend label > span {
+  font-size: 1em;
+  font-weight: inherit;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"] {
+  width: calc(3ch + 1.8rem);
+  flex-basis: calc(3ch + 1.8rem);
+  appearance: auto;
+  -moz-appearance: auto;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"]::-webkit-inner-spin-button,
+body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"]::-webkit-outer-spin-button {
+  -webkit-appearance: auto;
+  opacity: 1;
+}
+
+.ouw25-bargain-enemies [data-no-enemies] {
+  opacity: 0.5;
 }
 
 .ouw25-bargain-debt-row,
@@ -1995,6 +2078,7 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 }
 
 .ouw25-bargain-enemy[hidden],
+.ouw25-bargain-enemies [data-no-enemies][hidden],
 .ouw25-bargain-debts [data-new-creditor][hidden] {
   display: none;
 }

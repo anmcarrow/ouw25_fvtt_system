@@ -71,28 +71,32 @@
         <label><span>{{localize label}}</span> <input name="{{name}}" type="number" min="0" step="1" value="{{value}}"></label>
       {{/each}}
     </div>
-    <fieldset class="ouw25-bargain-debts">
-      <legend>{{localize "OUW25.BargainCalc.Debts"}}</legend>
-      <div class="ouw25-bargain-debt-row">
-        <select name="existingDebt" aria-label="{{localize "OUW25.BargainCalc.ExistingDebt"}}"></select>
-        <label><input name="loan" type="number" min="0" step="1" value="0" aria-label="{{localize "OUW25.BargainCalc.Loan"}}"> <span>{{localize "OUW25.BargainCalc.Currency"}}</span></label>
-      </div>
-      <label data-new-creditor><span>{{localize "OUW25.BargainCalc.CreditorName"}}</span> <input name="creditorName" type="text"></label>
-      <label><span>{{localize "OUW25.BargainCalc.CreditorLocation"}}</span> <select name="creditorLocation" data-location></select></label>
-    </fieldset>
-    <fieldset class="ouw25-bargain-enemies">
-      <legend>{{localize "OUW25.BargainCalc.NewEnemies"}}</legend>
-      <label><span>{{localize "OUW25.BargainCalc.Enemies"}}</span> <input name="enemies" type="number" min="0" max="{{maxEnemies}}" step="1" value="0"></label>
-      {{#each enemySlots}}
-        <div class="ouw25-bargain-enemy" data-enemy-row hidden>
-          <label><span>{{localize "OUW25.BargainCalc.EnemyName"}} {{number}}</span> <input type="text" data-enemy-name></label>
-          <label><span>{{localize "OUW25.BargainCalc.EnemyLocation"}}</span> <select data-enemy-location data-location></select></label>
+    <div class="ouw25-bargain-consequences">
+      <fieldset class="ouw25-bargain-debts">
+        <legend>{{localize "OUW25.BargainCalc.Debts"}}</legend>
+        <div class="ouw25-bargain-debt-row">
+          <select name="existingDebt" aria-label="{{localize "OUW25.BargainCalc.ExistingDebt"}}"></select>
+          <label><input name="loan" type="number" min="0" step="1" value="0" aria-label="{{localize "OUW25.BargainCalc.Loan"}}"> <span>{{localize "OUW25.BargainCalc.Currency"}}</span></label>
         </div>
-      {{/each}}
-    </fieldset>
-    <fieldset><legend>{{localize "OUW25.BargainCalc.Friends"}}</legend>
-      {{#each friends}}<label><input type="checkbox" name="friend" value="{{id}}"> <span>{{name}}</span></label>{{else}}<p>{{localize "OUW25.BargainCalc.NoFriends"}}</p>{{/each}}
-    </fieldset>
+        <label data-new-creditor><span>{{localize "OUW25.BargainCalc.CreditorName"}}</span> <input name="creditorName" type="text"></label>
+        <label><span>{{localize "OUW25.BargainCalc.CreditorLocation"}}</span> <select name="creditorLocation" data-location></select></label>
+      </fieldset>
+      <div class="ouw25-bargain-consequences-right">
+        <fieldset class="ouw25-bargain-enemies">
+          <legend><label><span>{{localize "OUW25.BargainCalc.NewEnemies"}}</span> <input name="enemies" type="number" min="0" max="{{maxEnemies}}" step="1" value="0" aria-label="{{localize "OUW25.BargainCalc.Enemies"}}"></label></legend>
+          <p data-no-enemies>{{localize "OUW25.BargainCalc.NoNewEnemies"}}</p>
+          {{#each enemySlots}}
+            <div class="ouw25-bargain-enemy" data-enemy-row hidden>
+              <label><span>{{localize "OUW25.BargainCalc.EnemyName"}} {{number}}</span> <input type="text" data-enemy-name></label>
+              <label><span>{{localize "OUW25.BargainCalc.EnemyLocation"}}</span> <select data-enemy-location data-location></select></label>
+            </div>
+          {{/each}}
+        </fieldset>
+        <fieldset><legend>{{localize "OUW25.BargainCalc.Friends"}}</legend>
+          {{#each friends}}<label><input type="checkbox" name="friend" value="{{id}}"> <span>{{name}}</span></label>{{else}}<p>{{localize "OUW25.BargainCalc.NoFriends"}}</p>{{/each}}
+        </fieldset>
+      </div>
+    </div>
   </fieldset>
   <p data-error role="alert"></p>
 </section>

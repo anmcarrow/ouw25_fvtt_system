@@ -1518,7 +1518,7 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
   let leader;
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, '[data-action="ok"]': { disabled: false },
-    "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-contact-target]": {}, "[data-price]": {},
+    "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {}
   };
   const root = { querySelector: selector => elements[selector], querySelectorAll: () => [] };
@@ -1541,6 +1541,13 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
     api: { DialogV2: { input: async config => {
       config.render(null, { element: root });
       assert.equal(leader.children[0].src, "token.webp");
+      assert.equal(elements["[data-no-enemies]"].hidden, false);
+      fields.enemies = { value: "1" };
+      form.dispatchEvent(new Event("input"));
+      assert.equal(elements["[data-no-enemies]"].hidden, true);
+      fields.enemies.value = "0";
+      form.dispatchEvent(new Event("input"));
+      assert.equal(elements["[data-no-enemies]"].hidden, false);
       fields.knowOpponent.checked = true;
       form.dispatchEvent(new Event("change"));
       assert.equal(elements['[data-action="ok"]'].disabled, true);

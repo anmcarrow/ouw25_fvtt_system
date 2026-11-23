@@ -24,6 +24,23 @@ test("bargain summary follows the help and the points breakdown starts payment m
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*0\.8em;/s);
 });
 
+test("bargain consequences and payment controls use the requested layouts", async () => {
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.match(bargain, /class="ouw25-bargain-consequences">[\s\S]*?class="ouw25-bargain-debts"[\s\S]*?class="ouw25-bargain-consequences-right">[\s\S]*?class="ouw25-bargain-enemies"[\s\S]*?BargainCalc\.Friends/);
+  assert.match(bargain, /<legend><label><span>\{\{localize "OUW25\.BargainCalc\.NewEnemies"\}\}<\/span> <input name="enemies"/);
+  assert.match(bargain, /<p data-no-enemies>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/p>/);
+  assert.match(styles, /\.ouw25-bargain-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3,[^;]*;[^}]*grid-template-rows:\s*repeat\(2,/s);
+  assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*justify-content:\s*flex-end;/s);
+  assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
+});
+
+test("bargain dialog scrolls its content while retaining its footer", () => {
+  assert.match(styles, /\.application\.ouw25\.ouw25-bargain-dialog\s*\{\s*min-width:\s*800px;\s*max-width:\s*800px;/);
+  assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{\s*flex:\s*1 1 auto;/);
+  assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*min-height:\s*0;[^}]*overflow-y:\s*auto;/s);
+  assert.match(styles, /\.ouw25-bargain-dialog \.form-footer\s*\{\s*flex:\s*0 0 auto;/);
+});
+
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {
   assert.match(styles, /\.application\.ouw25:has\(\.ouw25-notes\):not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-block-size:\s*60vh;/);
 });

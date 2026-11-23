@@ -21,7 +21,9 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<\/details>\s*<p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"><\/p>/);
   assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[\s\S]*?BargainCalc\.PaymentHelp[\s\S]*?data-breakdown><\/span>\s*<\/legend>/);
-  assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*0\.8em;/s);
+  assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
+  assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*min\(var\(--font-size-14, 14px\), 0\.8rem\);/s);
+  assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*min\(1em, 0\.8rem\);/s);
 });
 
 test("bargain consequences and payment controls use the requested layouts", async () => {
@@ -57,6 +59,10 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{\s*flex:\s*1 1 auto;/);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*min-height:\s*0;[^}]*overflow-y:\s*auto;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer\s*\{\s*flex:\s*0 0 auto;/);
+  const contentPadding = styles.match(/\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*padding-inline:\s*([^;]+);/s)?.[1];
+  const footerPadding = styles.match(/\.ouw25-bargain-dialog \.form-footer\s*\{[^}]*padding-inline:\s*([^;]+);/s)?.[1];
+  assert.equal(contentPadding, "calc(0.5rem + 20px) calc(0.5rem + 12px + 20px)");
+  assert.equal(footerPadding, contentPadding);
   assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height/);
   assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{\s*background:[^;]*sheet_bgr\.webp[^;]*100% auto no-repeat;/);
   assert.match(styles, /\.ouw25-bargain-scrollbar-thumb\s*\{[^}]*background:/s);

@@ -1886,6 +1886,10 @@ body.game .application.ouw25 .ouw25-bargain {
   gap: 0.6rem;
 }
 
+body.game .application.ouw25.ouw25-bargain-dialog {
+  min-width: 800px;
+}
+
 body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
   --input-background-color: var(--ouw25-field-background);
   color: var(--ouw25-color-ink);
@@ -1943,7 +1947,19 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 }
 
 .ouw25-bargain-help {
+  flex: 0 0 auto;
   padding: 0.34rem 0.6rem;
+}
+
+.ouw25-bargain-summary {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  font-size: 0.8em;
+  overflow-wrap: anywhere;
 }
 
 .ouw25-bargain-help > summary {
@@ -1966,9 +1982,44 @@ body.game .application.ouw25 .ouw25-bargain h4 {
 .ouw25-bargain-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(4, auto);
+  grid-template-rows: repeat(3, auto);
   grid-auto-flow: column;
   gap: 0.5rem;
+}
+
+.ouw25-bargain-debt-row,
+.ouw25-bargain-enemy {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ouw25-bargain-enemy[hidden],
+.ouw25-bargain-debts [data-new-creditor][hidden] {
+  display: none;
+}
+
+.ouw25-bargain-debt-row > select,
+.ouw25-bargain-enemy > label {
+  min-width: 0;
+  flex: 1;
+}
+
+.ouw25-bargain-debt-row > label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="loan"] {
+  width: calc(6ch + 0.6667rem + 2px);
+  flex-basis: calc(6ch + 0.6667rem + 2px);
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-debt-row label > span {
+  font-size: 1em;
+  font-weight: normal;
 }
 
 .ouw25-bargain-people {

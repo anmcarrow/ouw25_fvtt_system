@@ -9,12 +9,19 @@ const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/acto
 
 test("bargain payment field captions are compact and bold without restyling inputs", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
-  for (const key of ["ExistingDebt", "LoanDescription"]) {
-    assert.match(bargain, new RegExp(`<label><span>\\{\\{localize "OUW25\\.BargainCalc\\.${key}"\\}\\}</span>`));
+  for (const key of ["CreditorName", "CreditorLocation", "EnemyName", "EnemyLocation"]) {
+    assert.match(bargain, new RegExp(`<label(?: [^>]*)?><span>\\{\\{localize "OUW25\\.BargainCalc\\.${key}"\\}\\}`));
   }
   assert.match(bargain, /\{\{#each paymentFields\}\}\s*<label><span>\{\{localize label\}\}<\/span> <input name="\{\{name\}\}"/);
   assert.match(bargain, /name="friend"[^>]*> <span>\{\{name\}\}<\/span>/);
   assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
+});
+
+test("bargain summary follows the help and the points breakdown starts payment methods", async () => {
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.match(bargain, /<\/details>\s*<p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"><\/p>\s*<\/div>/);
+  assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[^<]*\{\{localize "OUW25\.BargainCalc\.Payment"\}\}<\/legend>\s*<p data-breakdown><\/p>/);
+  assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*0\.8em;/s);
 });
 
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {

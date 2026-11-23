@@ -1442,24 +1442,83 @@ test("bargain contacts use the chosen or uniquely owned founder cooperative with
   }
 });
 
+test("bargain records validate permissions and preserve or create the leader's debt and enemies", async () => {
+  const { validateBargainRecords, recordBargainConsequences } = await import(new URL("module/bargain-dialog.mjs", dist));
+  const previous = globalThis.game;
+  const debt = { id: "debt", name: "Creditor", type: "debt", system: { direction: "payable", amount: 100, location: "Old" } };
+  const items = Object.assign([debt], { get(id) { return this.find(item => item.id === id); } });
+  const leader = { id: "leader", documentName: "Actor", type: "merchant", items, testUserPermission: () => true,
+    async updateEmbeddedDocuments(_type, updates) {
+      debt.system.amount = updates[0]["system.amount"];
+      debt.system.location = updates[0]["system.location"];
+      return [debt];
+    },
+    async createEmbeddedDocuments(_type, records) { items.push(...records); return records; }
+  };
+  globalThis.game = { actors: new Map([[leader.id, leader]]), user: {} };
+  const values = { loan: "300", existingDebt: "debt", debtAmount: "100", debtLocation: "Old", debtName: "Creditor", creditorName: "",
+    creditorLocation: "Глокрр", enemies: "2", enemyRecords: [
+      { name: "First", location: "Глокрр" }, { name: "Second", location: "" }
+    ] };
+  try {
+    assert.equal(validateBargainRecords(leader, values), true);
+    debt.system.location = "Changed";
+    assert.equal(validateBargainRecords(leader, values), false);
+    debt.system.location = "Old";
+    debt.name = "Renamed";
+    assert.equal(validateBargainRecords(leader, values), false);
+    debt.name = "Creditor";
+    debt.system.amount = Number.MAX_SAFE_INTEGER;
+    assert.equal(validateBargainRecords(leader, { ...values, debtAmount: String(Number.MAX_SAFE_INTEGER) }), false);
+    debt.system.amount = 100;
+    await recordBargainConsequences(leader, values);
+    assert.deepEqual(debt.system, { direction: "payable", amount: 400, location: "Глокрр" });
+    assert.deepEqual(items.slice(1).map(item => [item.name, item.system.direction, item.system.location]),
+      [["First", "enemy", "Глокрр"], ["Second", "enemy", ""]]);
+    assert.equal(validateBargainRecords(leader, values), false);
+    const newDebt = { ...values, loan: "500", existingDebt: "", creditorName: "New creditor", enemies: "0", enemyRecords: [] };
+    await recordBargainConsequences(leader, newDebt);
+    assert.deepEqual(items[3], { type: "debt", name: "New creditor",
+      system: { direction: "payable", amount: 500, location: "Глокрр" } });
+    assert.equal(validateBargainRecords(leader, { ...newDebt, creditorName: "" }), false);
+    assert.equal(validateBargainRecords(leader, { ...newDebt, enemies: "21", enemyRecords: Array(21).fill({ name: "Enemy" }) }), false);
+    assert.equal(validateBargainRecords(leader, { ...newDebt, enemies: "20", enemyRecords: Array(20).fill({ name: "Enemy" }) }), true);
+    assert.equal(validateBargainRecords(leader, { ...newDebt, enemies: "1", enemyRecords: [{ name: "" }] }), false);
+    leader.testUserPermission = () => false;
+    await assert.rejects(recordBargainConsequences(leader, newDebt), /changed/);
+  } finally {
+    globalThis.game = previous;
+  }
+});
+
+test("bargain locations combine the 31 Union trading ports with known places without aliases", async () => {
+  const { UNION_TRADE_PORTS, locationChoices } = await import(new URL("module/ports.mjs", dist));
+  assert.equal(UNION_TRADE_PORTS.length, 31);
+  const locations = locationChoices(["Глокрр", "Пенллн", "Новый причал", " новый причал "]);
+  assert.equal(locations.length, 32);
+  assert.equal(locations.filter(name => name === "Пэнллн").length, 1);
+  assert.equal(locations.at(-1).toLowerCase(), "новый причал");
+});
+
 test("bargain dialog sorts payment fields and validates contact and partial outcome choices", async () => {
   const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui, random: Math.random };
   const actor = { id: "a", uuid: "Actor.a", name: "Merchant", documentName: "Actor", type: "merchant",
     img: "portrait.webp", prototypeToken: { texture: { src: "token.webp" } },
-    system: { pocketMoney: 0 }, items: [], testUserPermission: () => true };
+    system: { pocketMoney: 0 }, items: Object.assign([], { get() {} }), testUserPermission: () => true };
   const partial = Object.assign(new EventTarget(), { checked: false });
   const consequence = { value: "unrest", disabled: true };
+  const existingDebt = Object.assign(new EventTarget(), { value: "", selectedOptions: [], replaceChildren() {} });
   const fields = {
     partial, consequence, inflation: { checked: false }, knowOpponent: { checked: false }, goal: { value: "" }, custom: { value: "" },
-    time: { value: "2" }
+    existingDebt, creditorLocation: { value: "" }, time: { value: "2" }
   };
   fields.namedItem = name => fields[name];
   const form = Object.assign(new EventTarget(), { elements: fields, querySelectorAll: () => [] });
   let leader;
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, '[data-action="ok"]': { disabled: false },
-    "[data-custom]": { hidden: true }, "[data-contact-target]": {}, "[data-balances]": {}, "[data-price]": {},
+    "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-contact-target]": {}, "[data-price]": {},
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {}
   };
   const root = { querySelector: selector => elements[selector], querySelectorAll: () => [] };
@@ -1475,7 +1534,7 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async (_path, data) => {
       const lengths = data.paymentFields.map(field => field.label.length);
-      assert.equal(lengths.length, 8);
+      assert.equal(lengths.length, 6);
       assert.deepEqual(lengths, [...lengths].sort((a, b) => b - a));
       return "";
     } },

@@ -1,15 +1,17 @@
 import { calculateBargain } from "./bargain.mjs";
 import { lethalWoundSlot } from "./merchant.mjs";
+import { canonicalPortName, locationChoices } from "./ports.mjs";
 import { MERCHANT_TRAITS } from "./traits.mjs";
 
 const pending = new Set();
+const MAX_ENEMIES = 20;
 const CONSEQUENCES = [
   "unrest", "damage", "threat", "omen", "news", "worsening",
   "past", "hidden", "deadline", "responsibility", "bystanders", "grudge"
 ];
 const PAYMENT_FIELDS = [
   ["traits", "Traits"], ["captainTraits", "CaptainTraits"], ["time", "Time"], ["unrest", "Unrest"],
-  ["cash", "Cash"], ["budget", "Budget"], ["loan", "Loan"], ["enemies", "Enemies"]
+  ["cash", "Cash"], ["budget", "Budget"]
 ];
 
 function traitCount(actor) {
@@ -55,8 +57,14 @@ function readValues(form) {
     friends: form.querySelectorAll('input[name="friend"]:checked').length,
     friendIds: [...form.querySelectorAll('input[name="friend"]:checked')].map(input => input.value),
     enemyDescription: get("enemyDescription").trim() || game.i18n.localize("OUW25.BargainCalc.DefaultOpponent"),
-    knowOpponent: form.elements.knowOpponent.checked, loanDescription: get("loanDescription").trim(),
-    existingDebt: get("existingDebt")
+    knowOpponent: form.elements.knowOpponent.checked,
+    existingDebt: get("existingDebt"), creditorName: get("creditorName").trim(),
+    creditorLocation: get("creditorLocation"),
+    debtAmount: form.elements.existingDebt.selectedOptions[0]?.dataset.amount,
+    debtLocation: form.elements.existingDebt.selectedOptions[0]?.dataset.location,
+    debtName: form.elements.existingDebt.selectedOptions[0]?.dataset.name,
+    enemyRecords: [...form.querySelectorAll("[data-enemy-row]")].slice(0, Number(get("enemies")) || 0)
+      .map(row => ({ name: row.querySelector("[data-enemy-name]").value.trim(), location: row.querySelector("[data-enemy-location]").value }))
   };
 }
 
@@ -80,6 +88,51 @@ export async function recordBargainContact(cooperative, name) {
     type: "contact", name, system: { location: "", amount: 0, reason: game.i18n.localize("OUW25.BargainCalc.ContactRelationship") }
   }]);
   if (created.length !== 1) throw new Error("Contact creation failed");
+}
+
+export function validateBargainRecords(leader, values) {
+  const count = Number(values.enemies);
+  if (!Number.isSafeInteger(count) || count < 0 || count > MAX_ENEMIES
+    || values.enemyRecords.length !== count || values.enemyRecords.some(enemy => !enemy.name)) return false;
+  if (!(Number(values.loan) || count)) return true;
+  if (!eligible(leader, "merchant", "OWNER")) return false;
+  if (Number(values.loan)) {
+    if (!values.existingDebt) return Boolean(values.creditorName);
+    const debt = leader.items.get(values.existingDebt);
+    return debt?.type === "debt" && debt.system.direction === "payable"
+      && String(debt.system.amount) === values.debtAmount
+      && debt.system.location === values.debtLocation && debt.name === values.debtName
+      && Number.isSafeInteger(debt.system.amount + Number(values.loan));
+  }
+  return true;
+}
+
+export async function recordBargainConsequences(leader, values) {
+  if (!validateBargainRecords(leader, values)) throw new Error("Bargain records changed");
+  if (!Number(values.loan) && !values.enemyRecords.length) return;
+  if (Number(values.loan) && values.existingDebt) {
+    const debt = leader.items.get(values.existingDebt);
+    const amount = debt.system.amount + Number(values.loan);
+    const updates = [{ _id: debt.id, "system.amount": debt.system.amount + Number(values.loan),
+      "system.location": values.creditorLocation }];
+    const updated = await leader.updateEmbeddedDocuments("Item", updates);
+    const current = leader.items.get(values.existingDebt);
+    if (updated.length !== 1 || current?.system.amount !== amount
+      || current.system.location !== values.creditorLocation) throw new Error("Debt update failed");
+  }
+  const records = values.enemyRecords.map(enemy => ({
+    type: "relationship", name: enemy.name,
+    system: { direction: "enemy", location: enemy.location, reason: "" }
+  }));
+  if (Number(values.loan) && !values.existingDebt) records.unshift({
+    type: "debt", name: values.creditorName,
+    system: { direction: "payable", amount: Number(values.loan), location: values.creditorLocation }
+  });
+  if (records.length) {
+    if (!eligible(leader, "merchant", "OWNER")) throw new Error("Bargain record permission changed");
+    const created = await leader.createEmbeddedDocuments("Item", records);
+    if (created.length !== records.length) throw new Error("Bargain records creation failed");
+  }
 }
 
 export function validatePayment(actor, cooperative, values, snapshot) {
@@ -116,14 +169,13 @@ export async function openBargain(actor) {
   const snapshot = { cash: actor.system.pocketMoney, budget: null };
   const friends = actor.items.filter(item => item.type === "relationship" && item.system.direction === "friend")
     .map(item => ({ id: item.id, name: item.name }));
-  const debts = actor.items.filter(item => item.type === "debt" && item.system.direction === "payable")
-    .map(item => ({ id: item.id, name: item.name, amount: item.system.amount }));
   const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
     name, label: `OUW25.BargainCalc.${key}`, value: ["traits", "captainTraits"].includes(name) ? traitCount(actor) : 0
   })).sort((a, b) => Array.from(game.i18n.localize(b.label)).length - Array.from(game.i18n.localize(a.label)).length);
   try {
     const content = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/bargain.hbs", {
-      actor, paymentFields, friends, debts,
+      actor, paymentFields, friends, maxEnemies: MAX_ENEMIES,
+      enemySlots: Array.from({ length: MAX_ENEMIES }, (_, index) => ({ number: index + 1 })),
       consequences: CONSEQUENCES.map(id => ({ id, label: `OUW25.BargainCalc.Consequences.${id}` }))
     });
     const selection = await foundry.applications.api.DialogV2.input({
@@ -132,13 +184,17 @@ export async function openBargain(actor) {
         title: game.i18n.localize("OUW25.Bargain.Title"),
         initiator: game.i18n.localize("OUW25.BargainCalc.Initiator"), name: actor.name
       }), resizable: true },
-      position: { width: 720, height: 800 }, modal: false, content, rejectClose: false,
+      position: { width: 800, height: 800 }, modal: false, content, rejectClose: false,
       ok: { label: game.i18n.localize("OUW25.BargainCalc.Confirm"), callback: (_event, button) => {
         try {
           const values = readValues(button.form);
           const result = calculateBargain(values);
           if (values.knowOpponent && !contactCooperative(cooperative, leader)) {
             ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.ContactUnavailable"));
+            return false;
+          }
+          if (!validateBargainRecords(leader, values)) {
+            ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.RecordInvalid"));
             return false;
           }
           if (result.remaining || !validatePayment(actor, cooperative, values, snapshot)) throw new Error("changed");
@@ -153,18 +209,58 @@ export async function openBargain(actor) {
         const form = root.querySelector("form");
         const submit = root.querySelector('[data-action="ok"]');
         root.querySelector("[data-leader]").replaceChildren(participant(leader));
+        const option = (value, label, debt) => {
+          const element = document.createElement("option");
+          element.value = value;
+          element.textContent = label;
+          if (debt) {
+            element.dataset.amount = String(debt.system.amount);
+            element.dataset.location = debt.system.location;
+            element.dataset.name = debt.name;
+          }
+          return element;
+        };
+        const refreshLocations = () => {
+          const target = contactCooperative(cooperative, leader);
+          const known = target?.items.filter(item => item.type === "port").map(item => item.name) ?? [];
+          const debt = leader.items.get(form.elements.existingDebt.value);
+          const locations = locationChoices(known);
+          for (const select of root.querySelectorAll("select[data-location]")) {
+            const isCreditor = select === form.elements.creditorLocation;
+            const oldLocation = isCreditor ? debt?.system.location : "";
+            const choices = isCreditor && oldLocation ? locationChoices([...known, oldLocation]) : locations;
+            const previous = select.value;
+            select.replaceChildren(option("", game.i18n.localize("OUW25.BargainCalc.UnknownLocation")),
+              ...choices.map(name => option(oldLocation && canonicalPortName(oldLocation) === name ? oldLocation : name, name)));
+            if ([...select.options].some(item => item.value === previous)) select.value = previous;
+          }
+        };
+        const refreshDebts = () => {
+          const debts = leader.items.filter(item => item.type === "debt" && item.system.direction === "payable");
+          form.elements.existingDebt.replaceChildren(option("", game.i18n.localize("OUW25.BargainCalc.NewDebt")),
+            ...debts.map(debt => option(debt.id, `${debt.name} — ${debt.system.amount}`, debt)));
+          root.querySelector("[data-new-creditor]").hidden = false;
+          refreshLocations();
+        };
+        refreshDebts();
+        form.elements.existingDebt.addEventListener("change", () => {
+          const debt = leader.items.get(form.elements.existingDebt.value);
+          root.querySelector("[data-new-creditor]").hidden = Boolean(debt);
+          refreshLocations();
+          form.elements.creditorLocation.value = debt?.system.location ?? "";
+        });
         const update = () => {
           const values = readValues(form);
           const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
           form.elements.consequence.disabled = !values.partial;
           root.querySelector("[data-custom]").hidden = !values.partial || values.consequence !== "custom";
+          root.querySelectorAll("[data-enemy-row]").forEach((row, index) => {
+            row.hidden = index >= Number(values.enemies) || index >= MAX_ENEMIES;
+          });
           root.querySelector("[data-contact-target]").textContent = values.knowOpponent
             ? target ? game.i18n.format("OUW25.BargainCalc.ContactTarget", { name: target.name })
               : game.i18n.localize("OUW25.BargainCalc.ContactUnavailable")
             : "";
-          root.querySelector("[data-balances]").textContent = game.i18n.format("OUW25.BargainCalc.Balances", {
-            cash: actor.system.pocketMoney, budget: cooperative?.system.budget ?? "—"
-          });
           try {
             const result = calculateBargain(values);
             root.querySelector("[data-price]").textContent = game.i18n.format("OUW25.BargainCalc.PriceSummary", {
@@ -177,8 +273,10 @@ export async function openBargain(actor) {
             });
             root.querySelector("[data-breakdown]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", result.contributions);
             const valid = validatePayment(actor, cooperative, values, snapshot);
-            root.querySelector("[data-error]").textContent = valid ? "" : game.i18n.localize("OUW25.BargainCalc.InvalidPayment");
-            submit.disabled = !valid || result.remaining > 0 || (values.knowOpponent && !target);
+            const recordsValid = validateBargainRecords(leader, values);
+            root.querySelector("[data-error]").textContent = !valid ? game.i18n.localize("OUW25.BargainCalc.InvalidPayment")
+              : !recordsValid ? game.i18n.localize("OUW25.BargainCalc.RecordInvalid") : "";
+            submit.disabled = !valid || !recordsValid || result.remaining > 0 || (values.knowOpponent && !target);
           } catch {
             root.querySelector("[data-price]").textContent = "";
             root.querySelector("[data-summary]").textContent = "";
@@ -209,11 +307,13 @@ export async function openBargain(actor) {
                 leader = dropped;
                 root.querySelector("[data-leader]").replaceChildren(participant(dropped));
                 form.elements.traits.value = traitCount(dropped);
+                refreshDebts();
               } else if (zone.dataset.drop === "cooperative") {
                 cooperative = dropped;
                 snapshot.budget = dropped.system.budget;
                 root.querySelector("[data-cooperative]").replaceChildren(participant(dropped));
                 zone.querySelector("[data-drop-hint]").hidden = true;
+                refreshLocations();
               } else if (dropped.uuid !== actor.uuid && !helpers.has(dropped.uuid)) {
                 helpers.set(dropped.uuid, dropped);
                 const item = document.createElement("li");
@@ -240,6 +340,10 @@ export async function openBargain(actor) {
     });
     if (!selection) return;
     const { values, result } = selection;
+    if (!validateBargainRecords(leader, values)) {
+      ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.RecordInvalid"));
+      return;
+    }
     if (values.friendIds.some(id => {
       const current = actor.items.get(id);
       return current?.type !== "relationship" || current.system.direction !== "friend";
@@ -262,6 +366,13 @@ export async function openBargain(actor) {
       ui.notifications.error(game.i18n.format("OUW25.BargainCalc.PaymentFailed", {
         cash: actor.system.pocketMoney, budget: cooperative?.system.budget ?? "—"
       }));
+      return;
+    }
+    try {
+      await recordBargainConsequences(leader, values);
+    } catch (error) {
+      console.error("OUW25 | Bargain records failed", error);
+      ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.RecordFailed"));
       return;
     }
     if (contactTarget) {
@@ -288,7 +399,8 @@ export async function openBargain(actor) {
       ["PartialConsequence", consequence],
       ["Price", result.price], ["Paid", result.paid], ["Excess", result.excess],
       ["Cash", values.cash], ["Budget", values.budget], ["Time", values.time], ["Unrest", Number(values.unrest) * 8],
-      ["Loan", `${values.loan} ${debts.find(debt => debt.id === values.existingDebt)?.name ?? ""} ${values.loanDescription}`], ["Enemies", values.enemies],
+      ["Loan", `${values.loan} ${values.existingDebt ? leader.items.get(values.existingDebt)?.name ?? "" : values.creditorName} ${values.creditorLocation}`],
+      ["Enemies", values.enemyRecords.map(enemy => `${enemy.name}${enemy.location ? ` (${enemy.location})` : ""}`).join(", ") || "—"],
       ["Friends", chosenFriends || "—"]
     ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));
     try {

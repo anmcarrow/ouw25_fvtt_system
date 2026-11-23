@@ -1562,7 +1562,7 @@ test("bargain locations combine the 31 Union trading ports with known places wit
 test("bargain dialog sorts payment fields and validates contact and partial outcome choices", async () => {
   const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui,
-    getComputedStyle: globalThis.getComputedStyle, random: Math.random };
+    getComputedStyle: globalThis.getComputedStyle, ResizeObserver: globalThis.ResizeObserver, random: Math.random };
   const actor = { id: "a", uuid: "Actor.a", name: "Merchant", documentName: "Actor", type: "merchant",
     img: "portrait.webp", prototypeToken: { texture: { src: "token.webp" } },
     system: { pocketMoney: 0 }, items: Object.assign([], { get() {} }), testUserPermission: () => true };
@@ -1576,26 +1576,35 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
   };
   fields.namedItem = name => fields[name];
   let selectedFriends = [];
-  const form = Object.assign(new EventTarget(), { elements: fields,
+  const form = Object.assign(new EventTarget(), { elements: fields, append(element) { this.scrollbar = element; },
     querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends : [] });
+  const scrollArea = Object.assign(new EventTarget(), { clientHeight: 600, scrollHeight: 600, scrollTop: 0, offsetTop: 0 });
   let leader;
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
     '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
+    "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {},
-    ".dialog-content": { clientHeight: 600 }, "[data-bargain]": { offsetHeight: 700 }
+    ".dialog-content": scrollArea, "[data-bargain]": { offsetHeight: 700 }
   };
   const badges = ["loan", "enemies", "friends"].map(kind => ({
     dataset: { points: kind }, setAttribute(name, value) { this[name] = value; }
   }));
-  const root = { offsetHeight: 800, style: { setProperty(name, value) { this[name] = value; } },
+  const root = { id: "test", offsetHeight: 800, style: { setProperty(name, value) { this[name] = value; } },
     querySelector: selector => elements[selector],
     querySelectorAll: selector => selector === "[data-points]" ? badges : [] };
   globalThis.getComputedStyle = () => ({ paddingTop: "8px", paddingBottom: "8px" });
-  globalThis.document = { createElement: () => ({
-    dataset: {}, children: [], append(...children) { this.children.push(...children); }, setAttribute() {}
+  globalThis.document = { createElement: () => Object.assign(new EventTarget(), {
+    dataset: {}, style: {}, children: [], append(...children) { this.children.push(...children); },
+    setAttribute(name, value) { this[name] = value; }, remove() { this.removed = true; }
   }) };
+  const observers = [];
+  globalThis.ResizeObserver = class {
+    constructor() { observers.push(this); }
+    observe() {}
+    disconnect() { this.disconnected = true; }
+  };
   globalThis.game = {
     actors: new Map([[actor.id, actor]]), user: {},
     i18n: { localize: key => key, format: key => key }
@@ -1620,6 +1629,21 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       assert.equal(fields.unrest.disabled, true);
       assert.equal(elements["[data-no-enemies]"].hidden, false);
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
+      assert.equal(elements["[data-price-icon]"].textContent, "🟢");
+      assert.equal(form.scrollbar.hidden, true);
+      fields.time.value = "1";
+      scrollArea.scrollHeight = 1200;
+      form.dispatchEvent(new Event("input"));
+      assert.equal(elements["[data-price-icon]"].textContent, "🟠");
+      assert.equal(form.scrollbar.hidden, false);
+      const down = new Event("keydown", { cancelable: true });
+      down.key = "ArrowDown";
+      form.scrollbar.dispatchEvent(down);
+      assert.equal(scrollArea.scrollTop, 40);
+      assert.equal(form.scrollbar["aria-valuenow"], "40");
+      fields.time.value = "2";
+      form.dispatchEvent(new Event("input"));
+      assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       fields.enemies = { value: "1" };
       elements["[data-bargain]"].offsetHeight = 1200;
       form.dispatchEvent(new Event("input"));
@@ -1636,6 +1660,7 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       fields.captainTraits.value = "0";
       form.dispatchEvent(new Event("input"));
       assert.deepEqual(badges.map(badge => badge.textContent), ["—", "—", "—"]);
+      assert.equal(elements["[data-price-icon]"]["aria-label"], "OUW25.BargainCalc.PriceUnavailable");
       fields.loan.value = "0";
       selectedFriends = [];
       form.dispatchEvent(new Event("input"));
@@ -1671,19 +1696,25 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       assert.equal(consequence.value, "damage");
       assert.equal(config.ok.callback(null, { form }).result.price, 1);
       actor.prototypeToken.texture.src = "tokens/*.webp";
+      const oldScrollbar = form.scrollbar;
       config.render(null, dialog);
+      assert.equal(oldScrollbar.removed, true);
+      assert.equal(observers[0].disconnected, true);
       assert.equal(leader.children[0].src, "portrait.webp");
       return null;
     } } }
   } };
   try {
     await openBargain(actor);
+    assert.equal(form.scrollbar.removed, true);
+    assert.ok(observers.every(observer => observer.disconnected));
   } finally {
     globalThis.game = previous.game;
     globalThis.foundry = previous.foundry;
     globalThis.document = previous.document;
     globalThis.ui = previous.ui;
     globalThis.getComputedStyle = previous.getComputedStyle;
+    globalThis.ResizeObserver = previous.ResizeObserver;
     Math.random = previous.random;
   }
 });

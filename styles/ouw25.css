@@ -1912,28 +1912,47 @@ body.game .application.ouw25.ouw25-bargain-dialog .window-content {
 
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
   flex: 1 1 auto;
+  position: relative;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-content {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-gutter: stable;
+  scrollbar-width: none;
+  padding-inline-end: calc(0.5rem + 12px);
   background: transparent;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-content::-webkit-scrollbar {
-  width: 10px;
+  display: none;
 }
 
-body.game .application.ouw25.ouw25-bargain-dialog .dialog-content::-webkit-scrollbar-track {
+.ouw25-bargain-scrollbar {
+  position: absolute;
+  inset-inline-end: 0;
+  width: 12px;
+  z-index: 3;
+  touch-action: none;
   background: var(--ouw25-color-paper);
+  border-radius: 5px;
 }
 
-body.game .application.ouw25.ouw25-bargain-dialog .dialog-content::-webkit-scrollbar-thumb {
+.ouw25-bargain-scrollbar[hidden] {
+  display: none;
+}
+
+.ouw25-bargain-scrollbar-thumb {
+  position: absolute;
+  inset-inline: 0;
+  box-sizing: border-box;
   background: var(--ouw25-color-accent-soft);
   border: 2px solid var(--ouw25-color-paper);
   border-radius: 5px;
+}
+
+.ouw25-bargain-scrollbar:focus-visible {
+  outline: 2px solid var(--ouw25-color-accent-calm);
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer {
@@ -2318,6 +2337,35 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-outcome > select:dis
   display: flex;
   align-items: center;
   gap: 0.2rem;
+}
+
+.ouw25-bargain-price {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--ouw25-color-accent);
+}
+
+.ouw25-bargain-price p {
+  margin: 0;
+}
+
+.ouw25-bargain-friends {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 3ch;
+}
+
+.ouw25-bargain-friends label {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-friends label > span {
+  font-size: 1.2em;
+  overflow-wrap: anywhere;
 }
 
 .ouw25-bargain-drop {

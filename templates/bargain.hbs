@@ -66,7 +66,10 @@
     </label>
   </div>
   <label data-custom hidden>{{localize "OUW25.BargainCalc.CustomDescription"}} <input type="text" name="custom"></label>
-  <p class="ouw25-bargain-total" data-price role="status"></p>
+  <div class="ouw25-bargain-price" role="status">
+    <span data-price-icon role="img"></span>
+    <p class="ouw25-bargain-total" data-price></p>
+  </div>
   <fieldset class="ouw25-bargain-payment">
     <legend>
       <span>{{localize "OUW25.BargainCalc.Payment"}}</span>
@@ -103,7 +106,9 @@
           {{/each}}
         </fieldset>
         <fieldset><legend><span>{{localize "OUW25.BargainCalc.Friends"}}</span> <span class="ouw25-bargain-points" data-points="friends" role="status"></span></legend>
-          {{#each friends}}<label><input type="checkbox" name="friend" value="{{id}}"> <span>{{name}}</span></label>{{else}}<p>{{localize "OUW25.BargainCalc.NoFriends"}}</p>{{/each}}
+          {{#if friends}}<div class="ouw25-bargain-friends">
+            {{#each friends}}<label><input type="checkbox" name="friend" value="{{id}}"> <span>{{name}}</span></label>{{/each}}
+          </div>{{else}}<p>{{localize "OUW25.BargainCalc.NoFriends"}}</p>{{/if}}
         </fieldset>
       </div>
     </div>

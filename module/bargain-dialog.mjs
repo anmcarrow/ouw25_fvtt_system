@@ -16,6 +16,82 @@ const PAYMENT_FIELDS = [
   ["cash", "Cash"], ["budget", "Budget"]
 ];
 
+function bargainScrollbar(root, form, scrollArea, content) {
+  const track = document.createElement("div");
+  const thumb = document.createElement("div");
+  track.className = "ouw25-bargain-scrollbar";
+  thumb.className = "ouw25-bargain-scrollbar-thumb";
+  track.hidden = true;
+  track.tabIndex = 0;
+  track.setAttribute("role", "scrollbar");
+  track.setAttribute("aria-label", game.i18n.localize("OUW25.BargainCalc.ScrollContent"));
+  track.setAttribute("aria-orientation", "vertical");
+  track.setAttribute("aria-valuemin", "0");
+  scrollArea.id ||= `${root.id}-bargain-content`;
+  track.setAttribute("aria-controls", scrollArea.id);
+  track.append(thumb);
+  form.append(track);
+
+  const sync = () => {
+    const height = scrollArea.clientHeight;
+    const maximum = Math.max(0, scrollArea.scrollHeight - height);
+    track.hidden = maximum === 0;
+    track.style.top = `${scrollArea.offsetTop}px`;
+    track.style.height = `${height}px`;
+    const thumbHeight = maximum ? Math.min(height, Math.max(24, height * height / scrollArea.scrollHeight)) : height;
+    thumb.style.height = `${thumbHeight}px`;
+    thumb.style.top = `${maximum ? (height - thumbHeight) * scrollArea.scrollTop / maximum : 0}px`;
+    track.setAttribute("aria-valuemax", String(maximum));
+    track.setAttribute("aria-valuenow", String(Math.round(scrollArea.scrollTop)));
+  };
+  let dragOffset = 0;
+  const move = event => {
+    const trackRect = track.getBoundingClientRect();
+    const thumbRect = thumb.getBoundingClientRect();
+    const range = trackRect.height - thumbRect.height;
+    if (range > 0) {
+      scrollArea.scrollTop = (event.clientY - trackRect.top - dragOffset) / range
+        * (scrollArea.scrollHeight - scrollArea.clientHeight);
+      sync();
+    }
+  };
+  track.addEventListener("pointerdown", event => {
+    if (event.button !== 0) return;
+    const rect = thumb.getBoundingClientRect();
+    dragOffset = event.target === thumb ? event.clientY - rect.top : rect.height / 2;
+    track.setPointerCapture(event.pointerId);
+    move(event);
+    event.preventDefault();
+  });
+  track.addEventListener("pointermove", event => {
+    if (track.hasPointerCapture(event.pointerId)) move(event);
+  });
+  track.addEventListener("wheel", event => {
+    scrollArea.scrollTop += event.deltaY;
+    event.preventDefault();
+    sync();
+  }, { passive: false });
+  track.addEventListener("keydown", event => {
+    const steps = { ArrowUp: -40, ArrowDown: 40, PageUp: -scrollArea.clientHeight, PageDown: scrollArea.clientHeight };
+    if (event.key === "Home") scrollArea.scrollTop = 0;
+    else if (event.key === "End") scrollArea.scrollTop = scrollArea.scrollHeight;
+    else if (event.key in steps) scrollArea.scrollTop += steps[event.key];
+    else return;
+    event.preventDefault();
+    sync();
+  });
+  scrollArea.addEventListener("scroll", sync);
+  const observer = new ResizeObserver(sync);
+  observer.observe(scrollArea);
+  observer.observe(content);
+  sync();
+  return { sync, destroy() {
+    observer.disconnect();
+    scrollArea.removeEventListener("scroll", sync);
+    track.remove();
+  } };
+}
+
 function traitCount(actor) {
   const primary = ["merit", "flaw"].filter(kind => MERCHANT_TRAITS[kind].includes(actor.system[kind])).length;
   return primary + actor.items.filter(item => item.type === "trait"
@@ -188,6 +264,7 @@ export async function openBargain(actor) {
   let cooperativeManual = false;
   const helpers = new Map();
   const snapshot = { cash: leader.system.pocketMoney, budget: cooperative?.system.budget, unrest: cooperative?.system.unrest };
+  let scrollbar;
   const friends = actor.items.filter(item => item.type === "relationship" && item.system.direction === "friend")
     .map(item => ({ id: item.id, name: item.name }));
   const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
@@ -228,6 +305,10 @@ export async function openBargain(actor) {
       render: (_event, dialog) => {
         const root = dialog.element;
         const form = root.querySelector("form");
+        const scrollArea = root.querySelector(".dialog-content");
+        const content = root.querySelector("[data-bargain]");
+        scrollbar?.destroy();
+        scrollbar = bargainScrollbar(root, form, scrollArea, content);
         const submit = root.querySelector('[data-action="ok"]');
         root.querySelector("[data-leader]").replaceChildren(participant(leader));
         const showCooperative = () => {
@@ -330,6 +411,9 @@ export async function openBargain(actor) {
             : "";
           try {
             const result = calculateBargain(values);
+            const priceIcon = root.querySelector("[data-price-icon]");
+            priceIcon.textContent = result.remaining ? "🟠" : "🟢";
+            priceIcon.setAttribute("aria-label", game.i18n.localize(`OUW25.BargainCalc.${result.remaining ? "PriceUncovered" : "PriceCovered"}`));
             root.querySelector("[data-price]").textContent = game.i18n.format("OUW25.BargainCalc.PriceSummary", {
               neutralized: result.neutralized, spent: result.spentAdvantages, remaining: result.remainingAdvantages,
               full: result.fullPrice, price: result.price
@@ -351,6 +435,9 @@ export async function openBargain(actor) {
             error.hidden = !error.textContent;
             submit.disabled = !valid || !recordsValid || result.remaining > 0 || (values.knowOpponent && !target);
           } catch {
+            const priceIcon = root.querySelector("[data-price-icon]");
+            priceIcon.textContent = "🟠";
+            priceIcon.setAttribute("aria-label", game.i18n.localize("OUW25.BargainCalc.PriceUnavailable"));
             root.querySelector("[data-price]").textContent = "";
             root.querySelector("[data-summary]").textContent = "";
             root.querySelector("[data-breakdown]").textContent = "";
@@ -359,6 +446,7 @@ export async function openBargain(actor) {
             root.querySelector("[data-error]").hidden = false;
             submit.disabled = true;
           }
+          scrollbar.sync();
         };
         form.elements.partial.addEventListener("change", () => {
           if (form.elements.partial.checked) {
@@ -412,13 +500,12 @@ export async function openBargain(actor) {
           });
         }
         update();
-        const scrollArea = root.querySelector(".dialog-content");
-        const content = root.querySelector("[data-bargain]");
         const style = getComputedStyle(scrollArea);
         const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
         const height = root.offsetHeight - scrollArea.clientHeight + content.offsetHeight + padding;
         root.style.setProperty("--ouw25-bargain-min-height", `${Math.ceil(height)}px`);
         dialog.setPosition();
+        scrollbar.sync();
       }
     });
     if (!selection) return;
@@ -505,6 +592,7 @@ export async function openBargain(actor) {
       ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.ChatFailed"));
     }
   } finally {
+    scrollbar?.destroy();
     pending.delete(actor.uuid);
   }
 }

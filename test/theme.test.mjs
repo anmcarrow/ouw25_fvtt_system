@@ -45,6 +45,13 @@ test("bargain outcome options are prefixed and the disabled selector is faded", 
   assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{\s*opacity:\s*0\.5;/);
 });
 
+test("lost friends wrap as checkbox and name pairs", async () => {
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.match(bargain, /class="ouw25-bargain-friends">[\s\S]*?<label><input type="checkbox" name="friend"[^>]*> <span>\{\{name\}\}<\/span><\/label>/);
+  assert.match(styles, /\.ouw25-bargain-friends\s*\{[^}]*flex-wrap:\s*wrap;[^}]*gap:\s*0\.3rem 3ch;/s);
+  assert.match(styles, /\.ouw25-bargain-friends label > span\s*\{\s*font-size:\s*1\.2em;/);
+});
+
 test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.application\.ouw25\.ouw25-bargain-dialog\s*\{\s*min-width:\s*800px;\s*max-width:\s*800px;/);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{\s*flex:\s*1 1 auto;/);
@@ -52,7 +59,7 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer\s*\{\s*flex:\s*0 0 auto;/);
   assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height/);
   assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{\s*background:[^;]*sheet_bgr\.webp[^;]*100% auto no-repeat;/);
-  assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content::-webkit-scrollbar-thumb\s*\{[^}]*background:/s);
+  assert.match(styles, /\.ouw25-bargain-scrollbar-thumb\s*\{[^}]*background:/s);
 });
 
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {

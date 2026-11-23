@@ -9,10 +9,10 @@ const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/acto
 
 test("bargain payment field captions are compact and bold without restyling inputs", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
-  for (const key of ["Traits", "CaptainTraits", "Time", "Unrest", "Cash", "Budget", "Loan", "Enemies",
-    "EnemyDescription", "ExistingDebt", "LoanDescription"]) {
+  for (const key of ["ExistingDebt", "LoanDescription"]) {
     assert.match(bargain, new RegExp(`<label><span>\\{\\{localize "OUW25\\.BargainCalc\\.${key}"\\}\\}</span>`));
   }
+  assert.match(bargain, /\{\{#each paymentFields\}\}\s*<label><span>\{\{localize label\}\}<\/span> <input name="\{\{name\}\}"/);
   assert.match(bargain, /name="friend"[^>]*> <span>\{\{name\}\}<\/span>/);
   assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
 });

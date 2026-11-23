@@ -7,6 +7,10 @@ const CONSEQUENCES = [
   "unrest", "damage", "threat", "omen", "news", "worsening",
   "past", "hidden", "deadline", "responsibility", "bystanders", "grudge"
 ];
+const PAYMENT_FIELDS = [
+  ["traits", "Traits"], ["captainTraits", "CaptainTraits"], ["time", "Time"], ["unrest", "Unrest"],
+  ["cash", "Cash"], ["budget", "Budget"], ["loan", "Loan"], ["enemies", "Enemies"]
+];
 
 function traitCount(actor) {
   const primary = ["merit", "flaw"].filter(kind => MERCHANT_TRAITS[kind].includes(actor.system[kind])).length;
@@ -50,7 +54,8 @@ function readValues(form) {
     cash: get("cash"), budget: get("budget"), loan: get("loan"), enemies: get("enemies"),
     friends: form.querySelectorAll('input[name="friend"]:checked').length,
     friendIds: [...form.querySelectorAll('input[name="friend"]:checked')].map(input => input.value),
-    enemyDescription: get("enemyDescription").trim(), loanDescription: get("loanDescription").trim(),
+    enemyDescription: get("enemyDescription").trim() || game.i18n.localize("OUW25.BargainCalc.DefaultOpponent"),
+    knowOpponent: form.elements.knowOpponent.checked, loanDescription: get("loanDescription").trim(),
     existingDebt: get("existingDebt")
   };
 }
@@ -58,6 +63,23 @@ function readValues(form) {
 function eligible(actor, type, permission = "OBSERVER") {
   return actor?.documentName === "Actor" && actor.type === type
     && game.actors.get(actor.id) === actor && actor.testUserPermission(game.user, permission);
+}
+
+export function contactCooperative(selected, leader) {
+  if (selected) return eligible(selected, "cooperative", "OWNER") ? selected : null;
+  const matches = Array.from(game.actors.values()).filter(actor => eligible(actor, "cooperative", "OWNER")
+    && actor.system.founders?.includes(leader.uuid));
+  return matches.length === 1 ? matches[0] : null;
+}
+
+export async function recordBargainContact(cooperative, name) {
+  if (!eligible(cooperative, "cooperative", "OWNER")) throw new Error("Contact permission changed");
+  const normalized = name.trim().toLocaleLowerCase();
+  if (cooperative.items.some(item => item.type === "contact" && item.name.trim().toLocaleLowerCase() === normalized)) return;
+  const created = await cooperative.createEmbeddedDocuments("Item", [{
+    type: "contact", name, system: { location: "", amount: 0, reason: game.i18n.localize("OUW25.BargainCalc.ContactRelationship") }
+  }]);
+  if (created.length !== 1) throw new Error("Contact creation failed");
 }
 
 export function validatePayment(actor, cooperative, values, snapshot) {
@@ -96,9 +118,12 @@ export async function openBargain(actor) {
     .map(item => ({ id: item.id, name: item.name }));
   const debts = actor.items.filter(item => item.type === "debt" && item.system.direction === "payable")
     .map(item => ({ id: item.id, name: item.name, amount: item.system.amount }));
+  const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
+    name, label: `OUW25.BargainCalc.${key}`, value: ["traits", "captainTraits"].includes(name) ? traitCount(actor) : 0
+  })).sort((a, b) => Array.from(game.i18n.localize(b.label)).length - Array.from(game.i18n.localize(a.label)).length);
   try {
     const content = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/bargain.hbs", {
-      actor, traits: traitCount(actor), friends, debts,
+      actor, paymentFields, friends, debts,
       consequences: CONSEQUENCES.map(id => ({ id, label: `OUW25.BargainCalc.Consequences.${id}` }))
     });
     const selection = await foundry.applications.api.DialogV2.input({
@@ -112,6 +137,10 @@ export async function openBargain(actor) {
         try {
           const values = readValues(button.form);
           const result = calculateBargain(values);
+          if (values.knowOpponent && !contactCooperative(cooperative, leader)) {
+            ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.ContactUnavailable"));
+            return false;
+          }
           if (result.remaining || !validatePayment(actor, cooperative, values, snapshot)) throw new Error("changed");
           return { values, result };
         } catch {
@@ -126,8 +155,13 @@ export async function openBargain(actor) {
         root.querySelector("[data-leader]").replaceChildren(participant(leader));
         const update = () => {
           const values = readValues(form);
+          const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
           form.elements.consequence.disabled = !values.partial;
           root.querySelector("[data-custom]").hidden = !values.partial || values.consequence !== "custom";
+          root.querySelector("[data-contact-target]").textContent = values.knowOpponent
+            ? target ? game.i18n.format("OUW25.BargainCalc.ContactTarget", { name: target.name })
+              : game.i18n.localize("OUW25.BargainCalc.ContactUnavailable")
+            : "";
           root.querySelector("[data-balances]").textContent = game.i18n.format("OUW25.BargainCalc.Balances", {
             cash: actor.system.pocketMoney, budget: cooperative?.system.budget ?? "—"
           });
@@ -144,7 +178,7 @@ export async function openBargain(actor) {
             root.querySelector("[data-breakdown]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", result.contributions);
             const valid = validatePayment(actor, cooperative, values, snapshot);
             root.querySelector("[data-error]").textContent = valid ? "" : game.i18n.localize("OUW25.BargainCalc.InvalidPayment");
-            submit.disabled = !valid || result.remaining > 0;
+            submit.disabled = !valid || result.remaining > 0 || (values.knowOpponent && !target);
           } catch {
             root.querySelector("[data-price]").textContent = "";
             root.querySelector("[data-summary]").textContent = "";
@@ -210,7 +244,13 @@ export async function openBargain(actor) {
       const current = actor.items.get(id);
       return current?.type !== "relationship" || current.system.direction !== "friend";
     })) throw new Error("changed");
-    const documents = [actor, leader, ...helpers.values(), ...(cooperative ? [cooperative] : [])];
+    const contactTarget = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
+    if (values.knowOpponent && !contactTarget) {
+      ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.ContactUnavailable"));
+      return;
+    }
+    const documents = [actor, leader, ...helpers.values(), ...(cooperative ? [cooperative] : []),
+      ...(contactTarget && contactTarget !== cooperative ? [contactTarget] : [])];
     if (documents.some(document => !document.testUserPermission(game.user, "OBSERVER"))) throw new Error("changed");
     const recipients = Array.from(game.users).filter(user => user.isGM
       || documents.every(document => document.testUserPermission(user, "OBSERVER"))).map(user => user.id);
@@ -224,12 +264,21 @@ export async function openBargain(actor) {
       }));
       return;
     }
+    if (contactTarget) {
+      try {
+        await recordBargainContact(contactTarget, values.enemyDescription);
+      } catch (error) {
+        console.error("OUW25 | Bargain contact failed", error);
+        ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.ContactFailed"));
+        return;
+      }
+    }
     const chosenFriends = friends.filter(friend => values.friendIds.includes(friend.id)).map(friend => friend.name).join(", ");
     const consequence = values.partial
       ? values.consequence === "custom" ? values.custom || game.i18n.localize("OUW25.BargainCalc.Custom")
         : game.i18n.localize(`OUW25.BargainCalc.Consequences.${values.consequence}`) : "—";
     const rows = [
-      ["Goal", values.goal || game.i18n.localize("OUW25.BargainCalc.GoalPlaceholder")],
+      ["Goal", values.goal || game.i18n.localize("OUW25.BargainCalc.GoalPlaceholder")], ["Opponent", values.enemyDescription],
       ["Leader", leader.name], ["Helpers", [...helpers.values()].map(item => item.name).join(", ") || "—"],
       ["Outcome", game.i18n.localize(`OUW25.BargainCalc.${values.partial ? "Partial" : "Full"}`)],
       ["Inflation", game.i18n.localize(`OUW25.BargainCalc.${values.inflation ? "Enabled" : "Disabled"}`)],
@@ -239,7 +288,7 @@ export async function openBargain(actor) {
       ["PartialConsequence", consequence],
       ["Price", result.price], ["Paid", result.paid], ["Excess", result.excess],
       ["Cash", values.cash], ["Budget", values.budget], ["Time", values.time], ["Unrest", Number(values.unrest) * 8],
-      ["Loan", `${values.loan} ${debts.find(debt => debt.id === values.existingDebt)?.name ?? ""} ${values.loanDescription}`], ["Enemies", `${values.enemies} ${values.enemyDescription}`],
+      ["Loan", `${values.loan} ${debts.find(debt => debt.id === values.existingDebt)?.name ?? ""} ${values.loanDescription}`], ["Enemies", values.enemies],
       ["Friends", chosenFriends || "—"]
     ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));
     try {

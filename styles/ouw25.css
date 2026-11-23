@@ -1963,10 +1963,24 @@ body.game .application.ouw25 .ouw25-bargain h4 {
   padding: 0.8rem;
 }
 
-.ouw25-bargain-grid, .ouw25-bargain-people {
+.ouw25-bargain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(4, auto);
+  grid-auto-flow: column;
+  gap: 0.5rem;
+}
+
+.ouw25-bargain-people {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: 0.5rem;
+}
+
+.ouw25-bargain-opponent > label,
+.ouw25-bargain-opponent > small {
+  display: block;
+  font-size: 0.8em;
 }
 
 .ouw25-bargain-people {

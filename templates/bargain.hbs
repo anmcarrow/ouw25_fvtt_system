@@ -38,6 +38,11 @@
   <label><h4>{{localize "OUW25.BargainCalc.Goal"}}</h4>
     <input type="text" name="goal" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}">
   </label>
+  <div class="ouw25-bargain-opponent">
+    <input name="enemyDescription" type="text" aria-label="{{localize "OUW25.BargainCalc.EnemyDescription"}}" placeholder="{{localize "OUW25.BargainCalc.DefaultOpponent"}}">
+    <label><span>{{localize "OUW25.BargainCalc.KnowOpponent"}}</span> <input name="knowOpponent" type="checkbox"></label>
+    <small data-contact-target></small>
+  </div>
   <div class="ouw25-bargain-outcome">
     <label class="ouw25-bargain-switch">
       <span>{{localize "OUW25.BargainCalc.PartialSwitch"}}</span>
@@ -60,17 +65,11 @@
     <legend>{{localize "OUW25.BargainCalc.Payment"}}</legend>
     <p>{{localize "OUW25.BargainCalc.Manual"}}</p>
     <div class="ouw25-bargain-grid">
-      <label><span>{{localize "OUW25.BargainCalc.Traits"}}</span> <input name="traits" type="number" min="0" step="1" value="{{traits}}"></label>
-      <label><span>{{localize "OUW25.BargainCalc.CaptainTraits"}}</span> <input name="captainTraits" type="number" min="0" step="1" value="{{traits}}"></label>
-      <label><span>{{localize "OUW25.BargainCalc.Time"}}</span> <input name="time" type="number" min="0" step="1" value="0"></label>
-      <label><span>{{localize "OUW25.BargainCalc.Unrest"}}</span> <input name="unrest" type="number" min="0" step="1" value="0"></label>
-      <label><span>{{localize "OUW25.BargainCalc.Cash"}}</span> <input name="cash" type="number" min="0" step="1" value="0"></label>
-      <label><span>{{localize "OUW25.BargainCalc.Budget"}}</span> <input name="budget" type="number" min="0" step="1" value="0"></label>
-      <label><span>{{localize "OUW25.BargainCalc.Loan"}}</span> <input name="loan" type="number" min="0" step="1" value="0"></label>
-      <label><span>{{localize "OUW25.BargainCalc.Enemies"}}</span> <input name="enemies" type="number" min="0" step="1" value="0"></label>
+      {{#each paymentFields}}
+        <label><span>{{localize label}}</span> <input name="{{name}}" type="number" min="0" step="1" value="{{value}}"></label>
+      {{/each}}
     </div>
     <p data-balances></p>
-    <label><span>{{localize "OUW25.BargainCalc.EnemyDescription"}}</span> <input name="enemyDescription" type="text"></label>
     <label><span>{{localize "OUW25.BargainCalc.ExistingDebt"}}</span>
       <select name="existingDebt"><option value="">{{localize "OUW25.BargainCalc.NewDebt"}}</option>
         {{#each debts}}<option value="{{id}}">{{name}} — {{amount}}</option>{{/each}}

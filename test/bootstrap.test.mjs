@@ -1406,16 +1406,52 @@ test("bargain payment batches only confirmed funds and rejects stale or unauthor
   }
 });
 
-test("partial bargain selects a random consequence on activation and retains manual choices", async () => {
+test("bargain contacts use the chosen or uniquely owned founder cooperative without duplicates", async () => {
+  const { contactCooperative, recordBargainContact } = await import(new URL("module/bargain-dialog.mjs", dist));
+  const previous = globalThis.game;
+  const leader = { uuid: "Actor.leader" };
+  const makeCooperative = (id, founders = [], owner = true) => ({
+    id, name: id, documentName: "Actor", type: "cooperative", system: { founders }, items: [],
+    testUserPermission: () => owner,
+    async createEmbeddedDocuments(type, entries) {
+      assert.equal(type, "Item");
+      this.items.push(...entries);
+      return entries;
+    }
+  });
+  const selected = makeCooperative("selected");
+  const founded = makeCooperative("founded", [leader.uuid]);
+  const other = makeCooperative("other", [leader.uuid]);
+  const actors = new Map([selected, founded].map(actor => [actor.id, actor]));
+  globalThis.game = { actors, user: {}, i18n: { localize: () => "was challenged" } };
+  try {
+    assert.equal(contactCooperative(selected, leader), selected);
+    assert.equal(contactCooperative(null, leader), founded);
+    actors.set(other.id, other);
+    assert.equal(contactCooperative(null, leader), null);
+    actors.delete(other.id);
+    await recordBargainContact(founded, "Opponent");
+    assert.deepEqual(founded.items, [{ type: "contact", name: "Opponent", system: { location: "", amount: 0, reason: "was challenged" } }]);
+    await recordBargainContact(founded, " opponent ");
+    assert.equal(founded.items.length, 1);
+    founded.testUserPermission = () => false;
+    assert.equal(contactCooperative(null, leader), null);
+    await assert.rejects(recordBargainContact(founded, "Another"), /permission/);
+  } finally {
+    globalThis.game = previous;
+  }
+});
+
+test("bargain dialog sorts payment fields and validates contact and partial outcome choices", async () => {
   const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
-  const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, random: Math.random };
+  const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui, random: Math.random };
   const actor = { id: "a", uuid: "Actor.a", name: "Merchant", documentName: "Actor", type: "merchant",
     img: "portrait.webp", prototypeToken: { texture: { src: "token.webp" } },
     system: { pocketMoney: 0 }, items: [], testUserPermission: () => true };
   const partial = Object.assign(new EventTarget(), { checked: false });
   const consequence = { value: "unrest", disabled: true };
   const fields = {
-    partial, consequence, inflation: { checked: false }, goal: { value: "" }, custom: { value: "" },
+    partial, consequence, inflation: { checked: false }, knowOpponent: { checked: false }, goal: { value: "" }, custom: { value: "" },
     time: { value: "2" }
   };
   fields.namedItem = name => fields[name];
@@ -1423,7 +1459,7 @@ test("partial bargain selects a random consequence on activation and retains man
   let leader;
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, '[data-action="ok"]': { disabled: false },
-    "[data-custom]": { hidden: true }, "[data-balances]": {}, "[data-price]": {},
+    "[data-custom]": { hidden: true }, "[data-contact-target]": {}, "[data-balances]": {}, "[data-price]": {},
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {}
   };
   const root = { querySelector: selector => elements[selector], querySelectorAll: () => [] };
@@ -1434,11 +1470,25 @@ test("partial bargain selects a random consequence on activation and retains man
     actors: new Map([[actor.id, actor]]), user: {},
     i18n: { localize: key => key, format: key => key }
   };
+  let warning;
+  globalThis.ui = { notifications: { warn: value => { warning = value; } } };
   globalThis.foundry = { applications: {
-    handlebars: { renderTemplate: async () => "" },
+    handlebars: { renderTemplate: async (_path, data) => {
+      const lengths = data.paymentFields.map(field => field.label.length);
+      assert.equal(lengths.length, 8);
+      assert.deepEqual(lengths, [...lengths].sort((a, b) => b - a));
+      return "";
+    } },
     api: { DialogV2: { input: async config => {
       config.render(null, { element: root });
       assert.equal(leader.children[0].src, "token.webp");
+      fields.knowOpponent.checked = true;
+      form.dispatchEvent(new Event("change"));
+      assert.equal(elements['[data-action="ok"]'].disabled, true);
+      assert.equal(config.ok.callback(null, { form }), false);
+      assert.equal(warning, "OUW25.BargainCalc.ContactUnavailable");
+      fields.knowOpponent.checked = false;
+      form.dispatchEvent(new Event("change"));
       assert.equal(consequence.disabled, true);
       Math.random = () => 0.999;
       partial.checked = true;
@@ -1475,6 +1525,7 @@ test("partial bargain selects a random consequence on activation and retains man
     globalThis.game = previous.game;
     globalThis.foundry = previous.foundry;
     globalThis.document = previous.document;
+    globalThis.ui = previous.ui;
     Math.random = previous.random;
   }
 });

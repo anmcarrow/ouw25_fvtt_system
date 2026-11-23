@@ -126,12 +126,16 @@ function participant(actor) {
 
 function readValues(form) {
   const get = name => form.elements.namedItem(name)?.value ?? "0";
+  const number = name => {
+    const input = form.elements.namedItem(name);
+    return input?.value === "" && !input.validity?.badInput ? "0" : input?.value ?? "0";
+  };
   return {
     goal: get("goal").trim(), partial: form.elements.partial.checked, inflation: form.elements.inflation.checked,
     consequence: get("consequence"), custom: get("custom").trim(),
-    advantages: get("advantages"), complications: get("complications"), traits: get("traits"),
-    captainTraits: get("captainTraits"), time: get("time"), unrest: get("unrest"),
-    cash: get("cash"), budget: get("budget"), loan: get("loan"), enemies: get("enemies"),
+    advantages: number("advantages"), complications: number("complications"), traits: number("traits"),
+    captainTraits: number("captainTraits"), time: number("time"), unrest: number("unrest"),
+    cash: number("cash"), budget: number("budget"), loan: number("loan"), enemies: number("enemies"),
     friends: form.querySelectorAll('input[name="friend"]:checked').length,
     friendIds: [...form.querySelectorAll('input[name="friend"]:checked')].map(input => input.value),
     enemyDescription: get("enemyDescription").trim() || game.i18n.localize("OUW25.BargainCalc.DefaultOpponent"),
@@ -144,6 +148,22 @@ function readValues(form) {
     enemyRecords: [...form.querySelectorAll("[data-enemy-row]")].slice(0, Number(get("enemies")) || 0)
       .map(row => ({ name: row.querySelector("[data-enemy-name]").value.trim(), location: row.querySelector("[data-enemy-location]").value }))
   };
+}
+
+export function validateBargainFriends(actor, ids, friends) {
+  if (!ids.length) return true;
+  const available = new Set(friends.map(friend => friend.id));
+  return eligible(actor, "merchant", "OWNER") && new Set(ids).size === ids.length && ids.every(id => {
+    const item = actor.items.get(id);
+    return available.has(id) && item?.type === "relationship" && item.system.direction === "friend";
+  });
+}
+
+export async function removeBargainFriends(actor, ids, friends) {
+  if (!validateBargainFriends(actor, ids, friends)) throw new Error("Friends changed");
+  if (!ids.length) return;
+  const removed = await actor.deleteEmbeddedDocuments("Item", ids);
+  if (removed.length !== ids.length || ids.some(id => actor.items.get(id))) throw new Error("Friends removal failed");
 }
 
 function eligible(actor, type, permission = "OBSERVER") {
@@ -295,6 +315,10 @@ export async function openBargain(actor) {
             ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.RecordInvalid"));
             return false;
           }
+          if (!validateBargainFriends(actor, values.friendIds, friends)) {
+            ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.FriendsInvalid"));
+            return false;
+          }
           if (result.remaining || !validatePayment(leader, cooperative, values, snapshot)) throw new Error("changed");
           return { values, result };
         } catch {
@@ -429,11 +453,13 @@ export async function openBargain(actor) {
             showPoints(result.contributions);
             const valid = validatePayment(leader, cooperative, values, snapshot);
             const recordsValid = validateBargainRecords(leader, values);
+            const friendsValid = validateBargainFriends(actor, values.friendIds, friends);
             const error = root.querySelector("[data-error]");
             error.textContent = !valid ? game.i18n.localize("OUW25.BargainCalc.InvalidPayment")
-              : !recordsValid ? game.i18n.localize("OUW25.BargainCalc.RecordInvalid") : "";
+              : !recordsValid ? game.i18n.localize("OUW25.BargainCalc.RecordInvalid")
+              : !friendsValid ? game.i18n.localize("OUW25.BargainCalc.FriendsInvalid") : "";
             error.hidden = !error.textContent;
-            submit.disabled = !valid || !recordsValid || result.remaining > 0 || (values.knowOpponent && !target);
+            submit.disabled = !valid || !recordsValid || !friendsValid || result.remaining > 0 || (values.knowOpponent && !target);
           } catch {
             const priceIcon = root.querySelector("[data-price-icon]");
             priceIcon.textContent = "🟠";
@@ -514,10 +540,10 @@ export async function openBargain(actor) {
       ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.RecordInvalid"));
       return;
     }
-    if (values.friendIds.some(id => {
-      const current = actor.items.get(id);
-      return current?.type !== "relationship" || current.system.direction !== "friend";
-    })) throw new Error("changed");
+    if (!validateBargainFriends(actor, values.friendIds, friends)) {
+      ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.FriendsInvalid"));
+      return;
+    }
     const contactTarget = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
     if (values.knowOpponent && !contactTarget) {
       ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.ContactUnavailable"));
@@ -544,6 +570,13 @@ export async function openBargain(actor) {
     } catch (error) {
       console.error("OUW25 | Bargain records failed", error);
       ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.RecordFailed"));
+      return;
+    }
+    try {
+      await removeBargainFriends(actor, values.friendIds, friends);
+    } catch (error) {
+      console.error("OUW25 | Bargain friends removal failed", error);
+      ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.FriendsFailed"));
       return;
     }
     if (contactTarget) {

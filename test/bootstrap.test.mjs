@@ -1550,6 +1550,49 @@ test("bargain records validate permissions and preserve or create the leader's d
   }
 });
 
+test("lost bargain friends are removed only while they are still selected, owned friends", async () => {
+  const { validateBargainFriends, removeBargainFriends } = await import(new URL("module/bargain-dialog.mjs", dist));
+  const previous = globalThis.game;
+  const items = Object.assign([
+    { id: "f1", type: "relationship", system: { direction: "friend" } },
+    { id: "f2", type: "relationship", system: { direction: "friend" } },
+    { id: "enemy", type: "relationship", system: { direction: "enemy" } }
+  ], { get(id) { return this.find(item => item.id === id); } });
+  let allowed = true, calls = 0;
+  const actor = { id: "initiator", documentName: "Actor", type: "merchant", items,
+    testUserPermission: (_user, permission) => permission !== "OWNER" || allowed,
+    async deleteEmbeddedDocuments(type, ids) {
+      calls++;
+      assert.equal(type, "Item");
+      return ids.map(id => items.splice(items.findIndex(item => item.id === id), 1)[0]);
+    }
+  };
+  const shown = [{ id: "f1", name: "One" }, { id: "f2", name: "Two" }];
+  globalThis.game = { actors: new Map([[actor.id, actor]]), user: {} };
+  try {
+    assert.equal(validateBargainFriends(actor, ["f1", "f1"], shown), false);
+    assert.equal(validateBargainFriends(actor, ["enemy"], shown), false);
+    allowed = false;
+    await assert.rejects(removeBargainFriends(actor, ["f1"], shown), /changed/);
+    allowed = true;
+    items.get("f1").system.direction = "enemy";
+    await assert.rejects(removeBargainFriends(actor, ["f1"], shown), /changed/);
+    items.get("f1").system.direction = "friend";
+    assert.equal(calls, 0);
+    await removeBargainFriends(actor, [], shown);
+    assert.equal(calls, 0);
+    await removeBargainFriends(actor, ["f1"], shown);
+    assert.equal(items.get("f1"), undefined);
+    assert.equal(items.get("f2").system.direction, "friend");
+    assert.equal(items.get("enemy").system.direction, "enemy");
+    assert.equal(validateBargainFriends(actor, ["f1"], shown), false);
+    actor.deleteEmbeddedDocuments = async () => [];
+    await assert.rejects(removeBargainFriends(actor, ["f2"], shown), /removal failed/);
+  } finally {
+    globalThis.game = previous;
+  }
+});
+
 test("bargain locations combine the 31 Union trading ports with known places without aliases", async () => {
   const { UNION_TRADE_PORTS, locationChoices } = await import(new URL("module/ports.mjs", dist));
   assert.equal(UNION_TRADE_PORTS.length, 31);
@@ -1631,6 +1674,24 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.equal(form.scrollbar.hidden, true);
+      for (const name of ["traits", "captainTraits", "time", "unrest", "cash", "budget", "loan", "enemies", "advantages", "complications"]) {
+        const original = fields[name];
+        fields[name] = { value: "", validity: { badInput: false } };
+        form.dispatchEvent(new Event("input"));
+        assert.equal(elements["[data-price]"].textContent, "OUW25.BargainCalc.PriceSummary", name);
+        assert.equal(elements["[data-summary]"].textContent, "OUW25.BargainCalc.PaymentSummary", name);
+        assert.equal(elements["[data-breakdown]"].textContent, "OUW25.BargainCalc.Breakdown", name);
+        fields[name] = original;
+      }
+      fields.cash.value = "";
+      assert.equal(config.ok.callback(null, { form }).values.cash, "0");
+      fields.cash.validity = { badInput: true };
+      form.dispatchEvent(new Event("input"));
+      assert.equal(elements["[data-error]"].hidden, false);
+      assert.equal(config.ok.callback(null, { form }), false);
+      fields.cash.value = "0";
+      fields.cash.validity = { badInput: false };
+      form.dispatchEvent(new Event("input"));
       fields.time.value = "1";
       scrollArea.scrollHeight = 1200;
       form.dispatchEvent(new Event("input"));

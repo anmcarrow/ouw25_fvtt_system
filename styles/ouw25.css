@@ -1920,6 +1920,11 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type=
   text-align: left;
 }
 
+body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select) {
+  height: calc(var(--input-height) * 0.9);
+  line-height: calc(var(--input-height) * 0.9);
+}
+
 body.game .application.ouw25 .dialog-content .ouw25-bargain input[type="number"] {
   box-sizing: border-box;
   width: calc(3ch + 0.6667rem + 2px);
@@ -2055,7 +2060,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, auto);
   grid-auto-flow: column;
-  gap: 0.35rem 0.5rem;
+  gap: 0.21rem 0.5rem;
 }
 
 .ouw25-bargain-grid > label {
@@ -2114,9 +2119,11 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
 
 .ouw25-bargain-points {
   display: inline-grid;
+  position: relative;
   place-items: center;
   box-sizing: border-box;
   min-width: 2rem;
+  margin-inline-start: 0.4rem;
   aspect-ratio: 1;
   padding: 0.2rem;
   border: 1px solid var(--ouw25-color-accent);
@@ -2124,6 +2131,15 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
   background: var(--ouw25-color-paper);
   font-size: var(--font-size-14, 14px);
   font-weight: normal;
+}
+
+.ouw25-bargain-points::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: calc(100% + 0.125rem);
+  width: 0.55rem;
+  border-block-start: 1px solid var(--color-fieldset-border);
 }
 
 .ouw25-bargain-debts > legend {
@@ -2246,6 +2262,8 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type
 }
 
 body.game .application.ouw25 .ouw25-bargain-people h5 {
+  color: var(--ouw25-color-ink);
+  font-size: calc(var(--font-h5-size, 1.25rem) / 2);
   margin: 0 0 0.25rem;
 }
 
@@ -2314,9 +2332,9 @@ body.game .application.ouw25 .dialog-content [data-helpers] .ouw25-bargain-entry
 }
 
 .ouw25-bargain-participant img {
-  width: 1.875rem;
-  height: 1.875rem;
-  margin-block: -0.5rem;
+  width: 2.34375rem;
+  height: 2.34375rem;
+  margin-block: -0.734375rem;
   border: 0;
   border-radius: 50%;
   object-fit: cover;
@@ -2328,6 +2346,10 @@ body.game .application.ouw25 .dialog-content [data-helpers] .ouw25-bargain-entry
   margin: 0.3rem 0 0;
   padding: 0;
   list-style: none;
+}
+
+.ouw25-bargain-drop li {
+  display: flex;
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch {

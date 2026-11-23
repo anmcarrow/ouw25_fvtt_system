@@ -808,6 +808,7 @@
       <p>{{localize "OUW25.Bargain.Price"}}</p>
       <p>{{localize "OUW25.Bargain.Payment"}}</p>
       <p>{{localize "OUW25.Bargain.Consequences"}}</p>
+      {{#if editable}}<button type="button" data-action="openBargain">{{localize "OUW25.BargainCalc.Open"}}</button>{{/if}}
     </details>
   {{#if showCollision}}
     <details class="ouw25-sidebar-card ouw25-collision">
@@ -817,25 +818,14 @@
         <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
         <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
       </div>
-      <details class="ouw25-check-assistant" data-collision-assistant>
+      <details class="ouw25-check-assistant">
         <summary>{{localize "OUW25.CheckAssistant.Title"}}</summary>
-        <p>{{localize "OUW25.CheckAssistant.Help"}}</p>
-        <p>{{localize "OUW25.CheckAssistant.Context"}}:
-          {{#each condition.specialties}}{{#if selected}}{{localize label}}{{/if}}{{/each}} ·
-          {{#each condition.pasts}}{{#if selected}}{{localize label}}{{/if}}{{/each}} ·
-          {{#if identity.dream}}{{identity.dream}}{{else}}—{{/if}}
+        <p><strong>{{localize "OUW25.CheckAssistant.Advantages"}}:</strong>
+          {{#each collisionAssistant.bonuses}}{{localize label}}; {{/each}}{{localize "OUW25.CheckAssistant.Dream"}}.
         </p>
-        <h4>{{localize "OUW25.CheckAssistant.Advantages"}}</h4>
-        {{#each collisionAssistant.bonuses}}
-          <label>{{localize label}} <input type="number" min="0" {{#if maxOne}}max="1"{{/if}} step="1" value="0" data-assist-field="{{id}}"></label>
-        {{/each}}
-        <label><input type="checkbox" data-assist-field="dream"> {{localize "OUW25.CheckAssistant.Dream"}}</label>
-        <h4>{{localize "OUW25.CheckAssistant.Complications"}}</h4>
-        {{#each collisionAssistant.complications}}
-          <label>{{localize label}} <input type="number" min="0" {{#if maxOne}}max="1"{{/if}} step="1" value="0" data-assist-field="{{id}}"></label>
-        {{/each}}
-        <p data-assist-summary role="status"></p>
-        <button type="button" data-action="applyCollisionAssistant">{{localize "OUW25.CheckAssistant.Apply"}}</button>
+        <p><strong>{{localize "OUW25.CheckAssistant.Complications"}}:</strong>
+          {{#each collisionAssistant.complications}}{{localize label}}{{#unless @last}}; {{/unless}}{{/each}}.
+        </p>
       </details>
     </details>
   {{/if}}

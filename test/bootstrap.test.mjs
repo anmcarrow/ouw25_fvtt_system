@@ -899,19 +899,9 @@ test("the built package registers models and an editable notes sheet for its dec
   const checkSheet = new Sheet();
   checkSheet.isEditable = true;
   checkSheet.actor = { type: "merchant", name: "Merchant" };
-  const assistantInputs = [
-    { dataset: { assistField: "specialty" }, type: "number", value: "1" },
-    { dataset: { assistField: "equipment" }, type: "number", value: "1" },
-    { dataset: { assistField: "dream" }, type: "checkbox", checked: true }
-  ];
-  const assistant = { querySelectorAll: () => assistantInputs };
-  const diceInput = { value: "4" };
-  const deductionInput = { value: "0" };
+  const diceInput = { value: "9" };
+  const deductionInput = { value: "1" };
   const collisionSection = { querySelector: selector => selector === "[data-dice]" ? diceInput : deductionInput };
-  const useAssistant = { closest: selector => selector === "[data-collision-assistant]" ? assistant : collisionSection };
-  Sheet.DEFAULT_OPTIONS.actions.applyCollisionAssistant.call(checkSheet, null, useAssistant);
-  assert.equal(diceInput.value, 9);
-  assert.equal(deductionInput.value, 1);
   let interactive;
   let rollMessage;
   game.settings.get = () => "blind";
@@ -930,7 +920,7 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.equal(interactive, false);
   assert.equal(rollMessage.options.messageMode, "blind");
   assert.equal(rollMessage.message.flavor, "check card");
-  assert.ok(checkCard.details.some(detail => detail.label === "OUW25.CheckAssistant.Dream"));
+  assert.deepEqual(checkCard.details.map(detail => detail.label), ["OUW25.Collision.Dice", "OUW25.Collision.Deduction"]);
 
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));
@@ -1350,6 +1340,81 @@ test("collision distinguishes outcomes after deductions", async () => {
   for (const [deduction, remaining, outcome] of [[0, 2, "Success"], [1, 1, "Partial"], [3, -1, "Failure"]]) {
     assert.deepEqual(resolveCollision(dice, deduction), { remaining, outcome });
   }
+});
+
+test("bargain prices, advantage allocation, and mixed payments follow the selected rules", async () => {
+  const { calculateBargain } = await import(new URL("module/bargain.mjs", dist));
+  const input = { complications: 2, advantages: 5, traits: 2, captainTraits: 3 };
+  const standard = calculateBargain(input);
+  assert.equal(standard.neutralized, 1);
+  assert.equal(standard.spentAdvantages, 4);
+  assert.equal(standard.remainingAdvantages, 1);
+  assert.equal(standard.fullPrice, 4);
+  assert.equal(calculateBargain({ ...input, partial: true }).price, 3);
+  assert.equal(calculateBargain({ ...input, inflation: true }).fullPrice, 3);
+  assert.equal(calculateBargain({ ...input, inflation: true, partial: true }).price, 1);
+  const paid = calculateBargain({ ...input, advantages: 12, inflation: true, cash: 2000, budget: 4000,
+    loan: 15000, time: 1, unrest: 1, enemies: 1, friends: 1 });
+  assert.deepEqual(paid.contributions, { advantages: 0, time: 1, unrest: 1, money: 1, loan: 1, enemies: 3, friends: 4 });
+  assert.equal(paid.remaining, 0);
+  assert.ok(paid.excess > 0);
+  assert.equal(calculateBargain({ advantages: 12, inflation: true }).contributions.advantages, 1);
+  for (const invalid of [{ advantages: -1 }, { time: "1.5" }, { cash: 1 }, { loan: 1 }, { friends: Number.MAX_SAFE_INTEGER }]) {
+    assert.throws(() => calculateBargain(invalid), RangeError);
+  }
+});
+
+test("bargain payment batches only confirmed funds and rejects stale or unauthorized balances", async () => {
+  const { applyPayment, validatePayment } = await import(new URL("module/bargain-dialog.mjs", dist));
+  const previousGame = globalThis.game;
+  const previousFoundry = globalThis.foundry;
+  const actor = { id: "a", documentName: "Actor", type: "merchant", system: { pocketMoney: 5000 },
+    testUserPermission: () => true };
+  const cooperative = { id: "b", documentName: "Actor", type: "cooperative", system: { budget: 8000 },
+    testUserPermission: () => true };
+  const actors = new Map([[actor.id, actor], [cooperative.id, cooperative]]);
+  let batches = [];
+  globalThis.game = { actors, user: {} };
+  globalThis.foundry = { documents: { Actor: { async updateDocuments(updates) {
+    batches.push(updates);
+    for (const update of updates) {
+      const target = actors.get(update._id);
+      if ("system.pocketMoney" in update) target.system.pocketMoney = update["system.pocketMoney"];
+      if ("system.budget" in update) target.system.budget = update["system.budget"];
+    }
+  } } } };
+  try {
+    const snapshot = { cash: 5000, budget: 8000 };
+    const values = { cash: 2000, budget: 4000 };
+    assert.equal(validatePayment(actor, cooperative, values, snapshot), true);
+    await applyPayment(actor, cooperative, values, snapshot);
+    assert.deepEqual(batches, [[{ _id: "a", "system.pocketMoney": 3000 }, { _id: "b", "system.budget": 4000 }]]);
+    assert.equal(validatePayment(actor, cooperative, values, snapshot), false);
+    await assert.rejects(applyPayment(actor, cooperative, values, snapshot));
+    cooperative.testUserPermission = () => false;
+    assert.equal(validatePayment(actor, cooperative, values, { cash: 3000, budget: 4000 }), false);
+    cooperative.testUserPermission = () => true;
+    foundry.documents.Actor.updateDocuments = async updates => {
+      actor.system.pocketMoney = updates[0]["system.pocketMoney"];
+    };
+    await assert.rejects(applyPayment(actor, cooperative, { cash: 1000, budget: 1000 }, { cash: 3000, budget: 4000 }), /Partial payment/);
+    assert.equal(actor.system.pocketMoney, 2000);
+    assert.equal(cooperative.system.budget, 4000);
+  } finally {
+    globalThis.game = previousGame;
+    globalThis.foundry = previousFoundry;
+  }
+});
+
+test("the check cheatsheet lists advantages and complications without interactive fields", async () => {
+  const template = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
+  const section = template.match(/<details class="ouw25-check-assistant">([\s\S]*?)<\/details>/)?.[1];
+  assert.ok(section);
+  assert.equal((section.match(/<p>/g) ?? []).length, 2);
+  assert.match(section, /collisionAssistant\.bonuses/);
+  assert.match(section, /CheckAssistant\.Dream/);
+  assert.match(section, /collisionAssistant\.complications/);
+  assert.doesNotMatch(section, /<(?:input|button|select)\b/);
 });
 
 test("collision assistant accounts for chosen sources without applying their consequences", async () => {

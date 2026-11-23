@@ -1,0 +1,70 @@
+<section class="ouw25-bargain" data-bargain>
+  <div class="ouw25-bargain-people">
+    <p>{{localize "OUW25.BargainCalc.Initiator"}}: <strong>{{actor.name}}</strong> — {{localize "OUW25.BargainCalc.Wounds"}}: {{wounds}}</p>
+    <div class="ouw25-bargain-drop" data-drop="leader" tabindex="0">
+      {{localize "OUW25.BargainCalc.Leader"}}: <strong data-leader-name>{{actor.name}}</strong> — {{localize "OUW25.BargainCalc.Wounds"}}: <span data-leader-wounds>{{wounds}}</span>
+      <small>{{localize "OUW25.BargainCalc.DropLeader"}}</small>
+    </div>
+    <div class="ouw25-bargain-drop" data-drop="helpers" tabindex="0">
+      {{localize "OUW25.BargainCalc.Helpers"}}
+      <small>{{localize "OUW25.BargainCalc.DropHelpers"}}</small>
+      <ul data-helpers></ul>
+    </div>
+    <div class="ouw25-bargain-drop" data-drop="cooperative" tabindex="0">
+      {{localize "OUW25.BargainCalc.Cooperative"}}: <strong data-cooperative-name>—</strong>
+      <small>{{localize "OUW25.BargainCalc.DropCooperative"}}</small>
+    </div>
+  </div>
+  <label>{{localize "OUW25.BargainCalc.Goal"}}
+    <input type="text" name="goal" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}">
+  </label>
+  <label class="ouw25-bargain-switch">
+    <input type="checkbox" name="inflation" role="switch">
+    <span>{{localize "OUW25.BargainCalc.Inflation"}}</span>
+  </label>
+  <div class="ouw25-bargain-grid">
+    <label>{{localize "OUW25.BargainCalc.Outcome"}}
+      <select name="outcome"><option value="full">{{localize "OUW25.BargainCalc.Full"}}</option><option value="partial">{{localize "OUW25.BargainCalc.Partial"}}</option></select>
+    </label>
+    <label>{{localize "OUW25.BargainCalc.Complications"}} <input name="complications" type="number" min="0" step="1" value="0"></label>
+    <label>{{localize "OUW25.BargainCalc.Advantages"}} <input name="advantages" type="number" min="0" step="1" value="0"></label>
+  </div>
+  <div data-partial hidden>
+    <label>{{localize "OUW25.BargainCalc.PartialConsequence"}}
+      <select name="consequence">
+        {{#each consequences}}<option value="{{id}}">{{localize label}}</option>{{/each}}
+        <option value="custom">{{localize "OUW25.BargainCalc.Custom"}}</option>
+      </select>
+    </label>
+    <label data-custom hidden>{{localize "OUW25.BargainCalc.CustomDescription"}} <input type="text" name="custom"></label>
+  </div>
+  <p class="ouw25-bargain-total" data-price role="status"></p>
+  <fieldset>
+    <legend>{{localize "OUW25.BargainCalc.Payment"}}</legend>
+    <p>{{localize "OUW25.BargainCalc.Manual"}}</p>
+    <div class="ouw25-bargain-grid">
+      <label>{{localize "OUW25.BargainCalc.Traits"}} <input name="traits" type="number" min="0" step="1" value="{{traits}}"></label>
+      <label>{{localize "OUW25.BargainCalc.CaptainTraits"}} <input name="captainTraits" type="number" min="0" step="1" value="{{traits}}"></label>
+      <label>{{localize "OUW25.BargainCalc.Time"}} <input name="time" type="number" min="0" step="1" value="0"></label>
+      <label>{{localize "OUW25.BargainCalc.Unrest"}} <input name="unrest" type="number" min="0" step="1" value="0"></label>
+      <label>{{localize "OUW25.BargainCalc.Cash"}} <input name="cash" type="number" min="0" step="1" value="0"></label>
+      <label>{{localize "OUW25.BargainCalc.Budget"}} <input name="budget" type="number" min="0" step="1" value="0"></label>
+      <label>{{localize "OUW25.BargainCalc.Loan"}} <input name="loan" type="number" min="0" step="1" value="0"></label>
+      <label>{{localize "OUW25.BargainCalc.Enemies"}} <input name="enemies" type="number" min="0" step="1" value="0"></label>
+    </div>
+    <p data-balances></p>
+    <label>{{localize "OUW25.BargainCalc.EnemyDescription"}} <input name="enemyDescription" type="text"></label>
+    <label>{{localize "OUW25.BargainCalc.ExistingDebt"}}
+      <select name="existingDebt"><option value="">{{localize "OUW25.BargainCalc.NewDebt"}}</option>
+        {{#each debts}}<option value="{{id}}">{{name}} — {{amount}}</option>{{/each}}
+      </select>
+    </label>
+    <label>{{localize "OUW25.BargainCalc.LoanDescription"}} <input name="loanDescription" type="text"></label>
+    <fieldset><legend>{{localize "OUW25.BargainCalc.Friends"}}</legend>
+      {{#each friends}}<label><input type="checkbox" name="friend" value="{{id}}"> {{name}}</label>{{else}}<p>{{localize "OUW25.BargainCalc.NoFriends"}}</p>{{/each}}
+    </fieldset>
+  </fieldset>
+  <p data-breakdown></p>
+  <p class="ouw25-bargain-total" data-summary role="status"></p>
+  <p data-error role="alert"></p>
+</section>

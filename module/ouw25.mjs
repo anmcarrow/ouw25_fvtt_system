@@ -16,7 +16,8 @@ import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
 import { filterRecordTable, sortRecordTable } from "./record-search.mjs";
 import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink } from "./record-journal.mjs";
-import { ASSISTANT_BONUSES, ASSISTANT_COMPLICATIONS, calculateCollisionAssistant } from "./collision-assistant.mjs";
+import { ASSISTANT_BONUSES, ASSISTANT_COMPLICATIONS } from "./collision-assistant.mjs";
+import { openBargain } from "./bargain-dialog.mjs";
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
@@ -396,8 +397,6 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #recordSearches = new Map();
   #recordSorts = new Map();
   #journalPending = false;
-  #assistantInputs = {};
-  #assistantApplied = null;
 
   static DEFAULT_OPTIONS = {
     classes: ["ouw25"],
@@ -419,7 +418,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       recordJournal: Ouw25ActorSheet.recordJournal,
       showJournalBacklinks: Ouw25ActorSheet.showJournalBacklinks,
       openJournalBacklink: Ouw25ActorSheet.openJournalBacklink,
-      applyCollisionAssistant: Ouw25ActorSheet.applyCollisionAssistant,
+      openBargain: Ouw25ActorSheet.openBargain,
       openFounder: Ouw25ActorSheet.openFounder,
       removeFounder: Ouw25ActorSheet.removeFounder,
       toggleForcedMode: Ouw25ActorSheet.toggleForcedMode,
@@ -478,43 +477,6 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       filter();
       sortRecordTable(container, sort.value);
     }
-    const assistant = this.element.querySelector("[data-collision-assistant]");
-    for (const input of this.element.querySelectorAll("[data-dice], [data-deduction]")) {
-      input.addEventListener("input", () => { this.#assistantApplied = null; });
-    }
-    if (assistant) {
-      for (const input of assistant.querySelectorAll("[data-assist-field]")) {
-        const saved = this.#assistantInputs[input.dataset.assistField];
-        if (saved !== undefined) {
-          if (input.type === "checkbox") input.checked = saved;
-          else input.value = saved;
-        }
-      }
-      const update = () => {
-        this.#assistantInputs = this.#readAssistant(assistant);
-        const summary = assistant.querySelector("[data-assist-summary]");
-        const apply = assistant.querySelector("[data-action='applyCollisionAssistant']");
-        try {
-          const result = calculateCollisionAssistant(this.#assistantInputs);
-          summary.textContent = game.i18n.format("OUW25.CheckAssistant.Summary", {
-            dice: result.diceCount, complications: result.deduction
-          });
-          apply.disabled = false;
-        } catch {
-          summary.textContent = game.i18n.localize("OUW25.CheckAssistant.Invalid");
-          apply.disabled = true;
-        }
-      };
-      assistant.addEventListener("input", update);
-      assistant.addEventListener("input", () => { this.#assistantApplied = null; });
-      update();
-    }
-  }
-
-  #readAssistant(container) {
-    return Object.fromEntries([...container.querySelectorAll("[data-assist-field]")].map(input => [
-      input.dataset.assistField, input.type === "checkbox" ? input.checked : input.value
-    ]));
   }
 
   async _onFirstRender(context, options) {
@@ -682,12 +644,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       editable: this.isEditable,
       showCollision: this.isEditable && merchant,
       collisionAssistant: merchant ? {
-        bonuses: ASSISTANT_BONUSES.map(id => ({
-          id, label: `OUW25.CheckAssistant.Bonus.${id}`, maxOne: ["specialty", "shipMerit"].includes(id)
-        })),
-        complications: ASSISTANT_COMPLICATIONS.map(id => ({
-          id, label: `OUW25.CheckAssistant.Penalty.${id}`, maxOne: id === "equipment"
-        }))
+        bonuses: ASSISTANT_BONUSES.map(id => ({ label: `OUW25.CheckAssistant.Bonus.${id}` })),
+        complications: ASSISTANT_COMPLICATIONS.map(id => ({ label: `OUW25.CheckAssistant.Penalty.${id}` }))
       } : null,
       token: {
         icon: DEFAULT_ACTOR_TOKENS[type],
@@ -994,18 +952,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     await openJournalBacklink(target.dataset.uuid, game.user);
   }
 
-  static applyCollisionAssistant(_event, target) {
+  static async openBargain() {
     if (!this.isEditable || this.actor.type !== "merchant") return;
-    const assistant = target.closest("[data-collision-assistant]");
-    const collision = target.closest(".ouw25-collision");
-    try {
-      const result = calculateCollisionAssistant(this.#readAssistant(assistant));
-      collision.querySelector("[data-dice]").value = result.diceCount;
-      collision.querySelector("[data-deduction]").value = result.deduction;
-      this.#assistantApplied = result;
-    } catch (error) {
-      if (!(error instanceof RangeError)) throw error;
-      ui.notifications.warn(game.i18n.localize("OUW25.CheckAssistant.Invalid"));
+    try { await openBargain(this.actor); } catch (error) {
+      console.error("OUW25 | Bargain failed", error);
+      ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.Error"));
     }
   }
 
@@ -1781,24 +1732,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           outcome: game.i18n.localize(`OUW25.Collision.${outcome}`),
           remaining
       });
-      const applied = this.#assistantApplied;
-      const sources = applied?.diceCount === input.diceCount && applied.deduction === input.deduction
-        ? [
-          { label: "OUW25.CheckAssistant.Base", value: "4d6" },
-          ...applied.details.map(detail => ({
-            ...detail,
-            value: detail.label.endsWith(".donation")
-              ? game.i18n.format("OUW25.CheckAssistant.DonationDice", { dice: Math.floor(detail.value / 180), amount: detail.value })
-              : detail.label.startsWith("OUW25.CheckAssistant.Penalty.")
-                ? `−${detail.value}` : `+${detail.value}d6`
-          }))
-        ] : [];
       await roll.toMessage({
         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
         flavor: await checkCard(this.actor, title ?? game.i18n.localize("OUW25.Collision.Title"), result, [
           { label: "OUW25.Collision.Dice", value: input.diceCount },
-          { label: "OUW25.Collision.Deduction", value: input.deduction },
-          ...sources
+          { label: "OUW25.Collision.Deduction", value: input.deduction }
         ])
       }, { messageMode });
     } finally {

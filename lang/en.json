@@ -775,9 +775,10 @@
     "Bargain": {
       "Title": "Dramatic bargain",
       "Summary": "Price and ways to pay",
-      "Price": "Agree on the goal, stakes and risks with the group. A dramatic bargain replaces the roll: partial success costs 1 point, full success costs 2. In the Roll20 reference rules, each complication adds 2 points, and each set of 4 advantages cancels one complication.",
+      "Price": "Agree on the goal, stakes and risks with the group. A dramatic bargain replaces the roll: full success has a base price of 2 points, and partial success costs 1 point less than full success. In the standard mode, each complication adds 2 points to the full price, and each set of 4 advantages cancels one complication.",
       "Payment": "For each point, spend 12 advantages, take an octad to prepare, add 8 unrest, or pay 3,000 og. multiplied by the representative's total number of merits and flaws. You can combine payments. Unrest gained this way cannot be reduced before the collision ends.",
-      "Consequences": "The group may also negotiate debt or a change in relationships: gaining a new enemy covers 3 points; losing a valued ally covers 4. If you accept the consequences instead of contesting them, each affected protagonist gains one luck mark."
+      "Consequences": "The group may also negotiate debt or a change in relationships: gaining a new enemy covers 3 points; losing a valued ally covers 4. If you accept the consequences instead of contesting them, each affected protagonist gains one luck mark.",
+      "Inflation": "With Compensate for inflation enabled, each complication adds 1 point, a point costs 8 advantages, and partial success costs half the full price, rounded down. Other payment methods are unchanged."
     },
     "Collision": {
       "Title": "(Un)Luck Check",

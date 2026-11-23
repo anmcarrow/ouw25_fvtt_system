@@ -1153,6 +1153,23 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + spa
   border-radius: 0.35rem;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button.ouw25-bargain-reference {
+  --ouw25-card-paper: var(--ouw25-reference-paper);
+  justify-content: flex-start;
+  background: var(--ouw25-color-paper) var(--ouw25-card-paper) center top / 100% auto no-repeat;
+  border: 0;
+  border-radius: 0.35rem;
+  padding: var(--ouw25-reference-padding);
+  color: var(--ouw25-color-ink);
+  font-size: 16px;
+  line-height: 1.4;
+  text-align: start;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button.ouw25-bargain-reference:hover:not(:disabled) {
+  color: var(--ouw25-color-ink);
+}
+
 .ouw25 .ouw25-merchant-sidebar > .ouw25-merchant-wounds + .ouw25-sidebar-card {
   margin-block-start: calc(var(--ouw25-sidebar-gap) * 1.2);
 }

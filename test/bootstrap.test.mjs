@@ -1417,6 +1417,17 @@ test("the check cheatsheet lists advantages and complications without interactiv
   assert.doesNotMatch(section, /<(?:input|button|select)\b/);
 });
 
+test("the bargain panel opens the calculator and its reference is inside the dialog", async () => {
+  const sheet = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
+  const dialog = await readFile(new URL("templates/bargain.hbs", dist), "utf8");
+  assert.match(sheet, /<button type="button" class="ouw25-sidebar-card ouw25-bargain-reference" data-action="openBargain"[^>]*\{\{#unless editable\}\}disabled\{\{\/unless\}\}/);
+  assert.doesNotMatch(sheet, /<details class="ouw25-sidebar-card ouw25-bargain-reference"/);
+  for (const key of ["Price", "Payment", "Consequences", "Inflation"]) {
+    assert.match(dialog, new RegExp(`OUW25\\.Bargain\\.${key}`));
+    assert.doesNotMatch(sheet, new RegExp(`OUW25\\.Bargain\\.${key}`));
+  }
+});
+
 test("collision assistant accounts for chosen sources without applying their consequences", async () => {
   const { calculateCollisionAssistant } = await import(new URL("module/collision-assistant.mjs", dist));
   assert.deepEqual(calculateCollisionAssistant({}), { diceCount: 4, deduction: 0, details: [] });

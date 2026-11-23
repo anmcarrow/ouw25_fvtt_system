@@ -803,13 +803,9 @@
       {{/if}}
     </div>
   {{/if}}
-    <details class="ouw25-sidebar-card ouw25-bargain-reference">
-      <summary><span aria-hidden="true">&#x1F9EE;</span> {{localize "OUW25.Bargain.Title"}}</summary>
-      <p>{{localize "OUW25.Bargain.Price"}}</p>
-      <p>{{localize "OUW25.Bargain.Payment"}}</p>
-      <p>{{localize "OUW25.Bargain.Consequences"}}</p>
-      {{#if editable}}<button type="button" data-action="openBargain">{{localize "OUW25.BargainCalc.Open"}}</button>{{/if}}
-    </details>
+    <button type="button" class="ouw25-sidebar-card ouw25-bargain-reference" data-action="openBargain" data-tooltip="{{localize "OUW25.BargainCalc.Open"}}" {{#unless editable}}disabled{{/unless}}>
+      <span aria-hidden="true">&#x1F9EE;</span> {{localize "OUW25.Bargain.Title"}}
+    </button>
   {{#if showCollision}}
     <details class="ouw25-sidebar-card ouw25-collision">
       <summary><span aria-hidden="true">&#x1F630;</span> {{localize "OUW25.Collision.Title"}}</summary>

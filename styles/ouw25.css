@@ -2540,7 +2540,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
   }
 
   body.game .application.ouw25 .dialog-content .ouw25-bargain label > span:not([aria-hidden="true"]) {
-    filter: drop-shadow(2px 3px 0 rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.4));
   }
 }
 
@@ -2599,7 +2599,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-counter input[type="
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-block-start: 5px;
+  margin-block-start: 10px;
   padding: 0.35rem 0.5rem;
   border: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
@@ -2821,7 +2821,7 @@ body.game .application.ouw25 .ouw25-bargain-switch input:focus-visible {
 }
 
 body.game .application.ouw25 .dialog-content fieldset.ouw25-bargain-payment {
-  margin-block-start: 5px;
+  margin-block-start: 10px;
   border: 0;
   border-block-start: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;

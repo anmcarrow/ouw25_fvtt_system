@@ -28,8 +28,8 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
   assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*0\.8em;/s);
   assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*min\(1em, 0\.8rem\);/s);
-  assert.match(styles, /\.ouw25-bargain-price\s*\{[^}]*margin-block-start:\s*5px;/s);
-  assert.match(styles, /fieldset\.ouw25-bargain-payment\s*\{[^}]*margin-block-start:\s*5px;/s);
+  assert.match(styles, /\.ouw25-bargain-price\s*\{[^}]*margin-block-start:\s*10px;/s);
+  assert.match(styles, /fieldset\.ouw25-bargain-payment\s*\{[^}]*margin-block-start:\s*10px;/s);
   assert.match(styles, /\.ouw25-bargain-payment-help > summary::before,\s*\.ouw25-bargain-payment-help > summary::after\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);/s);
 });
 
@@ -99,7 +99,7 @@ test("bargain panels and headings use the accent gradient", async () => {
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(1px 1px 0 rgba\(0, 0, 0, 0\.2\)\);/);
-  assert.match(styles, /\.dialog-content \.ouw25-bargain label > span:not\(\[aria-hidden="true"\]\)\s*\{\s*filter:\s*drop-shadow\(2px 3px 0 rgba\(0, 0, 0, 0\.2\)\);/);
+  assert.match(styles, /\.dialog-content \.ouw25-bargain label > span:not\(\[aria-hidden="true"\]\)\s*\{\s*filter:\s*drop-shadow\(2px 2px 0 rgba\(0, 0, 0, 0\.4\)\);/);
   assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*transform:\s*translate\(1px, 1px\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);

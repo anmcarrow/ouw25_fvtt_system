@@ -28,9 +28,10 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*flex:\s*1 1 0;/s);
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
   assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*0\.8em;/s);
-  assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*min\(1em, 0\.8rem\);/s);
-  assert.match(styles, /\.ouw25-bargain-price\s*\{[^}]*margin-block-start:\s*10px;/s);
-  assert.match(styles, /fieldset\.ouw25-bargain-payment\s*\{[^}]*margin-block-start:\s*10px;/s);
+  assert.match(bargain, /<p data-price><strong data-success-cost><\/strong> <span data-price-details><\/span><\/p>/);
+  assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*1\.1em;/s);
+  assert.match(styles, /\.ouw25-bargain-price\s*\{[^}]*margin-block-start:\s*calc\(20px \+ 0\.6rem\);/s);
+  assert.match(styles, /fieldset\.ouw25-bargain-payment\s*\{[^}]*margin-block-start:\s*calc\(20px \+ 0\.6rem\);/s);
   assert.match(styles, /\.ouw25-bargain-payment-help > summary::before,\s*\.ouw25-bargain-payment-help > summary::after\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);/s);
 });
 
@@ -110,8 +111,8 @@ test("bargain panels and headings use the accent gradient", async () => {
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /\.ouw25-bargain-counter > span,\s*label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(2px 2px 1px rgba\(0, 0, 0, 0\.7\)\);/);
-  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*transform:\s*translate\(2px, 2px\);[^}]*filter:\s*blur\(1px\);/s);
-  assert.match(styles, /\.ouw25-bargain-consequences fieldset > legend::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*filter:\s*blur\(1px\);/s);
+  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*transform:\s*translate\(2px, 2px\);[^}]*filter:\s*blur\(0\.3rem\);/s);
+  assert.match(styles, /\.ouw25-bargain-consequences fieldset > legend::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*filter:\s*blur\(0\.3rem\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
 });

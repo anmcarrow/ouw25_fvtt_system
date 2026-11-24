@@ -1614,6 +1614,8 @@ test("English bargain text uses ampersands", async () => {
   assert.equal(BargainCalc.Budget, "From coop. budget (og.)");
   assert.equal(BargainCalc.NoFriends, "There still no friends in your collection...");
   assert.equal(BargainCalc.NoNewEnemies, "Still no enemies here... Want some?");
+  assert.equal(BargainCalc.SuccessCost, "Success cost: {full} pts.");
+  assert.equal(BargainCalc.PriceSummary, "Complications cancelled: {neutralized}; advantages spent: {spent}, remaining: {remaining}.");
 });
 
 test("bargain dialog orders payment fields and validates contact and partial outcome choices", async () => {
@@ -1653,7 +1655,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
     '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {},
-    "[data-no-enemies]": { setAttribute(name, value) { this[name] = value; } }, "[data-contact-target]": {}, "[data-price]": {},
+    "[data-no-enemies]": { setAttribute(name, value) { this[name] = value; } }, "[data-contact-target]": {},
+    "[data-success-cost]": {}, "[data-price-details]": {},
     "[data-add-enemy]": new EventTarget(),
     "[data-enemy-row]": enemyRow,
     "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
@@ -1681,9 +1684,10 @@ test("bargain dialog orders payment fields and validates contact and partial out
     observe() {}
     disconnect() { this.disconnected = true; }
   };
+  const formatted = new Map();
   globalThis.game = {
     actors: new Map([[actor.id, actor]]), user: {},
-    i18n: { localize: key => key, format: key => key }
+    i18n: { localize: key => key, format: (key, values) => { formatted.set(key, values); return key; } }
   };
   let warning;
   globalThis.ui = { notifications: { warn: value => { warning = value; } } };
@@ -1705,6 +1709,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(elements["[data-no-enemies]"]["aria-hidden"], "false");
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
+      assert.deepEqual(formatted.get("OUW25.BargainCalc.SuccessCost"), { full: 2 });
+      assert.deepEqual(formatted.get("OUW25.BargainCalc.PriceSummary"), { neutralized: 0, spent: 0, remaining: 0 });
       fields.enemies = { value: "0" };
       elements["[data-add-enemy]"].dispatchEvent(new Event("click"));
       assert.equal(fields.enemies.value, "1");
@@ -1735,7 +1741,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
         const original = fields[name];
         fields[name] = { value: "", validity: { badInput: false } };
         form.dispatchEvent(new Event("input"));
-        assert.equal(elements["[data-price]"].textContent, "OUW25.BargainCalc.PriceSummary", name);
+        assert.equal(elements["[data-success-cost]"].textContent, "OUW25.BargainCalc.SuccessCost", name);
+        assert.equal(elements["[data-price-details]"].textContent, "OUW25.BargainCalc.PriceSummary", name);
         assert.equal(elements["[data-summary]"].textContent, "OUW25.BargainCalc.PaymentSummary", name);
         assert.equal(elements["[data-breakdown]"].textContent, "OUW25.BargainCalc.Breakdown", name);
         fields[name] = original;
@@ -1746,6 +1753,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
       form.dispatchEvent(new Event("input"));
       assert.equal(form.error["aria-hidden"], "false");
       assert.equal(form.error.textContent, "OUW25.BargainCalc.Invalid");
+      assert.equal(elements["[data-success-cost]"].textContent, "");
+      assert.equal(elements["[data-price-details]"].textContent, "");
       assert.equal(config.ok.callback(null, { form }), false);
       fields.cash.value = "0";
       fields.cash.validity = { badInput: false };
@@ -1827,6 +1836,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       form.dispatchEvent(new Event("change"));
       assert.equal(consequence.value, "damage");
       assert.equal(config.ok.callback(null, { form }).result.price, 1);
+      assert.deepEqual(formatted.get("OUW25.BargainCalc.SuccessCost"), { full: 2 });
       actor.prototypeToken.texture.src = "tokens/*.webp";
       const oldScrollbar = form.scrollbar;
       const oldBackdrop = form.backdrop;

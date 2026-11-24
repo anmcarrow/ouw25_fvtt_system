@@ -474,9 +474,11 @@ export async function openBargain(actor) {
             const priceIcon = root.querySelector("[data-price-icon]");
             priceIcon.textContent = result.remaining ? "🟠" : "🟢";
             priceIcon.setAttribute("aria-label", game.i18n.localize(`OUW25.BargainCalc.${result.remaining ? "PriceUncovered" : "PriceCovered"}`));
-            root.querySelector("[data-price]").textContent = game.i18n.format("OUW25.BargainCalc.PriceSummary", {
-              neutralized: result.neutralized, spent: result.spentAdvantages, remaining: result.remainingAdvantages,
-              full: result.fullPrice, price: result.price
+            root.querySelector("[data-success-cost]").textContent = game.i18n.format("OUW25.BargainCalc.SuccessCost", {
+              full: result.fullPrice
+            });
+            root.querySelector("[data-price-details]").textContent = game.i18n.format("OUW25.BargainCalc.PriceSummary", {
+              neutralized: result.neutralized, spent: result.spentAdvantages, remaining: result.remainingAdvantages
             });
             root.querySelector("[data-summary]").textContent = game.i18n.format("OUW25.BargainCalc.PaymentSummary", {
               paid: result.paid, remaining: result.remaining, excess: result.excess,
@@ -498,7 +500,8 @@ export async function openBargain(actor) {
             const priceIcon = root.querySelector("[data-price-icon]");
             priceIcon.textContent = "🟠";
             priceIcon.setAttribute("aria-label", game.i18n.localize("OUW25.BargainCalc.PriceUnavailable"));
-            root.querySelector("[data-price]").textContent = "";
+            root.querySelector("[data-success-cost]").textContent = "";
+            root.querySelector("[data-price-details]").textContent = "";
             root.querySelector("[data-summary]").textContent = "";
             root.querySelector("[data-breakdown]").textContent = "";
             showPoints(null);

@@ -22,6 +22,9 @@ function bargainScrollbar(root, form, scrollArea, content) {
   const backdrop = document.createElement("div");
   backdrop.className = "ouw25-bargain-consequences-backdrop";
   backdrop.setAttribute("aria-hidden", "true");
+  const upperBackdrop = document.createElement("div");
+  upperBackdrop.className = "ouw25-bargain-upper-backdrop";
+  upperBackdrop.setAttribute("aria-hidden", "true");
   const track = document.createElement("div");
   const thumb = document.createElement("div");
   track.className = "ouw25-bargain-scrollbar";
@@ -35,12 +38,13 @@ function bargainScrollbar(root, form, scrollArea, content) {
   scrollArea.id ||= `${root.id}-bargain-content`;
   track.setAttribute("aria-controls", scrollArea.id);
   track.append(thumb);
-  viewport.append(backdrop);
+  viewport.append(backdrop, upperBackdrop);
   form.append(track);
 
   const sync = () => {
     const viewportRect = viewport.getBoundingClientRect();
     const consequencesRect = consequences.getBoundingClientRect();
+    upperBackdrop.style.top = `${scrollArea.getBoundingClientRect().top - viewportRect.top - 30 - scrollArea.scrollTop}px`;
     const left = Math.min(-30, consequencesRect.left - viewportRect.left - 30);
     const right = Math.max(viewportRect.width + 30, consequencesRect.right - viewportRect.left + 30);
     const top = consequencesRect.top - viewportRect.top - 15;
@@ -107,6 +111,7 @@ function bargainScrollbar(root, form, scrollArea, content) {
     observer.disconnect();
     scrollArea.removeEventListener("scroll", sync);
     backdrop.remove();
+    upperBackdrop.remove();
     track.remove();
   } };
 }

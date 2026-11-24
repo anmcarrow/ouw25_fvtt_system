@@ -1882,22 +1882,9 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
 }
 
 body.game .application.ouw25 .ouw25-bargain {
-  position: relative;
-  isolation: isolate;
   display: grid;
   gap: 0.6rem;
   color: #e5c998;
-}
-
-body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain::before {
-  content: "";
-  position: absolute;
-  inset: calc(-30px - 0.75rem) calc(-30px - 0.5rem - 12px - 20px) auto calc(-30px - 0.5rem - 20px);
-  height: 110px;
-  z-index: -1;
-  background: rgba(0, 0, 0, 0.2);
-  filter: blur(3px);
-  pointer-events: none;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog {
@@ -2007,6 +1994,16 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer::before {
 
 .ouw25-bargain-consequences-backdrop {
   position: absolute;
+  z-index: 0;
+  background: rgba(0, 0, 0, 0.2);
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.ouw25-bargain-upper-backdrop {
+  position: absolute;
+  inset-inline: -30px;
+  height: 110px;
   z-index: 0;
   background: rgba(0, 0, 0, 0.2);
   filter: blur(3px);
@@ -2248,7 +2245,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
   opacity: 1;
 }
 
-body.game .application.ouw25 .dialog-content .ouw25-bargain-grid label:has(input:is([name="time"], [name="unrest"], [name="budget"])) > span {
+body.game .application.ouw25 .dialog-content .ouw25-bargain-grid > label > span {
   font-size: 0.9em;
 }
 
@@ -2559,6 +2556,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain-outcome > select:disabled {
+  --ouw25-bargain-ink: #715d4b;
   opacity: 1;
 }
 
@@ -2815,6 +2813,8 @@ body.game .application.ouw25 .dialog-content fieldset.ouw25-bargain-payment {
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"] {
+  position: relative;
+  top: -3px;
   flex: 0 0 50%;
   border: 1px solid #220e0a;
   border-radius: 0.45rem;

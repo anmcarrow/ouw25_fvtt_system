@@ -1637,9 +1637,10 @@ test("bargain dialog orders payment fields and validates contact and partial out
     else this.scrollbar = node;
   },
     querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends : [] });
-  const viewport = { append(backdrop) { form.backdrop = backdrop; },
+  const viewport = { append(backdrop, upperBackdrop) { form.backdrop = backdrop; form.upperBackdrop = upperBackdrop; },
     getBoundingClientRect: () => ({ left: 100, top: 100, width: 700, height: 600 }) };
-  const scrollArea = Object.assign(new EventTarget(), { clientHeight: 600, scrollHeight: 600, scrollTop: 0, offsetTop: 0 });
+  const scrollArea = Object.assign(new EventTarget(), { clientHeight: 600, scrollHeight: 600, scrollTop: 0, offsetTop: 0,
+    getBoundingClientRect: () => ({ top: 108 }) });
   const consequencesRect = { left: 150, top: 400, right: 750, bottom: 600 };
   let leader;
   const elements = {
@@ -1698,6 +1699,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.equal(form.scrollbar.hidden, true);
       assert.deepEqual(form.backdrop.style, { left: "-30px", top: "285px", width: "760px", height: "365px" });
+      assert.equal(form.upperBackdrop.style.top, "-22px");
       consequencesRect.top = 350;
       consequencesRect.bottom = 750;
       scrollArea.dispatchEvent(new Event("scroll"));
@@ -1743,6 +1745,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       down.key = "ArrowDown";
       form.scrollbar.dispatchEvent(down);
       assert.equal(scrollArea.scrollTop, 40);
+      assert.equal(form.upperBackdrop.style.top, "-62px");
       assert.equal(form.scrollbar["aria-valuenow"], "40");
       fields.time.value = "2";
       form.dispatchEvent(new Event("input"));
@@ -1803,9 +1806,11 @@ test("bargain dialog orders payment fields and validates contact and partial out
       actor.prototypeToken.texture.src = "tokens/*.webp";
       const oldScrollbar = form.scrollbar;
       const oldBackdrop = form.backdrop;
+      const oldUpperBackdrop = form.upperBackdrop;
       config.render(null, dialog);
       assert.equal(oldScrollbar.removed, true);
       assert.equal(oldBackdrop.removed, true);
+      assert.equal(oldUpperBackdrop.removed, true);
       assert.equal(observers[0].disconnected, true);
       assert.equal(leader.children[0].src, "portrait.webp");
       return null;
@@ -1815,6 +1820,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     await openBargain(actor);
     assert.equal(form.scrollbar.removed, true);
     assert.equal(form.backdrop.removed, true);
+    assert.equal(form.upperBackdrop.removed, true);
     assert.ok(observers.every(observer => observer.disconnected));
   } finally {
     globalThis.game = previous.game;

@@ -15,7 +15,7 @@ test("bargain payment field captions are compact and bold without restyling inpu
   assert.match(bargain, /\{\{#each paymentFields\}\}\s*<label><span>\{\{localize label\}\}<\/span> <input name="\{\{name\}\}"/);
   assert.match(bargain, /name="friend"[^>]*> <span>\{\{name\}\}<\/span>/);
   assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
-  assert.match(styles, /\.ouw25-bargain-grid label:has\(input:is\(\[name="time"\], \[name="unrest"\], \[name="budget"\]\)\) > span\s*\{\s*font-size:\s*0\.9em;/);
+  assert.match(styles, /\.ouw25-bargain-grid > label > span\s*\{\s*font-size:\s*0\.9em;/);
   assert.match(styles, /\.ouw25-bargain-people h5\s*\{\s*font-size:\s*0\.9em;/);
 });
 
@@ -53,7 +53,7 @@ test("bargain outcome selector displays an unavailable placeholder without fadin
   assert.match(bargain, /<option value="custom">\+ \{\{localize "OUW25\.BargainCalc\.Custom"\}\}<\/option>/);
   assert.match(bargain, /&#x2193;<\/span><input name="complications"/);
   assert.match(bargain, /&#x2191;<\/span><input name="advantages"/);
-  assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{\s*opacity:\s*1;/);
+  assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{[^}]*--ouw25-bargain-ink:\s*#715d4b;[^}]*opacity:\s*1;/s);
 });
 
 test("lost friends wrap as checkbox and name pairs", async () => {
@@ -134,7 +134,7 @@ test("bargain consequences backdrop is translucent and non-interactive", () => {
 });
 
 test("bargain upper backdrop scrolls with the content", () => {
-  assert.match(styles, /\.ouw25-bargain-dialog \.ouw25-bargain::before\s*\{[^}]*inset:\s*calc\(-30px - 0\.75rem\)[^}]*height:\s*110px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-bargain-upper-backdrop\s*\{[^}]*inset-inline:\s*-30px;\s*height:\s*110px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
 });
 
 test("bargain headings and labels use the bundled Alice font", async () => {

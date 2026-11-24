@@ -28,7 +28,7 @@ function portrait(actor) {
 export async function openUnluck(actor, draft = null, title = null) {
   if (!eligible(actor, "merchant", "OWNER") || pending.has(actor.uuid)) return;
   pending.add(actor.uuid);
-  let leader = actor, cooperative = null, luck = 0, donations = 0;
+  let leader = actor, cooperative = null, cooperativeManual = false, luck = 0, donations = 0;
   let selectedWounds = new Set();
   const helpers = new Map();
   let snapshot, unregister = () => {}, actorHook, read;
@@ -122,13 +122,28 @@ export async function openUnluck(actor, draft = null, title = null) {
             area.append(label);
           });
         };
+        const selectCooperative = (selected, manual = true) => {
+          cooperative = eligible(selected, "cooperative", "OWNER") ? selected : null;
+          cooperativeManual = manual;
+          if (cooperative && !cooperatives.includes(cooperative)) {
+            cooperatives.push(cooperative);
+            const option = document.createElement("option");
+            option.value = cooperative.id; option.textContent = cooperative.name;
+            form.elements.cooperative.append(option);
+          }
+          form.elements.cooperative.value = cooperative?.id ?? "";
+          snapshot.budget = cooperative?.system.budget;
+          root.querySelector("[data-cooperative]").replaceChildren(...(cooperative ? [portrait(cooperative)] : []));
+          root.querySelector("[data-cooperative-hint]").hidden = Boolean(cooperative);
+          update();
+        };
         const selectLeader = selected => {
           if (!eligible(selected, "merchant")) return;
           leader = selected; luck = 0; selectedWounds = new Set();
-          const matches = cooperatives.filter(item => item.system.founders?.includes(leader.uuid));
-          cooperative = matches.length === 1 ? matches[0] : null;
-          form.elements.cooperative.value = cooperative?.id ?? "";
+          const matches = cooperatives.filter(item => eligible(item, "cooperative", "OWNER")
+            && item.system.founders?.includes(leader.uuid));
           snapshot = checkCostSnapshot(leader, cooperative);
+          selectCooperative(cooperativeManual ? cooperative : matches.length === 1 ? matches[0] : null, cooperativeManual);
           root.querySelector("[data-leader]").replaceChildren(portrait(leader));
           if (helpers.delete(leader.uuid)) showHelpers();
           showWounds(); update();
@@ -148,7 +163,9 @@ export async function openUnluck(actor, draft = null, title = null) {
         const receive = incoming => {
           form.reset();
           luck = 0; donations = 0; selectedWounds = new Set();
+          cooperativeManual = false;
           if (eligible(incoming.leader, "merchant")) selectLeader(incoming.leader);
+          if ("cooperative" in incoming) selectCooperative(incoming.cooperative);
           helpers.clear();
           for (const helper of incoming.helpers ?? []) {
             if (eligible(helper, "merchant") && helper.uuid !== leader.uuid) helpers.set(helper.uuid, helper);
@@ -163,7 +180,7 @@ export async function openUnluck(actor, draft = null, title = null) {
         unregister = registerCollisionWindow(actor, "check", receive);
         root.querySelector("[data-transfer-bargain]").addEventListener("click", () => {
           const values = read();
-          transferCollision(actor, "bargain", { ...values, leader, helpers: [...helpers.values()] }, openBargain);
+          transferCollision(actor, "bargain", { ...values, leader, cooperative, helpers: [...helpers.values()] }, openBargain);
         });
         root.querySelector("[data-luck-minus]").addEventListener("click", () => { luck = Math.max(0, luck - 1); update(); });
         root.querySelector("[data-luck-plus]").addEventListener("click", () => { luck = Math.min(leader.system.luck, luck + 1); update(); });
@@ -182,8 +199,7 @@ export async function openUnluck(actor, draft = null, title = null) {
         root.querySelector("[data-donation-minus]").addEventListener("click", () => { donations = Math.max(0, donations - 1); update(); });
         root.querySelector("[data-donation-plus]").addEventListener("click", () => { donations++; update(); });
         form.elements.cooperative.addEventListener("change", () => {
-          cooperative = cooperatives.find(item => item.id === value("cooperative")) ?? null;
-          snapshot.budget = cooperative?.system.budget; update();
+          selectCooperative(cooperatives.find(item => item.id === value("cooperative")) ?? null);
         });
         form.elements.partial.addEventListener("change", () => {
           if (form.elements.partial.checked && !value("consequence")) {
@@ -201,9 +217,12 @@ export async function openUnluck(actor, draft = null, title = null) {
               const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
               if (data.type !== "Actor") return;
               const dropped = await foundry.documents.Actor.fromDropData(data);
-              if (!eligible(dropped, "merchant")) return;
-              if (zone.dataset.drop === "leader") selectLeader(dropped);
-              else if (dropped.uuid !== leader.uuid) { helpers.set(dropped.uuid, dropped); showHelpers(); }
+              if (zone.dataset.drop === "cooperative") {
+                if (eligible(dropped, "cooperative", "OWNER")) selectCooperative(dropped);
+              } else if (eligible(dropped, "merchant")) {
+                if (zone.dataset.drop === "leader") selectLeader(dropped);
+                else if (dropped.uuid !== leader.uuid) { helpers.set(dropped.uuid, dropped); showHelpers(); }
+              }
             } catch (error) { console.error("OUW25 | Check participant drop failed", error); }
           });
         }
@@ -248,6 +267,7 @@ export async function openUnluck(actor, draft = null, title = null) {
       ["Goal", values.goal || game.i18n.localize("OUW25.BargainCalc.GoalPlaceholder")],
       ["Opponent", values.opponent], ["Leader", roller.name],
       ["Helpers", participants.map(item => item.name).join(", ") || "—"],
+      ["Cooperative", payer?.name || "—"],
       ["PartialConsequence", consequence], ["Complications", calculation.deduction],
       ["Advantages", values.advantages]
     ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));

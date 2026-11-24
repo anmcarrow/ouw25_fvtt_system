@@ -555,6 +555,10 @@ export async function openBargain(actor, draft = null) {
           root.querySelector('[data-drop="helpers"] [data-drop-hint]').hidden = false;
           cooperativeManual = false;
           if (eligible(incoming.leader, "merchant")) selectLeader(incoming.leader);
+          if ("cooperative" in incoming) {
+            selectCooperative(eligible(incoming.cooperative, "cooperative", "OWNER") ? incoming.cooperative : null, true);
+            refreshLocations();
+          }
           for (const helper of incoming.helpers ?? []) addHelper(helper);
           form.elements.goal.value = incoming.goal ?? "";
           form.elements.enemyDescription.value = incoming.opponent ?? "";
@@ -569,7 +573,7 @@ export async function openBargain(actor, draft = null) {
           const values = readValues(form);
           transferCollision(actor, "check", {
             goal: values.goal, opponent: values.enemyDescription, knowOpponent: values.knowOpponent,
-            advantages: values.advantages, complications: values.complications, leader, helpers: [...helpers.values()]
+            advantages: values.advantages, complications: values.complications, leader, cooperative, helpers: [...helpers.values()]
           }, openUnluck);
         });
         form.elements.partial.addEventListener("change", () => {

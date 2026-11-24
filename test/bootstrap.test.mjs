@@ -1613,6 +1613,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
   const actor = { id: "a", uuid: "Actor.a", name: "Merchant", documentName: "Actor", type: "merchant",
     img: "portrait.webp", prototypeToken: { texture: { src: "token.webp" } },
     system: { pocketMoney: 0 }, items: Object.assign([], { get() {} }), testUserPermission: () => true };
+  const cooperative = { id: "c", uuid: "Actor.c", name: "Cooperative", documentName: "Actor", type: "cooperative",
+    system: { budget: 50, unrest: 0, founders: [] }, items: [], testUserPermission: () => true };
   const partial = Object.assign(new EventTarget(), { checked: false });
   const consequence = { value: "unrest", disabled: true };
   const existingDebt = Object.assign(new EventTarget(), { value: "", selectedOptions: [], replaceChildren() {} });
@@ -1640,9 +1642,10 @@ test("bargain dialog orders payment fields and validates contact and partial out
   const scrollArea = Object.assign(new EventTarget(), { clientHeight: 600, scrollHeight: 600, scrollTop: 0, offsetTop: 0,
     getBoundingClientRect: () => ({ top: 108 }) });
   const consequencesRect = { left: 150, top: 400, right: 750, bottom: 600 };
-  let leader;
+  let leader, shownCooperative;
   const elements = {
-    form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
+    form, "[data-leader]": { replaceChildren(child) { leader = child; } },
+    "[data-cooperative]": { replaceChildren(child) { shownCooperative = child; } },
     '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {},
     "[data-helpers]": { replaceChildren() {} }, '[data-drop="helpers"] [data-drop-hint]': { hidden: false },
@@ -1699,6 +1702,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
         assert.equal(fields.advantages.value, "3");
         assert.equal(fields.complications.value, "2");
         assert.equal(fields.knowOpponent.checked, true);
+        assert.equal(shownCooperative.children[1].textContent, "Cooperative");
+        assert.equal(fields.budget.disabled, false);
         return null;
       }
       assert.equal(root.style["--ouw25-bargain-min-height"], "916px");
@@ -1861,7 +1866,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
     assert.equal(form.upperBackdrop.removed, true);
     assert.ok(observers.every(observer => observer.disconnected));
     incomingDraftTest = true;
-    await openBargain(actor, { leader: actor, helpers: [], goal: "Transferred goal", opponent: "Rival",
+    game.actors.set(cooperative.id, cooperative);
+    await openBargain(actor, { leader: actor, cooperative, helpers: [], goal: "Transferred goal", opponent: "Rival",
       knowOpponent: true, advantages: "3", complications: "2" });
   } finally {
     globalThis.game = previous.game;

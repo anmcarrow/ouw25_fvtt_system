@@ -2127,6 +2127,31 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
   padding: 0.4rem;
 }
 
+.ouw25-unluck [data-drop] .ouw25-bargain-participant {
+  max-width: 100%;
+}
+
+.ouw25-unluck [data-drop] .ouw25-bargain-participant img {
+  flex: 0 0 auto;
+}
+
+.ouw25-unluck [data-drop] .ouw25-bargain-participant strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ouw25-unluck-cooperative {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ouw25-unluck-cooperative > [data-drop],
+.ouw25-unluck-cooperative > select {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .ouw25-unluck [data-helpers] {
   margin: 0;
   padding: 0;
@@ -2165,16 +2190,31 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
   min-width: 0;
 }
 
-.ouw25-unluck-counts,
 .ouw25-unluck-resources {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   gap: 0.5rem;
 }
 
+.ouw25-unluck-checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .ouw25-unluck-counts {
+  display: grid;
+  flex: 2 1 25rem;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ouw25-unluck-checks > [data-luck-drop] {
+  flex: 1 1 12rem;
+  min-width: 0;
 }
 
 .ouw25-unluck-counts input {

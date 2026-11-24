@@ -2027,6 +2027,8 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   const actor = { id: "repeat", uuid: "Actor.repeat", name: "Merchant", documentName: "Actor", type: "merchant",
     system: { past: "artist", luck: 2, pocketMoney: 500, wound1: false, wound2: false },
     testUserPermission: () => true };
+  const cooperative = { id: "coop", uuid: "Actor.coop", name: "Coop", documentName: "Actor", type: "cooperative",
+    system: { budget: 179, founders: [actor.uuid] }, testUserPermission: () => true };
   const element = () => Object.assign(new EventTarget(), {
     children: [], dataset: {}, style: { setProperty() {} }, classList: { toggle() {} },
     get childNodes() { return this.children; },
@@ -2067,7 +2069,7 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   globalThis.document = { createElement: element };
   globalThis.Hooks = { on: (_name, callback) => { hook = callback; return callback; }, off() {} };
   globalThis.ui = { notifications: { warn: () => assert.fail("unexpected warning"), error: () => assert.fail("unexpected error") } };
-  globalThis.game = { actors: new Map([[actor.id, actor]]), user: {}, users: [{ id: "gm", isGM: true }],
+  globalThis.game = { actors: new Map([[actor.id, actor], [cooperative.id, cooperative]]), user: {}, users: [{ id: "gm", isGM: true }],
     i18n: { localize: key => key, format: (label, values) => label === "OUW25.Unluck.DonationTotal" ? `${values.amount} og.`
       : label === "OUW25.Unluck.OddsValues" ? oddsLabels[language].OddsValues.replace(/\{(\w+)\}/g, (_, name) => values[name]) : label },
     settings: { get: () => "publicroll" } };
@@ -2104,6 +2106,10 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     form.dispatchEvent(new Event("input"));
     assert.equal(selectors["[data-dice-count]"].textContent, 100);
     assert.equal(selectors["[data-dice-count]"].style.values["--dice-digits"], 3);
+    fields.advantages.value = "97";
+    form.dispatchEvent(new Event("input"));
+    assert.equal(fields.advantages.value, "96");
+    assert.equal(selectors['[data-action="ok"]'].disabled, false);
     fields.advantages.value = "0";
     form.dispatchEvent(new Event("input"));
     assert.equal(selectors["[data-dice-count]"].style.values["--dice-digits"], 1);
@@ -2113,6 +2119,37 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     observer.callback();
     assert.equal(selectors[".ouw25-unluck-status"].style.width, "260px");
     const click = selector => selectors[selector].dispatchEvent(new Event("click"));
+    const plus = selectors["[data-donation-plus]"], minus = selectors["[data-donation-minus]"];
+    assert.equal(plus.disabled, false);
+    assert.equal(minus.disabled, true);
+    click("[data-donation-plus]");
+    click("[data-donation-plus]");
+    click("[data-donation-plus]");
+    assert.equal(selectors["[data-donation-amount]"].textContent, "360 og.");
+    assert.equal(plus.disabled, true);
+    assert.equal(minus.disabled, false);
+    fields.source.value = "budget";
+    form.dispatchEvent(new Event("change"));
+    assert.equal(selectors["[data-donation-amount]"].textContent, "0 og.");
+    assert.equal(plus.disabled, true);
+    assert.equal(minus.disabled, true);
+    cooperative.system.budget = 360;
+    hook(cooperative);
+    click("[data-donation-plus]");
+    click("[data-donation-plus]");
+    assert.equal(selectors["[data-donation-amount]"].textContent, "360 og.");
+    cooperative.system.budget = 180;
+    hook(cooperative);
+    assert.equal(selectors["[data-donation-amount]"].textContent, "180 og.");
+    assert.equal(plus.disabled, true);
+    assert.equal(minus.disabled, false);
+    cooperative.testUserPermission = (_user, permission) => permission !== "OWNER";
+    hook(cooperative);
+    assert.equal(selectors["[data-donation-amount]"].textContent, "0 og.");
+    assert.equal(plus.disabled, true);
+    assert.equal(minus.disabled, true);
+    fields.source.value = "cash";
+    form.dispatchEvent(new Event("change"));
     click("[data-luck-plus]");
     click("[data-donation-plus]");
     const wound = selectors["[data-wounds]"].children[0].children[0];
@@ -2133,6 +2170,8 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     await dialog.options.buttons[0].callback(null, { form });
     assert.equal(actor.system.luck, 0);
     assert.equal(actor.system.pocketMoney, 140);
+    assert.equal(plus.disabled, true);
+    assert.equal(minus.disabled, true);
     assert.equal(updateCount, 2);
     assert.equal(chatCount, 2);
     assert.equal(dialog.rendered, true);

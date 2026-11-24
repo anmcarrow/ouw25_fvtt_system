@@ -2175,6 +2175,7 @@ body.game .application.ouw25.ouw25-unluck-dialog .window-content {
 }
 
 body.game .application.ouw25.ouw25-unluck-dialog .dialog-form {
+  flex: 1 1 auto;
   gap: 0;
 }
 
@@ -2377,7 +2378,7 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-donation select {
   flex-wrap: wrap;
   align-items: stretch;
   gap: 0.5rem calc(1rem + 14px);
-  margin-block: 38px 30px;
+  margin-block: 23px 30px;
 }
 
 .ouw25-unluck-counts {
@@ -2543,6 +2544,11 @@ body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-donation-actions 
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-donation-actions > button:disabled {
+  background: linear-gradient(160deg, #78303b 0%, #4f1725 40%, #2d0b16 100%);
+  filter: brightness(0.5);
 }
 
 .ouw25-unluck-status {

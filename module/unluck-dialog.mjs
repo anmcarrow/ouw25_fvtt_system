@@ -159,7 +159,21 @@ export async function openUnluck(actor, draft = null, title = null) {
           wounds: selectedWounds.size, woundSlots: [...selectedWounds], luck, donations, source: value("source")
         });
         const marks = root.querySelector("[data-luck-marks]");
+        const donationLimit = () => {
+          const source = value("source");
+          const payer = source === "cash" ? leader : source === "budget" ? cooperative : null;
+          const type = source === "cash" ? "merchant" : "cooperative";
+          const balance = source === "cash" ? payer?.system.pocketMoney : payer?.system.budget;
+          return eligible(payer, type, "OWNER") && Number.isSafeInteger(balance) && balance > 0
+            ? Math.min(96, Math.floor(balance / 180)) : 0;
+        };
         const update = () => {
+          const advantages = form.elements.advantages;
+          if (/^\d+$/.test(advantages.value) && Number(advantages.value) > 96) advantages.value = "96";
+          const limit = donationLimit();
+          donations = Math.min(donations, limit);
+          root.querySelector("[data-donation-plus]").disabled = donations >= limit;
+          root.querySelector("[data-donation-minus]").disabled = donations === 0;
           form.elements.consequence.disabled = !form.elements.partial.checked;
           root.querySelector("[data-custom]").hidden = !form.elements.partial.checked || value("consequence") !== "custom";
           root.querySelector("[data-luck-selected]").textContent = luck;
@@ -287,7 +301,10 @@ export async function openUnluck(actor, draft = null, title = null) {
           } catch { /* Ignore unrelated drops. */ }
         });
         root.querySelector("[data-donation-minus]").addEventListener("click", () => { donations = Math.max(0, donations - 1); update(); });
-        root.querySelector("[data-donation-plus]").addEventListener("click", () => { donations++; update(); });
+        root.querySelector("[data-donation-plus]").addEventListener("click", () => {
+          if (donations < donationLimit()) donations++;
+          update();
+        });
         const cooperativeCard = root.querySelector("[data-cooperative]");
         cooperativeCard.addEventListener("click", () => selectCooperative(null));
         cooperativeCard.addEventListener("keydown", event => {

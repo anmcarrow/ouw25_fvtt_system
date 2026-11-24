@@ -1646,7 +1646,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } },
     "[data-cooperative]": { replaceChildren(child) { shownCooperative = child; } },
-    '[data-action="ok"]': { disabled: false },
+    '[data-action="ok"]': { disabled: false, childNodes: [], querySelector() { return null; }, append() {} },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {},
     "[data-helpers]": { replaceChildren() {} }, '[data-drop="helpers"] [data-drop-hint]': { hidden: false },
     "[data-no-enemies]": { setAttribute(name, value) { this[name] = value; } }, "[data-contact-target]": {},

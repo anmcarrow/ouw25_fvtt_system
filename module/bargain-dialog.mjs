@@ -360,6 +360,12 @@ export async function openBargain(actor, draft = null) {
         scrollbar?.destroy();
         scrollbar = bargainScrollbar(root, form, scrollArea, content);
         const submit = root.querySelector('[data-action="ok"]');
+        if (!submit.querySelector(".ouw25-bargain-confirm-label")) {
+          const label = document.createElement("span");
+          label.className = "ouw25-bargain-confirm-label";
+          label.append(...submit.childNodes);
+          submit.append(label);
+        }
         const error = root.querySelector("[data-error]");
         form.append(error);
         const showError = message => {

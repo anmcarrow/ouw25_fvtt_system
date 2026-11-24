@@ -2103,7 +2103,7 @@ body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data
 
 body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check] > span > span {
   position: relative;
-  top: 0;
+  top: 2px;
   background: var(--ouw25-bargain-brass);
   background-clip: text;
   -webkit-background-clip: text;
@@ -3207,12 +3207,29 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-actio
   border-radius: 0.45rem;
   background: linear-gradient(#563025, #351a15 50%, #220e0a);
   color: #f3e5ca;
+  font-family: "Alice", Georgia, serif;
   box-shadow: inset 0 1px 0 rgba(255, 225, 190, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.35), 0 3px 0 #21110d, 0 4px 5px rgba(0, 0, 0, 0.4);
   padding-block-start: 0.225rem;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"]:hover {
   background: linear-gradient(#6c3e32, #48251c 50%, #2e1711);
+}
+
+@supports (background-clip: text) {
+  body.game .application.ouw25.ouw25-bargain-dialog .form-footer .ouw25-bargain-confirm-label {
+    background: var(--ouw25-border-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@media (forced-colors: active) {
+  body.game .application.ouw25.ouw25-bargain-dialog .form-footer .ouw25-bargain-confirm-label {
+    background: none;
+    -webkit-text-fill-color: ButtonText;
+  }
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"]:active {

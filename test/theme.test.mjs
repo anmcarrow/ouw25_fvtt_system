@@ -66,6 +66,9 @@ test("lost friends wrap as checkbox and name pairs", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /class="ouw25-bargain-friends">[\s\S]*?<label><input type="checkbox" name="friend"[^>]*> <span>\{\{name\}\}<\/span><\/label>/);
   assert.match(styles, /\.ouw25-bargain-friends\s*\{[^}]*flex-wrap:\s*wrap;[^}]*gap:\s*0\.3rem 3ch;/s);
+  assert.match(styles, /\.ouw25-bargain-friends label\s*\{[^}]*column-gap:\s*0\.35rem;/s);
+  assert.match(styles, /\.ouw25-bargain-friends input\[type="checkbox"\]\s*\{[^}]*--checkbox-background-color:\s*var\(--ouw25-bargain-ivory\);[^}]*--checkbox-checked-color:\s*var\(--ouw25-bargain-ivory\);/s);
+  assert.match(styles, /\.ouw25-bargain-friends input\[type="checkbox"\]\s*\{[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;[^}]*background:\s*var\(--ouw25-bargain-ivory\);/s);
   assert.match(styles, /\.ouw25-bargain-friends label > span\s*\{\s*font-size:\s*1\.2em;/);
 });
 
@@ -99,9 +102,8 @@ test("bargain panels and headings use the accent gradient", async () => {
     assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
-  assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(1px 1px 0 rgba\(0, 0, 0, 0\.2\)\);/);
-  assert.match(styles, /\.dialog-content \.ouw25-bargain label > span:not\(\[aria-hidden="true"\]\)\s*\{\s*filter:\s*drop-shadow\(2px 2px 0 rgba\(0, 0, 0, 0\.7\)\);/);
-  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*transform:\s*translate\(1px, 1px\);/s);
+  assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(2px 2px 0 rgba\(0, 0, 0, 0\.7\)\);/);
+  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*transform:\s*translate\(2px, 2px\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
 });

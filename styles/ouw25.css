@@ -2066,7 +2066,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   gap: 0.6rem;
   border-block-end: 2px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
   padding-block-end: 0.46rem;
 }
 
@@ -2096,7 +2096,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   border-image: var(--ouw25-border-gradient) 1;
   background: var(--ouw25-bargain-enamel);
   color: var(--ouw25-bargain-ink);
-  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7);
+  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7), 2px 2px 0 rgba(0, 0, 0, 0.7);
   font-size: min(0.8em, 0.8rem);
   overflow-wrap: anywhere;
 }
@@ -2148,7 +2148,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-help > summary > spa
   width: 0.8rem;
   height: 1px;
   background: var(--ouw25-border-gradient);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
   pointer-events: none;
 }
 
@@ -2228,7 +2228,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-help > summary > spa
   border-image: var(--ouw25-border-gradient) 1;
   background: var(--ouw25-bargain-enamel);
   color: var(--ouw25-bargain-ink);
-  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7);
+  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7), 2px 2px 0 rgba(0, 0, 0, 0.7);
   font-family: var(--ouw25-font-body);
   font-size: 0.8em;
   font-weight: normal;
@@ -2301,6 +2301,45 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid > label > span 
   border-image-width: 1px 0 0;
 }
 
+body.game .application.ouw25 .dialog-content .ouw25-bargain-payment,
+body.game .application.ouw25 .dialog-content .ouw25-bargain-consequences fieldset {
+  container-type: inline-size;
+  --ouw25-bargain-shadow-edge: 0px;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-consequences fieldset {
+  --ouw25-bargain-shadow-edge: 1px;
+}
+
+.ouw25-bargain-payment > legend,
+.ouw25-bargain-consequences fieldset > legend {
+  position: relative;
+}
+
+.ouw25-bargain-payment > legend::before,
+.ouw25-bargain-payment > legend::after,
+.ouw25-bargain-consequences fieldset > legend::before,
+.ouw25-bargain-consequences fieldset > legend::after {
+  content: "";
+  position: absolute;
+  top: calc(50% + 2px);
+  height: 1px;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+.ouw25-bargain-payment > legend::before,
+.ouw25-bargain-consequences fieldset > legend::before {
+  right: calc(100% - 2px);
+  width: calc(var(--spacer-16) + var(--ouw25-bargain-shadow-edge));
+}
+
+.ouw25-bargain-payment > legend::after,
+.ouw25-bargain-consequences fieldset > legend::after {
+  left: calc(100% + 2px);
+  width: max(0px, calc(100cqw + var(--spacer-16) + var(--ouw25-bargain-shadow-edge) - 100%));
+}
+
 .ouw25-bargain-debts {
   inset-block-start: -1px;
 }
@@ -2341,7 +2380,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid > label > span 
   width: 0.55rem;
   border-block-start: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
 }
 
 .ouw25-bargain-debts > legend {
@@ -2536,10 +2575,6 @@ body.game .application.ouw25 .ouw25-bargain :is(
     background-image: var(--ouw25-border-gradient);
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.2));
-  }
-
-  body.game .application.ouw25 .dialog-content .ouw25-bargain label > span:not([aria-hidden="true"]) {
     filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.7));
   }
 }
@@ -2605,7 +2640,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-counter input[type="
   border-image: var(--ouw25-border-gradient) 1;
   background: var(--ouw25-bargain-enamel);
   color: var(--ouw25-bargain-ink);
-  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7);
+  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7), 2px 2px 0 rgba(0, 0, 0, 0.7);
 }
 
 .ouw25-bargain-price p {
@@ -2622,13 +2657,44 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-counter input[type="
 .ouw25-bargain-friends label {
   display: inline-flex;
   align-items: center;
+  column-gap: 0.35rem;
   max-width: 100%;
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain-friends input[type="checkbox"] {
-  --checkbox-background-color: var(--ouw25-color-surface);
-  --checkbox-checked-color: var(--ouw25-color-surface);
+  --checkbox-size: calc(var(--font-size-20) - 2px);
+  --checkbox-background-color: var(--ouw25-bargain-ivory);
+  --checkbox-checked-color: var(--ouw25-bargain-ivory);
   --checkbox-checkmark-color: var(--ouw25-color-ink);
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--font-size-20);
+  height: var(--font-size-20);
+  padding: 0;
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  background: var(--ouw25-bargain-ivory);
+  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.4), inset 0 -1px 0 rgba(255, 248, 230, 0.8);
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-friends input[type="checkbox"]::before,
+body.game .application.ouw25 .dialog-content .ouw25-bargain-friends input[type="checkbox"]::after {
+  grid-area: 1 / 1;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-friends input[type="checkbox"]:checked::before {
+  position: relative;
+  z-index: 1;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-friends input[type="checkbox"]:focus-visible {
+  outline: 2px solid #ffecad;
+  outline-offset: 2px;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-friends input[type="checkbox"]:focus-visible::before {
+  outline: none;
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain-friends label > span {
@@ -2662,8 +2728,8 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-friends label > span
 
 .ouw25-bargain-drop::after {
   z-index: -1;
-  background: rgba(0, 0, 0, 0.2);
-  transform: translate(1px, 1px);
+  background: rgba(0, 0, 0, 0.7);
+  transform: translate(2px, 2px);
 }
 
 .ouw25-bargain-drop small {
@@ -2826,7 +2892,7 @@ body.game .application.ouw25 .dialog-content fieldset.ouw25-bargain-payment {
   border-block-start: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   border-radius: 0;
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"] {

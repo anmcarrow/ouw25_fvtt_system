@@ -2540,7 +2540,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
   }
 
   body.game .application.ouw25 .dialog-content .ouw25-bargain label > span:not([aria-hidden="true"]) {
-    filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(2px 3px 0 rgba(0, 0, 0, 0.2));
   }
 }
 

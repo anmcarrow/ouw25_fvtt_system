@@ -1609,7 +1609,7 @@ test("English bargain text uses ampersands", async () => {
   assert.doesNotMatch(JSON.stringify({ Bargain, otherTexts }), /\band\b/i);
   assert.equal(BargainCalc.Traits, "Leader's merits & flaws");
   assert.equal(BargainCalc.CaptainTraits, "Cap'n merits & flaws");
-  assert.equal(BargainCalc.Time, "Octads of prep. (pts.)");
+  assert.equal(BargainCalc.Time, "Time for prep (oct.)");
   assert.equal(BargainCalc.Unrest, "Payment in unrest (pts.)");
   assert.equal(BargainCalc.Budget, "From coop. budget (og.)");
   assert.equal(BargainCalc.NoFriends, "There still no friends in your collection...");

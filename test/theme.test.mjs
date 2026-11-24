@@ -40,6 +40,7 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(bargain, /<p class="ouw25-bargain-empty" data-no-enemies aria-hidden="false"><span>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/span><\/p>/);
   assert.match(bargain, /<p class="ouw25-bargain-empty"><span>\{\{localize "OUW25\.BargainCalc\.NoFriends"\}\}<\/span><\/p>/);
   assert.match(styles, /\.ouw25-bargain-grid\s*\{[^}]*grid-template-columns:[^;]*- 7px[^;]*\+ 7px[^;]*;[^}]*grid-template-rows:\s*repeat\(2,/s);
+  assert.match(styles, /\.ouw25-bargain-consequences\s*\{[^}]*margin-block-start:\s*25px;/s);
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*justify-content:\s*flex-end;/s);
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*gap:\s*0\.28125rem;/s);
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
@@ -99,7 +100,7 @@ test("bargain panels and headings use the accent gradient", async () => {
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(1px 1px 0 rgba\(0, 0, 0, 0\.2\)\);/);
-  assert.match(styles, /\.dialog-content \.ouw25-bargain label > span:not\(\[aria-hidden="true"\]\)\s*\{\s*filter:\s*drop-shadow\(2px 2px 0 rgba\(0, 0, 0, 0\.4\)\);/);
+  assert.match(styles, /\.dialog-content \.ouw25-bargain label > span:not\(\[aria-hidden="true"\]\)\s*\{\s*filter:\s*drop-shadow\(2px 2px 0 rgba\(0, 0, 0, 0\.7\)\);/);
   assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*transform:\s*translate\(1px, 1px\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);

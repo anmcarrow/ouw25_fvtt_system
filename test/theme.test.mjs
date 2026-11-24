@@ -162,7 +162,7 @@ test("bargain consequences backdrop is translucent and non-interactive", () => {
 });
 
 test("bargain upper backdrop scrolls with the content", () => {
-  assert.match(styles, /\.ouw25-bargain-upper-backdrop\s*\{[^}]*inset-inline:\s*-30px;\s*height:\s*97px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-bargain-upper-backdrop\s*\{[^}]*inset-inline:\s*-30px;\s*height:\s*107px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
 });
 
 test("bargain headings and labels use the bundled Alice font", async () => {

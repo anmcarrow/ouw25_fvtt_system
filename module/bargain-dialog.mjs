@@ -47,7 +47,7 @@ function bargainScrollbar(root, form, scrollArea, content) {
     upperBackdrop.style.top = `${scrollArea.getBoundingClientRect().top - viewportRect.top - 30 - scrollArea.scrollTop}px`;
     const left = Math.min(-30, consequencesRect.left - viewportRect.left - 30);
     const right = Math.max(viewportRect.width + 30, consequencesRect.right - viewportRect.left + 30);
-    const top = consequencesRect.top - viewportRect.top - 5;
+    const top = consequencesRect.top - viewportRect.top - 20;
     const bottom = Math.max(viewportRect.height + 30, consequencesRect.bottom - viewportRect.top + 150);
     backdrop.style.left = `${left}px`;
     backdrop.style.top = `${top}px`;

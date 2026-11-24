@@ -1699,13 +1699,13 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.equal(form.scrollbar.hidden, true);
-      assert.deepEqual(form.backdrop.style, { left: "-30px", top: "295px", width: "760px", height: "355px" });
+      assert.deepEqual(form.backdrop.style, { left: "-30px", top: "280px", width: "760px", height: "370px" });
       assert.equal(form.upperBackdrop.style.top, "-22px");
       consequencesRect.top = 350;
       consequencesRect.bottom = 750;
       scrollArea.dispatchEvent(new Event("scroll"));
-      assert.equal(form.backdrop.style.top, "245px");
-      assert.equal(form.backdrop.style.height, "555px");
+      assert.equal(form.backdrop.style.top, "230px");
+      assert.equal(form.backdrop.style.height, "570px");
       consequencesRect.top = 400;
       consequencesRect.bottom = 600;
       for (const name of ["traits", "captainTraits", "time", "unrest", "cash", "budget", "loan", "enemies", "advantages", "complications"]) {

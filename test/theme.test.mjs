@@ -21,6 +21,8 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<\/details>\s*<p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"><\/p>/);
   assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[\s\S]*?BargainCalc\.PaymentHelp[\s\S]*?data-breakdown><\/span>\s*<\/legend>/);
+  assert.match(styles, /\.ouw25-bargain-payment > legend\s*\{[^}]*width:\s*calc\(100% \+ var\(--spacer-16\) - 20px\);[^}]*padding-inline-end:\s*0;/s);
+  assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*flex:\s*1 1 0;/s);
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
   assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*0\.8em;/s);
   assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*min\(1em, 0\.8rem\);/s);

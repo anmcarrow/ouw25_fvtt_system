@@ -2112,7 +2112,10 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  max-width: 100%;
+  box-sizing: border-box;
+  width: calc(100% + var(--spacer-16) - 20px);
+  max-width: none;
+  padding-inline-end: 0;
 }
 
 .ouw25-bargain-payment > legend > span:first-child {
@@ -2122,7 +2125,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
 
 .ouw25-bargain-breakdown {
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   padding: 0.25rem 0.5rem;
   border: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;

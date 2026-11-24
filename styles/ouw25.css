@@ -2769,22 +2769,20 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-friends label > span
   content: "";
   position: absolute;
   inset: -1px;
-  padding: 1px;
   border-radius: inherit;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
   pointer-events: none;
 }
 
 .ouw25-bargain-drop::before {
+  padding: 1px;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
   background: var(--ouw25-border-gradient);
 }
 
 .ouw25-bargain-drop::after {
   z-index: -1;
-  background: rgba(0, 0, 0, 0.7);
-  transform: translate(2px, 2px);
-  filter: blur(0.3rem);
+  box-shadow: 2px 2px 0.3rem rgba(0, 0, 0, 0.7);
 }
 
 .ouw25-bargain-drop small {

@@ -102,8 +102,7 @@ test("bargain panels and headings use the accent gradient", async () => {
   const asset = await readFile(new URL("../dist/ouw25/styles/images/panel1.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;/s);
-  assert.match(styles, /\.ouw25-bargain-drop::before,\s*\.ouw25-bargain-drop::after\s*\{[^}]*mask-composite:\s*exclude;/s);
-  assert.match(styles, /\.ouw25-bargain-drop::before\s*\{\s*background:\s*var\(--ouw25-border-gradient\);/);
+  assert.match(styles, /\.ouw25-bargain-drop::before\s*\{[^}]*mask-composite:\s*exclude;[^}]*background:\s*var\(--ouw25-border-gradient\);/s);
   assert.match(styles, /\.ouw25-bargain-points\s*\{[^}]*background:[^;]*var\(--ouw25-bargain-brass\) border-box;/s);
   for (const selector of ["breakdown", "price"]) {
     assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
@@ -111,7 +110,7 @@ test("bargain panels and headings use the accent gradient", async () => {
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /\.ouw25-bargain-counter > span,\s*label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(2px 2px 1px rgba\(0, 0, 0, 0\.7\)\);/);
-  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*transform:\s*translate\(2px, 2px\);[^}]*filter:\s*blur\(0\.3rem\);/s);
+  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*box-shadow:\s*2px 2px 0\.3rem rgba\(0, 0, 0, 0\.7\);/s);
   assert.match(styles, /\.ouw25-bargain-consequences fieldset > legend::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*filter:\s*blur\(0\.3rem\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);

@@ -58,7 +58,7 @@ test("lost friends wrap as checkbox and name pairs", async () => {
 });
 
 test("bargain dialog scrolls its content while retaining its footer", () => {
-  assert.match(styles, /\.application\.ouw25\.ouw25-bargain-dialog\s*\{\s*min-width:\s*800px;\s*max-width:\s*800px;/);
+  assert.match(styles, /\.application\.ouw25\.ouw25-bargain-dialog\s*\{[^}]*min-width:\s*800px;\s*max-width:\s*800px;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{\s*flex:\s*1 1 auto;/);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*min-height:\s*0;[^}]*overflow-y:\s*auto;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*padding-block-start:\s*0\.75rem;/s);
@@ -77,13 +77,32 @@ test("bargain panels and headings use the accent gradient", async () => {
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;/s);
   assert.match(styles, /\.ouw25-bargain-drop::before\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);[^}]*mask-composite:\s*exclude;/s);
-  assert.match(styles, /\.ouw25-bargain-points\s*\{[^}]*background:[^;]*var\(--ouw25-border-gradient\) border-box;/s);
+  assert.match(styles, /\.ouw25-bargain-points\s*\{[^}]*background:[^;]*var\(--ouw25-bargain-brass\) border-box;/s);
   for (const selector of ["breakdown", "price"]) {
     assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
+});
+
+test("bargain mechanical controls retain distinct states and keyboard focus", async () => {
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.equal((bargain.match(/<summary[^>]*><span aria-hidden="true">\?<\/span><\/summary>/g) ?? []).length, 2);
+  assert.match(styles, /\.ouw25-bargain-help > summary:focus-visible\s*\{[^}]*outline:/s);
+  assert.match(styles, /\.ouw25-bargain-switch input:checked\s*\{[^}]*background:\s*#67734d;/s);
+  assert.match(styles, /\.ouw25-bargain-switch input:checked::before\s*\{[^}]*transform:/s);
+  assert.match(styles, /button\[data-action="ok"\]:active\s*\{[^}]*transform:\s*translateY\(2px\)/s);
+  assert.match(styles, /button\[data-action="ok"\]:focus-visible\s*\{[^}]*outline:/s);
+});
+
+test("bargain warning slides behind the window edge and respects reduced motion", async () => {
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.match(bargain, /data-error role="alert" aria-hidden="true"/);
+  assert.match(styles, /\.ouw25-bargain-error\s*\{[^}]*color:\s*#ff8e60;[^}]*background:\s*linear-gradient\(#48251c, #28120e\);[^}]*font-family:\s*"Alice", Georgia, serif;/s);
+  assert.match(styles, /\.ouw25-bargain-error\s*\{[^}]*border-radius:\s*0 0 0\.5rem 0\.5rem;[^}]*transition:\s*transform 250ms ease/s);
+  assert.match(styles, /\.ouw25-bargain-error\[aria-hidden="true"\]\s*\{[^}]*visibility:\s*hidden;[^}]*transform:\s*translateY\(-100%\)/s);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.ouw25-bargain-error,\s*\.ouw25-bargain-error\[aria-hidden="true"\]\s*\{\s*transition:\s*none;/);
 });
 
 test("bargain consequences backdrop is translucent and non-interactive", () => {
@@ -103,7 +122,7 @@ test("bargain headings and labels use the bundled Alice font", async () => {
 
 test("bargain input fields and options use the bundled Iosevka Charon Mono font", async () => {
   assert.match(styles, /\.dialog-content \.ouw25-bargain :is\(input:not\(\[type="checkbox"\]\)[^{]+\{[^}]*font-family:\s*"Iosevka Charon Mono", monospace;/s);
-  assert.match(styles, /\.dialog-content \.ouw25-bargain select option\s*\{\s*font-family:\s*"Iosevka Charon Mono", monospace;/);
+  assert.match(styles, /\.dialog-content \.ouw25-bargain select option\s*\{[^}]*font-family:\s*"Iosevka Charon Mono", monospace;/s);
   for (const subset of ["cyrillic-ext", "cyrillic", "latin-ext", "latin"]) {
     assert.ok(fontStyles.includes(`./fonts/iosevka-charon-mono-${subset}.woff2`));
     const font = await readFile(new URL(`../dist/ouw25/styles/fonts/iosevka-charon-mono-${subset}.woff2`, import.meta.url));

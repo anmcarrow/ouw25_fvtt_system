@@ -353,6 +353,17 @@ export async function openBargain(actor) {
         scrollbar?.destroy();
         scrollbar = bargainScrollbar(root, form, scrollArea, content);
         const submit = root.querySelector('[data-action="ok"]');
+        const error = root.querySelector("[data-error]");
+        form.append(error);
+        const showError = message => {
+          if (!message) {
+            error.setAttribute("aria-hidden", "true");
+            return;
+          }
+          if (error.getAttribute("aria-hidden") === "true") error.textContent = "";
+          error.setAttribute("aria-hidden", "false");
+          if (error.textContent !== message) error.textContent = message;
+        };
         root.querySelector("[data-leader]").replaceChildren(participant(leader));
         const showCooperative = () => {
           root.querySelector("[data-cooperative]").replaceChildren(...(cooperative ? [participant(cooperative)] : []));
@@ -473,11 +484,9 @@ export async function openBargain(actor) {
             const valid = validatePayment(leader, cooperative, values, snapshot);
             const recordsValid = validateBargainRecords(leader, values);
             const friendsValid = validateBargainFriends(actor, values.friendIds, friends);
-            const error = root.querySelector("[data-error]");
-            error.textContent = !valid ? game.i18n.localize("OUW25.BargainCalc.InvalidPayment")
+            showError(!valid ? game.i18n.localize("OUW25.BargainCalc.InvalidPayment")
               : !recordsValid ? game.i18n.localize("OUW25.BargainCalc.RecordInvalid")
-              : !friendsValid ? game.i18n.localize("OUW25.BargainCalc.FriendsInvalid") : "";
-            error.hidden = !error.textContent;
+              : !friendsValid ? game.i18n.localize("OUW25.BargainCalc.FriendsInvalid") : "");
             submit.disabled = !valid || !recordsValid || !friendsValid || result.remaining > 0 || (values.knowOpponent && !target);
           } catch {
             const priceIcon = root.querySelector("[data-price-icon]");
@@ -487,8 +496,7 @@ export async function openBargain(actor) {
             root.querySelector("[data-summary]").textContent = "";
             root.querySelector("[data-breakdown]").textContent = "";
             showPoints(null);
-            root.querySelector("[data-error]").textContent = game.i18n.localize("OUW25.BargainCalc.Invalid");
-            root.querySelector("[data-error]").hidden = false;
+            showError(game.i18n.localize("OUW25.BargainCalc.Invalid"));
             submit.disabled = true;
           }
           scrollbar.sync();

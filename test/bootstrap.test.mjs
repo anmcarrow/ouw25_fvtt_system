@@ -1628,7 +1628,10 @@ test("bargain dialog orders payment fields and validates contact and partial out
   };
   fields.namedItem = name => fields[name];
   let selectedFriends = [];
-  const form = Object.assign(new EventTarget(), { elements: fields, append(track) { this.scrollbar = track; },
+  const form = Object.assign(new EventTarget(), { elements: fields, append(node) {
+    if (node === elements["[data-error]"]) this.error = node;
+    else this.scrollbar = node;
+  },
     querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends : [] });
   const viewport = { append(backdrop) { form.backdrop = backdrop; },
     getBoundingClientRect: () => ({ left: 100, top: 100, width: 700, height: 600 }) };
@@ -1640,7 +1643,10 @@ test("bargain dialog orders payment fields and validates contact and partial out
     '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
     "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
-    "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {},
+    "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {
+      "aria-hidden": "true", textContent: "",
+      setAttribute(name, value) { this[name] = value; }, getAttribute(name) { return this[name]; }
+    },
     ".dialog-content": scrollArea, ".window-content": viewport, "[data-bargain]": { offsetHeight: 700 },
     ".ouw25-bargain-consequences": { getBoundingClientRect: () => consequencesRect }
   };
@@ -1707,8 +1713,19 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(config.ok.callback(null, { form }).values.cash, "0");
       fields.cash.validity = { badInput: true };
       form.dispatchEvent(new Event("input"));
-      assert.equal(elements["[data-error]"].hidden, false);
+      assert.equal(form.error["aria-hidden"], "false");
+      assert.equal(form.error.textContent, "OUW25.BargainCalc.Invalid");
       assert.equal(config.ok.callback(null, { form }), false);
+      fields.cash.value = "0";
+      fields.cash.validity = { badInput: false };
+      form.dispatchEvent(new Event("input"));
+      assert.equal(form.error["aria-hidden"], "true");
+      assert.equal(form.error.textContent, "OUW25.BargainCalc.Invalid");
+      fields.cash.value = "";
+      fields.cash.validity = { badInput: true };
+      form.dispatchEvent(new Event("input"));
+      assert.equal(form.error["aria-hidden"], "false");
+      assert.equal(form.error.textContent, "OUW25.BargainCalc.Invalid");
       fields.cash.value = "0";
       fields.cash.validity = { badInput: false };
       form.dispatchEvent(new Event("input"));

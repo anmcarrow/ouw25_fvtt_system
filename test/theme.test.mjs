@@ -80,6 +80,14 @@ test("bargain panels and headings use the accent gradient", async () => {
   assert.match(styles, /\.ouw25-bargain-enemies legend label > span[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
 });
 
+test("bargain participant cards use paper and consequence frames share their corner radius", async () => {
+  const asset = await readFile(new URL("../dist/ouw25/styles/images/smallpaper6.webp", import.meta.url));
+  assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+  assert.match(styles, /\.ouw25-bargain-entry\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*background:[^;]*smallpaper6\.webp[^;]*;[^}]*color:\s*var\(--ouw25-color-ink\);/s);
+  assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*border-image-width:\s*1px 0 0;/s);
+  assert.match(styles, /\.ouw25-bargain-consequences fieldset::before\s*\{[^}]*border-radius:\s*inherit;[^}]*mask-composite:\s*exclude;/s);
+});
+
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {
   assert.match(styles, /\.application\.ouw25:has\(\.ouw25-notes\):not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-block-size:\s*60vh;/);
 });

@@ -12,8 +12,8 @@ const CONSEQUENCES = [
   "past", "hidden", "deadline", "responsibility", "bystanders", "grudge"
 ];
 const PAYMENT_FIELDS = [
-  ["traits", "Traits"], ["captainTraits", "CaptainTraits"], ["time", "Time"], ["unrest", "Unrest"],
-  ["cash", "Cash"], ["budget", "Budget"]
+  ["captainTraits", "CaptainTraits"], ["traits", "Traits"], ["time", "Time"], ["unrest", "Unrest"],
+  ["budget", "Budget"], ["cash", "Cash"]
 ];
 
 function bargainScrollbar(root, form, scrollArea, content) {
@@ -289,7 +289,7 @@ export async function openBargain(actor) {
     .map(item => ({ id: item.id, name: item.name }));
   const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
     name, label: `OUW25.BargainCalc.${key}`, value: ["traits", "captainTraits"].includes(name) ? traitCount(actor) : 0
-  })).sort((a, b) => Array.from(game.i18n.localize(b.label)).length - Array.from(game.i18n.localize(a.label)).length);
+  }));
   try {
     const content = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/bargain.hbs", {
       actor, paymentFields, friends, maxEnemies: MAX_ENEMIES,

@@ -1602,7 +1602,7 @@ test("bargain locations combine the 31 Union trading ports with known places wit
   assert.equal(locations.at(-1).toLowerCase(), "новый причал");
 });
 
-test("bargain dialog sorts payment fields and validates contact and partial outcome choices", async () => {
+test("bargain dialog orders payment fields and validates contact and partial outcome choices", async () => {
   const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui,
     getComputedStyle: globalThis.getComputedStyle, ResizeObserver: globalThis.ResizeObserver, random: Math.random };
@@ -1656,9 +1656,8 @@ test("bargain dialog sorts payment fields and validates contact and partial outc
   globalThis.ui = { notifications: { warn: value => { warning = value; } } };
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async (_path, data) => {
-      const lengths = data.paymentFields.map(field => field.label.length);
-      assert.equal(lengths.length, 6);
-      assert.deepEqual(lengths, [...lengths].sort((a, b) => b - a));
+      assert.deepEqual(data.paymentFields.map(field => field.name),
+        ["captainTraits", "traits", "time", "unrest", "budget", "cash"]);
       return "";
     } },
     api: { DialogV2: { input: async config => {

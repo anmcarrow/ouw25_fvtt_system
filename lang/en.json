@@ -738,7 +738,7 @@
       "Manual": "Players record time and other consequences manually. On confirmation, selected lost friends are removed from the initiator's sheet, and money, unrest, the selected loan, new enemies and optional opponent contact are recorded. Only money that pays for whole points is deducted, proportionally from the two sources; the pocket share is rounded down to whole og. Unrest from the bargain cannot be reduced until the collision ends.",
       "PaymentHelp": "How payment consequences are recorded",
       "Traits": "Leader's merits and flaws",
-      "CaptainTraits": "Captain's merits and flaws for the loan",
+      "CaptainTraits": "Cap'n merits and flaws",
       "Time": "Octads of preparation (points)",
       "Unrest": "Payment in unrest (points)",
       "Cash": "From pocket money (og.)",

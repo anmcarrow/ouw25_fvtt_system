@@ -28,13 +28,49 @@ export function renderLuckMarks(marks, luck) {
   marks.classList.toggle("is-empty", luck === 0);
 }
 
+export function reelValues(dice, deduction) {
+  const values = [...dice].sort((a, b) => b - a).slice(0, 3).map(String);
+  if (resolveCollision(dice, deduction).remaining > 3) values[2] = "6+";
+  return values;
+}
+
+function spinReels(root, blind) {
+  const reels = root.querySelectorAll("[data-reel]");
+  const reduced = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  for (const reel of reels) {
+    reel.textContent = blind ? "?" : "—";
+    if (blind || reduced) continue;
+    const strip = document.createElement("div");
+    strip.className = "ouw25-unluck-reel-strip";
+    for (let i = 0; i < 12; i++) {
+      const number = document.createElement("span");
+      number.textContent = String(i % 6 + 1);
+      strip.append(number);
+    }
+    reel.replaceChildren(strip);
+  }
+  return reduced;
+}
+
+async function showReels(root, dice, deduction, blind, reduced) {
+  if (blind || !root.isConnected) return;
+  const reels = root.querySelectorAll("[data-reel]"), values = reelValues(dice, deduction);
+  const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+  if (!reduced) await pause(450);
+  for (let i = 0; i < reels.length && root.isConnected; i++) {
+    reels[i].textContent = values[i] ?? "—";
+    if (!reduced && i < reels.length - 1) await pause(260);
+  }
+  if (root.isConnected) await pause(1000);
+}
+
 export async function openUnluck(actor, draft = null, title = null) {
   if (!eligible(actor, "merchant", "OWNER") || pending.has(actor.uuid)) return;
   pending.add(actor.uuid);
   let leader = actor, cooperative = null, cooperativeManual = false, luck = 0, donations = 0;
   let selectedWounds = new Set();
   const helpers = new Map();
-  let snapshot, unregister = () => {}, actorHook, read;
+  let snapshot, unregister = () => {}, actorHook, read, dialogInstance, root, committed = false, closeInvalid = false;
   try {
     const cooperatives = Array.from(game.actors.values()).filter(item => eligible(item, "cooperative", "OWNER"));
     cooperative = firstFounderCooperative(leader);
@@ -46,23 +82,31 @@ export async function openUnluck(actor, draft = null, title = null) {
     const selection = await foundry.applications.api.DialogV2.input({
       classes: ["ouw25", "ouw25-unluck-dialog"],
       window: { title: game.i18n.format("OUW25.Unluck.WindowTitle", { name: actor.name }), resizable: true },
-      position: { width: 800, height: 800 }, modal: false, content, rejectClose: false,
+      position: { width: 800, height: 800 }, modal: false, content, rejectClose: false, form: { closeOnSubmit: false },
       ok: { label: game.i18n.localize("OUW25.Collision.Roll"), callback: (_event, button) => {
         try {
+          if (committed) return false;
           const form = button.form;
           const values = read(form);
           const calculation = calculateCheck(values);
           const target = values.knowOpponent && cooperative ? contactCooperative(cooperative, leader) : null;
           if (values.knowOpponent && !target) throw new Error("contact");
           checkCostUpdates(leader, cooperative, snapshot, { ...calculation, source: values.source, wounds: values.woundSlots });
+          committed = true;
+          form.inert = true;
+          unregister();
+          unregister = () => {};
           return { values, calculation, leader, cooperative, snapshot, helpers: [...helpers.values()], contact: target };
         } catch {
+          closeInvalid = true;
           ui.notifications.warn(game.i18n.localize("OUW25.Unluck.Invalid"));
           return false;
         }
       } },
       render: (_event, dialog) => {
-        const root = dialog.element, form = root.querySelector("form");
+        dialogInstance = dialog;
+        root = dialog.element;
+        const form = root.querySelector("form");
         const value = name => form.elements.namedItem(name)?.value ?? "";
         const readCount = name => value(name) === "" && !form.elements.namedItem(name).validity?.badInput ? "0" : value(name);
         read = () => ({
@@ -167,6 +211,7 @@ export async function openUnluck(actor, draft = null, title = null) {
           root.querySelector("[data-helper-hint]").hidden = helpers.size > 0;
         };
         const receive = incoming => {
+          if (committed) return;
           form.reset();
           luck = 0; donations = 0; selectedWounds = new Set();
           cooperativeManual = false;
@@ -224,10 +269,12 @@ export async function openUnluck(actor, draft = null, title = null) {
           zone.addEventListener("dragover", event => event.preventDefault());
           zone.addEventListener("drop", async event => {
             event.preventDefault();
+            if (committed) return;
             try {
               const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
               if (data.type !== "Actor") return;
               const dropped = await foundry.documents.Actor.fromDropData(data);
+              if (committed) return;
               if (zone.dataset.drop === "cooperative") {
                 if (eligible(dropped, "cooperative", "OWNER")) selectCooperative(dropped);
               } else if (eligible(dropped, "merchant")) {
@@ -241,7 +288,7 @@ export async function openUnluck(actor, draft = null, title = null) {
         if (draft) { receive(draft); draft = null; }
         if (actorHook !== undefined) Hooks.off("updateActor", actorHook);
         actorHook = Hooks.on("updateActor", changed => {
-          if (changed !== leader && changed !== cooperative) return;
+          if (committed || changed !== leader && changed !== cooperative) return;
           snapshot = checkCostSnapshot(leader, cooperative);
           selectedWounds = new Set([...selectedWounds].filter(slot => !snapshot.wounds[slot - 1]));
           luck = Math.min(luck, leader.system.luck);
@@ -258,7 +305,9 @@ export async function openUnluck(actor, draft = null, title = null) {
       || documents.every(document => document.testUserPermission(user, "OBSERVER"))).map(user => user.id);
     if (!recipients.length) throw new Error("recipients");
     const mode = game.settings.get("core", "messageMode");
-    const roll = await new foundry.dice.Roll(`${calculation.diceCount}d6`).evaluate({ allowInteractive: !["blind", "blindroll"].includes(mode) });
+    const blind = ["blind", "blindroll"].includes(mode);
+    const reduced = spinReels(root, blind);
+    const roll = await new foundry.dice.Roll(`${calculation.diceCount}d6`).evaluate({ allowInteractive: !blind });
     const dice = roll.dice.flatMap(term => term.results.filter(result => result.active).map(result => result.result));
     const remaining = resolveCollision(dice, calculation.deduction).remaining + calculation.luck;
     const outcome = remaining >= 2 ? "Success" : remaining === 1 ? "Partial" : "Failure";
@@ -270,6 +319,7 @@ export async function openUnluck(actor, draft = null, title = null) {
       ui.notifications.error(game.i18n.localize("OUW25.Unluck.CostsFailed"));
       return;
     }
+    await showReels(root, dice, calculation.deduction, blind, reduced);
     const result = game.i18n.format("OUW25.Collision.Result", {
       outcome: game.i18n.localize(`OUW25.Collision.${outcome}`), remaining
     });
@@ -307,6 +357,10 @@ export async function openUnluck(actor, draft = null, title = null) {
   } finally {
     unregister();
     if (actorHook !== undefined) Hooks.off("updateActor", actorHook);
-    pending.delete(actor.uuid);
+    try {
+      if ((committed || closeInvalid) && dialogInstance?.rendered) await dialogInstance.close();
+    } finally {
+      pending.delete(actor.uuid);
+    }
   }
 }

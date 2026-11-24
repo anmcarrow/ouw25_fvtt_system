@@ -2005,6 +2005,15 @@ test("check luck decorations persist across updates and follow the selected coun
   }
 });
 
+test("check reels show the three highest dice and mark excess surviving sixes", async () => {
+  const { reelValues } = await import(new URL("module/unluck-dialog.mjs", dist));
+  const dice = [2, 6, 3, 6, 5, 6, 6];
+  assert.deepEqual(reelValues(dice, 0), ["6", "6", "6+"]);
+  assert.deepEqual(reelValues(dice, 1), ["6", "6", "6"]);
+  assert.deepEqual(reelValues([2, 5, 1, 4], 0), ["5", "4", "2"]);
+  assert.deepEqual(dice, [2, 6, 3, 6, 5, 6, 6]);
+});
+
 test("change-plan hint uses the agreed success threshold", async () => {
   const { hasExcessSuccesses } = await import(new URL("module/collision.mjs", dist));
   assert.equal(hasExcessSuccesses(1, true), false);

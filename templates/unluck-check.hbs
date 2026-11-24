@@ -45,6 +45,11 @@
         <label>{{localize "OUW25.BargainCalc.Complications"}} <input name="complications" type="number" min="0" step="1" value="0"></label>
       </fieldset>
     </div>
+    <div class="ouw25-unluck-reels" data-reels aria-hidden="true">
+      <div class="ouw25-unluck-reel" data-reel>—</div>
+      <div class="ouw25-unluck-reel" data-reel>—</div>
+      <div class="ouw25-unluck-reel" data-reel>—</div>
+    </div>
     <div class="ouw25-unluck-luck" data-luck-drop role="group" aria-label="{{localize "OUW25.Unluck.Luck"}}">
       <div class="ouw25-unluck-luck-display">
         <div class="ouw25-unluck-luck-marks" data-luck-marks aria-hidden="true"></div>
@@ -57,17 +62,17 @@
     </div>
   </div>
   <div class="ouw25-unluck-resources">
-    <fieldset class="ouw25-unluck-donation"><legend>{{localize "OUW25.Unluck.DonationHeading"}} <output data-donation-amount></output></legend>
-      <label><span>{{localize "OUW25.Unluck.DonationSource"}}</span> <select name="source">
+    <fieldset class="ouw25-unluck-donation"><legend>{{localize "OUW25.Unluck.DonationHeading"}} <output class="ouw25-bargain-points ouw25-unluck-donation-total" data-donation-amount></output></legend>
+      <select name="source" aria-label="{{localize "OUW25.Unluck.DonationSource"}}">
         <option value="cash">{{localize "OUW25.Unluck.ByMyself"}}</option>
         <option value="budget">{{localize "OUW25.Unluck.ByCrew"}}</option>
-      </select></label>
+      </select>
       <div class="ouw25-unluck-donation-actions">
-        <output data-donation>+0!</output>
         <div>
           <button type="button" data-donation-plus>{{localize "OUW25.Unluck.DonationMore"}}</button>
           <button type="button" data-donation-minus>{{localize "OUW25.Unluck.DonationLess"}}</button>
         </div>
+        <output data-donation>+0!</output>
       </div>
     </fieldset>
     <div class="ouw25-unluck-status">

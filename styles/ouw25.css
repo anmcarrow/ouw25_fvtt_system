@@ -2132,9 +2132,32 @@ body.game .application.ouw25.ouw25-unluck-dialog .dialog-form {
   min-height: 0;
 }
 
+body.game .application.ouw25.ouw25-unluck-dialog {
+  --ouw25-bargain-brass: linear-gradient(135deg, #70542d 0%, #dfc58b 26%, #98733e 54%, #e8d39e 77%, #6f512b 100%);
+  --ouw25-bargain-ink: #2a211a;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .window-content {
+  background: #c9c9c9;
+}
+
 body.game .application.ouw25.ouw25-unluck-dialog .dialog-content {
   min-height: 0;
   overflow: auto;
+  background: #c9c9c9;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .form-footer {
+  justify-content: center;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .form-footer button[data-action="ok"] {
+  flex: 0 0 100px;
+  width: 100px;
+  height: 100px;
+  padding: 0;
+  border-radius: 50%;
+  font: 36px/1 var(--ouw25-font-heading);
 }
 
 .ouw25-unluck {
@@ -2204,6 +2227,9 @@ body.game .application.ouw25 .ouw25-unluck-people h5 {
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  padding: 0.25rem;
 }
 
 .ouw25-unluck-luck-display {
@@ -2257,17 +2283,17 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-luck-actions > button
   margin-block-start: 0;
 }
 
-.ouw25-unluck-donation > label,
 .ouw25-unluck-counts > label {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.4rem;
   min-width: 0;
 }
 
-.ouw25-unluck-donation select {
-  flex: 1 1 auto;
-  min-width: 0;
+body.game .application.ouw25 .dialog-content .ouw25-unluck-donation select {
+  width: max-content;
+  max-width: 100%;
 }
 
 .ouw25-unluck-resources {
@@ -2290,7 +2316,7 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-luck-actions > button
 }
 
 .ouw25-unluck-counts-group {
-  flex: 2 1 18rem;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -2299,13 +2325,61 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-luck-actions > button
 }
 
 .ouw25-unluck-checks > [data-luck-drop] {
-  flex: 1 1 12rem;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
-.ouw25-unluck-counts input {
-  min-width: 0;
-  flex: 1;
+body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="number"] {
+  width: calc(4ch + 1.8rem);
+  flex: 0 0 calc(4ch + 1.8rem);
+  appearance: auto;
+  -moz-appearance: auto;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="number"]::-webkit-inner-spin-button,
+body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: auto;
+  opacity: 1;
+}
+
+.ouw25-unluck-reels {
+  flex: 1 1 13rem;
+  min-width: min(100%, 13rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.ouw25-unluck-reel {
+  position: relative;
+  height: 7rem;
+  overflow: hidden;
+  border: 2px solid #514738;
+  border-radius: 0.4rem;
+  background: linear-gradient(#a89f8f, #f8f3e7 35%, #f8f3e7 65%, #a89f8f);
+  color: #2a211a;
+  font: 3.5rem/7rem var(--ouw25-font-heading);
+  text-align: center;
+  box-shadow: inset 0 3px 8px #0008;
+}
+
+.ouw25-unluck-reel-strip {
+  position: absolute;
+  inset: 0;
+  animation: ouw25-unluck-spin 0.42s steps(6, end) infinite;
+}
+
+.ouw25-unluck-reel-strip > span {
+  display: block;
+  height: 100%;
+}
+
+@keyframes ouw25-unluck-spin {
+  to { transform: translateY(-600%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ouw25-unluck-reel-strip { animation: none; }
 }
 
 .ouw25-unluck-donation,
@@ -2313,11 +2387,14 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-luck-actions > button
   min-width: 0;
 }
 
-.ouw25-unluck-donation > label + label {
-  margin-block-start: 0.4rem;
-}
-
-.ouw25-unluck-donation > label > span {
+.ouw25-unluck-donation .ouw25-unluck-donation-total {
+  min-width: calc(10ch + 0.8rem);
+  min-height: 2rem;
+  margin-inline-start: 1.2rem;
+  padding-inline: 0.4rem;
+  aspect-ratio: auto;
+  border-radius: 1rem;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 

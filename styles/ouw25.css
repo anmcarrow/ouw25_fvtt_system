@@ -2346,7 +2346,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-consequences fieldse
 }
 
 body.game .application.ouw25 .dialog-content fieldset.ouw25-bargain-debts {
-  padding-block-start: calc(var(--spacer-16) + 6px);
+  padding-block-start: calc(var(--spacer-16) + 7px);
 }
 
 .ouw25-bargain-enemies {
@@ -2463,6 +2463,11 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
   scale: 1;
   rotate: 0deg;
   transition: transform 600ms ease, visibility 0s, scale 150ms ease, rotate 150ms ease;
+}
+
+.ouw25-bargain-empty[data-no-enemies] > span {
+  position: relative;
+  inset-block-start: 4px;
 }
 
 .ouw25-bargain-empty > span:hover:has(> button[data-add-enemy]:not(:disabled)) {

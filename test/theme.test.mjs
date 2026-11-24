@@ -47,7 +47,7 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
   assert.match(styles, /:is\(\.ouw25-bargain-debts > label, \.ouw25-bargain-enemy > label\) > span\s*\{\s*font-size:\s*1em;/);
   assert.match(styles, /\.ouw25-bargain-enemies\s*\{\s*inset-block-start:\s*1px;/);
-  assert.match(styles, /fieldset\.ouw25-bargain-debts\s*\{\s*padding-block-start:\s*calc\(var\(--spacer-16\) \+ 6px\);/);
+  assert.match(styles, /fieldset\.ouw25-bargain-debts\s*\{\s*padding-block-start:\s*calc\(var\(--spacer-16\) \+ 7px\);/);
   assert.match(styles, /\.ouw25-bargain-enemies > \[data-enemy-row\]:first-of-type\s*\{\s*margin-block-start:\s*-17px;/);
   for (const kind of ["loan", "enemies", "friends"]) {
     assert.match(bargain, new RegExp(`<span class="ouw25-bargain-points" data-points="${kind}" role="status"></span>`));
@@ -129,6 +129,7 @@ test("bargain mechanical controls retain distinct states and keyboard focus", as
 });
 
 test("bargain empty states slide out on paper cards and respect reduced motion", () => {
+  assert.match(styles, /\.ouw25-bargain-empty\[data-no-enemies\] > span\s*\{\s*position:\s*relative;\s*inset-block-start:\s*4px;/);
   assert.match(styles, /\.ouw25-bargain-empty > span\s*\{[^}]*smallpaper6\.webp[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*transition:\s*transform 600ms ease/s);
   assert.match(styles, /\.ouw25-bargain-empty\[aria-hidden="true"\] > span\s*\{[^}]*transition:\s*transform 600ms ease, visibility 0s 600ms, scale 150ms ease, rotate 150ms ease;/s);
   assert.match(styles, /\.ouw25-bargain-empty > span:hover:has\(> button\[data-add-enemy\]:not\(:disabled\)\)\s*\{\s*scale:\s*1\.03;\s*rotate:\s*2deg;/);

@@ -1612,7 +1612,8 @@ test("English bargain text uses ampersands", async () => {
   assert.equal(BargainCalc.Time, "Octads of prep. (pts.)");
   assert.equal(BargainCalc.Unrest, "Payment in unrest (pts.)");
   assert.equal(BargainCalc.Budget, "From coop. budget (og.)");
-  assert.equal(BargainCalc.NoFriends, "Apparently, there are no friends here...");
+  assert.equal(BargainCalc.NoFriends, "There still no friends in your collection...");
+  assert.equal(BargainCalc.NoNewEnemies, "Still no enemies here... Want some?");
 });
 
 test("bargain dialog orders payment fields and validates contact and partial outcome choices", async () => {
@@ -1698,13 +1699,13 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.equal(form.scrollbar.hidden, true);
-      assert.deepEqual(form.backdrop.style, { left: "-30px", top: "285px", width: "760px", height: "365px" });
+      assert.deepEqual(form.backdrop.style, { left: "-30px", top: "295px", width: "760px", height: "355px" });
       assert.equal(form.upperBackdrop.style.top, "-22px");
       consequencesRect.top = 350;
       consequencesRect.bottom = 750;
       scrollArea.dispatchEvent(new Event("scroll"));
-      assert.equal(form.backdrop.style.top, "235px");
-      assert.equal(form.backdrop.style.height, "565px");
+      assert.equal(form.backdrop.style.top, "245px");
+      assert.equal(form.backdrop.style.height, "555px");
       consequencesRect.top = 400;
       consequencesRect.bottom = 600;
       for (const name of ["traits", "captainTraits", "time", "unrest", "cash", "budget", "loan", "enemies", "advantages", "complications"]) {

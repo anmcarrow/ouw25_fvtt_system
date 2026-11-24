@@ -16,7 +16,7 @@ test("bargain payment field captions are compact and bold without restyling inpu
   assert.match(bargain, /name="friend"[^>]*> <span>\{\{name\}\}<\/span>/);
   assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
   assert.match(styles, /\.ouw25-bargain-grid > label > span\s*\{\s*font-size:\s*1em;/);
-  assert.match(styles, /\.ouw25-bargain-people h5\s*\{\s*font-size:\s*0\.9em;/);
+  assert.match(styles, /\.ouw25-bargain-people h5\s*\{\s*font-size:\s*var\(--font-size-15, 15px\);/);
 });
 
 test("bargain summary and payment breakdown are alongside their help buttons", async () => {
@@ -28,6 +28,8 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
   assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*0\.8em;/s);
   assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*min\(1em, 0\.8rem\);/s);
+  assert.match(styles, /\.ouw25-bargain-price\s*\{[^}]*margin-block-start:\s*5px;/s);
+  assert.match(styles, /fieldset\.ouw25-bargain-payment\s*\{[^}]*margin-block-start:\s*5px;/s);
   assert.match(styles, /\.ouw25-bargain-payment-help > summary::before,\s*\.ouw25-bargain-payment-help > summary::after\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);/s);
 });
 
@@ -37,7 +39,7 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(bargain, /<legend><label><span>\{\{localize "OUW25\.BargainCalc\.NewEnemies"\}\}<\/span> <input name="enemies"/);
   assert.match(bargain, /<p class="ouw25-bargain-empty" data-no-enemies aria-hidden="false"><span>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/span><\/p>/);
   assert.match(bargain, /<p class="ouw25-bargain-empty"><span>\{\{localize "OUW25\.BargainCalc\.NoFriends"\}\}<\/span><\/p>/);
-  assert.match(styles, /\.ouw25-bargain-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3,[^;]*;[^}]*grid-template-rows:\s*repeat\(2,/s);
+  assert.match(styles, /\.ouw25-bargain-grid\s*\{[^}]*grid-template-columns:[^;]*- 7px[^;]*\+ 7px[^;]*;[^}]*grid-template-rows:\s*repeat\(2,/s);
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*justify-content:\s*flex-end;/s);
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*gap:\s*0\.28125rem;/s);
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
@@ -55,6 +57,8 @@ test("bargain outcome selector displays an unavailable placeholder without fadin
   assert.match(bargain, /&#x2193;<\/span><input name="complications"/);
   assert.match(bargain, /&#x2191;<\/span><input name="advantages"/);
   assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{[^}]*--ouw25-bargain-ink:\s*#715d4b;[^}]*opacity:\s*1;/s);
+  assert.match(styles, /\.ouw25-bargain-counter input\[type="number"\]\s*\{[^}]*width:\s*calc\(3ch \+ 1\.8rem\);[^}]*appearance:\s*auto;/s);
+  assert.match(styles, /\.ouw25-bargain-counter input\[type="number"\]::-webkit-inner-spin-button,[\s\S]*?::-webkit-outer-spin-button\s*\{[^}]*-webkit-appearance:\s*auto;/s);
 });
 
 test("lost friends wrap as checkbox and name pairs", async () => {
@@ -95,6 +99,7 @@ test("bargain panels and headings use the accent gradient", async () => {
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(1px 1px 0 rgba\(0, 0, 0, 0\.2\)\);/);
+  assert.match(styles, /\.dialog-content \.ouw25-bargain label > span:not\(\[aria-hidden="true"\]\)\s*\{\s*filter:\s*drop-shadow\(2px 2px 0 rgba\(0, 0, 0, 0\.2\)\);/);
   assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*transform:\s*translate\(1px, 1px\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
@@ -103,6 +108,8 @@ test("bargain panels and headings use the accent gradient", async () => {
 test("bargain mechanical controls retain distinct states and keyboard focus", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.equal((bargain.match(/<summary[^>]*><span aria-hidden="true">\?<\/span><\/summary>/g) ?? []).length, 2);
+  assert.match(styles, /\.ouw25-bargain-help > summary\s*\{[^}]*color:\s*#20452e;/s);
+  assert.match(styles, /\.ouw25-bargain-help > summary > span\s*\{\s*font-weight:\s*700;/);
   assert.match(styles, /\.ouw25-bargain-help > summary:focus-visible\s*\{[^}]*outline:/s);
   assert.match(styles, /\.ouw25-bargain-switch input:checked\s*\{[^}]*background:\s*#80bb7b;/s);
   assert.match(styles, /\.ouw25-bargain-switch input:checked::before\s*\{[^}]*transform:/s);
@@ -133,7 +140,7 @@ test("bargain consequences backdrop is translucent and non-interactive", () => {
 });
 
 test("bargain upper backdrop scrolls with the content", () => {
-  assert.match(styles, /\.ouw25-bargain-upper-backdrop\s*\{[^}]*inset-inline:\s*-30px;\s*height:\s*100px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-bargain-upper-backdrop\s*\{[^}]*inset-inline:\s*-30px;\s*height:\s*97px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
 });
 
 test("bargain headings and labels use the bundled Alice font", async () => {

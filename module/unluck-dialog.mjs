@@ -1,6 +1,6 @@
 import { calculateCheck, checkProbabilities, hasExcessSuccesses, resolveCollision } from "./collision.mjs";
 import { applyCheckCosts, checkCostSnapshot, checkCostUpdates } from "./check-costs.mjs";
-import { contactCooperative, firstFounderCooperative, recordBargainContact, openBargain } from "./bargain-dialog.mjs";
+import { contactCooperative, firstFounderCooperative, participant, recordBargainContact, openBargain } from "./bargain-dialog.mjs";
 import { registerCollisionWindow, transferCollision } from "./collision-transfer.mjs";
 
 const pending = new Set();
@@ -12,17 +12,20 @@ function eligible(actor, type, permission = "OBSERVER") {
     && actor.testUserPermission(game.user, permission);
 }
 
-function portrait(actor) {
-  const entry = document.createElement("span");
-  entry.className = "ouw25-bargain-participant";
-  const image = document.createElement("img");
-  const src = actor.prototypeToken?.texture?.src;
-  image.src = src && !src.includes("*") ? src : actor.img || "icons/svg/mystery-man.svg";
-  image.alt = "";
-  const name = document.createElement("strong");
-  name.textContent = actor.name;
-  entry.append(image, name);
-  return entry;
+export function renderLuckMarks(marks, luck) {
+  const count = Math.max(1, luck);
+  while (marks.children.length > count) marks.lastElementChild.remove();
+  while (marks.children.length < count) {
+    const mark = document.createElement("span");
+    mark.className = "ouw25-unluck-luck-mark";
+    if (marks.children.length) {
+      const angle = Math.random() * 2 * Math.PI, distance = 20 + Math.random() * 10;
+      mark.style.setProperty("--luck-x", `${Math.cos(angle) * distance}%`);
+      mark.style.setProperty("--luck-y", `${Math.sin(angle) * distance}%`);
+    }
+    marks.append(mark);
+  }
+  marks.classList.toggle("is-empty", luck === 0);
 }
 
 export async function openUnluck(actor, draft = null, title = null) {
@@ -42,14 +45,14 @@ export async function openUnluck(actor, draft = null, title = null) {
     });
     const selection = await foundry.applications.api.DialogV2.input({
       classes: ["ouw25", "ouw25-unluck-dialog"],
-      window: { title: title ?? game.i18n.localize("OUW25.Collision.Title"), resizable: true },
+      window: { title: game.i18n.format("OUW25.Unluck.WindowTitle", { name: actor.name }), resizable: true },
       position: { width: 800, height: 800 }, modal: false, content, rejectClose: false,
       ok: { label: game.i18n.localize("OUW25.Collision.Roll"), callback: (_event, button) => {
         try {
           const form = button.form;
           const values = read(form);
           const calculation = calculateCheck(values);
-          const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
+          const target = values.knowOpponent && cooperative ? contactCooperative(cooperative, leader) : null;
           if (values.knowOpponent && !target) throw new Error("contact");
           checkCostUpdates(leader, cooperative, snapshot, { ...calculation, source: values.source, wounds: values.woundSlots });
           return { values, calculation, leader, cooperative, snapshot, helpers: [...helpers.values()], contact: target };
@@ -69,12 +72,14 @@ export async function openUnluck(actor, draft = null, title = null) {
           advantages: readCount("advantages"), complications: readCount("complications"),
           wounds: selectedWounds.size, woundSlots: [...selectedWounds], luck, donations, source: value("source")
         });
+        const marks = root.querySelector("[data-luck-marks]");
         const update = () => {
           form.elements.consequence.disabled = !form.elements.partial.checked;
           root.querySelector("[data-custom]").hidden = !form.elements.partial.checked || value("consequence") !== "custom";
-          root.querySelector("[data-luck-available]").textContent = game.i18n.format("OUW25.Unluck.LuckAvailable", { count: leader.system.luck });
           root.querySelector("[data-luck-selected]").textContent = luck;
-          root.querySelector("[data-donation]").textContent = game.i18n.format("OUW25.Unluck.DonationAmount", { amount: donations * 180, dice: donations });
+          renderLuckMarks(marks, luck);
+          root.querySelector("[data-donation-amount]").textContent = game.i18n.format("OUW25.Unluck.DonationTotal", { amount: donations * 180 });
+          root.querySelector("[data-donation]").textContent = `+${donations}!`;
           const error = root.querySelector("[data-check-error]");
           const submit = root.querySelector('[data-action="ok"]');
           try {
@@ -89,7 +94,7 @@ export async function openUnluck(actor, draft = null, title = null) {
               success: (odds.Success * 100).toFixed(1)
             }) : game.i18n.localize("OUW25.Unluck.OddsBroken");
             try {
-              if (values.knowOpponent && !contactCooperative(cooperative, leader)) throw new Error("contact");
+              if (values.knowOpponent && (!cooperative || !contactCooperative(cooperative, leader))) throw new Error("contact");
               checkCostUpdates(leader, cooperative, snapshot, { ...calc, source: values.source, wounds: values.woundSlots });
             } catch {
               error.textContent = game.i18n.localize("OUW25.Unluck.Invalid");
@@ -115,25 +120,27 @@ export async function openUnluck(actor, draft = null, title = null) {
               if (input.checked) selectedWounds.add(index + 1); else selectedWounds.delete(index + 1);
               update();
             });
-            label.append(input, document.createTextNode(game.i18n.format(
+            const description = game.i18n.format(
               index + 1 === snapshot.wounds.length ? "OUW25.Condition.LethalWound" : "OUW25.Condition.Wound",
               { slot: index + 1 }
-            )));
+            );
+            input.setAttribute("aria-label", description);
+            input.dataset.tooltip = description;
+            label.append(input);
+            if (index + 1 === snapshot.wounds.length) {
+              const icon = document.createElement("span");
+              icon.textContent = "💀";
+              icon.setAttribute("aria-hidden", "true");
+              label.append(icon);
+            }
             area.append(label);
           });
         };
         const selectCooperative = (selected, manual = true) => {
           cooperative = eligible(selected, "cooperative") ? selected : null;
           cooperativeManual = manual;
-          if (cooperative && !cooperatives.includes(cooperative)) {
-            cooperatives.push(cooperative);
-            const option = document.createElement("option");
-            option.value = cooperative.id; option.textContent = cooperative.name;
-            form.elements.cooperative.append(option);
-          }
-          form.elements.cooperative.value = cooperative?.id ?? "";
           snapshot.budget = cooperative?.system.budget;
-          root.querySelector("[data-cooperative]").replaceChildren(...(cooperative ? [portrait(cooperative)] : []));
+          root.querySelector("[data-cooperative]").replaceChildren(...(cooperative ? [participant(cooperative)] : []));
           root.querySelector("[data-cooperative-hint]").hidden = Boolean(cooperative);
           update();
         };
@@ -142,7 +149,7 @@ export async function openUnluck(actor, draft = null, title = null) {
           leader = selected; luck = 0; selectedWounds = new Set();
           snapshot = checkCostSnapshot(leader, cooperative);
           selectCooperative(cooperativeManual ? cooperative : firstFounderCooperative(leader), cooperativeManual);
-          root.querySelector("[data-leader]").replaceChildren(portrait(leader));
+          root.querySelector("[data-leader]").replaceChildren(participant(leader));
           if (helpers.delete(leader.uuid)) showHelpers();
           showWounds(); update();
         };
@@ -151,7 +158,8 @@ export async function openUnluck(actor, draft = null, title = null) {
           for (const helper of helpers.values()) {
             const item = document.createElement("li"), button = document.createElement("button");
             button.type = "button";
-            button.append(portrait(helper), document.createTextNode(" ×"));
+            button.className = "ouw25-bargain-entry";
+            button.append(participant(helper), document.createTextNode(" ×"));
             button.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.RemoveHelper", { name: helper.name }));
             button.addEventListener("click", () => { helpers.delete(helper.uuid); showHelpers(); });
             item.append(button); list.append(item);
@@ -196,8 +204,13 @@ export async function openUnluck(actor, draft = null, title = null) {
         });
         root.querySelector("[data-donation-minus]").addEventListener("click", () => { donations = Math.max(0, donations - 1); update(); });
         root.querySelector("[data-donation-plus]").addEventListener("click", () => { donations++; update(); });
-        form.elements.cooperative.addEventListener("change", () => {
-          selectCooperative(cooperatives.find(item => item.id === value("cooperative")) ?? null);
+        const cooperativeCard = root.querySelector("[data-cooperative]");
+        cooperativeCard.addEventListener("click", () => selectCooperative(null));
+        cooperativeCard.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectCooperative(null);
+          }
         });
         form.elements.partial.addEventListener("change", () => {
           if (form.elements.partial.checked && !value("consequence")) {
@@ -232,6 +245,7 @@ export async function openUnluck(actor, draft = null, title = null) {
           snapshot = checkCostSnapshot(leader, cooperative);
           selectedWounds = new Set([...selectedWounds].filter(slot => !snapshot.wounds[slot - 1]));
           luck = Math.min(luck, leader.system.luck);
+          root.querySelector("[data-leader]").replaceChildren(participant(leader));
           showWounds(); update();
         });
       }

@@ -4,63 +4,74 @@
     <p data-check-summary role="status"></p>
     <button type="button" data-transfer-bargain>{{localize "OUW25.Unluck.ToBargain"}}</button>
   </div>
-  <div class="ouw25-unluck-people">
-    <fieldset><legend>{{localize "OUW25.BargainCalc.Leader"}}</legend>
-      <div data-drop="leader" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Leader"}}"><span data-leader></span></div>
-    </fieldset>
-    <fieldset><legend>{{localize "OUW25.BargainCalc.Helpers"}}</legend>
-      <div data-drop="helpers" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Helpers"}}"><span data-helper-hint>{{localize "OUW25.BargainCalc.DropHelpers"}}</span><ul data-helpers></ul></div>
-    </fieldset>
-    <fieldset><legend>{{localize "OUW25.BargainCalc.Cooperative"}}</legend>
-      <div class="ouw25-unluck-cooperative">
-        <div data-drop="cooperative" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Cooperative"}}" data-tooltip="{{localize "OUW25.BargainCalc.DropCooperative"}}">
-          <span data-cooperative></span><span data-cooperative-hint>{{localize "OUW25.Unluck.NoCooperative"}}</span>
-        </div>
-        <select name="cooperative" aria-label="{{localize "OUW25.Unluck.Cooperative"}}"><option value="">{{localize "OUW25.Unluck.NoCooperative"}}</option>{{#each cooperatives}}<option value="{{id}}">{{name}}</option>{{/each}}</select>
+  <div class="ouw25-unluck-people ouw25-bargain-people">
+    <section>
+      <h5>{{localize "OUW25.BargainCalc.Leader"}}</h5>
+      <div class="ouw25-bargain-drop" data-drop="leader" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Leader"}}" data-tooltip="{{localize "OUW25.BargainCalc.DropLeader"}}"><span class="ouw25-bargain-entry" data-leader></span></div>
+    </section>
+    <section>
+      <h5>{{localize "OUW25.BargainCalc.Helpers"}}</h5>
+      <div class="ouw25-bargain-drop" data-drop="helpers" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Helpers"}}" data-tooltip="{{localize "OUW25.BargainCalc.DropHelpers"}}"><small data-helper-hint>{{localize "OUW25.BargainCalc.DropHelpers"}}</small><ul data-helpers></ul></div>
+    </section>
+    <section>
+      <h5>{{localize "OUW25.BargainCalc.Cooperative"}}</h5>
+      <div class="ouw25-bargain-drop" data-drop="cooperative" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Cooperative"}}" data-tooltip="{{localize "OUW25.BargainCalc.DropCooperative"}}">
+        <span class="ouw25-bargain-entry" data-cooperative role="button" tabindex="0" aria-label="{{localize "OUW25.Unluck.RemoveCooperative"}}" data-tooltip="{{localize "OUW25.Unluck.RemoveCooperative"}}"></span>
+        <small data-cooperative-hint>{{localize "OUW25.BargainCalc.DropCooperative"}}</small>
       </div>
-    </fieldset>
+    </section>
   </div>
-  <div class="ouw25-unluck-goal">
-    <label><span>{{localize "OUW25.BargainCalc.GoalLabel"}}</span> <input name="goal" type="text" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}"></label>
-    <label><span>{{localize "OUW25.BargainCalc.Opponent"}}</span> <input name="opponent" type="text" placeholder="{{localize "OUW25.BargainCalc.DefaultOpponent"}}"></label>
-    <label><span>{{localize "OUW25.BargainCalc.KnowOpponent"}}</span> <input name="knowOpponent" type="checkbox" role="switch"></label>
-    <label><span>{{localize "OUW25.BargainCalc.PartialSwitch"}}</span> <input name="partial" type="checkbox" role="switch"></label>
-    <label><span>{{localize "OUW25.BargainCalc.PartialConsequence"}}</span> <select name="consequence" disabled>
+  <div class="ouw25-bargain-goal">
+    <label class="ouw25-bargain-goal-field"><span>{{localize "OUW25.BargainCalc.GoalLabel"}}:</span> <input name="goal" type="text" placeholder="{{localize "OUW25.BargainCalc.GoalPlaceholder"}}"></label>
+    <div class="ouw25-bargain-opponent">
+      <label class="ouw25-bargain-goal-field"><span>{{localize "OUW25.BargainCalc.Opponent"}}:</span> <input name="opponent" type="text" placeholder="{{localize "OUW25.BargainCalc.DefaultOpponent"}}"></label>
+      <label class="ouw25-bargain-switch"><span>{{localize "OUW25.BargainCalc.KnowOpponent"}}</span> <input name="knowOpponent" type="checkbox" role="switch" aria-label="{{localize "OUW25.BargainCalc.KnowOpponent"}}"></label>
+    </div>
+  </div>
+  <div class="ouw25-bargain-outcome ouw25-unluck-outcome">
+    <label class="ouw25-bargain-switch"><span>{{localize "OUW25.BargainCalc.PartialSwitch"}}</span> <input name="partial" type="checkbox" role="switch" aria-label="{{localize "OUW25.BargainCalc.Partial"}}"></label>
+    <select name="consequence" aria-label="{{localize "OUW25.BargainCalc.PartialConsequence"}}" data-tooltip="{{localize "OUW25.BargainCalc.PartialConsequence"}}" disabled>
       <option value="">{{localize "OUW25.BargainCalc.NotApplicable"}}</option>
       {{#each consequences}}<option value="{{id}}">{{localize label}}</option>{{/each}}
       <option value="custom">{{localize "OUW25.BargainCalc.Custom"}}</option>
-    </select></label>
-    <label data-custom hidden><span>{{localize "OUW25.BargainCalc.CustomDescription"}}</span> <input name="custom" type="text"></label>
+    </select>
   </div>
+  <label data-custom hidden><span>{{localize "OUW25.BargainCalc.CustomDescription"}}</span> <input name="custom" type="text"></label>
   <div class="ouw25-unluck-checks">
-    <div class="ouw25-unluck-counts">
-      <label>{{localize "OUW25.BargainCalc.Advantages"}} <input name="advantages" type="number" min="0" max="96" step="1" value="0"></label>
-      <label>{{localize "OUW25.BargainCalc.Complications"}} <input name="complications" type="number" min="0" step="1" value="0"></label>
-      <div>{{localize "OUW25.Collision.Dice"}} <output data-dice-count>4</output></div>
+    <div class="ouw25-unluck-counts-group">
+      <p>{{localize "OUW25.Unluck.DiceTotal"}} <output data-dice-count>4</output></p>
+      <fieldset class="ouw25-unluck-counts" aria-label="{{localize "OUW25.Unluck.Modifiers"}}">
+        <label>{{localize "OUW25.BargainCalc.Advantages"}} <input name="advantages" type="number" min="0" max="96" step="1" value="0"></label>
+        <label>{{localize "OUW25.BargainCalc.Complications"}} <input name="complications" type="number" min="0" step="1" value="0"></label>
+      </fieldset>
     </div>
-    <fieldset data-luck-drop><legend>{{localize "OUW25.Unluck.Luck"}}</legend>
-      <div class="ouw25-unluck-luck">
-        <output data-luck-available></output>
-        <button type="button" data-luck-minus aria-label="{{localize "OUW25.Unluck.LuckLess"}}">−</button>
-        <output data-luck-selected>0</output>
-        <button type="button" data-luck-plus aria-label="{{localize "OUW25.Unluck.LuckMore"}}">+</button>
+    <div class="ouw25-unluck-luck" data-luck-drop role="group" aria-label="{{localize "OUW25.Unluck.Luck"}}">
+      <div class="ouw25-unluck-luck-display">
+        <div class="ouw25-unluck-luck-marks" data-luck-marks aria-hidden="true"></div>
+        <output data-luck-selected aria-label="{{localize "OUW25.Unluck.Luck"}}">0</output>
       </div>
-    </fieldset>
+      <div class="ouw25-unluck-luck-actions">
+        <button type="button" data-luck-plus aria-label="{{localize "OUW25.Unluck.LuckMore"}}">+</button>
+        <button type="button" data-luck-minus aria-label="{{localize "OUW25.Unluck.LuckLess"}}">−</button>
+      </div>
+    </div>
   </div>
   <div class="ouw25-unluck-resources">
-    <fieldset class="ouw25-unluck-donation"><legend>{{localize "OUW25.Unluck.Donation"}}</legend>
+    <fieldset class="ouw25-unluck-donation"><legend>{{localize "OUW25.Unluck.DonationHeading"}} <output data-donation-amount></output></legend>
       <label><span>{{localize "OUW25.Unluck.DonationSource"}}</span> <select name="source">
-        <option value="cash">{{localize "OUW25.BargainCalc.Cash"}}</option>
-        <option value="budget">{{localize "OUW25.BargainCalc.Budget"}}</option>
+        <option value="cash">{{localize "OUW25.Unluck.ByMyself"}}</option>
+        <option value="budget">{{localize "OUW25.Unluck.ByCrew"}}</option>
       </select></label>
       <div class="ouw25-unluck-donation-actions">
-        <button type="button" data-donation-minus>{{localize "OUW25.Unluck.DonationLess"}}</button>
-        <button type="button" data-donation-plus>{{localize "OUW25.Unluck.DonationMore"}}</button>
-        <output data-donation>0</output>
+        <output data-donation>+0!</output>
+        <div>
+          <button type="button" data-donation-plus>{{localize "OUW25.Unluck.DonationMore"}}</button>
+          <button type="button" data-donation-minus>{{localize "OUW25.Unluck.DonationLess"}}</button>
+        </div>
       </div>
     </fieldset>
     <div class="ouw25-unluck-status">
-      <fieldset><legend>{{localize "OUW25.Unluck.Wounds"}}</legend><div data-wounds></div></fieldset>
+      <fieldset><legend>{{localize "OUW25.Unluck.WoundsHeading"}}</legend><div data-wounds></div></fieldset>
       <fieldset><legend>{{localize "OUW25.Unluck.Odds"}}</legend><p data-odds role="status"></p></fieldset>
     </div>
   </div>

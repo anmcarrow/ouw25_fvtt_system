@@ -124,7 +124,7 @@ function traitCount(actor) {
     && Object.values(MERCHANT_TRAITS).some(codes => codes.includes(item.system.code))).length;
 }
 
-function participant(actor) {
+export function participant(actor) {
   const element = document.createElement("span");
   element.className = "ouw25-bargain-participant";
   const portrait = document.createElement("img");

@@ -1951,7 +1951,7 @@ test("check includes its first viewable founder cooperative even without ownersh
   const first = makeCooperative("first", false), second = makeCooperative("second", true);
   let choices;
   globalThis.game = { actors: new Map([leader, first, second].map(actor => [actor.id, actor])),
-    user: {}, i18n: { localize: key => key } };
+    user: {}, i18n: { localize: key => key, format: key => key } };
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async (_path, data) => { choices = data.cooperatives; return ""; } },
     api: { DialogV2: { input: async () => null } }
@@ -1963,6 +1963,45 @@ test("check includes its first viewable founder cooperative even without ownersh
   } finally {
     globalThis.game = previous.game;
     globalThis.foundry = previous.foundry;
+  }
+});
+
+test("check luck decorations persist across updates and follow the selected count", async () => {
+  const { renderLuckMarks } = await import(new URL("module/unluck-dialog.mjs", dist));
+  const previous = globalThis.document;
+  const marks = {
+    children: [], empty: false,
+    append(mark) { this.children.push(mark); },
+    get lastElementChild() { return this.children.at(-1); },
+    classList: { toggle(_name, empty) { marks.empty = empty; } }
+  };
+  globalThis.document = { createElement: () => ({
+    style: { values: {}, setProperty(key, value) { this.values[key] = value; } },
+    remove() { marks.children.splice(marks.children.indexOf(this), 1); }
+  }) };
+  try {
+    renderLuckMarks(marks, 0);
+    assert.equal(marks.children.length, 1);
+    assert.equal(marks.empty, true);
+    const first = marks.children[0];
+    renderLuckMarks(marks, 1);
+    assert.equal(marks.children[0], first);
+    assert.equal(marks.empty, false);
+    renderLuckMarks(marks, 3);
+    const second = marks.children[1], third = marks.children[2];
+    for (const mark of [second, third]) {
+      const x = parseFloat(mark.style.values["--luck-x"]), y = parseFloat(mark.style.values["--luck-y"]);
+      assert.ok(Math.hypot(x, y) >= 19.999999 && Math.hypot(x, y) <= 30.000001);
+    }
+    renderLuckMarks(marks, 3);
+    assert.equal(marks.children[1], second);
+    assert.equal(marks.children[2], third);
+    renderLuckMarks(marks, 1);
+    assert.deepEqual(marks.children, [first]);
+    renderLuckMarks(marks, 0);
+    assert.equal(marks.empty, true);
+  } finally {
+    globalThis.document = previous;
   }
 });
 

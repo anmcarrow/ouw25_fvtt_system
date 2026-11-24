@@ -2139,7 +2139,7 @@ body.game .application.ouw25.ouw25-unluck-dialog .dialog-content {
 
 .ouw25-unluck {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
 
 .ouw25-unluck-toolbar {
@@ -2163,16 +2163,23 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
   width: auto;
 }
 
-.ouw25-unluck-people {
-  display: grid;
+.ouw25-unluck .ouw25-unluck-people {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  gap: 0.5rem;
+  margin-block: 0.6rem 0.2rem;
 }
 
-.ouw25-unluck [data-drop] {
-  min-height: 3rem;
-  border: 1px dashed currentColor;
-  padding: 0.4rem;
+body.game .application.ouw25 .ouw25-unluck-people h5 {
+  font-family: "Alice", Georgia, serif;
+  color: #edcd79;
+}
+
+@supports (background-clip: text) {
+  body.game .application.ouw25 .ouw25-unluck-people h5 {
+    background-image: var(--ouw25-border-gradient);
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(2px 2px 1px rgba(0, 0, 0, 0.7));
+  }
 }
 
 .ouw25-unluck [data-drop] .ouw25-bargain-participant {
@@ -2188,42 +2195,68 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
   overflow-wrap: anywhere;
 }
 
-.ouw25-unluck-cooperative {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.ouw25-unluck-cooperative > [data-drop],
-.ouw25-unluck-cooperative > select {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.ouw25-unluck [data-helpers] {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.ouw25-unluck [data-cooperative]:not(:empty) {
+  cursor: pointer;
 }
 
 .ouw25-unluck-luck {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  gap: 0.25rem;
 }
 
-.ouw25-unluck-luck [data-luck-available] {
-  flex: 0 0 100%;
-}
-
-.ouw25-unluck-goal {
+.ouw25-unluck-luck-display {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-  gap: 0.4rem;
+  place-items: center;
+  width: 8rem;
+  height: 7rem;
+  isolation: isolate;
 }
 
-.ouw25-unluck-goal > label:not([hidden]),
+.ouw25-unluck-luck-marks {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ouw25-unluck-luck-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5rem;
+  aspect-ratio: 1;
+  background: url("./images/lucky_point_clean.webp") center / contain no-repeat;
+  transform: translate(calc(-50% + var(--luck-x, 0%)), calc(-50% + var(--luck-y, 0%)));
+}
+
+.ouw25-unluck-luck-marks.is-empty {
+  opacity: 0.2;
+}
+
+.ouw25-unluck-luck-display output {
+  font: 3.5rem/1 "Limelight", var(--ouw25-font-accent);
+  color: #edcd79;
+  text-shadow: 1px 1px 3px #000;
+}
+
+.ouw25-unluck-luck-actions {
+  display: grid;
+  gap: 0.2rem;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-unluck-luck-actions > button {
+  width: 2rem;
+  padding: 0.25rem;
+}
+
+.ouw25-unluck .ouw25-unluck-outcome {
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin-block-start: 0;
+}
+
 .ouw25-unluck-donation > label,
 .ouw25-unluck-counts > label {
   display: flex;
@@ -2232,7 +2265,6 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
   min-width: 0;
 }
 
-.ouw25-unluck-goal :is(input:not([type="checkbox"]), select),
 .ouw25-unluck-donation select {
   flex: 1 1 auto;
   min-width: 0;
@@ -2253,11 +2285,17 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
 
 .ouw25-unluck-counts {
   display: grid;
-  flex: 2 1 25rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-  align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   min-width: 0;
+}
+
+.ouw25-unluck-counts-group {
+  flex: 2 1 18rem;
+  min-width: 0;
+}
+
+.ouw25-unluck-counts-group > p {
+  margin: 0 0 0.25rem;
 }
 
 .ouw25-unluck-checks > [data-luck-drop] {
@@ -2267,6 +2305,7 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
 
 .ouw25-unluck-counts input {
   min-width: 0;
+  flex: 1;
 }
 
 .ouw25-unluck-donation,
@@ -2284,10 +2323,20 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
 
 .ouw25-unluck-donation-actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   margin-block-start: 0.4rem;
+}
+
+.ouw25-unluck-donation-actions > output {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.ouw25-unluck-donation-actions > div {
+  display: grid;
+  gap: 0.2rem;
 }
 
 .ouw25-unluck-status {

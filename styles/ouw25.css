@@ -1923,6 +1923,17 @@ body.game .application.ouw25.ouw25-bargain-dialog .window-content {
   background: #355253 url("./images/panel1.webp") center top / 100% auto no-repeat;
 }
 
+body.game .application.ouw25.ouw25-bargain-dialog .window-content::before {
+  content: "";
+  position: absolute;
+  inset: -30px -30px auto;
+  height: 85px;
+  z-index: 0;
+  background: rgba(0, 0, 0, 0.2);
+  filter: blur(3px);
+  pointer-events: none;
+}
+
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
   flex: 1 1 auto;
   position: relative;
@@ -1979,13 +1990,13 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer {
   z-index: 1;
   justify-content: center;
   padding-inline: calc(0.5rem + 20px) calc(0.5rem + 12px + 20px);
-  padding-block-end: 1.5rem;
+  padding-block-end: 0.5rem;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer::before {
   content: "";
   position: absolute;
-  inset: -0.5rem -0.5rem -0.5rem;
+  inset: -0.125rem -0.5rem -0.5rem;
   z-index: -1;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.2), transparent 40px), url("./images/panel2.webp") center top / 100% auto no-repeat, #263c34;
   box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.35);
@@ -2235,6 +2246,10 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
   opacity: 1;
 }
 
+body.game .application.ouw25 .dialog-content .ouw25-bargain-grid label:has(input:is([name="time"], [name="unrest"], [name="budget"])) > span {
+  font-size: 0.9em;
+}
+
 .ouw25-bargain-consequences {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2370,9 +2385,54 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
 }
 
 .ouw25-bargain-enemy[hidden],
-.ouw25-bargain-enemies [data-no-enemies][hidden],
 .ouw25-bargain-debts [data-new-creditor][hidden] {
   display: none;
+}
+
+.ouw25-bargain-empty {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  margin: 0;
+  transition: grid-template-rows 300ms ease;
+}
+
+.ouw25-bargain-empty > span {
+  display: block;
+  min-height: 0;
+  justify-self: start;
+  margin: 0.25rem 0;
+  padding: 0.25rem 0.7rem 0.25rem 0.35rem;
+  border-radius: 0.25rem;
+  background: var(--ouw25-color-paper) url("./images/smallpaper6.webp") center / cover no-repeat;
+  color: var(--ouw25-color-ink);
+  visibility: visible;
+  transform: translateX(0);
+  transition: transform 300ms ease, visibility 0s;
+}
+
+.ouw25-bargain-empty[aria-hidden="true"] {
+  grid-template-rows: minmax(0, 0fr);
+  pointer-events: none;
+}
+
+.ouw25-bargain-empty[aria-hidden="true"] > span {
+  visibility: hidden;
+  transform: translateX(800px);
+  transition: transform 300ms ease, visibility 0s 300ms;
+}
+
+@starting-style {
+  .ouw25-bargain-empty:not([aria-hidden="true"]) > span {
+    transform: translateX(800px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ouw25-bargain-empty,
+  .ouw25-bargain-empty > span,
+  .ouw25-bargain-empty[aria-hidden="true"] > span {
+    transition: none;
+  }
 }
 
 .ouw25-bargain-debt-row > select,
@@ -2456,7 +2516,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type
 }
 
 body.game .application.ouw25 .ouw25-bargain-people h5 {
-  font-size: 0.8em;
+  font-size: 0.9em;
   margin: 0 0 0.25rem;
 }
 
@@ -2720,7 +2780,7 @@ body.game .application.ouw25 .ouw25-bargain-switch input::before {
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input:checked {
-  background: #ff8e60;
+  background: #80bb7b;
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input::after,

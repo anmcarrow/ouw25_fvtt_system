@@ -1609,6 +1609,9 @@ test("English bargain text uses ampersands", async () => {
   assert.doesNotMatch(JSON.stringify({ Bargain, otherTexts }), /\band\b/i);
   assert.equal(BargainCalc.Traits, "Leader's merits & flaws");
   assert.equal(BargainCalc.CaptainTraits, "Cap'n merits & flaws");
+  assert.equal(BargainCalc.Time, "Octads of prep. (pts.)");
+  assert.equal(BargainCalc.Unrest, "Payment in unrest (pts.)");
+  assert.equal(BargainCalc.Budget, "From coop. budget (og.)");
 });
 
 test("bargain dialog orders payment fields and validates contact and partial outcome choices", async () => {
@@ -1641,7 +1644,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
     '[data-action="ok"]': { disabled: false },
-    "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
+    "[data-custom]": { hidden: true }, "[data-new-creditor]": {},
+    "[data-no-enemies]": { setAttribute(name, value) { this[name] = value; } }, "[data-contact-target]": {}, "[data-price]": {},
     "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {
       "aria-hidden": "true", textContent: "",
@@ -1688,7 +1692,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(leader.children[0].src, "token.webp");
       assert.equal(fields.budget.disabled, true);
       assert.equal(fields.unrest.disabled, true);
-      assert.equal(elements["[data-no-enemies]"].hidden, false);
+      assert.equal(elements["[data-no-enemies]"]["aria-hidden"], "false");
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.equal(form.scrollbar.hidden, true);
@@ -1746,14 +1750,14 @@ test("bargain dialog orders payment fields and validates contact and partial out
       elements["[data-bargain]"].offsetHeight = 1200;
       form.dispatchEvent(new Event("input"));
       assert.equal(root.style["--ouw25-bargain-min-height"], "916px");
-      assert.equal(elements["[data-no-enemies]"].hidden, true);
+      assert.equal(elements["[data-no-enemies]"]["aria-hidden"], "true");
       assert.equal(badges[1].textContent, 3);
       fields.enemies.value = "0";
       fields.captainTraits = { value: "2" };
       fields.loan = { value: "10000" };
       selectedFriends = [{ value: "friend" }];
       form.dispatchEvent(new Event("input"));
-      assert.equal(elements["[data-no-enemies]"].hidden, false);
+      assert.equal(elements["[data-no-enemies]"]["aria-hidden"], "false");
       assert.deepEqual(badges.map(badge => badge.textContent), [1, 0, 4]);
       fields.captainTraits.value = "0";
       form.dispatchEvent(new Event("input"));

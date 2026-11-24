@@ -455,7 +455,7 @@ export async function openBargain(actor) {
           const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
           form.elements.consequence.disabled = !values.partial;
           root.querySelector("[data-custom]").hidden = !values.partial || values.consequence !== "custom";
-          root.querySelector("[data-no-enemies]").hidden = values.enemies !== "0";
+          root.querySelector("[data-no-enemies]").setAttribute("aria-hidden", String(values.enemies !== "0"));
           root.querySelectorAll("[data-enemy-row]").forEach((row, index) => {
             row.hidden = index >= Number(values.enemies) || index >= MAX_ENEMIES;
           });

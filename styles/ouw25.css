@@ -2066,13 +2066,17 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   gap: 0.6rem;
   border-block-end: 2px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
-  box-shadow: 2px 2px 0.3rem rgba(0, 0, 0, 0.7);
+  box-shadow: 2px -2px 0.3rem rgba(0, 0, 0, 0.7);
   padding-block-end: 0.46rem;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check] {
   flex: 0 0 auto;
   width: auto;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check]:hover:not(:disabled) {
+  filter: brightness(1.08) drop-shadow(0 -2px 2px rgba(55, 15, 0, 0.18));
 }
 
 body.game .application.ouw25.ouw25-unluck-dialog .window-content,
@@ -2243,7 +2247,7 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-ba
   border-image: var(--ouw25-border-gradient) 1;
   background: var(--ouw25-bargain-enamel);
   color: var(--ouw25-bargain-ink);
-  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7), 2px 2px 0.3rem rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0 2px 4px rgba(42, 33, 26, 0.35), inset 0 -1px 0 rgba(255, 248, 230, 0.7), 2px -2px 0.3rem rgba(0, 0, 0, 0.7);
   font-size: min(0.8em, 0.8rem);
   overflow-wrap: anywhere;
 }
@@ -2272,6 +2276,14 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-help > summary > spa
 .ouw25-bargain-help > summary:active {
   transform: translateY(1px);
   box-shadow: inset 0 1px 2px rgba(42, 33, 26, 0.45), 0 1px 0 #58432c;
+}
+
+.ouw25-bargain-toolbar .ouw25-bargain-help > summary {
+  box-shadow: inset 0 1px 1px #fff8e9, 0 -2px 0 #58432c, 0 -3px 4px rgba(0, 0, 0, 0.4);
+}
+
+.ouw25-bargain-toolbar .ouw25-bargain-help > summary:active {
+  box-shadow: inset 0 1px 2px rgba(42, 33, 26, 0.45), 0 -1px 0 #58432c;
 }
 
 .ouw25-bargain-help > summary:focus-visible {
@@ -3062,6 +3074,10 @@ body.game .application.ouw25 .ouw25-bargain-switch input::before {
   background: linear-gradient(135deg, #fff5dc, #c8b793);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   transition: transform 0.15s;
+}
+
+body.game .application.ouw25 .ouw25-bargain-toolbar .ouw25-bargain-switch input::before {
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.45);
 }
 
 body.game .application.ouw25 .ouw25-bargain-switch input:checked {

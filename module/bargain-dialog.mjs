@@ -326,7 +326,7 @@ export async function openBargain(actor) {
         title: game.i18n.localize("OUW25.Bargain.Title"),
         initiator: game.i18n.localize("OUW25.BargainCalc.Initiator"), name: actor.name
       }), resizable: true },
-      position: { width: 800, height: 800 }, modal: false, content, rejectClose: false,
+      position: { width: 800, height: 700 }, modal: false, content, rejectClose: false,
       ok: { label: game.i18n.localize("OUW25.BargainCalc.Confirm"), callback: (_event, button) => {
         try {
           const values = readValues(button.form);
@@ -487,7 +487,8 @@ export async function openBargain(actor) {
             if (result.moneyPayment.unspent) {
               root.querySelector("[data-summary]").textContent += ` ${game.i18n.format("OUW25.BargainCalc.MoneyUsed", result.moneyPayment)}`;
             }
-            root.querySelector("[data-breakdown]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", { ...result.contributions, sum: result.paid });
+            root.querySelector("[data-breakdown-total]").textContent = game.i18n.format("OUW25.BargainCalc.BreakdownTotal", { sum: result.paid });
+            root.querySelector("[data-breakdown-details]").textContent = game.i18n.format("OUW25.BargainCalc.Breakdown", result.contributions);
             showPoints(result.contributions);
             const valid = validatePayment(leader, cooperative, values, snapshot);
             const recordsValid = validateBargainRecords(leader, values);
@@ -503,7 +504,8 @@ export async function openBargain(actor) {
             root.querySelector("[data-success-cost]").textContent = "";
             root.querySelector("[data-price-details]").textContent = "";
             root.querySelector("[data-summary]").textContent = "";
-            root.querySelector("[data-breakdown]").textContent = "";
+            root.querySelector("[data-breakdown-total]").textContent = "";
+            root.querySelector("[data-breakdown-details]").textContent = "";
             showPoints(null);
             showError(game.i18n.localize("OUW25.BargainCalc.Invalid"));
             submit.disabled = true;

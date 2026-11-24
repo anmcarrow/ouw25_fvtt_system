@@ -23,7 +23,7 @@ test("bargain payment field captions are compact and bold without restyling inpu
 test("bargain summary and payment breakdown are alongside their help buttons", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<\/details>\s*<p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"><\/p>/);
-  assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[\s\S]*?BargainCalc\.PaymentHelp[\s\S]*?data-breakdown><\/span>\s*<\/legend>/);
+  assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[\s\S]*?BargainCalc\.PaymentHelp[\s\S]*?data-breakdown><strong data-breakdown-total><\/strong><span data-breakdown-details><\/span><\/span>\s*<\/legend>/);
   assert.match(styles, /\.ouw25-bargain-payment > legend\s*\{[^}]*width:\s*calc\(100% \+ var\(--spacer-16\) - 20px\);[^}]*padding-inline-end:\s*0;/s);
   assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*flex:\s*1 1 0;/s);
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
@@ -93,7 +93,7 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer::before\s*\{[^}]*inset:\s*-0\.125rem -0\.5rem -0\.5rem;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer::before\s*\{[^}]*linear-gradient\(to top, rgba\(0, 0, 0, 0\.2\), transparent 40px\)[^}]*panel2\.webp[^}]*box-shadow:/s);
   assert.match(styles, /button\[data-action="ok"\]\s*\{[^}]*flex:\s*0 0 50%;/s);
-  assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height/);
+  assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height, 0px\), 700px,/);
   assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{[^}]*background:[^;]*panel1\.webp[^;]*100% auto no-repeat;/s);
   assert.match(styles, /\.ouw25-bargain-scrollbar-thumb\s*\{[^}]*background:/s);
 });

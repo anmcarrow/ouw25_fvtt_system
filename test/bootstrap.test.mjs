@@ -1660,7 +1660,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     "[data-add-enemy]": new EventTarget(),
     "[data-enemy-row]": enemyRow,
     "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
-    "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {
+    "[data-summary]": {}, "[data-breakdown-total]": {}, "[data-breakdown-details]": {}, "[data-error]": {
       "aria-hidden": "true", textContent: "",
       setAttribute(name, value) { this[name] = value; }, getAttribute(name) { return this[name]; }
     },
@@ -1698,6 +1698,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       return "";
     } },
     api: { DialogV2: { input: async config => {
+      assert.equal(config.position.height, 700);
       let positions = 0;
       const dialog = { element: root, setPosition() { positions++; } };
       config.render(null, dialog);
@@ -1711,6 +1712,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.deepEqual(formatted.get("OUW25.BargainCalc.SuccessCost"), { full: 2 });
       assert.deepEqual(formatted.get("OUW25.BargainCalc.PriceSummary"), { neutralized: 0, spent: 0, remaining: 0 });
+      assert.deepEqual(formatted.get("OUW25.BargainCalc.BreakdownTotal"), { sum: formatted.get("OUW25.BargainCalc.PaymentSummary").paid });
       fields.enemies = { value: "0" };
       elements["[data-add-enemy]"].dispatchEvent(new Event("click"));
       assert.equal(fields.enemies.value, "1");
@@ -1744,7 +1746,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
         assert.equal(elements["[data-success-cost]"].textContent, "OUW25.BargainCalc.SuccessCost", name);
         assert.equal(elements["[data-price-details]"].textContent, "OUW25.BargainCalc.PriceSummary", name);
         assert.equal(elements["[data-summary]"].textContent, "OUW25.BargainCalc.PaymentSummary", name);
-        assert.equal(elements["[data-breakdown]"].textContent, "OUW25.BargainCalc.Breakdown", name);
+        assert.equal(elements["[data-breakdown-total]"].textContent, "OUW25.BargainCalc.BreakdownTotal", name);
+        assert.equal(elements["[data-breakdown-details]"].textContent, "OUW25.BargainCalc.Breakdown", name);
         fields[name] = original;
       }
       fields.cash.value = "";
@@ -1755,6 +1758,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(form.error.textContent, "OUW25.BargainCalc.Invalid");
       assert.equal(elements["[data-success-cost]"].textContent, "");
       assert.equal(elements["[data-price-details]"].textContent, "");
+      assert.equal(elements["[data-breakdown-total]"].textContent, "");
+      assert.equal(elements["[data-breakdown-details]"].textContent, "");
       assert.equal(config.ok.callback(null, { form }), false);
       fields.cash.value = "0";
       fields.cash.validity = { badInput: false };

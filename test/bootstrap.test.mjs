@@ -2039,7 +2039,8 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   const selectors = {
     form, "[data-custom]": {}, "[data-luck-marks]": element(), "[data-luck-selected]": {},
     "[data-donation-amount]": {}, "[data-check-error]": {},
-    '[data-action="ok"]': {}, "[data-dice-count]": {}, "[data-check-summary]": {}, "[data-odds]": {},
+    '[data-action="ok"]': {}, "[data-dice-count]": { style: { values: {}, setProperty(name, value) { this.values[name] = value; } } },
+    "[data-odds]": {},
     "[data-wounds]": element(), "[data-cooperative]": element(), "[data-cooperative-hint]": {},
     "[data-leader]": element(), "[data-helpers]": element(), "[data-helper-hint]": {},
     "[data-transfer-bargain]": element(), "[data-luck-minus]": element(), "[data-luck-plus]": element(),
@@ -2091,6 +2092,13 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     language = 1;
     form.dispatchEvent(new Event("input"));
     assert.equal(selectors["[data-odds]"].textContent, "48.2% / 38.6% / 13.2%");
+    fields.advantages.value = "96";
+    form.dispatchEvent(new Event("input"));
+    assert.equal(selectors["[data-dice-count]"].textContent, 100);
+    assert.equal(selectors["[data-dice-count]"].style.values["--dice-digits"], 3);
+    fields.advantages.value = "0";
+    form.dispatchEvent(new Event("input"));
+    assert.equal(selectors["[data-dice-count]"].style.values["--dice-digits"], 1);
     assert.equal(observer.target, selectors[".ouw25-unluck-donation"]);
     assert.notEqual(observer.disconnected, true);
     donationWidth = 260;
@@ -2128,13 +2136,14 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   }
 });
 
-test("check reels show the three highest dice and mark excess surviving sixes", async () => {
+test("check reels show the four highest dice and mark excess surviving sixes", async () => {
   const { reelValues } = await import(new URL("module/unluck-dialog.mjs", dist));
-  const dice = [2, 6, 3, 6, 5, 6, 6];
-  assert.deepEqual(reelValues(dice, 0), ["6", "6", "6+"]);
-  assert.deepEqual(reelValues(dice, 1), ["6", "6", "6"]);
-  assert.deepEqual(reelValues([2, 5, 1, 4], 0), ["5", "4", "2"]);
-  assert.deepEqual(dice, [2, 6, 3, 6, 5, 6, 6]);
+  const dice = [2, 6, 3, 6, 5, 6, 6, 6];
+  assert.deepEqual(reelValues(dice, 0), ["6", "6", "6", "6+"]);
+  assert.deepEqual(reelValues(dice, 1), ["6", "6", "6", "6"]);
+  assert.deepEqual(reelValues(dice, 2), ["6", "6", "6", "6"]);
+  assert.deepEqual(reelValues([2, 5, 1, 4], 0), ["5", "4", "2", "1"]);
+  assert.deepEqual(dice, [2, 6, 3, 6, 5, 6, 6, 6]);
 });
 
 test("change-plan hint uses the agreed success threshold", async () => {

@@ -818,7 +818,7 @@
       "Open": "Open (un)luck check",
       "WindowTitle": "(Un)lucky Gambler – {name}",
       "Help": "Agree on the goal, risks, advantages & complications. Roll 4d6 plus advantages; each complication removes one six. Two remaining sixes are a full success, one is partial, & none is failure. Luck marks add guaranteed successes.",
-      "ToBargain": "Dramatic bargain",
+      "ToBargain": "Buy Successes",
       "ToCheck": "(Un)lucky gamble",
       "Luck": "Luck marks to spend",
       "LuckAvailable": "Available: {count}",

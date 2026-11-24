@@ -29,8 +29,8 @@ export function renderLuckMarks(marks, luck) {
 }
 
 export function reelValues(dice, deduction) {
-  const values = [...dice].sort((a, b) => b - a).slice(0, 3).map(String);
-  if (resolveCollision(dice, deduction).remaining > 3) values[2] = "6+";
+  const values = [...dice].sort((a, b) => b - a).slice(0, 4).map(String);
+  if (resolveCollision(dice, deduction).remaining > 4) values[3] = "6+";
   return values;
 }
 
@@ -83,7 +83,7 @@ export async function openUnluck(actor, draft = null, title = null) {
     const config = {
       classes: ["ouw25", "ouw25-unluck-dialog"],
       window: { title: game.i18n.format("OUW25.Unluck.WindowTitle", { name: actor.name }), resizable: true },
-      position: { width: 800, height: 800 }, modal: false, content, form: { closeOnSubmit: false },
+      position: { width: 622, height: 800 }, modal: false, content, form: { closeOnSubmit: false },
       buttons: [{ action: "ok", default: true, label: game.i18n.localize("OUW25.Collision.Roll"), callback: async (_event, button) => {
         if (committed) return;
         const form = button.form;
@@ -161,10 +161,9 @@ export async function openUnluck(actor, draft = null, title = null) {
           const submit = root.querySelector('[data-action="ok"]');
           try {
             const values = read(), calc = calculateCheck(values);
-            root.querySelector("[data-dice-count]").textContent = calc.diceCount;
-            root.querySelector("[data-check-summary]").textContent = game.i18n.format("OUW25.Unluck.Summary", {
-              dice: calc.diceCount, deduction: calc.deduction, luck: calc.luck
-            });
+            const diceCount = root.querySelector("[data-dice-count]");
+            diceCount.textContent = calc.diceCount;
+            diceCount.style.setProperty("--dice-digits", String(calc.diceCount).length);
             const odds = checkProbabilities(calc.diceCount, calc.deduction, calc.luck);
             root.querySelector("[data-odds]").textContent = odds ? game.i18n.format("OUW25.Unluck.OddsValues", {
               failure: (odds.Failure * 100).toFixed(1), partial: (odds.Partial * 100).toFixed(1),

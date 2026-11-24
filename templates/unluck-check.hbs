@@ -1,8 +1,10 @@
 <section class="ouw25-unluck" data-unluck>
   <div class="ouw25-unluck-toolbar">
-    <details><summary aria-label="{{localize "OUW25.CheckAssistant.Title"}}">?</summary><p>{{localize "OUW25.Unluck.Help"}}</p></details>
-    <p data-check-summary role="status"></p>
-    <button type="button" data-transfer-bargain>{{localize "OUW25.Unluck.ToBargain"}}</button>
+    <details class="ouw25-bargain-help">
+      <summary data-tooltip="{{localize "OUW25.CheckAssistant.Title"}}" aria-label="{{localize "OUW25.CheckAssistant.Title"}}"><span aria-hidden="true">?</span></summary>
+      <div class="ouw25-bargain-help-content"><p>{{localize "OUW25.Unluck.Help"}}</p></div>
+    </details>
+    <button type="button" data-transfer-bargain><span>{{localize "OUW25.Unluck.ToBargain"}}</span></button>
   </div>
   <div class="ouw25-unluck-people ouw25-bargain-people">
     <section>
@@ -48,6 +50,7 @@
       <div class="ouw25-unluck-reel" data-reel>—</div>
       <div class="ouw25-unluck-reel" data-reel>—</div>
       <div class="ouw25-unluck-reel" data-reel>—</div>
+      <div class="ouw25-unluck-reel" data-reel>—</div>
     </div>
     <div class="ouw25-unluck-luck" data-luck-drop role="group" aria-label="{{localize "OUW25.Unluck.Luck"}}">
       <div class="ouw25-unluck-luck-display">
@@ -80,7 +83,7 @@
       <output data-dice-count aria-label="{{localize "OUW25.Unluck.DiceTotal"}}">4</output>
     </div>
     <div class="ouw25-unluck-status">
-      <fieldset><legend><span class="ouw25-bargain-points ouw25-unluck-heading">{{localize "OUW25.Unluck.WoundsHeading"}}</span></legend><div class="ouw25-wound-slots" data-wounds></div></fieldset>
+      <fieldset><legend><span class="ouw25-bargain-points ouw25-unluck-heading">{{localize "OUW25.Unluck.WoundsHeading"}}</span></legend><div class="ouw25-unluck-wound-art"><div class="ouw25-wound-slots" data-wounds></div></div></fieldset>
       <fieldset><legend><span class="ouw25-bargain-points ouw25-unluck-heading">{{localize "OUW25.Unluck.Odds"}}</span></legend><p data-odds role="status"></p></fieldset>
     </div>
   </div>

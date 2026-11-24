@@ -70,7 +70,7 @@ export async function openUnluck(actor, draft = null, title = null) {
   let leader = actor, cooperative = null, cooperativeManual = false, luck = 0, donations = 0;
   let selectedWounds = new Set();
   const helpers = new Map();
-  let snapshot, unregister = () => {}, actorHook, read, refresh, dialogInstance, root;
+  let snapshot, unregister = () => {}, actorHook, read, refresh, dialogInstance, root, resourceObserver;
   let committed = false, closed = false, finish, generation = 0;
   try {
     const cooperatives = Array.from(game.actors.values()).filter(item => eligible(item, "cooperative", "OWNER"));
@@ -127,6 +127,20 @@ export async function openUnluck(actor, draft = null, title = null) {
         dialogInstance = dialog;
         root = dialog.element;
         const form = root.querySelector("form");
+        const footer = root.querySelector(".form-footer"), staged = root.querySelector("[data-unluck-staged]");
+        if (footer && staged) footer.append(staged);
+        const resources = root.querySelector(".ouw25-unluck-resources");
+        const donationBlock = root.querySelector(".ouw25-unluck-donation");
+        const statusBlock = root.querySelector(".ouw25-unluck-status");
+        resourceObserver?.disconnect();
+        if (resources && donationBlock && statusBlock) {
+          const syncWidths = () => { statusBlock.style.width = `${donationBlock.getBoundingClientRect().width}px`; };
+          syncWidths();
+          if (globalThis.ResizeObserver) {
+            resourceObserver = new ResizeObserver(syncWidths);
+            resourceObserver.observe(donationBlock);
+          }
+        }
         const value = name => form.elements.namedItem(name)?.value ?? "";
         const readCount = name => value(name) === "" && !form.elements.namedItem(name).validity?.badInput ? "0" : value(name);
         read = () => ({
@@ -143,7 +157,6 @@ export async function openUnluck(actor, draft = null, title = null) {
           root.querySelector("[data-luck-selected]").textContent = luck;
           renderLuckMarks(marks, luck);
           root.querySelector("[data-donation-amount]").textContent = game.i18n.format("OUW25.Unluck.DonationTotal", { amount: donations * 180 });
-          root.querySelector("[data-donation]").textContent = `+${donations}!`;
           const error = root.querySelector("[data-check-error]");
           const submit = root.querySelector('[data-action="ok"]');
           try {
@@ -392,6 +405,7 @@ export async function openUnluck(actor, draft = null, title = null) {
       dialogInstance.addEventListener("close", () => {
         closed = true;
         unregister();
+        resourceObserver?.disconnect();
         if (actorHook !== undefined) { Hooks.off("updateActor", actorHook); actorHook = undefined; }
         if (!committed) finish();
       }, { once: true });
@@ -399,6 +413,7 @@ export async function openUnluck(actor, draft = null, title = null) {
     });
   } finally {
     unregister();
+    resourceObserver?.disconnect();
     if (actorHook !== undefined) Hooks.off("updateActor", actorHook);
     pending.delete(actor.uuid);
   }

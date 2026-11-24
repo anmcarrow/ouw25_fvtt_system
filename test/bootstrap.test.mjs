@@ -2015,8 +2015,10 @@ test("check luck decorations persist across updates and follow the selected coun
 
 test("check stays open for repeated rolls and clears only spent draft resources", async () => {
   const { openUnluck } = await import(new URL("module/unluck-dialog.mjs", dist));
+  const oddsLabels = await Promise.all(["en", "ru"].map(async lang =>
+    JSON.parse(await readFile(new URL(`lang/${lang}.json`, dist), "utf8")).OUW25.Unluck));
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document,
-    Hooks: globalThis.Hooks, ui: globalThis.ui };
+    Hooks: globalThis.Hooks, ui: globalThis.ui, ResizeObserver: globalThis.ResizeObserver };
   const actor = { id: "repeat", uuid: "Actor.repeat", name: "Merchant", documentName: "Actor", type: "merchant",
     system: { past: "artist", luck: 2, pocketMoney: 500, wound1: false, wound2: false },
     testUserPermission: () => true };
@@ -2033,24 +2035,35 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   };
   fields.namedItem = name => fields[name];
   const form = Object.assign(new EventTarget(), { elements: fields, inert: false });
+  let donationWidth = 220, observer;
   const selectors = {
     form, "[data-custom]": {}, "[data-luck-marks]": element(), "[data-luck-selected]": {},
-    "[data-donation-amount]": {}, "[data-donation]": {}, "[data-check-error]": {},
+    "[data-donation-amount]": {}, "[data-check-error]": {},
     '[data-action="ok"]': {}, "[data-dice-count]": {}, "[data-check-summary]": {}, "[data-odds]": {},
     "[data-wounds]": element(), "[data-cooperative]": element(), "[data-cooperative-hint]": {},
     "[data-leader]": element(), "[data-helpers]": element(), "[data-helper-hint]": {},
     "[data-transfer-bargain]": element(), "[data-luck-minus]": element(), "[data-luck-plus]": element(),
-    "[data-luck-drop]": element(), "[data-donation-minus]": element(), "[data-donation-plus]": element()
+    "[data-luck-drop]": element(), "[data-donation-minus]": element(), "[data-donation-plus]": element(),
+    ".form-footer": element(), "[data-unluck-staged]": element(),
+    ".ouw25-unluck-resources": {}, ".ouw25-unluck-donation": { getBoundingClientRect: () => ({ width: donationWidth }) },
+    ".ouw25-unluck-status": { style: {} }
   };
   const marks = selectors["[data-luck-marks]"];
   Object.defineProperty(marks, "lastElementChild", { get() { return this.children.at(-1); } });
   const root = { isConnected: false, querySelector: selector => selectors[selector], querySelectorAll: () => [] };
-  let dialog, chatCount = 0, updateCount = 0, hook;
+  let dialog, chatCount = 0, updateCount = 0, hook, language = 0;
+  globalThis.ResizeObserver = class {
+    constructor(callback) { this.callback = callback; observer = this; }
+    observe(target) { this.target = target; }
+    disconnect() { this.disconnected = true; }
+  };
   globalThis.document = { createElement: element };
   globalThis.Hooks = { on: (_name, callback) => { hook = callback; return callback; }, off() {} };
   globalThis.ui = { notifications: { warn: () => assert.fail("unexpected warning"), error: () => assert.fail("unexpected error") } };
   globalThis.game = { actors: new Map([[actor.id, actor]]), user: {}, users: [{ id: "gm", isGM: true }],
-    i18n: { localize: key => key, format: key => key }, settings: { get: () => "publicroll" } };
+    i18n: { localize: key => key, format: (label, values) => label === "OUW25.Unluck.DonationTotal" ? `${values.amount} og.`
+      : label === "OUW25.Unluck.OddsValues" ? oddsLabels[language].OddsValues.replace(/\{(\w+)\}/g, (_, name) => values[name]) : label },
+    settings: { get: () => "publicroll" } };
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async () => "" },
     api: { DialogV2: class {
@@ -2072,6 +2085,17 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   try {
     const open = openUnluck(actor);
     await new Promise(resolve => setImmediate(resolve));
+    assert.ok(selectors[".form-footer"].children.includes(selectors["[data-unluck-staged]"]));
+    assert.equal(selectors[".ouw25-unluck-status"].style.width, "220px");
+    assert.equal(selectors["[data-odds]"].textContent, "48.2% / 38.6% / 13.2%");
+    language = 1;
+    form.dispatchEvent(new Event("input"));
+    assert.equal(selectors["[data-odds]"].textContent, "48.2% / 38.6% / 13.2%");
+    assert.equal(observer.target, selectors[".ouw25-unluck-donation"]);
+    assert.notEqual(observer.disconnected, true);
+    donationWidth = 260;
+    observer.callback();
+    assert.equal(selectors[".ouw25-unluck-status"].style.width, "260px");
     const click = selector => selectors[selector].dispatchEvent(new Event("click"));
     click("[data-luck-plus]");
     click("[data-donation-plus]");
@@ -2085,7 +2109,8 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     assert.equal(actor.system.pocketMoney, 320);
     assert.equal(actor.system.wound1, true);
     assert.equal(selectors["[data-luck-selected]"].textContent, 0);
-    assert.equal(selectors["[data-donation]"].textContent, "+0!");
+    assert.equal(selectors["[data-donation-amount]"].textContent, "0 og.");
+    assert.equal(selectors["[data-dice-count]"].textContent, 4);
     assert.equal(selectors["[data-wounds]"].children[0].children[0].disabled, true);
     click("[data-luck-plus]");
     click("[data-donation-plus]");
@@ -2096,6 +2121,7 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     assert.equal(chatCount, 2);
     assert.equal(dialog.rendered, true);
     dialog.close();
+    assert.equal(observer.disconnected, true);
     await open;
   } finally {
     Object.assign(globalThis, previous);

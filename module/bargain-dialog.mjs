@@ -556,7 +556,7 @@ export async function openBargain(actor, draft = null) {
           cooperativeManual = false;
           if (eligible(incoming.leader, "merchant")) selectLeader(incoming.leader);
           if ("cooperative" in incoming) {
-            selectCooperative(eligible(incoming.cooperative, "cooperative", "OWNER") ? incoming.cooperative : null, true);
+            selectCooperative(eligible(incoming.cooperative, "cooperative") ? incoming.cooperative : null, true);
             refreshLocations();
           }
           for (const helper of incoming.helpers ?? []) addHelper(helper);

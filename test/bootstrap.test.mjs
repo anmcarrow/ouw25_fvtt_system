@@ -1938,6 +1938,34 @@ test("check odds account for complications and guaranteed successes without limi
   assert.throws(() => calculateCheck({ donations: 1, advantages: 96 }), RangeError);
 });
 
+test("check includes its first viewable founder cooperative even without ownership", async () => {
+  const { openUnluck } = await import(new URL("module/unluck-dialog.mjs", dist));
+  const previous = { game: globalThis.game, foundry: globalThis.foundry };
+  const leader = { id: "leader", uuid: "Actor.leader", documentName: "Actor", type: "merchant",
+    system: { past: "artist", luck: 0, pocketMoney: 0 }, testUserPermission: () => true };
+  const makeCooperative = (id, owner) => ({
+    id, uuid: `Actor.${id}`, documentName: "Actor", type: "cooperative",
+    system: { founders: [leader.uuid], budget: 100 },
+    testUserPermission: (_user, permission) => permission === "OBSERVER" || owner
+  });
+  const first = makeCooperative("first", false), second = makeCooperative("second", true);
+  let choices;
+  globalThis.game = { actors: new Map([leader, first, second].map(actor => [actor.id, actor])),
+    user: {}, i18n: { localize: key => key } };
+  globalThis.foundry = { applications: {
+    handlebars: { renderTemplate: async (_path, data) => { choices = data.cooperatives; return ""; } },
+    api: { DialogV2: { input: async () => null } }
+  } };
+  try {
+    await openUnluck(leader);
+    assert.ok(choices.includes(first));
+    assert.ok(choices.includes(second));
+  } finally {
+    globalThis.game = previous.game;
+    globalThis.foundry = previous.foundry;
+  }
+});
+
 test("change-plan hint uses the agreed success threshold", async () => {
   const { hasExcessSuccesses } = await import(new URL("module/collision.mjs", dist));
   assert.equal(hasExcessSuccesses(1, true), false);

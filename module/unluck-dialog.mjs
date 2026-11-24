@@ -1,6 +1,6 @@
 import { calculateCheck, checkProbabilities, hasExcessSuccesses, resolveCollision } from "./collision.mjs";
 import { applyCheckCosts, checkCostSnapshot, checkCostUpdates } from "./check-costs.mjs";
-import { contactCooperative, recordBargainContact, openBargain } from "./bargain-dialog.mjs";
+import { contactCooperative, firstFounderCooperative, recordBargainContact, openBargain } from "./bargain-dialog.mjs";
 import { registerCollisionWindow, transferCollision } from "./collision-transfer.mjs";
 
 const pending = new Set();
@@ -34,8 +34,8 @@ export async function openUnluck(actor, draft = null, title = null) {
   let snapshot, unregister = () => {}, actorHook, read;
   try {
     const cooperatives = Array.from(game.actors.values()).filter(item => eligible(item, "cooperative", "OWNER"));
-    const automatic = cooperatives.filter(item => item.system.founders?.includes(leader.uuid));
-    if (automatic.length === 1) cooperative = automatic[0];
+    cooperative = firstFounderCooperative(leader);
+    if (cooperative && !cooperatives.includes(cooperative)) cooperatives.push(cooperative);
     snapshot = checkCostSnapshot(leader, cooperative);
     const content = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/unluck-check.hbs", {
       cooperatives, consequences: consequences.map(id => ({ id, label: `OUW25.BargainCalc.Consequences.${id}` }))
@@ -123,7 +123,7 @@ export async function openUnluck(actor, draft = null, title = null) {
           });
         };
         const selectCooperative = (selected, manual = true) => {
-          cooperative = eligible(selected, "cooperative", "OWNER") ? selected : null;
+          cooperative = eligible(selected, "cooperative") ? selected : null;
           cooperativeManual = manual;
           if (cooperative && !cooperatives.includes(cooperative)) {
             cooperatives.push(cooperative);
@@ -140,10 +140,8 @@ export async function openUnluck(actor, draft = null, title = null) {
         const selectLeader = selected => {
           if (!eligible(selected, "merchant")) return;
           leader = selected; luck = 0; selectedWounds = new Set();
-          const matches = cooperatives.filter(item => eligible(item, "cooperative", "OWNER")
-            && item.system.founders?.includes(leader.uuid));
           snapshot = checkCostSnapshot(leader, cooperative);
-          selectCooperative(cooperativeManual ? cooperative : matches.length === 1 ? matches[0] : null, cooperativeManual);
+          selectCooperative(cooperativeManual ? cooperative : firstFounderCooperative(leader), cooperativeManual);
           root.querySelector("[data-leader]").replaceChildren(portrait(leader));
           if (helpers.delete(leader.uuid)) showHelpers();
           showWounds(); update();

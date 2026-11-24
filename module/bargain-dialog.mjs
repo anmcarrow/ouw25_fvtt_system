@@ -326,7 +326,7 @@ export async function openBargain(actor) {
         title: game.i18n.localize("OUW25.Bargain.Title"),
         initiator: game.i18n.localize("OUW25.BargainCalc.Initiator"), name: actor.name
       }), resizable: true },
-      position: { width: 800, height: 700 }, modal: false, content, rejectClose: false,
+      position: { width: 800, height: 800 }, modal: false, content, rejectClose: false,
       ok: { label: game.i18n.localize("OUW25.BargainCalc.Confirm"), callback: (_event, button) => {
         try {
           const values = readValues(button.form);

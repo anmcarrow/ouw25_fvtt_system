@@ -93,7 +93,7 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer::before\s*\{[^}]*inset:\s*-0\.125rem -0\.5rem -0\.5rem;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer::before\s*\{[^}]*linear-gradient\(to top, rgba\(0, 0, 0, 0\.2\), transparent 40px\)[^}]*panel2\.webp[^}]*box-shadow:/s);
   assert.match(styles, /button\[data-action="ok"\]\s*\{[^}]*flex:\s*0 0 50%;/s);
-  assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height, 0px\), 700px,/);
+  assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height, 0px\), calc\(100vh/);
   assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{[^}]*background:[^;]*panel1\.webp[^;]*100% auto no-repeat;/s);
   assert.match(styles, /\.ouw25-bargain-scrollbar-thumb\s*\{[^}]*background:/s);
 });

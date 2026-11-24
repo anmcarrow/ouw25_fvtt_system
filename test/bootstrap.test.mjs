@@ -1698,7 +1698,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       return "";
     } },
     api: { DialogV2: { input: async config => {
-      assert.equal(config.position.height, 700);
+      assert.equal(config.position.height, 800);
       let positions = 0;
       const dialog = { element: root, setPosition() { positions++; } };
       config.render(null, dialog);

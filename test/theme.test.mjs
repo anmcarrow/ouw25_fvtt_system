@@ -46,13 +46,14 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(styles, /\.ouw25-bargain-points\s*\{[^}]*aspect-ratio:\s*1;[^}]*border-radius:\s*50%/s);
 });
 
-test("bargain outcome options are prefixed and the disabled selector is faded", async () => {
+test("bargain outcome selector displays an unavailable placeholder without fading", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.match(bargain, /<option value="" selected disabled hidden>\{\{localize "OUW25\.BargainCalc\.NotApplicable"\}\}<\/option>/);
   assert.match(bargain, /<option value="\{\{id\}\}">\+ \{\{localize label\}\}<\/option>/);
   assert.match(bargain, /<option value="custom">\+ \{\{localize "OUW25\.BargainCalc\.Custom"\}\}<\/option>/);
   assert.match(bargain, /&#x2193;<\/span><input name="complications"/);
   assert.match(bargain, /&#x2191;<\/span><input name="advantages"/);
-  assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{\s*opacity:\s*0\.5;/);
+  assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{\s*opacity:\s*1;/);
 });
 
 test("lost friends wrap as checkbox and name pairs", async () => {
@@ -72,7 +73,7 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   const footerPadding = styles.match(/\.ouw25-bargain-dialog \.form-footer\s*\{[^}]*padding-inline:\s*([^;]+);/s)?.[1];
   assert.equal(contentPadding, "calc(0.5rem + 20px) calc(0.5rem + 12px + 20px)");
   assert.equal(footerPadding, contentPadding);
-  assert.match(styles, /\.ouw25-bargain-dialog \.form-footer\s*\{[^}]*padding-block-end:\s*0\.5rem;/s);
+  assert.match(styles, /\.ouw25-bargain-dialog \.form-footer\s*\{[^}]*padding-block:\s*0\.4375rem 0\.0625rem;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer::before\s*\{[^}]*inset:\s*-0\.125rem -0\.5rem -0\.5rem;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer::before\s*\{[^}]*linear-gradient\(to top, rgba\(0, 0, 0, 0\.2\), transparent 40px\)[^}]*panel2\.webp[^}]*box-shadow:/s);
   assert.match(styles, /button\[data-action="ok"\]\s*\{[^}]*flex:\s*0 0 50%;/s);
@@ -111,7 +112,8 @@ test("bargain mechanical controls retain distinct states and keyboard focus", as
 });
 
 test("bargain empty states slide out on paper cards and respect reduced motion", () => {
-  assert.match(styles, /\.ouw25-bargain-empty > span\s*\{[^}]*smallpaper6\.webp[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*transition:\s*transform 300ms ease/s);
+  assert.match(styles, /\.ouw25-bargain-empty > span\s*\{[^}]*smallpaper6\.webp[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*transition:\s*transform 600ms ease/s);
+  assert.match(styles, /\.ouw25-bargain-empty\[aria-hidden="true"\] > span\s*\{[^}]*transition:\s*transform 600ms ease, visibility 0s 600ms;/s);
   assert.match(styles, /\.ouw25-bargain-empty\[aria-hidden="true"\] > span\s*\{[^}]*transform:\s*translateX\(800px\)/s);
   assert.match(styles, /@starting-style\s*\{\s*\.ouw25-bargain-empty:not\(\[aria-hidden="true"\]\) > span\s*\{\s*transform:\s*translateX\(800px\)/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.ouw25-bargain-empty,[\s\S]*?transition:\s*none;/);
@@ -131,8 +133,8 @@ test("bargain consequences backdrop is translucent and non-interactive", () => {
   assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{[^}]*isolation:\s*isolate;[^}]*overflow:\s*hidden;/s);
 });
 
-test("bargain upper backdrop ends 55px below the content edge", () => {
-  assert.match(styles, /\.ouw25-bargain-dialog \.window-content::before\s*\{[^}]*inset:\s*-30px -30px auto;\s*height:\s*85px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
+test("bargain upper backdrop scrolls with the content", () => {
+  assert.match(styles, /\.ouw25-bargain-dialog \.ouw25-bargain::before\s*\{[^}]*inset:\s*calc\(-30px - 0\.75rem\)[^}]*height:\s*110px;[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
 });
 
 test("bargain headings and labels use the bundled Alice font", async () => {
@@ -162,6 +164,7 @@ test("bargain participant cards use paper and consequence frames share their cor
   assert.match(styles, /\.ouw25-bargain-entry\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*background:[^;]*smallpaper6\.webp[^;]*;[^}]*color:\s*var\(--ouw25-color-ink\);/s);
   assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*border-image-width:\s*1px 0 0;/s);
   assert.match(styles, /\.ouw25-bargain-consequences fieldset::before,\s*\.ouw25-bargain-consequences fieldset::after\s*\{[^}]*border-radius:\s*inherit;[^}]*mask-composite:\s*exclude;/s);
+  assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry\s*\{[^}]*height:\s*auto;[^}]*min-height:\s*0;[^}]*line-height:\s*inherit;/s);
   assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry:hover:not\(:disabled\)\s*\{[^}]*background:\s*transparent;[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*filter:\s*none;/s);
   assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry:hover::before\s*\{\s*opacity:\s*0\.8;/);
 });

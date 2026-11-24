@@ -1605,13 +1605,14 @@ test("bargain locations combine the 31 Union trading ports with known places wit
 test("English bargain text uses ampersands", async () => {
   const { OUW25: { Bargain, BargainCalc } } = JSON.parse(await readFile(new URL("lang/en.json", dist), "utf8"));
   const { KnowOpponent, ...otherTexts } = BargainCalc;
-  assert.equal(KnowOpponent, "... and now we know him? Y/N");
+  assert.equal(KnowOpponent, "... and now we know him? (Y/N)");
   assert.doesNotMatch(JSON.stringify({ Bargain, otherTexts }), /\band\b/i);
   assert.equal(BargainCalc.Traits, "Leader's merits & flaws");
   assert.equal(BargainCalc.CaptainTraits, "Cap'n merits & flaws");
   assert.equal(BargainCalc.Time, "Octads of prep. (pts.)");
   assert.equal(BargainCalc.Unrest, "Payment in unrest (pts.)");
   assert.equal(BargainCalc.Budget, "From coop. budget (og.)");
+  assert.equal(BargainCalc.NoFriends, "Apparently, there are no friends here...");
 });
 
 test("bargain dialog orders payment fields and validates contact and partial outcome choices", async () => {
@@ -1774,6 +1775,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       fields.knowOpponent.checked = false;
       form.dispatchEvent(new Event("change"));
       assert.equal(consequence.disabled, true);
+      assert.equal(consequence.value, "");
       Math.random = () => 0.999;
       partial.checked = true;
       partial.dispatchEvent(new Event("change"));
@@ -1789,6 +1791,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
       partial.dispatchEvent(new Event("change"));
       form.dispatchEvent(new Event("change"));
       assert.equal(consequence.disabled, true);
+      assert.equal(consequence.value, "");
       assert.equal(elements["[data-custom]"].hidden, true);
       assert.equal(config.ok.callback(null, { form }).result.price, 2);
       Math.random = () => 0;

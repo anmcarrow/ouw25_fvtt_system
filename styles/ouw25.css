@@ -1882,9 +1882,22 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
 }
 
 body.game .application.ouw25 .ouw25-bargain {
+  position: relative;
+  isolation: isolate;
   display: grid;
   gap: 0.6rem;
   color: #e5c998;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain::before {
+  content: "";
+  position: absolute;
+  inset: calc(-30px - 0.75rem) calc(-30px - 0.5rem - 12px - 20px) auto calc(-30px - 0.5rem - 20px);
+  height: 110px;
+  z-index: -1;
+  background: rgba(0, 0, 0, 0.2);
+  filter: blur(3px);
+  pointer-events: none;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog {
@@ -1921,17 +1934,6 @@ body.game .application.ouw25.ouw25-bargain-dialog .window-content {
   isolation: isolate;
   overflow: hidden;
   background: #355253 url("./images/panel1.webp") center top / 100% auto no-repeat;
-}
-
-body.game .application.ouw25.ouw25-bargain-dialog .window-content::before {
-  content: "";
-  position: absolute;
-  inset: -30px -30px auto;
-  height: 85px;
-  z-index: 0;
-  background: rgba(0, 0, 0, 0.2);
-  filter: blur(3px);
-  pointer-events: none;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
@@ -1990,7 +1992,7 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer {
   z-index: 1;
   justify-content: center;
   padding-inline: calc(0.5rem + 20px) calc(0.5rem + 12px + 20px);
-  padding-block-end: 0.5rem;
+  padding-block: 0.4375rem 0.0625rem;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer::before {
@@ -2393,7 +2395,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   margin: 0;
-  transition: grid-template-rows 300ms ease;
+  transition: grid-template-rows 600ms ease;
 }
 
 .ouw25-bargain-empty > span {
@@ -2407,7 +2409,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
   color: var(--ouw25-color-ink);
   visibility: visible;
   transform: translateX(0);
-  transition: transform 300ms ease, visibility 0s;
+  transition: transform 600ms ease, visibility 0s;
 }
 
 .ouw25-bargain-empty[aria-hidden="true"] {
@@ -2418,7 +2420,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
 .ouw25-bargain-empty[aria-hidden="true"] > span {
   visibility: hidden;
   transform: translateX(800px);
-  transition: transform 300ms ease, visibility 0s 300ms;
+  transition: transform 600ms ease, visibility 0s 600ms;
 }
 
 @starting-style {
@@ -2557,7 +2559,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain-outcome > select:disabled {
-  opacity: 0.5;
+  opacity: 1;
 }
 
 .ouw25-bargain-counter {
@@ -2686,6 +2688,9 @@ body.game .application.ouw25 .dialog-content [data-helpers] li:first-child .ouw2
 body.game .application.ouw25 .dialog-content [data-helpers] button.ouw25-bargain-entry {
   position: relative;
   isolation: isolate;
+  height: auto;
+  min-height: 0;
+  line-height: inherit;
   background: transparent;
 }
 

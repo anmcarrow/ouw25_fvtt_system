@@ -55,6 +55,7 @@
       <input type="checkbox" name="partial" role="switch" aria-label="{{localize "OUW25.BargainCalc.Partial"}}">
     </label>
     <select name="consequence" aria-label="{{localize "OUW25.BargainCalc.PartialConsequence"}}" data-tooltip="{{localize "OUW25.BargainCalc.PartialConsequence"}}" disabled>
+      <option value="" selected disabled hidden>{{localize "OUW25.BargainCalc.NotApplicable"}}</option>
       {{#each consequences}}<option value="{{id}}">+ {{localize label}}</option>{{/each}}
       <option value="custom">+ {{localize "OUW25.BargainCalc.Custom"}}</option>
     </select>

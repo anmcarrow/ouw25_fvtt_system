@@ -451,6 +451,7 @@ export async function openBargain(actor) {
         };
         const update = () => {
           refreshLimits();
+          if (!form.elements.partial.checked) form.elements.consequence.value = "";
           const values = readValues(form);
           const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
           form.elements.consequence.disabled = !values.partial;

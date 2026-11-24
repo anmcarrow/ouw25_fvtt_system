@@ -18,6 +18,7 @@ const PAYMENT_FIELDS = [
 
 function bargainScrollbar(root, form, scrollArea, content) {
   const consequences = root.querySelector(".ouw25-bargain-consequences");
+  const viewport = root.querySelector(".window-content");
   const backdrop = document.createElement("div");
   backdrop.className = "ouw25-bargain-consequences-backdrop";
   backdrop.setAttribute("aria-hidden", "true");
@@ -34,15 +35,20 @@ function bargainScrollbar(root, form, scrollArea, content) {
   scrollArea.id ||= `${root.id}-bargain-content`;
   track.setAttribute("aria-controls", scrollArea.id);
   track.append(thumb);
-  form.append(backdrop, track);
+  viewport.append(backdrop);
+  form.append(track);
 
   const sync = () => {
-    const formRect = form.getBoundingClientRect();
+    const viewportRect = viewport.getBoundingClientRect();
     const consequencesRect = consequences.getBoundingClientRect();
-    backdrop.style.left = `${consequencesRect.left - formRect.left - 30}px`;
-    backdrop.style.top = `${consequencesRect.top - formRect.top}px`;
-    backdrop.style.width = `${consequencesRect.width + 60}px`;
-    backdrop.style.height = `${consequencesRect.height + 150}px`;
+    const left = Math.min(-30, consequencesRect.left - viewportRect.left - 30);
+    const right = Math.max(viewportRect.width + 30, consequencesRect.right - viewportRect.left + 30);
+    const top = consequencesRect.top - viewportRect.top - 15;
+    const bottom = Math.max(viewportRect.height + 30, consequencesRect.bottom - viewportRect.top + 150);
+    backdrop.style.left = `${left}px`;
+    backdrop.style.top = `${top}px`;
+    backdrop.style.width = `${right - left}px`;
+    backdrop.style.height = `${bottom - top}px`;
     const height = scrollArea.clientHeight;
     const maximum = Math.max(0, scrollArea.scrollHeight - height);
     track.hidden = maximum === 0;
@@ -95,6 +101,7 @@ function bargainScrollbar(root, form, scrollArea, content) {
   observer.observe(scrollArea);
   observer.observe(content);
   observer.observe(consequences);
+  observer.observe(viewport);
   sync();
   return { sync, destroy() {
     observer.disconnect();

@@ -1628,11 +1628,12 @@ test("bargain dialog orders payment fields and validates contact and partial out
   };
   fields.namedItem = name => fields[name];
   let selectedFriends = [];
-  const form = Object.assign(new EventTarget(), { elements: fields, append(backdrop, track) { this.backdrop = backdrop; this.scrollbar = track; },
-    getBoundingClientRect: () => ({ left: 100, top: 100 }),
+  const form = Object.assign(new EventTarget(), { elements: fields, append(track) { this.scrollbar = track; },
     querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends : [] });
+  const viewport = { append(backdrop) { form.backdrop = backdrop; },
+    getBoundingClientRect: () => ({ left: 100, top: 100, width: 700, height: 600 }) };
   const scrollArea = Object.assign(new EventTarget(), { clientHeight: 600, scrollHeight: 600, scrollTop: 0, offsetTop: 0 });
-  const consequencesRect = { left: 150, top: 400, width: 600, height: 200 };
+  const consequencesRect = { left: 150, top: 400, right: 750, bottom: 600 };
   let leader;
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
@@ -1640,7 +1641,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
     "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {},
-    ".dialog-content": scrollArea, "[data-bargain]": { offsetHeight: 700 },
+    ".dialog-content": scrollArea, ".window-content": viewport, "[data-bargain]": { offsetHeight: 700 },
     ".ouw25-bargain-consequences": { getBoundingClientRect: () => consequencesRect }
   };
   const badges = ["loan", "enemies", "friends"].map(kind => ({
@@ -1685,14 +1686,14 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.equal(form.scrollbar.hidden, true);
-      assert.deepEqual(form.backdrop.style, { left: "20px", top: "300px", width: "660px", height: "350px" });
+      assert.deepEqual(form.backdrop.style, { left: "-30px", top: "285px", width: "760px", height: "365px" });
       consequencesRect.top = 350;
-      consequencesRect.height = 400;
+      consequencesRect.bottom = 750;
       scrollArea.dispatchEvent(new Event("scroll"));
-      assert.equal(form.backdrop.style.top, "250px");
-      assert.equal(form.backdrop.style.height, "550px");
+      assert.equal(form.backdrop.style.top, "235px");
+      assert.equal(form.backdrop.style.height, "565px");
       consequencesRect.top = 400;
-      consequencesRect.height = 200;
+      consequencesRect.bottom = 600;
       for (const name of ["traits", "captainTraits", "time", "unrest", "cash", "budget", "loan", "enemies", "advantages", "complications"]) {
         const original = fields[name];
         fields[name] = { value: "", validity: { badInput: false } };

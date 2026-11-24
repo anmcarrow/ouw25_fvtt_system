@@ -1913,14 +1913,16 @@ body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .window-content {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: #355253 url("./images/panel1.webp") center top / 100% auto no-repeat;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-form {
   flex: 1 1 auto;
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
+  z-index: 1;
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .dialog-content {

@@ -66,7 +66,7 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.equal(contentPadding, "calc(0.5rem + 20px) calc(0.5rem + 12px + 20px)");
   assert.equal(footerPadding, contentPadding);
   assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height/);
-  assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{\s*background:[^;]*panel1\.webp[^;]*100% auto no-repeat;/);
+  assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{[^}]*background:[^;]*panel1\.webp[^;]*100% auto no-repeat;/s);
   assert.match(styles, /\.ouw25-bargain-scrollbar-thumb\s*\{[^}]*background:/s);
 });
 
@@ -84,7 +84,7 @@ test("bargain panels and headings use the accent gradient", async () => {
 
 test("bargain consequences backdrop is translucent and non-interactive", () => {
   assert.match(styles, /\.ouw25-bargain-consequences-backdrop\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
-  assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{[^}]*isolation:\s*isolate;[^}]*overflow:\s*hidden;/s);
+  assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{[^}]*isolation:\s*isolate;[^}]*overflow:\s*hidden;/s);
 });
 
 test("bargain headings and labels use the bundled Alice font", async () => {

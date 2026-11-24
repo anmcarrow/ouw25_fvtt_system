@@ -778,7 +778,7 @@
     {{> ouw25-finances}}
   {{#if condition}}
     <div class="ouw25-luck">
-      <output class="ouw25-luck-value" tabindex="0" aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{localize "OUW25.Condition.LuckHelp"}}"><span>{{condition.luck}}</span></output>
+      <output class="ouw25-luck-value" tabindex="0" {{#if editable}}draggable="true"{{/if}} aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{localize "OUW25.Condition.LuckHelp"}}"><span>{{condition.luck}}</span></output>
       {{#if editable}}
         <div class="ouw25-luck-actions">
           <button type="button" data-action="changeLuck" data-luck="add" aria-label="{{localize "OUW25.Condition.AddLuck"}}" data-tooltip="{{localize "OUW25.Condition.AddLuck"}}" {{#unless condition.canAdd}}disabled{{/unless}}><span>+</span></button>
@@ -807,23 +807,9 @@
       <span aria-hidden="true">&#x1F9EE;</span> {{localize "OUW25.Bargain.Title"}}
     </button>
   {{#if showCollision}}
-    <details class="ouw25-sidebar-card ouw25-collision">
-      <summary><span aria-hidden="true">&#x1F630;</span> {{localize "OUW25.Collision.Title"}}</summary>
-      <div class="ouw25-collision-controls">
-        <label>{{localize "OUW25.Collision.Dice"}} <input type="number" min="4" max="100" step="1" value="4" data-dice></label>
-        <label>{{localize "OUW25.Collision.Deduction"}} <input type="number" min="0" step="1" value="0" data-deduction></label>
-        <button type="button" data-action="rollCollision">{{localize "OUW25.Collision.Roll"}}</button>
-      </div>
-      <details class="ouw25-check-assistant">
-        <summary>{{localize "OUW25.CheckAssistant.Title"}}</summary>
-        <p><strong>{{localize "OUW25.CheckAssistant.Advantages"}}:</strong>
-          {{#each collisionAssistant.bonuses}}{{localize label}}; {{/each}}{{localize "OUW25.CheckAssistant.Dream"}}.
-        </p>
-        <p><strong>{{localize "OUW25.CheckAssistant.Complications"}}:</strong>
-          {{#each collisionAssistant.complications}}{{localize label}}{{#unless @last}}; {{/unless}}{{/each}}.
-        </p>
-      </details>
-    </details>
+    <button type="button" class="ouw25-sidebar-card ouw25-collision" data-action="rollCollision" data-tooltip="{{localize "OUW25.Unluck.Open"}}">
+      <span aria-hidden="true">&#x1F630;</span> {{localize "OUW25.Collision.Title"}}
+    </button>
   {{/if}}
     </div>
   {{/ouw25-tab}}

@@ -1153,7 +1153,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + spa
   border-radius: 0.35rem;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button.ouw25-bargain-reference {
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button:is(.ouw25-bargain-reference, .ouw25-collision) {
   --ouw25-card-paper: var(--ouw25-reference-paper);
   justify-content: flex-start;
   background: var(--ouw25-color-paper) var(--ouw25-card-paper) center top / 100% auto no-repeat;
@@ -1166,7 +1166,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button.ouw25
   text-align: start;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button.ouw25-bargain-reference:hover:not(:disabled) {
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button:is(.ouw25-bargain-reference, .ouw25-collision):hover:not(:disabled) {
   color: var(--ouw25-color-ink);
 }
 
@@ -2068,6 +2068,66 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   border-image: var(--ouw25-border-gradient) 1;
   box-shadow: 2px 2px 0.3rem rgba(0, 0, 0, 0.7);
   padding-block-end: 0.46rem;
+}
+
+body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check] {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .window-content,
+body.game .application.ouw25.ouw25-unluck-dialog .dialog-form {
+  min-height: 0;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .dialog-content {
+  min-height: 0;
+  overflow: auto;
+}
+
+.ouw25-unluck {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ouw25-unluck-toolbar,
+.ouw25-unluck-counts {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ouw25-unluck-toolbar > p {
+  flex: 1 1 auto;
+}
+
+.ouw25-unluck-people {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ouw25-unluck [data-drop] {
+  min-height: 3rem;
+  border: 1px dashed currentColor;
+  padding: 0.4rem;
+}
+
+.ouw25-unluck [data-helpers] {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ouw25-unluck-goal {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ouw25-unluck [data-wounds] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .ouw25-bargain-help-content {

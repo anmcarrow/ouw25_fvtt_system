@@ -1,4 +1,4 @@
-import { parseCollisionInput, resolveCollision } from "./collision.mjs";
+import { resolveCollision } from "./collision.mjs";
 import { DEBT_DIRECTIONS, debtTotals, pensionBalanceAfterDeposit, pensionProgress } from "./finance.mjs";
 import { lethalWoundSlot, MERCHANT_PASTS, pastFromRoll, startingPocketMoney } from "./merchant.mjs";
 import { availableSpecialties, isSpecialtyAllowed, MERCHANT_SPECIALTIES, specialtyFromRoll } from "./merchant.mjs";
@@ -16,8 +16,8 @@ import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
 import { filterRecordTable, sortRecordTable } from "./record-search.mjs";
 import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink } from "./record-journal.mjs";
-import { ASSISTANT_BONUSES, ASSISTANT_COMPLICATIONS } from "./collision-assistant.mjs";
 import { openBargain } from "./bargain-dialog.mjs";
+import { openUnluck } from "./unluck-dialog.mjs";
 
 const SYSTEM_ID = "ouw25";
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
@@ -454,6 +454,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+    const luck = this.element.querySelector(".ouw25-luck-value[draggable='true']");
+    luck?.addEventListener("dragstart", event => {
+      if (!this.isEditable || this.actor.system.luck < 1) { event.preventDefault(); return; }
+      event.stopPropagation();
+      event.dataTransfer.setData("text/plain", JSON.stringify({ type: "OUW25Luck", uuid: this.actor.uuid }));
+      event.dataTransfer.effectAllowed = "copy";
+    });
     for (const container of this.element.querySelectorAll("[data-search-key]")) {
       const input = container.querySelector("[data-search-input]");
       const clear = container.querySelector("[data-search-clear]");
@@ -643,10 +650,6 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       actorTypeLabel: `TYPES.Actor.${type}`,
       editable: this.isEditable,
       showCollision: this.isEditable && merchant,
-      collisionAssistant: merchant ? {
-        bonuses: ASSISTANT_BONUSES.map(id => ({ label: `OUW25.CheckAssistant.Bonus.${id}` })),
-        complications: ASSISTANT_COMPLICATIONS.map(id => ({ label: `OUW25.CheckAssistant.Penalty.${id}` }))
-      } : null,
       token: {
         icon: DEFAULT_ACTOR_TOKENS[type],
         label: merchant ? "OUW25.Identity.ConfigureToken" : "OUW25.Ship.ConfigureToken",
@@ -1710,35 +1713,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   static async #rollCollision(target, title) {
     if (!this.isEditable || this.actor.type !== "merchant" || target.disabled) return;
-    const section = target.closest(".ouw25-notes").querySelector(".ouw25-collision");
-    let input;
-    try {
-      input = parseCollisionInput(section.querySelector("[data-dice]").value, section.querySelector("[data-deduction]").value);
-    } catch (error) {
-      if (!(error instanceof RangeError)) throw error;
-      ui.notifications.warn(game.i18n.localize("OUW25.Collision.InvalidInput"));
-      return;
-    }
-
     target.disabled = true;
     try {
-      const { Roll } = foundry.dice;
-      const { ChatMessage } = foundry.documents;
-      const messageMode = game.settings.get("core", "messageMode");
-      const roll = await new Roll(`${input.diceCount}d6`).evaluate({ allowInteractive: !["blind", "blindroll"].includes(messageMode) });
-      const dice = roll.dice.flatMap(term => term.results.filter(result => result.active).map(result => result.result));
-      const { outcome, remaining } = resolveCollision(dice, input.deduction);
-      const result = game.i18n.format("OUW25.Collision.Result", {
-          outcome: game.i18n.localize(`OUW25.Collision.${outcome}`),
-          remaining
-      });
-      await roll.toMessage({
-        speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        flavor: await checkCard(this.actor, title ?? game.i18n.localize("OUW25.Collision.Title"), result, [
-          { label: "OUW25.Collision.Dice", value: input.diceCount },
-          { label: "OUW25.Collision.Deduction", value: input.deduction }
-        ])
-      }, { messageMode });
+      await openUnluck(this.actor, null, title);
+    } catch (error) {
+      console.error("OUW25 | Check failed", error);
+      ui.notifications.error(game.i18n.localize("OUW25.Unluck.Invalid"));
     } finally {
       target.disabled = false;
     }

@@ -898,29 +898,17 @@ test("the built package registers models and an editable notes sheet for its dec
 
   const checkSheet = new Sheet();
   checkSheet.isEditable = true;
-  checkSheet.actor = { type: "merchant", name: "Merchant" };
-  const diceInput = { value: "9" };
-  const deductionInput = { value: "1" };
-  const collisionSection = { querySelector: selector => selector === "[data-dice]" ? diceInput : deductionInput };
-  let interactive;
-  let rollMessage;
-  game.settings.get = () => "blind";
-  foundry.dice.Roll = class {
-    constructor(formula) { this.formula = formula; }
-    async evaluate(options) {
-      interactive = options.allowInteractive;
-      this.dice = [{ results: [{ active: true, result: 6 }] }];
-      return this;
-    }
-    async toMessage(message, options) { rollMessage = { message, options }; }
-  };
-  foundry.applications.handlebars.renderTemplate = async (_path, data) => { checkCard = data; return "check card"; };
-  const rollTarget = { disabled: false, closest: () => ({ querySelector: () => collisionSection }) };
+  checkSheet.actor = { id: "merchant", uuid: "Actor.merchant", documentName: "Actor", type: "merchant",
+    name: "Merchant", system: { past: "artist", luck: 1, pocketMoney: 500 }, testUserPermission: () => true };
+  game.actors = new Map([[checkSheet.actor.id, checkSheet.actor]]);
+  let checkDialog;
+  foundry.applications.handlebars.renderTemplate = async () => "check form";
+  foundry.applications.api.DialogV2.input = async config => { checkDialog = config; return null; };
+  const rollTarget = { disabled: false };
   await Sheet.DEFAULT_OPTIONS.actions.rollCollision.call(checkSheet, null, rollTarget);
-  assert.equal(interactive, false);
-  assert.equal(rollMessage.options.messageMode, "blind");
-  assert.equal(rollMessage.message.flavor, "check card");
-  assert.deepEqual(checkCard.details.map(detail => detail.label), ["OUW25.Collision.Dice", "OUW25.Collision.Deduction"]);
+  assert.equal(checkDialog.content, "check form");
+  assert.equal(checkDialog.modal, false);
+  assert.equal(rollTarget.disabled, false);
 
   await Promise.all([...manifest.styles, ...manifest.languages.map(({ path }) => path)]
     .map(path => readFile(new URL(path, dist))));
@@ -1631,7 +1619,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
   const fields = {
     partial, consequence, inflation: { checked: false }, knowOpponent: { checked: false }, goal: { value: "" }, custom: { value: "" },
     existingDebt, creditorLocation: { value: "" }, time: { value: "2" },
-    cash: { value: "0" }, budget: { value: "0" }, unrest: { value: "0" }
+    cash: { value: "0" }, budget: { value: "0" }, unrest: { value: "0" },
+    traits: { value: "0" }, advantages: { value: "0" }, complications: { value: "0" }, enemyDescription: { value: "" }
   };
   fields.namedItem = name => fields[name];
   let selectedFriends = [];
@@ -1643,6 +1632,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     if (node === elements["[data-error]"]) this.error = node;
     else this.scrollbar = node;
   },
+    reset() { partial.checked = false; },
     querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends
       : selector === "[data-enemy-row]" ? [enemyRow] : [] });
   const viewport = { append(backdrop, upperBackdrop) { form.backdrop = backdrop; form.upperBackdrop = upperBackdrop; },
@@ -1655,6 +1645,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
     '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {},
+    "[data-helpers]": { replaceChildren() {} }, '[data-drop="helpers"] [data-drop-hint]': { hidden: false },
     "[data-no-enemies]": { setAttribute(name, value) { this[name] = value; } }, "[data-contact-target]": {},
     "[data-success-cost]": {}, "[data-price-details]": {},
     "[data-add-enemy]": new EventTarget(),
@@ -1689,7 +1680,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     actors: new Map([[actor.id, actor]]), user: {},
     i18n: { localize: key => key, format: (key, values) => { formatted.set(key, values); return key; } }
   };
-  let warning;
+  let warning, incomingDraftTest = false;
   globalThis.ui = { notifications: { warn: value => { warning = value; } } };
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async (_path, data) => {
@@ -1702,6 +1693,14 @@ test("bargain dialog orders payment fields and validates contact and partial out
       let positions = 0;
       const dialog = { element: root, setPosition() { positions++; } };
       config.render(null, dialog);
+      if (incomingDraftTest) {
+        assert.equal(fields.goal.value, "Transferred goal");
+        assert.equal(fields.enemyDescription.value, "Rival");
+        assert.equal(fields.advantages.value, "3");
+        assert.equal(fields.complications.value, "2");
+        assert.equal(fields.knowOpponent.checked, true);
+        return null;
+      }
       assert.equal(root.style["--ouw25-bargain-min-height"], "916px");
       assert.equal(positions, 1);
       assert.equal(leader.children[0].src, "token.webp");
@@ -1861,6 +1860,9 @@ test("bargain dialog orders payment fields and validates contact and partial out
     assert.equal(form.backdrop.removed, true);
     assert.equal(form.upperBackdrop.removed, true);
     assert.ok(observers.every(observer => observer.disconnected));
+    incomingDraftTest = true;
+    await openBargain(actor, { leader: actor, helpers: [], goal: "Transferred goal", opponent: "Rival",
+      knowOpponent: true, advantages: "3", complications: "2" });
   } finally {
     globalThis.game = previous.game;
     globalThis.foundry = previous.foundry;
@@ -1872,15 +1874,10 @@ test("bargain dialog orders payment fields and validates contact and partial out
   }
 });
 
-test("the check cheatsheet lists advantages and complications without interactive fields", async () => {
+test("the check button opens a separate dialog", async () => {
   const template = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
-  const section = template.match(/<details class="ouw25-check-assistant">([\s\S]*?)<\/details>/)?.[1];
-  assert.ok(section);
-  assert.equal((section.match(/<p>/g) ?? []).length, 2);
-  assert.match(section, /collisionAssistant\.bonuses/);
-  assert.match(section, /CheckAssistant\.Dream/);
-  assert.match(section, /collisionAssistant\.complications/);
-  assert.doesNotMatch(section, /<(?:input|button|select)\b/);
+  assert.match(template, /<button[^>]+ouw25-collision[^>]+data-action="rollCollision"/);
+  assert.doesNotMatch(template, /<details class="ouw25-sidebar-card ouw25-collision">/);
 });
 
 test("the bargain panel opens the calculator and its reference is inside the dialog", async () => {
@@ -1916,6 +1913,87 @@ test("collision assistant accounts for chosen sources without applying their con
     { preparation: 97 }, { donation: Number.MAX_SAFE_INTEGER }]) {
     assert.throws(() => calculateCollisionAssistant(invalid), RangeError);
   }
+});
+
+test("check odds account for complications and guaranteed successes without limiting the roll", async () => {
+  const { calculateCheck, checkProbabilities } = await import(new URL("module/collision.mjs", dist));
+  assert.deepEqual(calculateCheck({ advantages: 2, wounds: 1, donations: 2, complications: 1, luck: 1 }),
+    { diceCount: 9, deduction: 1, luck: 1, donation: 360 });
+  const baseline = checkProbabilities(4, 0);
+  assert.ok(Math.abs(baseline.Success - 0.13194444444444445) < 1e-10);
+  assert.ok(Math.abs(baseline.Partial - 0.38580246913580246) < 1e-10);
+  assert.ok(Math.abs(Object.values(baseline).reduce((a, b) => a + b) - 1) < 1e-10);
+  assert.ok(Math.abs(checkProbabilities(4, 1, 1).Success - baseline.Success) < 1e-10);
+  assert.ok(Math.abs(checkProbabilities(4, 5).Failure - 1) < 1e-10);
+  assert.ok(Math.abs(checkProbabilities(4, 0, 2).Success - 1) < 1e-10);
+  assert.equal(checkProbabilities(16, 0), null);
+  assert.equal(calculateCheck({ advantages: 12 }).diceCount, 16);
+  assert.throws(() => calculateCheck({ advantages: 97 }), RangeError);
+  assert.throws(() => calculateCheck({ donations: 1, advantages: 96 }), RangeError);
+});
+
+test("change-plan hint uses the agreed success threshold", async () => {
+  const { hasExcessSuccesses } = await import(new URL("module/collision.mjs", dist));
+  assert.equal(hasExcessSuccesses(1, true), false);
+  assert.equal(hasExcessSuccesses(2, true), true);
+  assert.equal(hasExcessSuccesses(2, false), false);
+  assert.equal(hasExcessSuccesses(3, false), true);
+});
+
+test("check costs reject stale resources and only record newly selected wounds", async () => {
+  const { checkCostSnapshot, checkCostUpdates, applyCheckCosts } = await import(new URL("module/check-costs.mjs", dist));
+  const oldGame = globalThis.game, oldFoundry = globalThis.foundry;
+  const actor = { id: "leader", documentName: "Actor", type: "merchant",
+    system: { past: "artist", fragile: false, luck: 2, pocketMoney: 500, wound1: true, wound2: false },
+    testUserPermission: () => true };
+  const coop = { id: "coop", documentName: "Actor", type: "cooperative", system: { budget: 1000 }, testUserPermission: () => true };
+  globalThis.game = { actors: new Map([[actor.id, actor], [coop.id, coop]]), user: {} };
+  globalThis.foundry = { documents: { Actor: { updateDocuments: async updates => {
+    for (const update of updates) for (const [key, value] of Object.entries(update)) {
+      if (key.startsWith("system.")) game.actors.get(update._id).system[key.slice(7)] = value;
+    }
+  } } } };
+  try {
+    const snapshot = checkCostSnapshot(actor, coop);
+    const values = { luck: 1, donation: 360, source: "budget", wounds: [2] };
+    assert.deepEqual(checkCostUpdates(actor, coop, snapshot, values), [
+      { _id: "leader", "system.luck": 1, "system.wound2": true }, { _id: "coop", "system.budget": 640 }
+    ]);
+    assert.throws(() => checkCostUpdates(actor, coop, snapshot, { ...values, wounds: [1] }));
+    assert.throws(() => checkCostUpdates(actor, coop, snapshot, { ...values, luck: 3 }));
+    assert.throws(() => checkCostUpdates(actor, coop, snapshot, { ...values, source: "cash", donation: 540 }));
+    coop.system.budget = 900;
+    assert.throws(() => checkCostUpdates(actor, coop, snapshot, values));
+    coop.system.budget = 1000;
+    await applyCheckCosts(actor, coop, snapshot, values);
+    assert.equal(actor.system.luck, 1);
+    assert.equal(actor.system.wound2, true);
+    assert.equal(coop.system.budget, 640);
+    assert.throws(() => checkCostUpdates(actor, coop, snapshot, values));
+  } finally { globalThis.game = oldGame; globalThis.foundry = oldFoundry; }
+});
+
+test("transferring a collision asks before replacing an open draft", async () => {
+  const { registerCollisionWindow, transferCollision } = await import(new URL("module/collision-transfer.mjs", dist));
+  const oldGame = globalThis.game, oldFoundry = globalThis.foundry;
+  const actor = { uuid: "Actor.transfer" }, draft = { goal: "Escape", advantages: 2 };
+  let confirmed = false, received, opened;
+  globalThis.game = { i18n: { localize: key => key } };
+  globalThis.foundry = { applications: { api: { DialogV2: { confirm: async () => confirmed } } } };
+  const unregister = registerCollisionWindow(actor, "check", value => { received = value; });
+  try {
+    await transferCollision(actor, "check", draft, async () => { opened = true; });
+    assert.equal(received, undefined);
+    confirmed = true;
+    await transferCollision(actor, "check", draft, async () => { opened = true; });
+    assert.equal(received, draft);
+    assert.equal(opened, undefined);
+    unregister();
+    await transferCollision(actor, "check", draft, async (initiator, value) => {
+      assert.equal(initiator, actor); opened = value;
+    });
+    assert.equal(opened, draft);
+  } finally { unregister(); globalThis.game = oldGame; globalThis.foundry = oldFoundry; }
 });
 
 test("creation rolls map to the pilot background table and apply starting-money exceptions", async () => {

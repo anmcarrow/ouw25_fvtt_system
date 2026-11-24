@@ -2,6 +2,8 @@ import { calculateBargain } from "./bargain.mjs";
 import { lethalWoundSlot } from "./merchant.mjs";
 import { canonicalPortName, locationChoices } from "./ports.mjs";
 import { MERCHANT_TRAITS } from "./traits.mjs";
+import { registerCollisionWindow, transferCollision } from "./collision-transfer.mjs";
+import { openUnluck } from "./unluck-dialog.mjs";
 
 const pending = new Set();
 const MAX_ENEMIES = 20;
@@ -300,7 +302,7 @@ export async function applyPayment(actor, cooperative, values, snapshot) {
   return moneyPayment;
 }
 
-export async function openBargain(actor) {
+export async function openBargain(actor, draft = null) {
   if (!eligible(actor, "merchant", "OWNER") || pending.has(actor.uuid)) return;
   pending.add(actor.uuid);
   let leader = actor;
@@ -308,7 +310,7 @@ export async function openBargain(actor) {
   let cooperativeManual = false;
   const helpers = new Map();
   const snapshot = { cash: leader.system.pocketMoney, budget: cooperative?.system.budget, unrest: cooperative?.system.unrest };
-  let scrollbar;
+  let scrollbar, unregister = () => {};
   const friends = actor.items.filter(item => item.type === "relationship" && item.system.direction === "friend")
     .map(item => ({ id: item.id, name: item.name }));
   const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
@@ -512,6 +514,64 @@ export async function openBargain(actor) {
           }
           scrollbar.sync();
         };
+        const selectLeader = selected => {
+          leader = selected;
+          if (helpers.delete(selected.uuid)) {
+            for (const item of root.querySelectorAll("[data-helpers] > li")) {
+              if (item.dataset.uuid === selected.uuid) item.remove();
+            }
+            root.querySelector('[data-drop="helpers"] [data-drop-hint]').hidden = helpers.size > 0;
+          }
+          snapshot.cash = selected.system.pocketMoney;
+          if (!eligible(leader, "merchant", "OWNER")) form.elements.cash.value = "0";
+          if (!cooperativeManual) selectCooperative(firstFounderCooperative(leader));
+          else refreshLimits();
+          root.querySelector("[data-leader]").replaceChildren(participant(selected));
+          form.elements.traits.value = traitCount(selected);
+          refreshDebts();
+        };
+        const addHelper = selected => {
+          if (!eligible(selected, "merchant") || selected.uuid === leader.uuid || helpers.has(selected.uuid)) return;
+          helpers.set(selected.uuid, selected);
+          const item = document.createElement("li"), remove = document.createElement("button");
+          item.dataset.uuid = selected.uuid;
+          remove.type = "button";
+          remove.className = "ouw25-bargain-entry";
+          remove.append(participant(selected), document.createTextNode(" ×"));
+          remove.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.RemoveHelper", { name: selected.name }));
+          remove.addEventListener("click", () => {
+            helpers.delete(selected.uuid);
+            item.remove();
+            root.querySelector('[data-drop="helpers"] [data-drop-hint]').hidden = helpers.size > 0;
+          });
+          item.append(remove);
+          root.querySelector("[data-helpers]").append(item);
+          root.querySelector('[data-drop="helpers"] [data-drop-hint]').hidden = true;
+        };
+        const receive = incoming => {
+          form.reset();
+          helpers.clear();
+          root.querySelector("[data-helpers]").replaceChildren();
+          root.querySelector('[data-drop="helpers"] [data-drop-hint]').hidden = false;
+          cooperativeManual = false;
+          if (eligible(incoming.leader, "merchant")) selectLeader(incoming.leader);
+          for (const helper of incoming.helpers ?? []) addHelper(helper);
+          form.elements.goal.value = incoming.goal ?? "";
+          form.elements.enemyDescription.value = incoming.opponent ?? "";
+          form.elements.knowOpponent.checked = Boolean(incoming.knowOpponent);
+          form.elements.advantages.value = incoming.advantages ?? "0";
+          form.elements.complications.value = incoming.complications ?? "0";
+          update();
+        };
+        unregister();
+        unregister = registerCollisionWindow(actor, "bargain", receive);
+        root.querySelector("[data-transfer-check]")?.addEventListener("click", () => {
+          const values = readValues(form);
+          transferCollision(actor, "check", {
+            goal: values.goal, opponent: values.enemyDescription, knowOpponent: values.knowOpponent,
+            advantages: values.advantages, complications: values.complications, leader, helpers: [...helpers.values()]
+          }, openUnluck);
+        });
         form.elements.partial.addEventListener("change", () => {
           if (form.elements.partial.checked) {
             form.elements.consequence.value = CONSEQUENCES[Math.floor(Math.random() * CONSEQUENCES.length)];
@@ -541,39 +601,17 @@ export async function openBargain(actor) {
               const permission = zone.dataset.drop === "cooperative" ? "OWNER" : "OBSERVER";
               if (!eligible(dropped, type, permission)) return;
               if (zone.dataset.drop === "leader") {
-                leader = dropped;
-                snapshot.cash = dropped.system.pocketMoney;
-                if (!eligible(leader, "merchant", "OWNER")) form.elements.cash.value = "0";
-                if (!cooperativeManual) selectCooperative(firstFounderCooperative(leader));
-                else refreshLimits();
-                root.querySelector("[data-leader]").replaceChildren(participant(dropped));
-                form.elements.traits.value = traitCount(dropped);
-                refreshDebts();
+                selectLeader(dropped);
               } else if (zone.dataset.drop === "cooperative") {
                 selectCooperative(dropped, true);
                 refreshLocations();
-              } else if (dropped.uuid !== actor.uuid && !helpers.has(dropped.uuid)) {
-                helpers.set(dropped.uuid, dropped);
-                const item = document.createElement("li");
-                const remove = document.createElement("button");
-                remove.type = "button";
-                remove.className = "ouw25-bargain-entry";
-                remove.append(participant(dropped), document.createTextNode(" ×"));
-                remove.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.RemoveHelper", { name: dropped.name }));
-                remove.addEventListener("click", () => {
-                  helpers.delete(dropped.uuid);
-                  item.remove();
-                  zone.querySelector("[data-drop-hint]").hidden = helpers.size > 0;
-                });
-                item.append(remove);
-                root.querySelector("[data-helpers]").append(item);
-                zone.querySelector("[data-drop-hint]").hidden = true;
-              }
+              } else addHelper(dropped);
               update();
             } catch (error) { console.error("OUW25 | Bargain drop failed", error); }
           });
         }
-        update();
+        if (draft) { receive(draft); draft = null; }
+        else update();
         const style = getComputedStyle(scrollArea);
         const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
         const height = root.offsetHeight - scrollArea.clientHeight + content.offsetHeight + padding;
@@ -673,6 +711,7 @@ export async function openBargain(actor) {
       ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.ChatFailed"));
     }
   } finally {
+    unregister();
     scrollbar?.destroy();
     pending.delete(actor.uuid);
   }

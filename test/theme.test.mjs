@@ -46,7 +46,9 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*gap:\s*0\.28125rem;/s);
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
   assert.match(styles, /:is\(\.ouw25-bargain-debts > label, \.ouw25-bargain-enemy > label\) > span\s*\{\s*font-size:\s*1em;/);
-  assert.match(styles, /\.ouw25-bargain-enemies > \[data-enemy-row\]:first-of-type\s*\{\s*margin-block-start:\s*-13px;/);
+  assert.match(styles, /\.ouw25-bargain-enemies\s*\{\s*inset-block-start:\s*1px;/);
+  assert.match(styles, /fieldset\.ouw25-bargain-debts\s*\{\s*padding-block-start:\s*calc\(var\(--spacer-16\) \+ 2px\);/);
+  assert.match(styles, /\.ouw25-bargain-enemies > \[data-enemy-row\]:first-of-type\s*\{\s*margin-block-start:\s*-17px;/);
   for (const kind of ["loan", "enemies", "friends"]) {
     assert.match(bargain, new RegExp(`<span class="ouw25-bargain-points" data-points="${kind}" role="status"></span>`));
   }

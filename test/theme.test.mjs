@@ -58,6 +58,7 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   assert.match(styles, /\.application\.ouw25\.ouw25-bargain-dialog\s*\{\s*min-width:\s*800px;\s*max-width:\s*800px;/);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{\s*flex:\s*1 1 auto;/);
   assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*min-height:\s*0;[^}]*overflow-y:\s*auto;/s);
+  assert.match(styles, /\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*padding-block-start:\s*0\.75rem;/s);
   assert.match(styles, /\.ouw25-bargain-dialog \.form-footer\s*\{\s*flex:\s*0 0 auto;/);
   const contentPadding = styles.match(/\.ouw25-bargain-dialog \.dialog-content\s*\{[^}]*padding-inline:\s*([^;]+);/s)?.[1];
   const footerPadding = styles.match(/\.ouw25-bargain-dialog \.form-footer\s*\{[^}]*padding-inline:\s*([^;]+);/s)?.[1];

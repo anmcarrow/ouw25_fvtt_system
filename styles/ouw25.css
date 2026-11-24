@@ -1921,6 +1921,7 @@ body.game .application.ouw25.ouw25-bargain-dialog .dialog-content {
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: none;
+  padding-block-start: 0.75rem;
   padding-inline: calc(0.5rem + 20px) calc(0.5rem + 12px + 20px);
   background: transparent;
 }
@@ -2179,6 +2180,10 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
   mask-composite: exclude;
   clip-path: polygon(0 0, 0.25rem 0, 0.25rem 0.25rem, calc(100% - 0.25rem) 0.25rem, calc(100% - 0.25rem) 0, 100% 0, 100% 100%, 0 100%);
   pointer-events: none;
+}
+
+.ouw25-bargain-debts {
+  inset-block-start: -1px;
 }
 
 .ouw25-bargain-debts::before {

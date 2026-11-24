@@ -771,6 +771,7 @@
       "ExistingDebt": "Creditor",
       "NewDebt": "New creditor",
       "Friends": "Lost friends",
+      "SacrificialFriends": "Sacrificial friends",
       "NoFriends": "Apparently, there are no friends here...",
       "Balances": "Pocket: {cash} og.; budget: {budget} og.",
       "PriceSummary": "Complications cancelled: {neutralized}; advantages spent: {spent}, remaining: {remaining}. Full success: {full}; selected outcome: {price} points.",

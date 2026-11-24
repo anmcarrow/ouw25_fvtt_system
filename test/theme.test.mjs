@@ -32,7 +32,7 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
 
 test("bargain consequences and payment controls use the requested layouts", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
-  assert.match(bargain, /class="ouw25-bargain-consequences">[\s\S]*?class="ouw25-bargain-debts"[\s\S]*?class="ouw25-bargain-consequences-right">[\s\S]*?class="ouw25-bargain-enemies"[\s\S]*?BargainCalc\.Friends/);
+  assert.match(bargain, /class="ouw25-bargain-consequences">[\s\S]*?class="ouw25-bargain-debts"[\s\S]*?class="ouw25-bargain-consequences-right">[\s\S]*?class="ouw25-bargain-enemies"[\s\S]*?BargainCalc\.SacrificialFriends/);
   assert.match(bargain, /<legend><label><span>\{\{localize "OUW25\.BargainCalc\.NewEnemies"\}\}<\/span> <input name="enemies"/);
   assert.match(bargain, /<p class="ouw25-bargain-empty" data-no-enemies aria-hidden="false"><span>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/span><\/p>/);
   assert.match(bargain, /<p class="ouw25-bargain-empty"><span>\{\{localize "OUW25\.BargainCalc\.NoFriends"\}\}<\/span><\/p>/);
@@ -94,9 +94,7 @@ test("bargain panels and headings use the accent gradient", async () => {
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(1px 1px 0 rgba\(0, 0, 0, 0\.2\)\);/);
-  for (const selector of ["drop", "consequences fieldset"]) {
-    assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}::after\\s*\\{[^}]*background:\\s*rgba\\(0, 0, 0, 0\\.2\\);[^}]*transform:\\s*translate\\(1px, 1px\\);`, "s"));
-  }
+  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*transform:\s*translate\(1px, 1px\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
 });
@@ -163,7 +161,7 @@ test("bargain participant cards use paper and consequence frames share their cor
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   assert.match(styles, /\.ouw25-bargain-entry\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*background:[^;]*smallpaper6\.webp[^;]*;[^}]*color:\s*var\(--ouw25-color-ink\);/s);
   assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*border-image-width:\s*1px 0 0;/s);
-  assert.match(styles, /\.ouw25-bargain-consequences fieldset::before,\s*\.ouw25-bargain-consequences fieldset::after\s*\{[^}]*border-radius:\s*inherit;[^}]*mask-composite:\s*exclude;/s);
+  assert.doesNotMatch(styles, /\.ouw25-bargain-consequences fieldset::(?:before|after)/);
   assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry\s*\{[^}]*height:\s*auto;[^}]*min-height:\s*0;[^}]*line-height:\s*inherit;/s);
   assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry:hover:not\(:disabled\)\s*\{[^}]*background:\s*transparent;[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*filter:\s*none;/s);
   assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry:hover::before\s*\{\s*opacity:\s*0\.8;/);

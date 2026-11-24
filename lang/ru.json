@@ -771,6 +771,7 @@
       "ExistingDebt": "Кредитор",
       "NewDebt": "Новый кредитор",
       "Friends": "Потерянные друзья",
+      "SacrificialFriends": "Друзья на заклание",
       "NoFriends": "Нет записанных друзей.",
       "Balances": "В кармане: {cash} ог.; бюджет: {budget} ог.",
       "PriceSummary": "Осложнений снято: {neutralized}; преимуществ потрачено: {spent}, осталось: {remaining}. Полный успех: {full}; выбранный исход: {price} пунктов.",

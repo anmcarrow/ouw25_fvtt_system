@@ -2273,38 +2273,8 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid > label > span 
   border-image-width: 1px 0 0;
 }
 
-/* Keep the native legend cutout while drawing the rounded sides and corners. */
-.ouw25-bargain-consequences fieldset::before,
-.ouw25-bargain-consequences fieldset::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  inset-block-start: calc(-1px - 1rem);
-  padding: 1px;
-  border-radius: inherit;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  clip-path: polygon(0 0, 0.25rem 0, 0.25rem 0.25rem, calc(100% - 0.25rem) 0.25rem, calc(100% - 0.25rem) 0, 100% 0, 100% 100%, 0 100%);
-  pointer-events: none;
-}
-
-.ouw25-bargain-consequences fieldset::before {
-  background: var(--ouw25-border-gradient);
-}
-
-.ouw25-bargain-consequences fieldset::after {
-  z-index: -1;
-  background: rgba(0, 0, 0, 0.2);
-  transform: translate(1px, 1px);
-}
-
 .ouw25-bargain-debts {
   inset-block-start: -1px;
-}
-
-.ouw25-bargain-debts::before,
-.ouw25-bargain-debts::after {
-  inset-block-start: calc(-1px - 1.25rem);
 }
 
 .ouw25-bargain-consequences :is(.ouw25-bargain-debts, .ouw25-bargain-enemies) {

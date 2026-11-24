@@ -106,7 +106,7 @@
             </div>
           {{/each}}
         </fieldset>
-        <fieldset><legend><span>{{localize "OUW25.BargainCalc.Friends"}}</span> <span class="ouw25-bargain-points" data-points="friends" role="status"></span></legend>
+        <fieldset><legend><span>{{localize "OUW25.BargainCalc.SacrificialFriends"}}</span> <span class="ouw25-bargain-points" data-points="friends" role="status"></span></legend>
           {{#if friends}}<div class="ouw25-bargain-friends">
             {{#each friends}}<label><input type="checkbox" name="friend" value="{{id}}"> <span>{{name}}</span></label>{{/each}}
           </div>{{else}}<p class="ouw25-bargain-empty"><span>{{localize "OUW25.BargainCalc.NoFriends"}}</span></p>{{/if}}

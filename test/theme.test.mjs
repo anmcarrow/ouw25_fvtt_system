@@ -22,7 +22,7 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   assert.match(bargain, /<\/details>\s*<p class="ouw25-bargain-total ouw25-bargain-summary" data-summary role="status"><\/p>/);
   assert.match(bargain, /<fieldset class="ouw25-bargain-payment">\s*<legend>[\s\S]*?BargainCalc\.PaymentHelp[\s\S]*?data-breakdown><\/span>\s*<\/legend>/);
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
-  assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*min\(var\(--font-size-14, 14px\), 0\.8rem\);/s);
+  assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*0\.8em;/s);
   assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*min\(1em, 0\.8rem\);/s);
 });
 
@@ -79,7 +79,9 @@ test("bargain panels and headings use the accent gradient", async () => {
   for (const selector of ["breakdown", "price"]) {
     assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
   }
-  assert.match(styles, /\.ouw25-bargain-enemies legend label > span[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
+  assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
+  const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
+  assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
 });
 
 test("bargain consequences backdrop is translucent and non-interactive", () => {

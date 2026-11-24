@@ -779,7 +779,7 @@
       "ScrollContent": "Scroll bargain calculator",
       "PaymentSummary": "Covered: {paid}; remaining: {remaining}; excess: {excess}. Per point: {money} og. or {loan} og. in loans. Unrest to add: {unrest}.",
       "MoneyUsed": "Deduct: pocket {cash} og., budget {budget} og.; unspent: {unspent} og.",
-      "Breakdown": "Points gathered {sum}: advantages {advantages}, time {time}, unrest {unrest}, money {money}, loan {loan}, enemies {enemies}, friends {friends}.",
+      "Breakdown": "Pts. gathered {sum}: advantages {advantages}, time {time}, unrest {unrest}, money {money}, loan {loan}, enemies {enemies}, friends {friends}.",
       "PointsEarned": "Points: {points}",
       "Invalid": "Enter valid nonnegative whole numbers; monetary options require a number of merits & flaws.",
       "InvalidPayment": "Insufficient funds or room for unrest, insufficient permissions, or state changed. Close & reopen the window.",

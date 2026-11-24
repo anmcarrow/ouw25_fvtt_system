@@ -2129,7 +2129,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   background: var(--ouw25-color-paper);
   color: var(--ouw25-color-ink);
   font-family: var(--ouw25-font-body);
-  font-size: min(var(--font-size-14, 14px), 0.8rem);
+  font-size: 0.8em;
   font-weight: normal;
 }
 
@@ -2383,7 +2383,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
   .ouw25-bargain-people h5,
   .ouw25-bargain-payment > legend > span:first-child,
   .ouw25-bargain-consequences legend > span:first-child,
-  .ouw25-bargain-enemies legend label > span
+  label > span:not([aria-hidden="true"])
 ) {
   color: #edcd79;
 }
@@ -2393,7 +2393,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
     .ouw25-bargain-people h5,
     .ouw25-bargain-payment > legend > span:first-child,
     .ouw25-bargain-consequences legend > span:first-child,
-    .ouw25-bargain-enemies legend label > span
+    label > span:not([aria-hidden="true"])
   ) {
     background-image: var(--ouw25-border-gradient);
     background-clip: text;

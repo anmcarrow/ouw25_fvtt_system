@@ -1595,9 +1595,13 @@ test("bargain locations combine the 31 Union trading ports with known places wit
 });
 
 test("English bargain text uses ampersands", async () => {
-  const { OUW25: { Bargain, BargainCalc } } = JSON.parse(await readFile(new URL("lang/en.json", dist), "utf8"));
+  const { OUW25: { Bargain, BargainCalc, Unluck } } = JSON.parse(await readFile(new URL("lang/en.json", dist), "utf8"));
   const { KnowOpponent, ...otherTexts } = BargainCalc;
-  assert.equal(KnowOpponent, "... and now we know him? (Y/N)");
+  assert.equal(KnowOpponent, "... and now you know them? (Y/N)");
+  assert.equal(BargainCalc.Title, "Success Calculator");
+  assert.equal(Unluck.ToCheck, "(Un)lucky Gambler");
+  assert.equal(Unluck.DonationMore, "Spend more!");
+  assert.equal(Unluck.DonationLess, "Spend less!");
   assert.doesNotMatch(JSON.stringify({ Bargain, otherTexts }), /\band\b/i);
   assert.equal(BargainCalc.Traits, "Leader's merits & flaws");
   assert.equal(BargainCalc.CaptainTraits, "Cap'n merits & flaws");
@@ -2024,6 +2028,8 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     testUserPermission: () => true };
   const element = () => Object.assign(new EventTarget(), {
     children: [], dataset: {}, style: { setProperty() {} }, classList: { toggle() {} },
+    get childNodes() { return this.children; },
+    querySelector(selector) { return this.children.find(child => `.${child.className}` === selector) ?? null; },
     append(...items) { this.children.push(...items); },
     replaceChildren(...items) { this.children = items; },
     setAttribute(name, value) { this[name] = value; }
@@ -2085,6 +2091,7 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   try {
     const open = openUnluck(actor);
     await new Promise(resolve => setImmediate(resolve));
+    assert.equal(selectors['[data-action="ok"]'].children[0].className, "ouw25-unluck-roll-label");
     assert.equal(selectors['[data-action="ok"]'].dataset.tooltip, "OUW25.Unluck.Staged");
     assert.equal(selectors['[data-action="ok"]']["aria-description"], "OUW25.Unluck.Staged");
     assert.equal(selectors[".ouw25-unluck-status"].style.width, "220px");

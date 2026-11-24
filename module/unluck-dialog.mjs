@@ -128,6 +128,12 @@ export async function openUnluck(actor, draft = null, title = null) {
         root = dialog.element;
         const form = root.querySelector("form");
         const submit = root.querySelector('[data-action="ok"]');
+        if (!submit.querySelector(".ouw25-unluck-roll-label")) {
+          const label = document.createElement("span");
+          label.className = "ouw25-unluck-roll-label";
+          label.append(...submit.childNodes);
+          submit.append(label);
+        }
         const staged = game.i18n.localize("OUW25.Unluck.Staged");
         submit.dataset.tooltip = staged;
         submit.setAttribute("aria-description", staged);

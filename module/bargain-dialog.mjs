@@ -325,7 +325,7 @@ export async function openBargain(actor, draft = null) {
     const selection = await foundry.applications.api.DialogV2.input({
       classes: ["ouw25", "ouw25-bargain-dialog"],
       window: { title: game.i18n.format("OUW25.BargainCalc.WindowTitle", {
-        title: game.i18n.localize("OUW25.Bargain.Title"),
+        title: game.i18n.localize("OUW25.BargainCalc.Title"),
         initiator: game.i18n.localize("OUW25.BargainCalc.Initiator"), name: actor.name
       }), resizable: true },
       position: { width: 800, height: 800 }, modal: false, content, rejectClose: false,

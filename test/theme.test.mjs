@@ -12,6 +12,13 @@ test("the Gambler uses the bundled etched metal background", async () => {
   assert.ok((await readFile(new URL("../dist/ouw25/styles/images/panel3.webp", import.meta.url))).length > 0);
 });
 
+test("the Gambler packages and uses its recessed panel textures", async () => {
+  for (const image of ["felt1", "felt2", "panel4", "panel5"]) {
+    assert.match(styles, new RegExp(`url\\("\\./images/${image}\\.webp"\\)`));
+    assert.ok((await readFile(new URL(`../dist/ouw25/styles/images/${image}.webp`, import.meta.url))).length > 0);
+  }
+});
+
 test("bargain payment field captions are compact and bold without restyling inputs", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   for (const key of ["CreditorName", "CreditorLocation", "EnemyName", "EnemyLocation"]) {
@@ -70,7 +77,7 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(styles, /\.ouw25-bargain-points\s*\{[^}]*aspect-ratio:\s*1;[^}]*border-radius:\s*50%/s);
 });
 
-test("bargain outcome selector displays an unavailable placeholder without fading", async () => {
+test("bargain outcome selector fades only the unavailable placeholder", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<option value="" selected disabled hidden>\{\{localize "OUW25\.BargainCalc\.NotApplicable"\}\}<\/option>/);
   assert.match(bargain, /<option value="\{\{id\}\}">\+ \{\{localize label\}\}<\/option>/);
@@ -79,6 +86,7 @@ test("bargain outcome selector displays an unavailable placeholder without fadin
   assert.match(bargain, /&#x2191;<\/span><input name="advantages"/);
   assert.match(styles, /\.ouw25-bargain-outcome\s*\{[^}]*margin-block-start:\s*0\.6rem;/s);
   assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{[^}]*--ouw25-bargain-ink:\s*#715d4b;[^}]*opacity:\s*1;/s);
+  assert.match(styles, /\.ouw25-bargain-outcome > select:has\(option:checked\[value=""\]\)\s*\{\s*color:\s*rgb\(42 33 26 \/ 50%\);/s);
   assert.match(styles, /\.ouw25-bargain-counter input\[type="number"\]\s*\{[^}]*width:\s*calc\(3ch \+ 1\.8rem\);[^}]*appearance:\s*auto;/s);
   assert.match(styles, /\.ouw25-bargain-counter input\[type="number"\]::-webkit-inner-spin-button,[\s\S]*?::-webkit-outer-spin-button\s*\{[^}]*-webkit-appearance:\s*auto;/s);
 });

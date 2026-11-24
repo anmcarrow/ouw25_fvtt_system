@@ -2090,20 +2090,30 @@ body.game .application.ouw25.ouw25-unluck-dialog .dialog-content {
   gap: 0.75rem;
 }
 
-.ouw25-unluck-toolbar,
-.ouw25-unluck-counts {
+.ouw25-unluck-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
 
+.ouw25-unluck-toolbar > details {
+  min-width: 0;
+}
+
 .ouw25-unluck-toolbar > p {
   flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-unluck :is([data-transfer-bargain], [data-luck-minus], [data-luck-plus], [data-donation-minus], [data-donation-plus]) {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .ouw25-unluck-people {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
   gap: 0.5rem;
 }
 
@@ -2119,9 +2129,86 @@ body.game .application.ouw25.ouw25-unluck-dialog .dialog-content {
   list-style: none;
 }
 
+.ouw25-unluck-luck {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ouw25-unluck-luck [data-luck-available] {
+  flex: 0 0 100%;
+}
+
 .ouw25-unluck-goal {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: 0.4rem;
+}
+
+.ouw25-unluck-goal > label:not([hidden]),
+.ouw25-unluck-donation > label,
+.ouw25-unluck-counts > label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ouw25-unluck-goal :is(input:not([type="checkbox"]), select),
+.ouw25-unluck-donation select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ouw25-unluck-counts,
+.ouw25-unluck-resources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 0.5rem;
+}
+
+.ouw25-unluck-counts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  align-items: center;
+}
+
+.ouw25-unluck-counts input {
+  min-width: 0;
+}
+
+.ouw25-unluck-donation,
+.ouw25-unluck-status {
+  min-width: 0;
+}
+
+.ouw25-unluck-donation > label + label {
+  margin-block-start: 0.4rem;
+}
+
+.ouw25-unluck-donation > label > span {
+  white-space: nowrap;
+}
+
+.ouw25-unluck-donation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-block-start: 0.4rem;
+}
+
+.ouw25-unluck-status {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ouw25-unluck-status [data-odds] {
+  margin: 0;
+}
+
+.ouw25-unluck [data-check-error]:empty {
+  display: none;
 }
 
 .ouw25-unluck [data-wounds] {

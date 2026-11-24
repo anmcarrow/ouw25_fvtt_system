@@ -83,7 +83,7 @@ export async function openUnluck(actor, draft = null, title = null) {
     const config = {
       classes: ["ouw25", "ouw25-unluck-dialog"],
       window: { title: game.i18n.format("OUW25.Unluck.WindowTitle", { name: actor.name }), resizable: true },
-      position: { width: 622, height: 800 }, modal: false, content, form: { closeOnSubmit: false },
+      position: { width: 650, height: 800 }, modal: false, content, form: { closeOnSubmit: false },
       buttons: [{ action: "ok", default: true, label: game.i18n.localize("OUW25.Unluck.Roll"), callback: async (_event, button) => {
         if (committed) return;
         const form = button.form;

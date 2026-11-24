@@ -1633,11 +1633,16 @@ test("bargain dialog orders payment fields and validates contact and partial out
   };
   fields.namedItem = name => fields[name];
   let selectedFriends = [];
+  const enemyName = { value: "Old enemy", focus() { this.focused = true; } };
+  const enemyLocation = { value: "Old location" };
+  const enemyRow = { hidden: true, querySelector: selector =>
+    selector === "[data-enemy-name]" ? enemyName : enemyLocation };
   const form = Object.assign(new EventTarget(), { elements: fields, append(node) {
     if (node === elements["[data-error]"]) this.error = node;
     else this.scrollbar = node;
   },
-    querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends : [] });
+    querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends
+      : selector === "[data-enemy-row]" ? [enemyRow] : [] });
   const viewport = { append(backdrop, upperBackdrop) { form.backdrop = backdrop; form.upperBackdrop = upperBackdrop; },
     getBoundingClientRect: () => ({ left: 100, top: 100, width: 700, height: 600 }) };
   const scrollArea = Object.assign(new EventTarget(), { clientHeight: 600, scrollHeight: 600, scrollTop: 0, offsetTop: 0,
@@ -1649,6 +1654,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
     '[data-action="ok"]': { disabled: false },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {},
     "[data-no-enemies]": { setAttribute(name, value) { this[name] = value; } }, "[data-contact-target]": {}, "[data-price]": {},
+    "[data-add-enemy]": new EventTarget(),
+    "[data-enemy-row]": enemyRow,
     "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {
       "aria-hidden": "true", textContent: "",
@@ -1662,7 +1669,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
   }));
   const root = { id: "test", offsetHeight: 800, style: { setProperty(name, value) { this[name] = value; } },
     querySelector: selector => elements[selector],
-    querySelectorAll: selector => selector === "[data-points]" ? badges : [] };
+    querySelectorAll: selector => selector === "[data-points]" ? badges : selector === "[data-enemy-row]" ? [enemyRow] : [] };
   globalThis.getComputedStyle = () => ({ paddingTop: "8px", paddingBottom: "8px" });
   globalThis.document = { createElement: () => Object.assign(new EventTarget(), {
     dataset: {}, style: {}, children: [], append(...children) { this.children.push(...children); },
@@ -1698,6 +1705,22 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(elements["[data-no-enemies]"]["aria-hidden"], "false");
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
+      fields.enemies = { value: "0" };
+      elements["[data-add-enemy]"].dispatchEvent(new Event("click"));
+      assert.equal(fields.enemies.value, "1");
+      assert.equal(enemyRow.hidden, false);
+      assert.equal(enemyName.value, "");
+      assert.equal(enemyLocation.value, "");
+      assert.equal(enemyName.focused, true);
+      assert.equal(elements["[data-add-enemy]"].disabled, true);
+      assert.equal(elements["[data-no-enemies]"]["aria-hidden"], "true");
+      assert.equal(badges[1].textContent, 3);
+      assert.equal(elements['[data-action="ok"]'].disabled, true);
+      elements["[data-add-enemy]"].dispatchEvent(new Event("click"));
+      assert.equal(fields.enemies.value, "1");
+      fields.enemies.value = "0";
+      form.dispatchEvent(new Event("input"));
+      assert.equal(elements["[data-add-enemy]"].disabled, false);
       assert.equal(form.scrollbar.hidden, true);
       assert.deepEqual(form.backdrop.style, { left: "-30px", top: "280px", width: "760px", height: "370px" });
       assert.equal(form.upperBackdrop.style.top, "-22px");

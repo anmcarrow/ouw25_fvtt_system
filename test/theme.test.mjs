@@ -17,6 +17,7 @@ test("bargain payment field captions are compact and bold without restyling inpu
   assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
   assert.match(styles, /\.ouw25-bargain-grid > label > span\s*\{\s*font-size:\s*1em;/);
   assert.match(styles, /\.ouw25-bargain-people h5\s*\{\s*font-size:\s*var\(--font-size-15, 15px\);/);
+  assert.match(styles, /\.ouw25-bargain-people\s*\{\s*margin-block:\s*1\.2rem 0\.6rem;/);
 });
 
 test("bargain summary and payment breakdown are alongside their help buttons", async () => {
@@ -37,7 +38,7 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /class="ouw25-bargain-consequences">[\s\S]*?class="ouw25-bargain-debts"[\s\S]*?class="ouw25-bargain-consequences-right">[\s\S]*?class="ouw25-bargain-enemies"[\s\S]*?BargainCalc\.SacrificialFriends/);
   assert.match(bargain, /<legend><label><span>\{\{localize "OUW25\.BargainCalc\.NewEnemies"\}\}<\/span> <input name="enemies"/);
-  assert.match(bargain, /<p class="ouw25-bargain-empty" data-no-enemies aria-hidden="false"><span>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/span><\/p>/);
+  assert.match(bargain, /<p class="ouw25-bargain-empty" data-no-enemies aria-hidden="false"><span><button type="button" data-add-enemy>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/button><\/span><\/p>/);
   assert.match(bargain, /<p class="ouw25-bargain-empty"><span>\{\{localize "OUW25\.BargainCalc\.NoFriends"\}\}<\/span><\/p>/);
   assert.match(styles, /\.ouw25-bargain-grid\s*\{[^}]*grid-template-columns:[^;]*- 7px[^;]*\+ 7px[^;]*;[^}]*grid-template-rows:\s*repeat\(2,/s);
   assert.match(styles, /\.ouw25-bargain-consequences\s*\{[^}]*margin-block-start:\s*25px;/s);
@@ -57,6 +58,7 @@ test("bargain outcome selector displays an unavailable placeholder without fadin
   assert.match(bargain, /<option value="custom">\+ \{\{localize "OUW25\.BargainCalc\.Custom"\}\}<\/option>/);
   assert.match(bargain, /&#x2193;<\/span><input name="complications"/);
   assert.match(bargain, /&#x2191;<\/span><input name="advantages"/);
+  assert.match(styles, /\.ouw25-bargain-outcome\s*\{[^}]*margin-block-start:\s*0\.6rem;/s);
   assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{[^}]*--ouw25-bargain-ink:\s*#715d4b;[^}]*opacity:\s*1;/s);
   assert.match(styles, /\.ouw25-bargain-counter input\[type="number"\]\s*\{[^}]*width:\s*calc\(3ch \+ 1\.8rem\);[^}]*appearance:\s*auto;/s);
   assert.match(styles, /\.ouw25-bargain-counter input\[type="number"\]::-webkit-inner-spin-button,[\s\S]*?::-webkit-outer-spin-button\s*\{[^}]*-webkit-appearance:\s*auto;/s);
@@ -102,7 +104,8 @@ test("bargain panels and headings use the accent gradient", async () => {
     assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
-  assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(2px 2px 0 rgba\(0, 0, 0, 0\.7\)\);/);
+  assert.match(styles, /\.ouw25-bargain-counter > span,\s*label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
+  assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(2px 2px 1px rgba\(0, 0, 0, 0\.7\)\);/);
   assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*transform:\s*translate\(2px, 2px\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
@@ -122,7 +125,8 @@ test("bargain mechanical controls retain distinct states and keyboard focus", as
 
 test("bargain empty states slide out on paper cards and respect reduced motion", () => {
   assert.match(styles, /\.ouw25-bargain-empty > span\s*\{[^}]*smallpaper6\.webp[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*transition:\s*transform 600ms ease/s);
-  assert.match(styles, /\.ouw25-bargain-empty\[aria-hidden="true"\] > span\s*\{[^}]*transition:\s*transform 600ms ease, visibility 0s 600ms;/s);
+  assert.match(styles, /\.ouw25-bargain-empty\[aria-hidden="true"\] > span\s*\{[^}]*transition:\s*transform 600ms ease, visibility 0s 600ms, scale 150ms ease, rotate 150ms ease;/s);
+  assert.match(styles, /\.ouw25-bargain-empty > span:hover:has\(> button\[data-add-enemy\]:not\(:disabled\)\)\s*\{\s*scale:\s*1\.03;\s*rotate:\s*2deg;/);
   assert.match(styles, /\.ouw25-bargain-empty\[aria-hidden="true"\] > span\s*\{[^}]*transform:\s*translateX\(800px\)/s);
   assert.match(styles, /@starting-style\s*\{\s*\.ouw25-bargain-empty:not\(\[aria-hidden="true"\]\) > span\s*\{\s*transform:\s*translateX\(800px\)/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.ouw25-bargain-empty,[\s\S]*?transition:\s*none;/);

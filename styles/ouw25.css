@@ -2443,7 +2443,39 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
   color: var(--ouw25-color-ink);
   visibility: visible;
   transform: translateX(0);
-  transition: transform 600ms ease, visibility 0s;
+  scale: 1;
+  rotate: 0deg;
+  transition: transform 600ms ease, visibility 0s, scale 150ms ease, rotate 150ms ease;
+}
+
+.ouw25-bargain-empty > span:hover:has(> button[data-add-enemy]:not(:disabled)) {
+  scale: 1.03;
+  rotate: 2deg;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-empty button[data-add-enemy],
+body.game .application.ouw25 .dialog-content .ouw25-bargain-empty button[data-add-enemy]:hover:not(:disabled),
+body.game .application.ouw25 .dialog-content .ouw25-bargain-empty button[data-add-enemy]:disabled {
+  display: inline;
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  filter: none;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-empty button[data-add-enemy]:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-bargain-empty button[data-add-enemy]:focus-visible {
+  outline: 2px solid #ffecad;
+  outline-offset: 2px;
 }
 
 .ouw25-bargain-empty[aria-hidden="true"] {
@@ -2454,7 +2486,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
 .ouw25-bargain-empty[aria-hidden="true"] > span {
   visibility: hidden;
   transform: translateX(800px);
-  transition: transform 600ms ease, visibility 0s 600ms;
+  transition: transform 600ms ease, visibility 0s 600ms, scale 150ms ease, rotate 150ms ease;
 }
 
 @starting-style {
@@ -2547,7 +2579,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-goal input:not([type
 }
 
 .ouw25-bargain-people {
-  margin-block: 0.6rem;
+  margin-block: 1.2rem 0.6rem;
   row-gap: 1rem;
 }
 
@@ -2560,6 +2592,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
   .ouw25-bargain-people h5,
   .ouw25-bargain-payment > legend > span:first-child,
   .ouw25-bargain-consequences legend > span:first-child,
+  .ouw25-bargain-counter > span,
   label > span:not([aria-hidden="true"])
 ) {
   color: #edcd79;
@@ -2570,12 +2603,13 @@ body.game .application.ouw25 .ouw25-bargain :is(
     .ouw25-bargain-people h5,
     .ouw25-bargain-payment > legend > span:first-child,
     .ouw25-bargain-consequences legend > span:first-child,
+    .ouw25-bargain-counter > span,
     label > span:not([aria-hidden="true"])
   ) {
     background-image: var(--ouw25-border-gradient);
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.7));
+    filter: drop-shadow(2px 2px 1px rgba(0, 0, 0, 0.7));
   }
 }
 
@@ -2584,6 +2618,7 @@ body.game .application.ouw25 .ouw25-bargain :is(
   grid-template-columns: max-content minmax(0, 1fr) max-content max-content;
   align-items: center;
   gap: 0.5rem;
+  margin-block-start: 0.6rem;
   overflow-x: auto;
 }
 

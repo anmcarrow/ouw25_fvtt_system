@@ -461,7 +461,9 @@ export async function openBargain(actor) {
           const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
           form.elements.consequence.disabled = !values.partial;
           root.querySelector("[data-custom]").hidden = !values.partial || values.consequence !== "custom";
-          root.querySelector("[data-no-enemies]").setAttribute("aria-hidden", String(values.enemies !== "0"));
+          const noEnemies = values.enemies === "0";
+          root.querySelector("[data-no-enemies]").setAttribute("aria-hidden", String(!noEnemies));
+          root.querySelector("[data-add-enemy]").disabled = !noEnemies;
           root.querySelectorAll("[data-enemy-row]").forEach((row, index) => {
             row.hidden = index >= Number(values.enemies) || index >= MAX_ENEMIES;
           });
@@ -509,6 +511,16 @@ export async function openBargain(actor) {
           if (form.elements.partial.checked) {
             form.elements.consequence.value = CONSEQUENCES[Math.floor(Math.random() * CONSEQUENCES.length)];
           }
+        });
+        root.querySelector("[data-add-enemy]").addEventListener("click", () => {
+          if (Number(form.elements.enemies.value) !== 0) return;
+          const row = root.querySelector("[data-enemy-row]");
+          const name = row.querySelector("[data-enemy-name]");
+          name.value = "";
+          row.querySelector("[data-enemy-location]").value = "";
+          form.elements.enemies.value = "1";
+          update();
+          name.focus();
         });
         form.addEventListener("input", update);
         form.addEventListener("change", update);

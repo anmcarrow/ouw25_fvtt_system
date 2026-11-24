@@ -7,6 +7,11 @@ const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", impo
 const template = await readFile(new URL("../dist/ouw25/templates/actor-notes.hbs", import.meta.url), "utf8");
 const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/actor-create.hbs", import.meta.url), "utf8");
 
+test("the Gambler uses the bundled etched metal background", async () => {
+  assert.match(styles, /\.ouw25-unluck-dialog \.dialog-content\s*\{[^}]*background:[^;]*panel3\.webp[^;]*100% auto repeat-y local;/s);
+  assert.ok((await readFile(new URL("../dist/ouw25/styles/images/panel3.webp", import.meta.url))).length > 0);
+});
+
 test("bargain payment field captions are compact and bold without restyling inputs", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   for (const key of ["CreditorName", "CreditorLocation", "EnemyName", "EnemyLocation"]) {

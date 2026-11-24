@@ -150,7 +150,7 @@ export function participant(actor) {
   return element;
 }
 
-function readValues(form) {
+function readValues(form, helperAdvantages = 0) {
   const get = name => form.elements.namedItem(name)?.value ?? "0";
   const number = name => {
     const input = form.elements.namedItem(name);
@@ -159,7 +159,7 @@ function readValues(form) {
   return {
     goal: get("goal").trim(), partial: form.elements.partial.checked, inflation: form.elements.inflation.checked,
     consequence: get("consequence"), custom: get("custom").trim(),
-    advantages: number("advantages"), complications: number("complications"), traits: number("traits"),
+    advantages: number("advantages"), helperAdvantages, complications: number("complications"), traits: number("traits"),
     captainTraits: number("captainTraits"), time: number("time"), unrest: number("unrest"),
     cash: number("cash"), budget: number("budget"), loan: number("loan"), enemies: number("enemies"),
     friends: form.querySelectorAll('input[name="friend"]:checked').length,
@@ -331,7 +331,7 @@ export async function openBargain(actor, draft = null) {
       position: { width: 800, height: 800 }, modal: false, content, rejectClose: false,
       ok: { label: game.i18n.localize("OUW25.BargainCalc.Confirm"), callback: (_event, button) => {
         try {
-          const values = readValues(button.form);
+          const values = readValues(button.form, helpers.size);
           const result = calculateBargain(values);
           if (values.knowOpponent && !contactCooperative(cooperative, leader)) {
             ui.notifications.warn(game.i18n.localize("OUW25.BargainCalc.ContactUnavailable"));
@@ -465,7 +465,11 @@ export async function openBargain(actor, draft = null) {
         const update = () => {
           refreshLimits();
           if (!form.elements.partial.checked) form.elements.consequence.value = "";
-          const values = readValues(form);
+          const values = readValues(form, helpers.size);
+          const bonus = root.querySelector("[data-helper-bonus]");
+          bonus.hidden = helpers.size === 0;
+          bonus.textContent = `+${helpers.size}`;
+          bonus.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.HelperBonus", { count: helpers.size }));
           const target = values.knowOpponent ? contactCooperative(cooperative, leader) : null;
           form.elements.consequence.disabled = !values.partial;
           root.querySelector("[data-custom]").hidden = !values.partial || values.consequence !== "custom";
@@ -549,6 +553,7 @@ export async function openBargain(actor, draft = null) {
             helpers.delete(selected.uuid);
             item.remove();
             root.querySelector('[data-drop="helpers"] [data-drop-hint]').hidden = helpers.size > 0;
+            update();
           });
           item.append(remove);
           root.querySelector("[data-helpers]").append(item);
@@ -693,7 +698,7 @@ export async function openBargain(actor, draft = null) {
       ["Leader", leader.name], ["Helpers", [...helpers.values()].map(item => item.name).join(", ") || "—"],
       ["Outcome", game.i18n.localize(`OUW25.BargainCalc.${values.partial ? "Partial" : "Full"}`)],
       ["Inflation", game.i18n.localize(`OUW25.BargainCalc.${values.inflation ? "Enabled" : "Disabled"}`)],
-      ["Complications", values.complications], ["Advantages", values.advantages],
+      ["Complications", values.complications], ["Advantages", Number(values.advantages) + values.helperAdvantages],
       ["Neutralized", `${result.neutralized} (${result.spentAdvantages})`],
       ["AdvantagePoints", result.contributions.advantages],
       ["PartialConsequence", consequence],

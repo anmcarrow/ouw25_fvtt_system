@@ -709,6 +709,8 @@
       "WindowTitle": "{title} — {initiator}: {name}",
       "Leader": "Bargain leader",
       "Helpers": "Helpers",
+      "HelperBonus": "+{count} advantages from helpers",
+      "OtherAdvantages": "Enter advantages from other sources; each selected helper adds one automatically.",
       "Wounds": "wounds marked",
       "Cooperative": "Cooperative",
       "DropLeader": "Drag a merchant from the actor directory here.",

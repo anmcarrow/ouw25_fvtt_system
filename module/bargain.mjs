@@ -6,7 +6,7 @@ function count(value) {
 }
 
 export function calculateBargain(values) {
-  const advantages = count(values.advantages);
+  const advantages = count(count(values.advantages) + count(values.helperAdvantages));
   const complications = count(values.complications);
   const traits = count(values.traits);
   const captainTraits = count(values.captainTraits);

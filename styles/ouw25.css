@@ -2489,6 +2489,7 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="nu
 .ouw25-unluck-dice-total > output {
   position: absolute;
   inset: 0;
+  transform: translateY(10px);
   display: grid;
   place-items: center;
   font: min(144px, calc(160cqw / var(--dice-digits, 1))) / 1 "Limelight", var(--ouw25-font-accent);

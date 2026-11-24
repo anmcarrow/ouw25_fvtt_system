@@ -28,11 +28,12 @@ export function hasExcessSuccesses(remaining, partial) {
 
 export function calculateCheck(values) {
   const advantages = parseCount(values.advantages ?? 0, 0, 96);
+  const helperAdvantages = parseCount(values.helperAdvantages ?? 0, 0, 96);
   const complications = parseCount(values.complications ?? 0, 0, Number.MAX_SAFE_INTEGER);
   const wounds = parseCount(values.wounds ?? 0, 0, 4);
   const donations = parseCount(values.donations ?? 0, 0, 96);
   const luck = parseCount(values.luck ?? 0, 0, Number.MAX_SAFE_INTEGER);
-  const { diceCount } = parseCollisionInput(4 + advantages + wounds + donations, complications);
+  const { diceCount } = parseCollisionInput(4 + advantages + helperAdvantages + wounds + donations, complications);
   return { diceCount, deduction: complications, luck, donation: donations * 180 };
 }
 

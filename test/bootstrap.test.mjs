@@ -1351,6 +1351,9 @@ test("bargain prices, advantage allocation, and mixed payments follow the select
   assert.equal(paid.remaining, 0);
   assert.ok(paid.excess > 0);
   assert.equal(calculateBargain({ advantages: 12, inflation: true }).contributions.advantages, 1);
+  assert.equal(calculateBargain({ advantages: 3, helperAdvantages: 1, complications: 1 }).neutralized, 1);
+  assert.equal(calculateBargain({ advantages: 11, helperAdvantages: 1 }).contributions.advantages, 1);
+  assert.throws(() => calculateBargain({ advantages: Number.MAX_SAFE_INTEGER, helperAdvantages: 1 }), RangeError);
   for (const invalid of [{ advantages: -1 }, { time: "1.5" }, { cash: 1 }, { loan: 1 }, { friends: Number.MAX_SAFE_INTEGER }]) {
     assert.throws(() => calculateBargain(invalid), RangeError);
   }
@@ -1624,6 +1627,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     system: { pocketMoney: 0 }, items: Object.assign([], { get() {} }), testUserPermission: () => true };
   const cooperative = { id: "c", uuid: "Actor.c", name: "Cooperative", documentName: "Actor", type: "cooperative",
     system: { budget: 50, unrest: 0, founders: [] }, items: [], testUserPermission: () => true };
+  const helper = { ...actor, id: "h", uuid: "Actor.h", name: "Helper" };
   const partial = Object.assign(new EventTarget(), { checked: false });
   const consequence = { value: "unrest", disabled: true };
   const existingDebt = Object.assign(new EventTarget(), { value: "", selectedOptions: [], replaceChildren() {} });
@@ -1657,7 +1661,9 @@ test("bargain dialog orders payment fields and validates contact and partial out
     "[data-cooperative]": { replaceChildren(child) { shownCooperative = child; } },
     '[data-action="ok"]': { disabled: false, childNodes: [], querySelector() { return null; }, append() {} },
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {},
-    "[data-helpers]": { replaceChildren() {} }, '[data-drop="helpers"] [data-drop-hint]': { hidden: false },
+    "[data-helpers]": { children: [], replaceChildren(...items) { this.children = items; }, append(item) { this.children.push(item); } },
+    "[data-helper-bonus]": { setAttribute(name, value) { this[name] = value; } },
+    '[data-drop="helpers"] [data-drop-hint]': { hidden: false },
     "[data-no-enemies]": { setAttribute(name, value) { this[name] = value; } }, "[data-contact-target]": {},
     "[data-success-cost]": {}, "[data-price-details]": {},
     "[data-add-enemy]": new EventTarget(),
@@ -1673,11 +1679,13 @@ test("bargain dialog orders payment fields and validates contact and partial out
   const badges = ["loan", "enemies", "friends"].map(kind => ({
     dataset: { points: kind }, setAttribute(name, value) { this[name] = value; }
   }));
+  const dropZones = ["helpers", "leader"].map(kind => Object.assign(new EventTarget(), { dataset: { drop: kind } }));
   const root = { id: "test", offsetHeight: 800, style: { setProperty(name, value) { this[name] = value; } },
     querySelector: selector => elements[selector],
-    querySelectorAll: selector => selector === "[data-points]" ? badges : selector === "[data-enemy-row]" ? [enemyRow] : [] };
+    querySelectorAll: selector => selector === "[data-points]" ? badges : selector === "[data-enemy-row]" ? [enemyRow]
+      : selector === "[data-drop]" ? dropZones : selector === "[data-helpers] > li" ? elements["[data-helpers]"].children : [] };
   globalThis.getComputedStyle = () => ({ paddingTop: "8px", paddingBottom: "8px" });
-  globalThis.document = { createElement: () => Object.assign(new EventTarget(), {
+  globalThis.document = { createTextNode: text => ({ textContent: text }), createElement: () => Object.assign(new EventTarget(), {
     dataset: {}, style: {}, children: [], append(...children) { this.children.push(...children); },
     setAttribute(name, value) { this[name] = value; }, remove() { this.removed = true; }
   }) };
@@ -1694,7 +1702,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
   };
   let warning, incomingDraftTest = false;
   globalThis.ui = { notifications: { warn: value => { warning = value; } } };
-  globalThis.foundry = { applications: {
+  globalThis.foundry = { documents: { Actor: { fromDropData: async () => helper } }, applications: {
+    ux: { TextEditor: { implementation: { getDragEventData: () => ({ type: "Actor" }) } } },
     handlebars: { renderTemplate: async (_path, data) => {
       assert.deepEqual(data.paymentFields.map(field => field.name),
         ["traits", "captainTraits", "unrest", "time", "cash", "budget"]);
@@ -1713,6 +1722,26 @@ test("bargain dialog orders payment fields and validates contact and partial out
         assert.equal(fields.knowOpponent.checked, true);
         assert.equal(shownCooperative.children[1].textContent, "Cooperative");
         assert.equal(fields.budget.disabled, false);
+        assert.equal(elements["[data-helper-bonus]"].textContent, "+1");
+        assert.equal(elements["[data-helper-bonus]"].hidden, false);
+        assert.deepEqual(formatted.get("OUW25.BargainCalc.PriceSummary"), { neutralized: 1, spent: 4, remaining: 0 });
+        fields.time.value = "4";
+        const confirmed = config.ok.callback(null, { form });
+        assert.equal(confirmed.values.advantages, "3");
+        assert.equal(confirmed.values.helperAdvantages, 1);
+        assert.equal(confirmed.result.price, 4);
+        elements["[data-helpers]"].children[0].children[0].dispatchEvent(new Event("click"));
+        assert.equal(elements["[data-helper-bonus]"].hidden, true);
+        assert.deepEqual(formatted.get("OUW25.BargainCalc.PriceSummary"), { neutralized: 0, spent: 0, remaining: 3 });
+        dropZones[0].dispatchEvent(new Event("drop", { cancelable: true }));
+        await new Promise(resolve => setImmediate(resolve));
+        dropZones[0].dispatchEvent(new Event("drop", { cancelable: true }));
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(elements["[data-helper-bonus]"].textContent, "+1");
+        dropZones[1].dispatchEvent(new Event("drop", { cancelable: true }));
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(elements["[data-helper-bonus]"].hidden, true);
+        assert.deepEqual(formatted.get("OUW25.BargainCalc.PriceSummary"), { neutralized: 0, spent: 0, remaining: 3 });
         return null;
       }
       assert.equal(root.style["--ouw25-bargain-min-height"], "916px");
@@ -1876,7 +1905,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
     assert.ok(observers.every(observer => observer.disconnected));
     incomingDraftTest = true;
     game.actors.set(cooperative.id, cooperative);
-    await openBargain(actor, { leader: actor, cooperative, helpers: [], goal: "Transferred goal", opponent: "Rival",
+    game.actors.set(helper.id, helper);
+    await openBargain(actor, { leader: actor, cooperative, helpers: [helper], goal: "Transferred goal", opponent: "Rival",
       knowOpponent: true, advantages: "3", complications: "2" });
   } finally {
     globalThis.game = previous.game;
@@ -1943,6 +1973,9 @@ test("check odds account for complications and guaranteed successes without limi
   assert.ok(Math.abs(checkProbabilities(4, 0, 2).Success - 1) < 1e-10);
   assert.equal(checkProbabilities(16, 0), null);
   assert.equal(calculateCheck({ advantages: 12 }).diceCount, 16);
+  assert.equal(calculateCheck({ advantages: 2, helperAdvantages: 2 }).diceCount, 8);
+  assert.equal(calculateCheck({ advantages: 95, helperAdvantages: 1 }).diceCount, 100);
+  assert.throws(() => calculateCheck({ advantages: 95, helperAdvantages: 2 }), RangeError);
   assert.throws(() => calculateCheck({ advantages: 97 }), RangeError);
   assert.throws(() => calculateCheck({ donations: 1, advantages: 96 }), RangeError);
 });
@@ -2020,6 +2053,7 @@ test("check luck decorations persist across updates and follow the selected coun
 
 test("check stays open for repeated rolls and clears only spent draft resources", async () => {
   const { openUnluck } = await import(new URL("module/unluck-dialog.mjs", dist));
+  const { transferCollision, registerCollisionWindow } = await import(new URL("module/collision-transfer.mjs", dist));
   const oddsLabels = await Promise.all(["en", "ru"].map(async lang =>
     JSON.parse(await readFile(new URL(`lang/${lang}.json`, dist), "utf8")).OUW25.Unluck));
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document,
@@ -2029,6 +2063,7 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     testUserPermission: () => true };
   const cooperative = { id: "coop", uuid: "Actor.coop", name: "Coop", documentName: "Actor", type: "cooperative",
     system: { budget: 179, founders: [actor.uuid] }, testUserPermission: () => true };
+  const helper = { ...actor, id: "helper", uuid: "Actor.helper", name: "Helper" };
   const element = () => Object.assign(new EventTarget(), {
     children: [], dataset: {}, style: { setProperty() {} }, classList: { toggle() {} },
     get childNodes() { return this.children; },
@@ -2043,10 +2078,12 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     custom: { value: "" }, advantages: { value: "0" }, complications: { value: "0" }, source: { value: "cash" }
   };
   fields.namedItem = name => fields[name];
-  const form = Object.assign(new EventTarget(), { elements: fields, inert: false });
+  const form = Object.assign(new EventTarget(), { elements: fields, inert: false, reset() {
+    fields.partial.checked = false; fields.source.value = "cash";
+  } });
   let donationWidth = 220, observer;
   const selectors = {
-    form, "[data-custom]": {}, "[data-luck-marks]": element(), "[data-luck-selected]": {},
+    form, "[data-custom]": {}, "[data-luck-marks]": element(), "[data-luck-selected]": {}, "[data-helper-bonus]": element(),
     "[data-donation-amount]": {}, "[data-check-error]": {},
     '[data-action="ok"]': element(), "[data-dice-count]": { style: { values: {}, setProperty(name, value) { this.values[name] = value; } } },
     "[data-odds]": {},
@@ -2059,32 +2096,37 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   };
   const marks = selectors["[data-luck-marks]"];
   Object.defineProperty(marks, "lastElementChild", { get() { return this.children.at(-1); } });
-  const root = { isConnected: false, querySelector: selector => selectors[selector], querySelectorAll: () => [] };
-  let dialog, chatCount = 0, updateCount = 0, hook, language = 0;
+  const dropZones = ["helpers", "leader"].map(kind => Object.assign(element(), { dataset: { drop: kind } }));
+  const root = { isConnected: false, querySelector: selector => selectors[selector],
+    querySelectorAll: selector => selector === "[data-drop]" ? dropZones : [] };
+  let dialog, chatCount = 0, updateCount = 0, hook, language = 0, lastCard, rollFormula;
   globalThis.ResizeObserver = class {
     constructor(callback) { this.callback = callback; observer = this; }
     observe(target) { this.target = target; }
     disconnect() { this.disconnected = true; }
   };
-  globalThis.document = { createElement: element };
+  globalThis.document = { createElement: element, createTextNode: text => ({ textContent: text }) };
   globalThis.Hooks = { on: (_name, callback) => { hook = callback; return callback; }, off() {} };
   globalThis.ui = { notifications: { warn: () => assert.fail("unexpected warning"), error: () => assert.fail("unexpected error") } };
-  globalThis.game = { actors: new Map([[actor.id, actor], [cooperative.id, cooperative]]), user: {}, users: [{ id: "gm", isGM: true }],
+  globalThis.game = { actors: new Map([[actor.id, actor], [cooperative.id, cooperative], [helper.id, helper]]), user: {}, users: [{ id: "gm", isGM: true }],
     i18n: { localize: key => key, format: (label, values) => label === "OUW25.Unluck.DonationTotal" ? `${values.amount} og.`
       : label === "OUW25.Unluck.OddsValues" ? oddsLabels[language].OddsValues.replace(/\{(\w+)\}/g, (_, name) => values[name]) : label },
     settings: { get: () => "publicroll" } };
   globalThis.foundry = { applications: {
-    handlebars: { renderTemplate: async () => "" },
+    ux: { TextEditor: { implementation: { getDragEventData: () => ({ type: "Actor" }) } } },
+    handlebars: { renderTemplate: async (path, data) => { if (path.endsWith("check-card.hbs")) lastCard = data; return ""; } },
     api: { DialogV2: class {
+      static async confirm() { return true; }
       constructor(options) { this.options = options; this.handlers = {}; dialog = this; }
       addEventListener(name, callback) { this.handlers[name] = callback; }
       render() { this.element = root; this.rendered = true; this.handlers.render(); }
       close() { this.rendered = false; this.handlers.close(); }
     } }
   }, dice: { Roll: class {
+    constructor(formula) { rollFormula = formula; }
     async evaluate() { this.dice = [{ results: [6, 6, 2, 2].map(result => ({ active: true, result })) }]; return this; }
   } }, documents: {
-    Actor: { updateDocuments: async updates => {
+    Actor: { fromDropData: async () => helper, updateDocuments: async updates => {
       updateCount++;
       for (const [key, value] of Object.entries(updates[0])) if (key.startsWith("system.")) actor.system[key.slice(7)] = value;
       hook(actor);
@@ -2175,6 +2217,39 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     assert.equal(updateCount, 2);
     assert.equal(chatCount, 2);
     assert.equal(dialog.rendered, true);
+    await transferCollision(actor, "check", { leader: actor, helpers: [helper], advantages: "2", complications: "0" }, () => {});
+    assert.equal(fields.advantages.value, "2");
+    assert.equal(selectors["[data-helper-bonus]"].textContent, "+1");
+    assert.equal(selectors["[data-dice-count]"].textContent, 7);
+    fields.advantages.value = "96";
+    form.dispatchEvent(new Event("input"));
+    assert.equal(selectors['[data-action="ok"]'].disabled, true);
+    assert.equal(selectors["[data-dice-count]"].textContent, "—");
+    fields.advantages.value = "2";
+    form.dispatchEvent(new Event("input"));
+    let transferred;
+    const unregister = registerCollisionWindow(actor, "bargain", draft => { transferred = draft; });
+    click("[data-transfer-bargain]");
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(transferred.advantages, "2");
+    assert.equal("helperAdvantages" in transferred, false);
+    assert.deepEqual(transferred.helpers, [helper]);
+    unregister();
+    await dialog.options.buttons[0].callback(null, { form });
+    assert.equal(rollFormula, "7d6");
+    assert.equal(lastCard.details.find(row => row.label === "OUW25.BargainCalc.Advantages").value, 3);
+    selectors["[data-helpers]"].children[0].children[0].dispatchEvent(new Event("click"));
+    assert.equal(selectors["[data-helper-bonus]"].hidden, true);
+    assert.equal(selectors["[data-dice-count]"].textContent, 6);
+    dropZones[0].dispatchEvent(new Event("drop", { cancelable: true }));
+    await new Promise(resolve => setImmediate(resolve));
+    dropZones[0].dispatchEvent(new Event("drop", { cancelable: true }));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(selectors["[data-dice-count]"].textContent, 7);
+    dropZones[1].dispatchEvent(new Event("drop", { cancelable: true }));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(selectors["[data-helper-bonus]"].hidden, true);
+    assert.equal(selectors["[data-dice-count]"].textContent, 6);
     dialog.close();
     assert.equal(observer.disconnected, true);
     await open;

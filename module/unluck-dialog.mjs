@@ -155,7 +155,7 @@ export async function openUnluck(actor, draft = null, title = null) {
           goal: value("goal").trim(), opponent: value("opponent").trim() || game.i18n.localize("OUW25.BargainCalc.DefaultOpponent"),
           knowOpponent: form.elements.knowOpponent.checked, partial: form.elements.partial.checked,
           consequence: form.elements.partial.checked ? value("consequence") : "", custom: value("custom").trim(),
-          advantages: readCount("advantages"), complications: readCount("complications"),
+          advantages: readCount("advantages"), helperAdvantages: helpers.size, complications: readCount("complications"),
           wounds: selectedWounds.size, woundSlots: [...selectedWounds], luck, donations, source: value("source")
         });
         const marks = root.querySelector("[data-luck-marks]");
@@ -174,6 +174,10 @@ export async function openUnluck(actor, draft = null, title = null) {
           donations = Math.min(donations, limit);
           root.querySelector("[data-donation-plus]").disabled = donations >= limit;
           root.querySelector("[data-donation-minus]").disabled = donations === 0;
+          const bonus = root.querySelector("[data-helper-bonus]");
+          bonus.hidden = helpers.size === 0;
+          bonus.textContent = `+${helpers.size}`;
+          bonus.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.HelperBonus", { count: helpers.size }));
           form.elements.consequence.disabled = !form.elements.partial.checked;
           root.querySelector("[data-custom]").hidden = !form.elements.partial.checked || value("consequence") !== "custom";
           root.querySelector("[data-luck-selected]").textContent = luck;
@@ -203,6 +207,7 @@ export async function openUnluck(actor, draft = null, title = null) {
             submit.disabled = false;
           } catch {
             error.textContent = game.i18n.localize("OUW25.Unluck.Invalid");
+            root.querySelector("[data-dice-count]").textContent = "—";
             root.querySelector("[data-odds]").textContent = "—";
             submit.disabled = true;
           }
@@ -258,7 +263,7 @@ export async function openUnluck(actor, draft = null, title = null) {
             button.className = "ouw25-bargain-entry";
             button.append(participant(helper), document.createTextNode(" ×"));
             button.setAttribute("aria-label", game.i18n.format("OUW25.BargainCalc.RemoveHelper", { name: helper.name }));
-            button.addEventListener("click", () => { helpers.delete(helper.uuid); showHelpers(); });
+            button.addEventListener("click", () => { helpers.delete(helper.uuid); showHelpers(); update(); });
             item.append(button); list.append(item);
           }
           root.querySelector("[data-helper-hint]").hidden = helpers.size > 0;
@@ -284,6 +289,7 @@ export async function openUnluck(actor, draft = null, title = null) {
         unregister = registerCollisionWindow(actor, "check", receive);
         root.querySelector("[data-transfer-bargain]").addEventListener("click", () => {
           const values = read();
+          delete values.helperAdvantages;
           transferCollision(actor, "bargain", { ...values, leader, cooperative, helpers: [...helpers.values()] }, openBargain);
         });
         root.querySelector("[data-luck-minus]").addEventListener("click", () => { luck = Math.max(0, luck - 1); update(); });
@@ -336,7 +342,7 @@ export async function openUnluck(actor, draft = null, title = null) {
                 if (eligible(dropped, "cooperative", "OWNER")) selectCooperative(dropped);
               } else if (eligible(dropped, "merchant")) {
                 if (zone.dataset.drop === "leader") selectLeader(dropped);
-                else if (dropped.uuid !== leader.uuid) { helpers.set(dropped.uuid, dropped); showHelpers(); }
+                else if (dropped.uuid !== leader.uuid) { helpers.set(dropped.uuid, dropped); showHelpers(); update(); }
               }
             } catch (error) { console.error("OUW25 | Check participant drop failed", error); }
           });
@@ -396,7 +402,7 @@ export async function openUnluck(actor, draft = null, title = null) {
         ["Helpers", participants.map(item => item.name).join(", ") || "—"],
         ["Cooperative", payer?.name || "—"],
         ["PartialConsequence", consequence], ["Complications", calculation.deduction],
-        ["Advantages", values.advantages]
+        ["Advantages", Number(values.advantages) + values.helperAdvantages]
       ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));
       details.push({ label: "OUW25.Collision.Dice", value: calculation.diceCount },
         { label: "OUW25.Unluck.Luck", value: calculation.luck },

@@ -12,7 +12,7 @@
       <div class="ouw25-bargain-drop" data-drop="leader" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Leader"}}" data-tooltip="{{localize "OUW25.BargainCalc.DropLeader"}}"><span class="ouw25-bargain-entry" data-leader></span></div>
     </section>
     <section>
-      <h5>{{localize "OUW25.BargainCalc.Helpers"}}</h5>
+      <h5>{{localize "OUW25.BargainCalc.Helpers"}} <span data-helper-bonus role="status" data-tooltip="{{localize "OUW25.BargainCalc.OtherAdvantages"}}" hidden></span></h5>
       <div class="ouw25-bargain-drop" data-drop="helpers" tabindex="0" aria-label="{{localize "OUW25.BargainCalc.Helpers"}}" data-tooltip="{{localize "OUW25.BargainCalc.DropHelpers"}}"><small data-helper-hint>{{localize "OUW25.BargainCalc.DropHelpers"}}</small><ul data-helpers></ul></div>
     </section>
     <section>
@@ -42,7 +42,7 @@
   <div class="ouw25-unluck-checks">
     <div class="ouw25-unluck-counts-group">
       <fieldset class="ouw25-unluck-counts" aria-label="{{localize "OUW25.Unluck.Modifiers"}}">
-        <label>{{localize "OUW25.BargainCalc.Advantages"}} <input name="advantages" type="number" min="0" max="96" step="1" value="0"></label>
+        <label data-tooltip="{{localize "OUW25.BargainCalc.OtherAdvantages"}}">{{localize "OUW25.BargainCalc.Advantages"}} <input name="advantages" type="number" min="0" max="96" step="1" value="0"></label>
         <label>{{localize "OUW25.BargainCalc.Complications"}} <input name="complications" type="number" min="0" step="1" value="0"></label>
       </fieldset>
     </div>

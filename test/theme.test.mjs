@@ -47,6 +47,8 @@ test("bargain outcome options are prefixed and the disabled selector is faded", 
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<option value="\{\{id\}\}">\+ \{\{localize label\}\}<\/option>/);
   assert.match(bargain, /<option value="custom">\+ \{\{localize "OUW25\.BargainCalc\.Custom"\}\}<\/option>/);
+  assert.match(bargain, /&#x2193;<\/span><input name="complications"/);
+  assert.match(bargain, /&#x2191;<\/span><input name="advantages"/);
   assert.match(styles, /\.ouw25-bargain-outcome > select:disabled\s*\{\s*opacity:\s*0\.5;/);
 });
 
@@ -67,6 +69,8 @@ test("bargain dialog scrolls its content while retaining its footer", () => {
   const footerPadding = styles.match(/\.ouw25-bargain-dialog \.form-footer\s*\{[^}]*padding-inline:\s*([^;]+);/s)?.[1];
   assert.equal(contentPadding, "calc(0.5rem + 20px) calc(0.5rem + 12px + 20px)");
   assert.equal(footerPadding, contentPadding);
+  assert.match(styles, /\.ouw25-bargain-dialog \.form-footer::before\s*\{[^}]*linear-gradient\(to top, rgba\(0, 0, 0, 0\.2\), transparent 40px\)[^}]*panel2\.webp[^}]*box-shadow:/s);
+  assert.match(styles, /button\[data-action="ok"\]\s*\{[^}]*flex:\s*0 0 50%;/s);
   assert.match(styles, /\.ouw25-bargain-dialog:not\(\.minimizing, \.minimized, \.maximizing\)\s*\{\s*min-height:\s*min\(var\(--ouw25-bargain-min-height/);
   assert.match(styles, /\.ouw25-bargain-dialog \.window-content\s*\{[^}]*background:[^;]*panel1\.webp[^;]*100% auto no-repeat;/s);
   assert.match(styles, /\.ouw25-bargain-scrollbar-thumb\s*\{[^}]*background:/s);
@@ -76,12 +80,17 @@ test("bargain panels and headings use the accent gradient", async () => {
   const asset = await readFile(new URL("../dist/ouw25/styles/images/panel1.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;/s);
-  assert.match(styles, /\.ouw25-bargain-drop::before\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);[^}]*mask-composite:\s*exclude;/s);
+  assert.match(styles, /\.ouw25-bargain-drop::before,\s*\.ouw25-bargain-drop::after\s*\{[^}]*mask-composite:\s*exclude;/s);
+  assert.match(styles, /\.ouw25-bargain-drop::before\s*\{\s*background:\s*var\(--ouw25-border-gradient\);/);
   assert.match(styles, /\.ouw25-bargain-points\s*\{[^}]*background:[^;]*var\(--ouw25-bargain-brass\) border-box;/s);
   for (const selector of ["breakdown", "price"]) {
     assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
   }
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
+  assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(1px 1px 0 rgba\(0, 0, 0, 0\.2\)\);/);
+  for (const selector of ["drop", "consequences fieldset"]) {
+    assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}::after\\s*\\{[^}]*background:\\s*rgba\\(0, 0, 0, 0\\.2\\);[^}]*transform:\\s*translate\\(1px, 1px\\);`, "s"));
+  }
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
 });
@@ -90,7 +99,7 @@ test("bargain mechanical controls retain distinct states and keyboard focus", as
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.equal((bargain.match(/<summary[^>]*><span aria-hidden="true">\?<\/span><\/summary>/g) ?? []).length, 2);
   assert.match(styles, /\.ouw25-bargain-help > summary:focus-visible\s*\{[^}]*outline:/s);
-  assert.match(styles, /\.ouw25-bargain-switch input:checked\s*\{[^}]*background:\s*#67734d;/s);
+  assert.match(styles, /\.ouw25-bargain-switch input:checked\s*\{[^}]*background:\s*#ff8e60;/s);
   assert.match(styles, /\.ouw25-bargain-switch input:checked::before\s*\{[^}]*transform:/s);
   assert.match(styles, /button\[data-action="ok"\]:active\s*\{[^}]*transform:\s*translateY\(2px\)/s);
   assert.match(styles, /button\[data-action="ok"\]:focus-visible\s*\{[^}]*outline:/s);
@@ -99,7 +108,7 @@ test("bargain mechanical controls retain distinct states and keyboard focus", as
 test("bargain warning slides behind the window edge and respects reduced motion", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /data-error role="alert" aria-hidden="true"/);
-  assert.match(styles, /\.ouw25-bargain-error\s*\{[^}]*color:\s*#ff8e60;[^}]*background:\s*linear-gradient\(#48251c, #28120e\);[^}]*font-family:\s*"Alice", Georgia, serif;/s);
+  assert.match(styles, /\.ouw25-bargain-error\s*\{[^}]*color:\s*#ff795c;[^}]*background:\s*linear-gradient\(#341911, #1a0b09\);[^}]*font-family:\s*"Alice", Georgia, serif;/s);
   assert.match(styles, /\.ouw25-bargain-error\s*\{[^}]*border-radius:\s*0 0 0\.5rem 0\.5rem;[^}]*transition:\s*transform 250ms ease/s);
   assert.match(styles, /\.ouw25-bargain-error\[aria-hidden="true"\]\s*\{[^}]*visibility:\s*hidden;[^}]*transform:\s*translateY\(-100%\)/s);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.ouw25-bargain-error,\s*\.ouw25-bargain-error\[aria-hidden="true"\]\s*\{\s*transition:\s*none;/);
@@ -136,7 +145,9 @@ test("bargain participant cards use paper and consequence frames share their cor
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   assert.match(styles, /\.ouw25-bargain-entry\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*background:[^;]*smallpaper6\.webp[^;]*;[^}]*color:\s*var\(--ouw25-color-ink\);/s);
   assert.match(styles, /\.ouw25-bargain-consequences fieldset\s*\{[^}]*border-radius:\s*0\.25rem;[^}]*border-image-width:\s*1px 0 0;/s);
-  assert.match(styles, /\.ouw25-bargain-consequences fieldset::before\s*\{[^}]*border-radius:\s*inherit;[^}]*mask-composite:\s*exclude;/s);
+  assert.match(styles, /\.ouw25-bargain-consequences fieldset::before,\s*\.ouw25-bargain-consequences fieldset::after\s*\{[^}]*border-radius:\s*inherit;[^}]*mask-composite:\s*exclude;/s);
+  assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry:hover:not\(:disabled\)\s*\{[^}]*background:\s*transparent;[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*filter:\s*none;/s);
+  assert.match(styles, /\[data-helpers\] button\.ouw25-bargain-entry:hover::before\s*\{\s*opacity:\s*0\.8;/);
 });
 
 test("the sheet minimum height does not interfere with Foundry window minimization", () => {

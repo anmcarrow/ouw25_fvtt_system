@@ -459,10 +459,8 @@ export async function openBargain(actor) {
           root.querySelectorAll("[data-enemy-row]").forEach((row, index) => {
             row.hidden = index >= Number(values.enemies) || index >= MAX_ENEMIES;
           });
-          root.querySelector("[data-contact-target]").textContent = values.knowOpponent
-            ? target ? game.i18n.format("OUW25.BargainCalc.ContactTarget", { name: target.name })
-              : game.i18n.localize("OUW25.BargainCalc.ContactUnavailable")
-            : "";
+          root.querySelector("[data-contact-target]").textContent = values.knowOpponent && !target
+            ? game.i18n.localize("OUW25.BargainCalc.ContactUnavailable") : "";
           try {
             const result = calculateBargain(values);
             const priceIcon = root.querySelector("[data-price-icon]");

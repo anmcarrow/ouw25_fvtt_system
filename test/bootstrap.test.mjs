@@ -1599,6 +1599,7 @@ test("English bargain text uses ampersands", async () => {
   const { KnowOpponent, ...otherTexts } = BargainCalc;
   assert.equal(KnowOpponent, "... and now you know them? (Y/N)");
   assert.equal(BargainCalc.Title, "Success Calculator");
+  assert.equal(Unluck.ToBargain, "Success Calculator");
   assert.equal(Unluck.ToCheck, "(Un)lucky Gambler");
   assert.equal(Unluck.DonationMore, "Spend more!");
   assert.equal(Unluck.DonationLess, "Spend less!");

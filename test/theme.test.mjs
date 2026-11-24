@@ -45,6 +45,8 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*justify-content:\s*flex-end;/s);
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*gap:\s*0\.28125rem;/s);
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
+  assert.match(styles, /:is\(\.ouw25-bargain-debts > label, \.ouw25-bargain-enemy > label\) > span\s*\{\s*font-size:\s*1em;/);
+  assert.match(styles, /\.ouw25-bargain-enemies > \[data-enemy-row\]:first-of-type\s*\{\s*margin-block-start:\s*-13px;/);
   for (const kind of ["loan", "enemies", "friends"]) {
     assert.match(bargain, new RegExp(`<span class="ouw25-bargain-points" data-points="${kind}" role="status"></span>`));
   }
@@ -106,7 +108,8 @@ test("bargain panels and headings use the accent gradient", async () => {
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /\.ouw25-bargain-counter > span,\s*label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
   assert.match(styles, /label > span:not\(\[aria-hidden="true"\]\)[\s\S]*?filter:\s*drop-shadow\(2px 2px 1px rgba\(0, 0, 0, 0\.7\)\);/);
-  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*transform:\s*translate\(2px, 2px\);/s);
+  assert.match(styles, /\.ouw25-bargain-drop::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*transform:\s*translate\(2px, 2px\);[^}]*filter:\s*blur\(1px\);/s);
+  assert.match(styles, /\.ouw25-bargain-consequences fieldset > legend::after\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.7\);[^}]*filter:\s*blur\(1px\);/s);
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /<label data-custom hidden><span>\{\{localize "OUW25\.BargainCalc\.CustomDescription"\}\}<\/span>/);
 });

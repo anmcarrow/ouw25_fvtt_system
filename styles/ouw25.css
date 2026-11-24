@@ -2132,6 +2132,30 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   display: none;
 }
 
+.ouw25-bargain-payment-help > summary {
+  position: relative;
+}
+
+.ouw25-bargain-payment-help > summary::before,
+.ouw25-bargain-payment-help > summary::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  width: 0.8rem;
+  height: 1px;
+  background: var(--ouw25-border-gradient);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.ouw25-bargain-payment-help > summary::before {
+  inset-inline-end: calc(100% + 2px);
+}
+
+.ouw25-bargain-payment-help > summary::after {
+  inset-inline-start: calc(100% + 2px);
+}
+
 .ouw25-bargain-help-content {
   position: absolute;
   inset-block-start: 100%;
@@ -2246,7 +2270,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-grid input:not([name
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain-grid > label > span {
-  font-size: 0.9em;
+  font-size: 1em;
 }
 
 .ouw25-bargain-consequences {

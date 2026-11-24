@@ -12,8 +12,8 @@ const CONSEQUENCES = [
   "past", "hidden", "deadline", "responsibility", "bystanders", "grudge"
 ];
 const PAYMENT_FIELDS = [
-  ["traits", "Traits"], ["captainTraits", "CaptainTraits"], ["time", "Time"], ["unrest", "Unrest"],
-  ["budget", "Budget"], ["cash", "Cash"]
+  ["traits", "Traits"], ["captainTraits", "CaptainTraits"], ["unrest", "Unrest"], ["time", "Time"],
+  ["cash", "Cash"], ["budget", "Budget"]
 ];
 
 function bargainScrollbar(root, form, scrollArea, content) {

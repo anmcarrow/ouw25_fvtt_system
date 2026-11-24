@@ -1682,7 +1682,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async (_path, data) => {
       assert.deepEqual(data.paymentFields.map(field => field.name),
-        ["traits", "captainTraits", "time", "unrest", "budget", "cash"]);
+        ["traits", "captainTraits", "unrest", "time", "cash", "budget"]);
       return "";
     } },
     api: { DialogV2: { input: async config => {

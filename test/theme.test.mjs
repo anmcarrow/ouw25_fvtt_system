@@ -15,7 +15,7 @@ test("bargain payment field captions are compact and bold without restyling inpu
   assert.match(bargain, /\{\{#each paymentFields\}\}\s*<label><span>\{\{localize label\}\}<\/span> <input name="\{\{name\}\}"/);
   assert.match(bargain, /name="friend"[^>]*> <span>\{\{name\}\}<\/span>/);
   assert.match(styles, /\.ouw25-bargain-payment label > span\s*\{\s*font-size:\s*0\.8em;\s*font-weight:\s*bold;/);
-  assert.match(styles, /\.ouw25-bargain-grid > label > span\s*\{\s*font-size:\s*0\.9em;/);
+  assert.match(styles, /\.ouw25-bargain-grid > label > span\s*\{\s*font-size:\s*1em;/);
   assert.match(styles, /\.ouw25-bargain-people h5\s*\{\s*font-size:\s*0\.9em;/);
 });
 
@@ -28,6 +28,7 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   assert.match(styles, /\.ouw25-bargain-summary\s*\{[^}]*border:\s*1px solid transparent;[^}]*font-size:\s*min\(0\.8em, 0\.8rem\);/s);
   assert.match(styles, /\.ouw25-bargain-breakdown\s*\{[^}]*font-size:\s*0\.8em;/s);
   assert.match(styles, /\.ouw25-bargain-price p\s*\{[^}]*font-size:\s*min\(1em, 0\.8rem\);/s);
+  assert.match(styles, /\.ouw25-bargain-payment-help > summary::before,\s*\.ouw25-bargain-payment-help > summary::after\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);/s);
 });
 
 test("bargain consequences and payment controls use the requested layouts", async () => {

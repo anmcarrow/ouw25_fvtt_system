@@ -17,6 +17,10 @@ const PAYMENT_FIELDS = [
 ];
 
 function bargainScrollbar(root, form, scrollArea, content) {
+  const consequences = root.querySelector(".ouw25-bargain-consequences");
+  const backdrop = document.createElement("div");
+  backdrop.className = "ouw25-bargain-consequences-backdrop";
+  backdrop.setAttribute("aria-hidden", "true");
   const track = document.createElement("div");
   const thumb = document.createElement("div");
   track.className = "ouw25-bargain-scrollbar";
@@ -30,9 +34,15 @@ function bargainScrollbar(root, form, scrollArea, content) {
   scrollArea.id ||= `${root.id}-bargain-content`;
   track.setAttribute("aria-controls", scrollArea.id);
   track.append(thumb);
-  form.append(track);
+  form.append(backdrop, track);
 
   const sync = () => {
+    const formRect = form.getBoundingClientRect();
+    const consequencesRect = consequences.getBoundingClientRect();
+    backdrop.style.left = `${consequencesRect.left - formRect.left - 30}px`;
+    backdrop.style.top = `${consequencesRect.top - formRect.top}px`;
+    backdrop.style.width = `${consequencesRect.width + 60}px`;
+    backdrop.style.height = `${consequencesRect.height + 150}px`;
     const height = scrollArea.clientHeight;
     const maximum = Math.max(0, scrollArea.scrollHeight - height);
     track.hidden = maximum === 0;
@@ -84,10 +94,12 @@ function bargainScrollbar(root, form, scrollArea, content) {
   const observer = new ResizeObserver(sync);
   observer.observe(scrollArea);
   observer.observe(content);
+  observer.observe(consequences);
   sync();
   return { sync, destroy() {
     observer.disconnect();
     scrollArea.removeEventListener("scroll", sync);
+    backdrop.remove();
     track.remove();
   } };
 }

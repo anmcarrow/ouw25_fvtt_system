@@ -82,6 +82,11 @@ test("bargain panels and headings use the accent gradient", async () => {
   assert.match(styles, /\.ouw25-bargain-enemies legend label > span[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
 });
 
+test("bargain consequences backdrop is translucent and non-interactive", () => {
+  assert.match(styles, /\.ouw25-bargain-consequences-backdrop\s*\{[^}]*background:\s*rgba\(0, 0, 0, 0\.2\);[^}]*filter:\s*blur\(3px\);[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-bargain-dialog \.dialog-form\s*\{[^}]*isolation:\s*isolate;[^}]*overflow:\s*hidden;/s);
+});
+
 test("bargain headings and labels use the bundled Alice font", async () => {
   assert.match(styles, /\.ouw25-bargain-dialog \.ouw25-bargain :is\(h1, h2, h3, h4, h5, h6, legend, label\)\s*\{\s*font-family:\s*"Alice", Georgia, serif;/);
   for (const subset of ["cyrillic-ext", "cyrillic", "latin-ext", "latin"]) {

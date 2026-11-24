@@ -1628,9 +1628,11 @@ test("bargain dialog orders payment fields and validates contact and partial out
   };
   fields.namedItem = name => fields[name];
   let selectedFriends = [];
-  const form = Object.assign(new EventTarget(), { elements: fields, append(element) { this.scrollbar = element; },
+  const form = Object.assign(new EventTarget(), { elements: fields, append(backdrop, track) { this.backdrop = backdrop; this.scrollbar = track; },
+    getBoundingClientRect: () => ({ left: 100, top: 100 }),
     querySelectorAll: selector => selector === 'input[name="friend"]:checked' ? selectedFriends : [] });
   const scrollArea = Object.assign(new EventTarget(), { clientHeight: 600, scrollHeight: 600, scrollTop: 0, offsetTop: 0 });
+  const consequencesRect = { left: 150, top: 400, width: 600, height: 200 };
   let leader;
   const elements = {
     form, "[data-leader]": { replaceChildren(child) { leader = child; } }, "[data-cooperative]": { replaceChildren() {} },
@@ -1638,7 +1640,8 @@ test("bargain dialog orders payment fields and validates contact and partial out
     "[data-custom]": { hidden: true }, "[data-new-creditor]": {}, "[data-no-enemies]": {}, "[data-contact-target]": {}, "[data-price]": {},
     "[data-price-icon]": { setAttribute(name, value) { this[name] = value; } },
     "[data-summary]": {}, "[data-breakdown]": {}, "[data-error]": {},
-    ".dialog-content": scrollArea, "[data-bargain]": { offsetHeight: 700 }
+    ".dialog-content": scrollArea, "[data-bargain]": { offsetHeight: 700 },
+    ".ouw25-bargain-consequences": { getBoundingClientRect: () => consequencesRect }
   };
   const badges = ["loan", "enemies", "friends"].map(kind => ({
     dataset: { points: kind }, setAttribute(name, value) { this[name] = value; }
@@ -1682,6 +1685,14 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.deepEqual(badges.map(badge => badge.textContent), [0, 0, 0]);
       assert.equal(elements["[data-price-icon]"].textContent, "🟢");
       assert.equal(form.scrollbar.hidden, true);
+      assert.deepEqual(form.backdrop.style, { left: "20px", top: "300px", width: "660px", height: "350px" });
+      consequencesRect.top = 350;
+      consequencesRect.height = 400;
+      scrollArea.dispatchEvent(new Event("scroll"));
+      assert.equal(form.backdrop.style.top, "250px");
+      assert.equal(form.backdrop.style.height, "550px");
+      consequencesRect.top = 400;
+      consequencesRect.height = 200;
       for (const name of ["traits", "captainTraits", "time", "unrest", "cash", "budget", "loan", "enemies", "advantages", "complications"]) {
         const original = fields[name];
         fields[name] = { value: "", validity: { badInput: false } };
@@ -1766,8 +1777,10 @@ test("bargain dialog orders payment fields and validates contact and partial out
       assert.equal(config.ok.callback(null, { form }).result.price, 1);
       actor.prototypeToken.texture.src = "tokens/*.webp";
       const oldScrollbar = form.scrollbar;
+      const oldBackdrop = form.backdrop;
       config.render(null, dialog);
       assert.equal(oldScrollbar.removed, true);
+      assert.equal(oldBackdrop.removed, true);
       assert.equal(observers[0].disconnected, true);
       assert.equal(leader.children[0].src, "portrait.webp");
       return null;
@@ -1776,6 +1789,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
   try {
     await openBargain(actor);
     assert.equal(form.scrollbar.removed, true);
+    assert.equal(form.backdrop.removed, true);
     assert.ok(observers.every(observer => observer.disconnected));
   } finally {
     globalThis.game = previous.game;

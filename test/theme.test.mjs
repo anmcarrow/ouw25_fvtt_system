@@ -129,7 +129,7 @@ test("bargain mechanical controls retain distinct states and keyboard focus", as
 });
 
 test("bargain empty states slide out on paper cards and respect reduced motion", () => {
-  assert.match(styles, /\.ouw25-bargain-empty\[data-no-enemies\] > span\s*\{\s*position:\s*relative;\s*inset-block-start:\s*4px;/);
+  assert.match(styles, /\.ouw25-bargain-empty\[data-no-enemies\] > span\s*\{\s*position:\s*relative;\s*inset-block-start:\s*7px;/);
   assert.match(styles, /\.ouw25-bargain-empty > span\s*\{[^}]*smallpaper6\.webp[^}]*color:\s*var\(--ouw25-color-ink\);[^}]*transition:\s*transform 600ms ease/s);
   assert.match(styles, /\.ouw25-bargain-empty\[aria-hidden="true"\] > span\s*\{[^}]*transition:\s*transform 600ms ease, visibility 0s 600ms, scale 150ms ease, rotate 150ms ease;/s);
   assert.match(styles, /\.ouw25-bargain-empty > span:hover:has\(> button\[data-add-enemy\]:not\(:disabled\)\)\s*\{\s*scale:\s*1\.03;\s*rotate:\s*2deg;/);

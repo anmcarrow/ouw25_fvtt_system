@@ -2467,7 +2467,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain input[name="enemies"
 
 .ouw25-bargain-empty[data-no-enemies] > span {
   position: relative;
-  inset-block-start: 4px;
+  inset-block-start: 7px;
 }
 
 .ouw25-bargain-empty > span:hover:has(> button[data-add-enemy]:not(:disabled)) {

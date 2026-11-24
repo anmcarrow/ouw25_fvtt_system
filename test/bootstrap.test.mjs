@@ -2039,13 +2039,12 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   const selectors = {
     form, "[data-custom]": {}, "[data-luck-marks]": element(), "[data-luck-selected]": {},
     "[data-donation-amount]": {}, "[data-check-error]": {},
-    '[data-action="ok"]': {}, "[data-dice-count]": { style: { values: {}, setProperty(name, value) { this.values[name] = value; } } },
+    '[data-action="ok"]': element(), "[data-dice-count]": { style: { values: {}, setProperty(name, value) { this.values[name] = value; } } },
     "[data-odds]": {},
     "[data-wounds]": element(), "[data-cooperative]": element(), "[data-cooperative-hint]": {},
     "[data-leader]": element(), "[data-helpers]": element(), "[data-helper-hint]": {},
     "[data-transfer-bargain]": element(), "[data-luck-minus]": element(), "[data-luck-plus]": element(),
     "[data-luck-drop]": element(), "[data-donation-minus]": element(), "[data-donation-plus]": element(),
-    ".form-footer": element(), "[data-unluck-staged]": element(),
     ".ouw25-unluck-resources": {}, ".ouw25-unluck-donation": { getBoundingClientRect: () => ({ width: donationWidth }) },
     ".ouw25-unluck-status": { style: {} }
   };
@@ -2086,7 +2085,8 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   try {
     const open = openUnluck(actor);
     await new Promise(resolve => setImmediate(resolve));
-    assert.ok(selectors[".form-footer"].children.includes(selectors["[data-unluck-staged]"]));
+    assert.equal(selectors['[data-action="ok"]'].dataset.tooltip, "OUW25.Unluck.Staged");
+    assert.equal(selectors['[data-action="ok"]']["aria-description"], "OUW25.Unluck.Staged");
     assert.equal(selectors[".ouw25-unluck-status"].style.width, "220px");
     assert.equal(selectors["[data-odds]"].textContent, "48.2% / 38.6% / 13.2%");
     language = 1;

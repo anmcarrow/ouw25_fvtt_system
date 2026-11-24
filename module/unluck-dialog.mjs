@@ -84,7 +84,7 @@ export async function openUnluck(actor, draft = null, title = null) {
       classes: ["ouw25", "ouw25-unluck-dialog"],
       window: { title: game.i18n.format("OUW25.Unluck.WindowTitle", { name: actor.name }), resizable: true },
       position: { width: 622, height: 800 }, modal: false, content, form: { closeOnSubmit: false },
-      buttons: [{ action: "ok", default: true, label: game.i18n.localize("OUW25.Collision.Roll"), callback: async (_event, button) => {
+      buttons: [{ action: "ok", default: true, label: game.i18n.localize("OUW25.Unluck.Roll"), callback: async (_event, button) => {
         if (committed) return;
         const form = button.form;
         let selection;
@@ -127,8 +127,10 @@ export async function openUnluck(actor, draft = null, title = null) {
         dialogInstance = dialog;
         root = dialog.element;
         const form = root.querySelector("form");
-        const footer = root.querySelector(".form-footer"), staged = root.querySelector("[data-unluck-staged]");
-        if (footer && staged) footer.append(staged);
+        const submit = root.querySelector('[data-action="ok"]');
+        const staged = game.i18n.localize("OUW25.Unluck.Staged");
+        submit.dataset.tooltip = staged;
+        submit.setAttribute("aria-description", staged);
         const resources = root.querySelector(".ouw25-unluck-resources");
         const donationBlock = root.querySelector(".ouw25-unluck-donation");
         const statusBlock = root.querySelector(".ouw25-unluck-status");

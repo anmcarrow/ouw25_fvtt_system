@@ -2003,7 +2003,7 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer::before {
 .ouw25-bargain-upper-backdrop {
   position: absolute;
   inset-inline: -30px;
-  height: 110px;
+  height: 105px;
   z-index: 0;
   background: rgba(0, 0, 0, 0.2);
   filter: blur(3px);

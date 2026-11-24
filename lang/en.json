@@ -780,7 +780,7 @@
       "PriceUncovered": "Price not yet covered",
       "PriceUnavailable": "Price unavailable",
       "ScrollContent": "Scroll bargain calculator",
-      "PaymentSummary": "Covered: {paid}; remaining: {remaining}; excess: {excess}. Per point: {money} og. or {loan} og. in loans. Unrest to add: {unrest}.",
+      "PaymentSummary": "Per point: {money} og. or {loan} og. in loans. Unrest to add: {unrest}.",
       "MoneyUsed": "Deduct: pocket {cash} og., budget {budget} og.; unspent: {unspent} og.",
       "BreakdownTotal": "Pts. gathered {sum}",
       "Breakdown": ": advantages {advantages}, time {time}, unrest {unrest}, money {money}, loan {loan}, enemies {enemies}, friends {friends}.",

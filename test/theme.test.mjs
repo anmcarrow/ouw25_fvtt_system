@@ -35,6 +35,15 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   assert.match(styles, /\.ouw25-bargain-payment-help > summary::before,\s*\.ouw25-bargain-payment-help > summary::after\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);/s);
 });
 
+test("bargain status keeps payment rates and unrest without covered totals", async () => {
+  for (const language of ["en", "ru"]) {
+    const data = JSON.parse(await readFile(new URL(`../dist/ouw25/lang/${language}.json`, import.meta.url), "utf8"));
+    const summary = data.OUW25.BargainCalc.PaymentSummary;
+    assert.doesNotMatch(summary, /\{(?:paid|remaining|excess)\}/);
+    for (const field of ["money", "loan", "unrest"]) assert.ok(summary.includes(`{${field}}`));
+  }
+});
+
 test("bargain consequences and payment controls use the requested layouts", async () => {
   const bargain = await readFile(new URL("../dist/ouw25/templates/bargain.hbs", import.meta.url), "utf8");
   assert.match(bargain, /class="ouw25-bargain-consequences">[\s\S]*?class="ouw25-bargain-debts"[\s\S]*?class="ouw25-bargain-consequences-right">[\s\S]*?class="ouw25-bargain-enemies"[\s\S]*?BargainCalc\.SacrificialFriends/);

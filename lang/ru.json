@@ -780,7 +780,7 @@
       "PriceUncovered": "Цена ещё не покрыта",
       "PriceUnavailable": "Цена недоступна",
       "ScrollContent": "Прокрутка калькулятора размена",
-      "PaymentSummary": "Покрыто: {paid}; осталось: {remaining}; избыток: {excess}. За пункт: {money} ог. или заём {loan} ог. Смуты будет добавлено: {unrest}.",
+      "PaymentSummary": "За пункт: {money} ог. или заём {loan} ог. Смуты будет добавлено: {unrest}.",
       "MoneyUsed": "Будет списано: из кармана {cash} ог., из бюджета {budget} ог.; неиспользовано: {unspent} ог.",
       "BreakdownTotal": "Набрано пунктов {sum}",
       "Breakdown": ": преимущества {advantages}, время {time}, смута {unrest}, деньги {money}, заём {loan}, враги {enemies}, друзья {friends}.",

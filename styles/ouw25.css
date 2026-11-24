@@ -2103,7 +2103,7 @@ body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data
 
 body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check] > span > span {
   position: relative;
-  top: -3px;
+  top: 0;
   background: var(--ouw25-bargain-brass);
   background-clip: text;
   -webkit-background-clip: text;

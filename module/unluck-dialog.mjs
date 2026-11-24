@@ -70,7 +70,8 @@ export async function openUnluck(actor, draft = null, title = null) {
   let leader = actor, cooperative = null, cooperativeManual = false, luck = 0, donations = 0;
   let selectedWounds = new Set();
   const helpers = new Map();
-  let snapshot, unregister = () => {}, actorHook, read, dialogInstance, root, committed = false, closeInvalid = false;
+  let snapshot, unregister = () => {}, actorHook, read, refresh, dialogInstance, root;
+  let committed = false, closed = false, finish, generation = 0;
   try {
     const cooperatives = Array.from(game.actors.values()).filter(item => eligible(item, "cooperative", "OWNER"));
     cooperative = firstFounderCooperative(leader);
@@ -79,30 +80,49 @@ export async function openUnluck(actor, draft = null, title = null) {
     const content = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/unluck-check.hbs", {
       cooperatives, consequences: consequences.map(id => ({ id, label: `OUW25.BargainCalc.Consequences.${id}` }))
     });
-    const selection = await foundry.applications.api.DialogV2.input({
+    const config = {
       classes: ["ouw25", "ouw25-unluck-dialog"],
       window: { title: game.i18n.format("OUW25.Unluck.WindowTitle", { name: actor.name }), resizable: true },
-      position: { width: 800, height: 800 }, modal: false, content, rejectClose: false, form: { closeOnSubmit: false },
-      ok: { label: game.i18n.localize("OUW25.Collision.Roll"), callback: (_event, button) => {
+      position: { width: 800, height: 800 }, modal: false, content, form: { closeOnSubmit: false },
+      buttons: [{ action: "ok", default: true, label: game.i18n.localize("OUW25.Collision.Roll"), callback: async (_event, button) => {
+        if (committed) return;
+        const form = button.form;
+        let selection;
         try {
-          if (committed) return false;
-          const form = button.form;
           const values = read(form);
           const calculation = calculateCheck(values);
           const target = values.knowOpponent && cooperative ? contactCooperative(cooperative, leader) : null;
           if (values.knowOpponent && !target) throw new Error("contact");
           checkCostUpdates(leader, cooperative, snapshot, { ...calculation, source: values.source, wounds: values.woundSlots });
-          committed = true;
-          form.inert = true;
-          unregister();
-          unregister = () => {};
-          return { values, calculation, leader, cooperative, snapshot, helpers: [...helpers.values()], contact: target };
+          selection = { values, calculation, leader, cooperative, snapshot, helpers: [...helpers.values()], contact: target };
         } catch {
-          closeInvalid = true;
           ui.notifications.warn(game.i18n.localize("OUW25.Unluck.Invalid"));
-          return false;
+          setTimeout(() => { if (!closed && !committed) refresh(); }, 0);
+          return;
         }
-      } },
+        committed = true;
+        generation++;
+        form.inert = true;
+        let costsAttempted = false;
+        try {
+          if (!await perform(selection, () => { costsAttempted = true; })) {
+            for (const reel of root.querySelectorAll("[data-reel]")) reel.textContent = "—";
+          }
+        } catch (error) {
+          for (const reel of root.querySelectorAll("[data-reel]")) reel.textContent = "—";
+          console.error("OUW25 | Check failed", error);
+          ui.notifications.error(game.i18n.localize("OUW25.Unluck.Invalid"));
+        } finally {
+          if (costsAttempted) { luck = 0; donations = 0; selectedWounds.clear(); }
+          committed = false;
+          if (closed) finish();
+          else {
+            form.inert = false;
+            refresh();
+            setTimeout(() => { if (!closed && !committed) refresh(); }, 0);
+          }
+        }
+      } }],
       render: (_event, dialog) => {
         dialogInstance = dialog;
         root = dialog.element;
@@ -156,6 +176,7 @@ export async function openUnluck(actor, draft = null, title = null) {
         const showWounds = () => {
           const area = root.querySelector("[data-wounds]");
           area.replaceChildren();
+          area.dataset.count = snapshot.wounds.length;
           snapshot.wounds.forEach((marked, index) => {
             const label = document.createElement("label"), input = document.createElement("input");
             input.type = "checkbox"; input.checked = marked || selectedWounds.has(index + 1);
@@ -170,13 +191,11 @@ export async function openUnluck(actor, draft = null, title = null) {
             );
             input.setAttribute("aria-label", description);
             input.dataset.tooltip = description;
-            label.append(input);
-            if (index + 1 === snapshot.wounds.length) {
-              const icon = document.createElement("span");
-              icon.textContent = "💀";
-              icon.setAttribute("aria-hidden", "true");
-              label.append(icon);
-            }
+            label.className = "ouw25-condition-check";
+            const icon = document.createElement("span");
+            icon.textContent = index + 1 === snapshot.wounds.length ? "💀" : "🩸";
+            icon.setAttribute("aria-hidden", "true");
+            label.append(input, icon);
             area.append(label);
           });
         };
@@ -270,11 +289,12 @@ export async function openUnluck(actor, draft = null, title = null) {
           zone.addEventListener("drop", async event => {
             event.preventDefault();
             if (committed) return;
+            const dropGeneration = generation;
             try {
               const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
               if (data.type !== "Actor") return;
               const dropped = await foundry.documents.Actor.fromDropData(data);
-              if (committed) return;
+              if (committed || dropGeneration !== generation) return;
               if (zone.dataset.drop === "cooperative") {
                 if (eligible(dropped, "cooperative", "OWNER")) selectCooperative(dropped);
               } else if (eligible(dropped, "merchant")) {
@@ -295,72 +315,91 @@ export async function openUnluck(actor, draft = null, title = null) {
           root.querySelector("[data-leader]").replaceChildren(participant(leader));
           showWounds(); update();
         });
+        refresh = () => {
+          snapshot = checkCostSnapshot(leader, cooperative);
+          selectedWounds = new Set([...selectedWounds].filter(slot => !snapshot.wounds[slot - 1]));
+          luck = Math.min(luck, leader.system.luck);
+          root.querySelector("[data-leader]").replaceChildren(participant(leader));
+          showWounds(); update();
+        };
       }
-    });
-    if (!selection) return;
-    const { values, calculation, leader: roller, cooperative: payer, helpers: participants, contact } = selection;
-    const documents = [...new Set([actor, roller, ...participants, ...(payer ? [payer] : []), ...(contact ? [contact] : [])])];
-    if (documents.some(document => !document.testUserPermission(game.user, "OBSERVER"))) throw new Error("permissions");
-    const recipients = Array.from(game.users).filter(user => user.isGM
-      || documents.every(document => document.testUserPermission(user, "OBSERVER"))).map(user => user.id);
-    if (!recipients.length) throw new Error("recipients");
-    const mode = game.settings.get("core", "messageMode");
-    const blind = ["blind", "blindroll"].includes(mode);
-    const reduced = spinReels(root, blind);
-    const roll = await new foundry.dice.Roll(`${calculation.diceCount}d6`).evaluate({ allowInteractive: !blind });
-    const dice = roll.dice.flatMap(term => term.results.filter(result => result.active).map(result => result.result));
-    const remaining = resolveCollision(dice, calculation.deduction).remaining + calculation.luck;
-    const outcome = remaining >= 2 ? "Success" : remaining === 1 ? "Partial" : "Failure";
-    try {
-      await applyCheckCosts(roller, payer, selection.snapshot, { ...calculation, source: values.source, wounds: values.woundSlots });
-      if (contact) await recordBargainContact(contact, values.opponent);
-    } catch (error) {
-      console.error("OUW25 | Check costs failed", error);
-      ui.notifications.error(game.i18n.localize("OUW25.Unluck.CostsFailed"));
-      return;
-    }
-    await showReels(root, dice, calculation.deduction, blind, reduced);
-    const result = game.i18n.format("OUW25.Collision.Result", {
-      outcome: game.i18n.localize(`OUW25.Collision.${outcome}`), remaining
-    });
-    const consequence = values.consequence === "custom" ? values.custom
-      : values.consequence ? game.i18n.localize(`OUW25.BargainCalc.Consequences.${values.consequence}`) : "—";
-    const details = [
-      ["Goal", values.goal || game.i18n.localize("OUW25.BargainCalc.GoalPlaceholder")],
-      ["Opponent", values.opponent], ["Leader", roller.name],
-      ["Helpers", participants.map(item => item.name).join(", ") || "—"],
-      ["Cooperative", payer?.name || "—"],
-      ["PartialConsequence", consequence], ["Complications", calculation.deduction],
-      ["Advantages", values.advantages]
-    ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));
-    details.push({ label: "OUW25.Collision.Dice", value: calculation.diceCount },
-      { label: "OUW25.Unluck.Luck", value: calculation.luck },
-      { label: "OUW25.Unluck.Donation", value: calculation.donation },
-      { label: "OUW25.Unluck.Wounds", value: values.woundSlots.join(", ") || "—" });
-    try {
-      const { ChatMessage } = foundry.documents;
-      const flavor = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/check-card.hbs", {
-        actorName: roller.name, title: title ?? game.i18n.localize("OUW25.Collision.Title"), result, details,
-        hint: [game.i18n.localize("OUW25.Unluck.AfterRoll"),
-          ...(hasExcessSuccesses(remaining, values.partial) ? [game.i18n.localize("OUW25.Unluck.ChangePlan")] : [])].join(" ")
+    };
+    async function perform(selection, costsStarted) {
+      const { values, calculation, leader: roller, cooperative: payer, helpers: participants, contact } = selection;
+      const documents = [...new Set([actor, roller, ...participants, ...(payer ? [payer] : []), ...(contact ? [contact] : [])])];
+      if (documents.some(document => !document.testUserPermission(game.user, "OBSERVER"))) throw new Error("permissions");
+      const recipients = Array.from(game.users).filter(user => user.isGM
+        || documents.every(document => document.testUserPermission(user, "OBSERVER"))).map(user => user.id);
+      if (!recipients.length) throw new Error("recipients");
+      const mode = game.settings.get("core", "messageMode");
+      const blind = ["blind", "blindroll"].includes(mode);
+      const reduced = spinReels(root, blind);
+      const roll = await new foundry.dice.Roll(`${calculation.diceCount}d6`).evaluate({ allowInteractive: !blind });
+      const dice = roll.dice.flatMap(term => term.results.filter(result => result.active).map(result => result.result));
+      const remaining = resolveCollision(dice, calculation.deduction).remaining + calculation.luck;
+      const outcome = remaining >= 2 ? "Success" : remaining === 1 ? "Partial" : "Failure";
+      try {
+        costsStarted();
+        await applyCheckCosts(roller, payer, selection.snapshot, { ...calculation, source: values.source, wounds: values.woundSlots });
+        if (contact) await recordBargainContact(contact, values.opponent);
+      } catch (error) {
+        console.error("OUW25 | Check costs failed", error);
+        ui.notifications.error(game.i18n.localize("OUW25.Unluck.CostsFailed"));
+        return false;
+      }
+      await showReels(root, dice, calculation.deduction, blind, reduced);
+      const result = game.i18n.format("OUW25.Collision.Result", {
+        outcome: game.i18n.localize(`OUW25.Collision.${outcome}`), remaining
       });
-      const message = { speaker: ChatMessage.getSpeaker({ actor: roller }), flavor, rolls: [roll] };
-      ChatMessage.applyRollMode(message, mode);
-      message.whisper = ["public", "ic", "publicroll", "roll"].includes(mode)
-        ? recipients : (message.whisper ?? []).filter(id => recipients.includes(id));
-      if (!message.whisper.length) throw new Error("No authorized recipients");
-      await ChatMessage.create(message);
-    } catch (error) {
-      console.error("OUW25 | Check chat failed", error);
-      ui.notifications.error(game.i18n.localize("OUW25.Unluck.ChatFailed"));
+      const consequence = values.consequence === "custom" ? values.custom
+        : values.consequence ? game.i18n.localize(`OUW25.BargainCalc.Consequences.${values.consequence}`) : "—";
+      const details = [
+        ["Goal", values.goal || game.i18n.localize("OUW25.BargainCalc.GoalPlaceholder")],
+        ["Opponent", values.opponent], ["Leader", roller.name],
+        ["Helpers", participants.map(item => item.name).join(", ") || "—"],
+        ["Cooperative", payer?.name || "—"],
+        ["PartialConsequence", consequence], ["Complications", calculation.deduction],
+        ["Advantages", values.advantages]
+      ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));
+      details.push({ label: "OUW25.Collision.Dice", value: calculation.diceCount },
+        { label: "OUW25.Unluck.Luck", value: calculation.luck },
+        { label: "OUW25.Unluck.Donation", value: calculation.donation },
+        { label: "OUW25.Unluck.Wounds", value: values.woundSlots.join(", ") || "—" });
+      try {
+        const { ChatMessage } = foundry.documents;
+        const flavor = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/check-card.hbs", {
+          actorName: roller.name, title: title ?? game.i18n.localize("OUW25.Collision.Title"), result, details,
+          hint: [game.i18n.localize("OUW25.Unluck.AfterRoll"),
+            ...(hasExcessSuccesses(remaining, values.partial) ? [game.i18n.localize("OUW25.Unluck.ChangePlan")] : [])].join(" ")
+        });
+        const message = { speaker: ChatMessage.getSpeaker({ actor: roller }), flavor, rolls: [roll] };
+        ChatMessage.applyRollMode(message, mode);
+        message.whisper = ["public", "ic", "publicroll", "roll"].includes(mode)
+          ? recipients : (message.whisper ?? []).filter(id => recipients.includes(id));
+        if (!message.whisper.length) throw new Error("No authorized recipients");
+        await ChatMessage.create(message);
+      } catch (error) {
+        console.error("OUW25 | Check chat failed", error);
+        ui.notifications.error(game.i18n.localize("OUW25.Unluck.ChatFailed"));
+      }
+      return true;
     }
+    await new Promise((resolve, reject) => {
+      finish = resolve;
+      const { render, ...options } = config;
+      dialogInstance = new foundry.applications.api.DialogV2(options);
+      dialogInstance.addEventListener("render", event => render(event, dialogInstance));
+      dialogInstance.addEventListener("close", () => {
+        closed = true;
+        unregister();
+        if (actorHook !== undefined) { Hooks.off("updateActor", actorHook); actorHook = undefined; }
+        if (!committed) finish();
+      }, { once: true });
+      Promise.resolve(dialogInstance.render({ force: true })).catch(reject);
+    });
   } finally {
     unregister();
     if (actorHook !== undefined) Hooks.off("updateActor", actorHook);
-    try {
-      if ((committed || closeInvalid) && dialogInstance?.rendered) await dialogInstance.close();
-    } finally {
-      pending.delete(actor.uuid);
-    }
+    pending.delete(actor.uuid);
   }
 }

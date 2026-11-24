@@ -903,7 +903,11 @@ test("the built package registers models and an editable notes sheet for its dec
   game.actors = new Map([[checkSheet.actor.id, checkSheet.actor]]);
   let checkDialog;
   foundry.applications.handlebars.renderTemplate = async () => "check form";
-  foundry.applications.api.DialogV2.input = async config => { checkDialog = config; return null; };
+  foundry.applications.api.DialogV2 = class {
+    constructor(config) { checkDialog = config; this.handlers = {}; }
+    addEventListener(event, callback) { this.handlers[event] = callback; }
+    render() { this.handlers.close(); }
+  };
   const rollTarget = { disabled: false };
   await Sheet.DEFAULT_OPTIONS.actions.rollCollision.call(checkSheet, null, rollTarget);
   assert.equal(checkDialog.content, "check form");
@@ -1954,7 +1958,11 @@ test("check includes its first viewable founder cooperative even without ownersh
     user: {}, i18n: { localize: key => key, format: key => key } };
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async (_path, data) => { choices = data.cooperatives; return ""; } },
-    api: { DialogV2: { input: async () => null } }
+    api: { DialogV2: class {
+      constructor() { this.handlers = {}; }
+      addEventListener(event, callback) { this.handlers[event] = callback; }
+      render() { this.handlers.close(); }
+    } }
   } };
   try {
     await openUnluck(leader);
@@ -2002,6 +2010,95 @@ test("check luck decorations persist across updates and follow the selected coun
     assert.equal(marks.empty, true);
   } finally {
     globalThis.document = previous;
+  }
+});
+
+test("check stays open for repeated rolls and clears only spent draft resources", async () => {
+  const { openUnluck } = await import(new URL("module/unluck-dialog.mjs", dist));
+  const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document,
+    Hooks: globalThis.Hooks, ui: globalThis.ui };
+  const actor = { id: "repeat", uuid: "Actor.repeat", name: "Merchant", documentName: "Actor", type: "merchant",
+    system: { past: "artist", luck: 2, pocketMoney: 500, wound1: false, wound2: false },
+    testUserPermission: () => true };
+  const element = () => Object.assign(new EventTarget(), {
+    children: [], dataset: {}, style: { setProperty() {} }, classList: { toggle() {} },
+    append(...items) { this.children.push(...items); },
+    replaceChildren(...items) { this.children = items; },
+    setAttribute(name, value) { this[name] = value; }
+  });
+  const fields = {
+    goal: { value: "Goal" }, opponent: { value: "" }, knowOpponent: { checked: false },
+    partial: Object.assign(new EventTarget(), { checked: false }), consequence: { value: "", disabled: true },
+    custom: { value: "" }, advantages: { value: "0" }, complications: { value: "0" }, source: { value: "cash" }
+  };
+  fields.namedItem = name => fields[name];
+  const form = Object.assign(new EventTarget(), { elements: fields, inert: false });
+  const selectors = {
+    form, "[data-custom]": {}, "[data-luck-marks]": element(), "[data-luck-selected]": {},
+    "[data-donation-amount]": {}, "[data-donation]": {}, "[data-check-error]": {},
+    '[data-action="ok"]': {}, "[data-dice-count]": {}, "[data-check-summary]": {}, "[data-odds]": {},
+    "[data-wounds]": element(), "[data-cooperative]": element(), "[data-cooperative-hint]": {},
+    "[data-leader]": element(), "[data-helpers]": element(), "[data-helper-hint]": {},
+    "[data-transfer-bargain]": element(), "[data-luck-minus]": element(), "[data-luck-plus]": element(),
+    "[data-luck-drop]": element(), "[data-donation-minus]": element(), "[data-donation-plus]": element()
+  };
+  const marks = selectors["[data-luck-marks]"];
+  Object.defineProperty(marks, "lastElementChild", { get() { return this.children.at(-1); } });
+  const root = { isConnected: false, querySelector: selector => selectors[selector], querySelectorAll: () => [] };
+  let dialog, chatCount = 0, updateCount = 0, hook;
+  globalThis.document = { createElement: element };
+  globalThis.Hooks = { on: (_name, callback) => { hook = callback; return callback; }, off() {} };
+  globalThis.ui = { notifications: { warn: () => assert.fail("unexpected warning"), error: () => assert.fail("unexpected error") } };
+  globalThis.game = { actors: new Map([[actor.id, actor]]), user: {}, users: [{ id: "gm", isGM: true }],
+    i18n: { localize: key => key, format: key => key }, settings: { get: () => "publicroll" } };
+  globalThis.foundry = { applications: {
+    handlebars: { renderTemplate: async () => "" },
+    api: { DialogV2: class {
+      constructor(options) { this.options = options; this.handlers = {}; dialog = this; }
+      addEventListener(name, callback) { this.handlers[name] = callback; }
+      render() { this.element = root; this.rendered = true; this.handlers.render(); }
+      close() { this.rendered = false; this.handlers.close(); }
+    } }
+  }, dice: { Roll: class {
+    async evaluate() { this.dice = [{ results: [6, 6, 2, 2].map(result => ({ active: true, result })) }]; return this; }
+  } }, documents: {
+    Actor: { updateDocuments: async updates => {
+      updateCount++;
+      for (const [key, value] of Object.entries(updates[0])) if (key.startsWith("system.")) actor.system[key.slice(7)] = value;
+      hook(actor);
+    } },
+    ChatMessage: { getSpeaker: () => ({}), applyRollMode() {}, create: async () => { chatCount++; } }
+  } };
+  try {
+    const open = openUnluck(actor);
+    await new Promise(resolve => setImmediate(resolve));
+    const click = selector => selectors[selector].dispatchEvent(new Event("click"));
+    click("[data-luck-plus]");
+    click("[data-donation-plus]");
+    const wound = selectors["[data-wounds]"].children[0].children[0];
+    wound.checked = true;
+    wound.dispatchEvent(new Event("change"));
+    await dialog.options.buttons[0].callback(null, { form });
+    assert.equal(dialog.rendered, true);
+    assert.equal(form.inert, false);
+    assert.equal(actor.system.luck, 1);
+    assert.equal(actor.system.pocketMoney, 320);
+    assert.equal(actor.system.wound1, true);
+    assert.equal(selectors["[data-luck-selected]"].textContent, 0);
+    assert.equal(selectors["[data-donation]"].textContent, "+0!");
+    assert.equal(selectors["[data-wounds]"].children[0].children[0].disabled, true);
+    click("[data-luck-plus]");
+    click("[data-donation-plus]");
+    await dialog.options.buttons[0].callback(null, { form });
+    assert.equal(actor.system.luck, 0);
+    assert.equal(actor.system.pocketMoney, 140);
+    assert.equal(updateCount, 2);
+    assert.equal(chatCount, 2);
+    assert.equal(dialog.rendered, true);
+    dialog.close();
+    await open;
+  } finally {
+    Object.assign(globalThis, previous);
   }
 });
 

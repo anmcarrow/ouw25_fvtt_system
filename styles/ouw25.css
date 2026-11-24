@@ -200,7 +200,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-hold-status {
   overflow: visible;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-condition-check {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-check {
   position: relative;
   display: inline-grid;
   place-items: center;
@@ -209,7 +209,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check {
   vertical-align: middle;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-check input {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -218,7 +218,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input {
   opacity: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-condition-check span {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-check span {
   display: grid;
   place-items: center;
   width: 100%;
@@ -230,12 +230,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-condition-check span {
   pointer-events: none;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input:not(:checked) + span {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-check input:not(:checked) + span {
   color: transparent;
   font-size: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-condition-check input:focus-visible + span {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-check input:focus-visible + span {
   outline: 2px solid var(--ouw25-color-accent-calm);
   outline-offset: 2px;
 }
@@ -1109,20 +1109,20 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds:has(.ouw25-woun
   row-gap: 11.7px;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots > .ouw25-condition-check {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots > .ouw25-condition-check {
   place-items: center;
   inline-size: 39.2px;
   block-size: 39.2px;
   margin: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check::before,
-body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check > span {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots .ouw25-condition-check::before,
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots .ouw25-condition-check > span {
   grid-area: 1 / 1;
   clip-path: polygon(25% 0, 75% 0, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0 75%, 0 25%);
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check::before {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots .ouw25-condition-check::before {
   content: "";
   inline-size: 32.8px;
   block-size: 32.8px;
@@ -1132,18 +1132,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-ch
   pointer-events: none;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check > span {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots .ouw25-condition-check > span {
   inline-size: 30.8px;
   block-size: 30.8px;
   border: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots .ouw25-condition-check:has(input:focus-visible) {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots .ouw25-condition-check:has(input:focus-visible) {
   outline: 2px solid var(--ouw25-color-accent-calm);
   border-radius: 0.25rem;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-wound-slots input:checked + span {
+body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots input:checked + span {
   font-size: 1.96rem;
 }
 
@@ -2305,23 +2305,30 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-donation select {
 .ouw25-unluck-checks {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: stretch;
+  gap: 0.5rem 2rem;
+  margin-block: 60px 30px;
 }
 
 .ouw25-unluck-counts {
   display: grid;
   gap: 0.35rem;
   min-width: 0;
+  height: 100%;
+  margin: 0;
 }
 
 .ouw25-unluck-counts-group {
+  position: relative;
   flex: 0 1 auto;
   min-width: 0;
 }
 
 .ouw25-unluck-counts-group > p {
-  margin: 0 0 0.25rem;
+  position: absolute;
+  bottom: calc(100% + 0.25rem);
+  margin: 0;
+  white-space: nowrap;
 }
 
 .ouw25-unluck-checks > [data-luck-drop] {
@@ -2343,8 +2350,8 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="nu
 }
 
 .ouw25-unluck-reels {
-  flex: 1 1 13rem;
-  min-width: min(100%, 13rem);
+  flex: 1 1 10rem;
+  min-width: min(100%, 10rem);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.25rem;
@@ -2352,13 +2359,15 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="nu
 
 .ouw25-unluck-reel {
   position: relative;
-  height: 7rem;
+  display: grid;
+  place-items: center;
+  min-height: 7rem;
   overflow: hidden;
   border: 2px solid #514738;
   border-radius: 0.4rem;
   background: linear-gradient(#a89f8f, #f8f3e7 35%, #f8f3e7 65%, #a89f8f);
   color: #2a211a;
-  font: 3.5rem/7rem var(--ouw25-font-heading);
+  font: 3.5rem/1 var(--ouw25-font-heading);
   text-align: center;
   box-shadow: inset 0 3px 8px #0008;
 }
@@ -2370,7 +2379,8 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="nu
 }
 
 .ouw25-unluck-reel-strip > span {
-  display: block;
+  display: grid;
+  place-items: center;
   height: 100%;
 }
 
@@ -2398,22 +2408,46 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="nu
   white-space: nowrap;
 }
 
-.ouw25-unluck-donation-actions {
+.ouw25-unluck .ouw25-unluck-heading {
+  min-width: 0;
+  min-height: 2rem;
+  margin: 0;
+  padding-inline: 0.6rem;
+  aspect-ratio: auto;
+  border-radius: 0.6rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.ouw25-unluck .ouw25-unluck-heading::before {
+  content: none;
+}
+
+.ouw25-unluck-donation-layout {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin-block-start: 0.4rem;
+  gap: 30px;
+  overflow-x: auto;
 }
 
-.ouw25-unluck-donation-actions > output {
-  font-size: 2rem;
+.ouw25-unluck-donation-layout > output {
+  flex: 0 0 auto;
+  font-size: 8rem;
   font-weight: bold;
+  line-height: 1;
 }
 
-.ouw25-unluck-donation-actions > div {
+.ouw25-unluck-donation-controls {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: center;
+}
+
+.ouw25-unluck-donation-actions {
   display: grid;
   gap: 0.2rem;
+  justify-items: center;
+  margin-block-start: 0.4rem;
 }
 
 .ouw25-unluck-status {
@@ -2427,12 +2461,6 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="nu
 
 .ouw25-unluck [data-check-error]:empty {
   display: none;
-}
-
-.ouw25-unluck [data-wounds] {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 .ouw25-bargain-help-content {

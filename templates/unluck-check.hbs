@@ -62,22 +62,24 @@
     </div>
   </div>
   <div class="ouw25-unluck-resources">
-    <fieldset class="ouw25-unluck-donation"><legend>{{localize "OUW25.Unluck.DonationHeading"}} <output class="ouw25-bargain-points ouw25-unluck-donation-total" data-donation-amount></output></legend>
-      <select name="source" aria-label="{{localize "OUW25.Unluck.DonationSource"}}">
-        <option value="cash">{{localize "OUW25.Unluck.ByMyself"}}</option>
-        <option value="budget">{{localize "OUW25.Unluck.ByCrew"}}</option>
-      </select>
-      <div class="ouw25-unluck-donation-actions">
-        <div>
+    <fieldset class="ouw25-unluck-donation"><legend><span class="ouw25-bargain-points ouw25-unluck-heading">{{localize "OUW25.Unluck.DonationHeading"}}</span> <output class="ouw25-bargain-points ouw25-unluck-donation-total" data-donation-amount></output></legend>
+      <div class="ouw25-unluck-donation-layout">
+        <div class="ouw25-unluck-donation-controls">
+          <select name="source" aria-label="{{localize "OUW25.Unluck.DonationSource"}}">
+            <option value="cash">{{localize "OUW25.Unluck.ByMyself"}}</option>
+            <option value="budget">{{localize "OUW25.Unluck.ByCrew"}}</option>
+          </select>
+          <div class="ouw25-unluck-donation-actions">
           <button type="button" data-donation-plus>{{localize "OUW25.Unluck.DonationMore"}}</button>
           <button type="button" data-donation-minus>{{localize "OUW25.Unluck.DonationLess"}}</button>
+          </div>
         </div>
         <output data-donation>+0!</output>
       </div>
     </fieldset>
     <div class="ouw25-unluck-status">
-      <fieldset><legend>{{localize "OUW25.Unluck.WoundsHeading"}}</legend><div data-wounds></div></fieldset>
-      <fieldset><legend>{{localize "OUW25.Unluck.Odds"}}</legend><p data-odds role="status"></p></fieldset>
+      <fieldset><legend><span class="ouw25-bargain-points ouw25-unluck-heading">{{localize "OUW25.Unluck.WoundsHeading"}}</span></legend><div class="ouw25-wound-slots" data-wounds></div></fieldset>
+      <fieldset><legend><span class="ouw25-bargain-points ouw25-unluck-heading">{{localize "OUW25.Unluck.Odds"}}</span></legend><p data-odds role="status"></p></fieldset>
     </div>
   </div>
   <p data-check-error role="alert"></p>

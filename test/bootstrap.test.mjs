@@ -1602,6 +1602,13 @@ test("bargain locations combine the 31 Union trading ports with known places wit
   assert.equal(locations.at(-1).toLowerCase(), "новый причал");
 });
 
+test("English bargain text uses ampersands", async () => {
+  const { OUW25: { Bargain, BargainCalc } } = JSON.parse(await readFile(new URL("lang/en.json", dist), "utf8"));
+  assert.doesNotMatch(JSON.stringify({ Bargain, BargainCalc }), /\band\b/i);
+  assert.equal(BargainCalc.Traits, "Leader's merits & flaws");
+  assert.equal(BargainCalc.CaptainTraits, "Cap'n merits & flaws");
+});
+
 test("bargain dialog orders payment fields and validates contact and partial outcome choices", async () => {
   const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui,
@@ -1657,7 +1664,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
   globalThis.foundry = { applications: {
     handlebars: { renderTemplate: async (_path, data) => {
       assert.deepEqual(data.paymentFields.map(field => field.name),
-        ["captainTraits", "traits", "time", "unrest", "budget", "cash"]);
+        ["traits", "captainTraits", "time", "unrest", "budget", "cash"]);
       return "";
     } },
     api: { DialogV2: { input: async config => {

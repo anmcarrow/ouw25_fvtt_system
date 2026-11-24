@@ -33,6 +33,7 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(bargain, /<p data-no-enemies>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/p>/);
   assert.match(styles, /\.ouw25-bargain-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3,[^;]*;[^}]*grid-template-rows:\s*repeat\(2,/s);
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*justify-content:\s*flex-end;/s);
+  assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*gap:\s*0\.1875rem;/s);
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
   for (const kind of ["loan", "enemies", "friends"]) {
     assert.match(bargain, new RegExp(`<span class="ouw25-bargain-points" data-points="${kind}" role="status"></span>`));

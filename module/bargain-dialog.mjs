@@ -12,7 +12,7 @@ const CONSEQUENCES = [
   "past", "hidden", "deadline", "responsibility", "bystanders", "grudge"
 ];
 const PAYMENT_FIELDS = [
-  ["captainTraits", "CaptainTraits"], ["traits", "Traits"], ["time", "Time"], ["unrest", "Unrest"],
+  ["traits", "Traits"], ["captainTraits", "CaptainTraits"], ["time", "Time"], ["unrest", "Unrest"],
   ["budget", "Budget"], ["cash", "Cash"]
 ];
 

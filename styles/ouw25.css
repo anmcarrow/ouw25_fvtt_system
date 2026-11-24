@@ -2122,7 +2122,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-payment label > span
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.125rem;
+  gap: 0.1875rem;
   min-width: 0;
   text-align: right;
 }

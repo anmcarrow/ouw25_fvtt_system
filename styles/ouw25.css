@@ -2346,7 +2346,7 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-consequences fieldse
 }
 
 body.game .application.ouw25 .dialog-content fieldset.ouw25-bargain-debts {
-  padding-block-start: calc(var(--spacer-16) + 2px);
+  padding-block-start: calc(var(--spacer-16) + 6px);
 }
 
 .ouw25-bargain-enemies {

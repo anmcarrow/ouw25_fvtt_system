@@ -33,7 +33,7 @@ test("bargain consequences and payment controls use the requested layouts", asyn
   assert.match(bargain, /<p data-no-enemies>\{\{localize "OUW25\.BargainCalc\.NoNewEnemies"\}\}<\/p>/);
   assert.match(styles, /\.ouw25-bargain-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3,[^;]*;[^}]*grid-template-rows:\s*repeat\(2,/s);
   assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*justify-content:\s*flex-end;/s);
-  assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*gap:\s*0\.1875rem;/s);
+  assert.match(styles, /\.ouw25-bargain-grid > label\s*\{[^}]*gap:\s*0\.28125rem;/s);
   assert.match(styles, /input:is\(\[name="cash"\], \[name="budget"\]\)\s*\{[^}]*width:\s*calc\(7ch/s);
   for (const kind of ["loan", "enemies", "friends"]) {
     assert.match(bargain, new RegExp(`<span class="ouw25-bargain-points" data-points="${kind}" role="status"></span>`));
@@ -80,6 +80,27 @@ test("bargain panels and headings use the accent gradient", async () => {
     assert.match(styles, new RegExp(`\\.ouw25-bargain-${selector}\\s*\\{[^}]*border-image:\\s*var\\(--ouw25-border-gradient\\) 1;`, "s"));
   }
   assert.match(styles, /\.ouw25-bargain-enemies legend label > span[\s\S]*?background-image:\s*var\(--ouw25-border-gradient\);\s*background-clip:\s*text;/);
+});
+
+test("bargain headings and labels use the bundled Alice font", async () => {
+  assert.match(styles, /\.ouw25-bargain-dialog \.ouw25-bargain :is\(h1, h2, h3, h4, h5, h6, legend, label\)\s*\{\s*font-family:\s*"Alice", Georgia, serif;/);
+  for (const subset of ["cyrillic-ext", "cyrillic", "latin-ext", "latin"]) {
+    assert.ok(fontStyles.includes(`./fonts/alice-${subset}.woff2`));
+    const font = await readFile(new URL(`../dist/ouw25/styles/fonts/alice-${subset}.woff2`, import.meta.url));
+    assert.equal(font.subarray(0, 4).toString(), "wOF2");
+  }
+  assert.match(await readFile(new URL("../dist/ouw25/styles/fonts/alice-OFL.txt", import.meta.url), "utf8"), /SIL OPEN FONT LICENSE/);
+});
+
+test("bargain input fields and options use the bundled Iosevka Charon Mono font", async () => {
+  assert.match(styles, /\.dialog-content \.ouw25-bargain :is\(input:not\(\[type="checkbox"\]\)[^{]+\{[^}]*font-family:\s*"Iosevka Charon Mono", monospace;/s);
+  assert.match(styles, /\.dialog-content \.ouw25-bargain select option\s*\{\s*font-family:\s*"Iosevka Charon Mono", monospace;/);
+  for (const subset of ["cyrillic-ext", "cyrillic", "latin-ext", "latin"]) {
+    assert.ok(fontStyles.includes(`./fonts/iosevka-charon-mono-${subset}.woff2`));
+    const font = await readFile(new URL(`../dist/ouw25/styles/fonts/iosevka-charon-mono-${subset}.woff2`, import.meta.url));
+    assert.equal(font.subarray(0, 4).toString(), "wOF2");
+  }
+  assert.match(await readFile(new URL("../dist/ouw25/styles/fonts/iosevka-charon-mono-OFL.txt", import.meta.url), "utf8"), /SIL OPEN FONT LICENSE/);
 });
 
 test("bargain participant cards use paper and consequence frames share their corner radius", async () => {

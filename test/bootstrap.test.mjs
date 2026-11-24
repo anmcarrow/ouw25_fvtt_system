@@ -1604,7 +1604,9 @@ test("bargain locations combine the 31 Union trading ports with known places wit
 
 test("English bargain text uses ampersands", async () => {
   const { OUW25: { Bargain, BargainCalc } } = JSON.parse(await readFile(new URL("lang/en.json", dist), "utf8"));
-  assert.doesNotMatch(JSON.stringify({ Bargain, BargainCalc }), /\band\b/i);
+  const { KnowOpponent, ...otherTexts } = BargainCalc;
+  assert.equal(KnowOpponent, "... and now we know him?");
+  assert.doesNotMatch(JSON.stringify({ Bargain, otherTexts }), /\band\b/i);
   assert.equal(BargainCalc.Traits, "Leader's merits & flaws");
   assert.equal(BargainCalc.CaptainTraits, "Cap'n merits & flaws");
 });

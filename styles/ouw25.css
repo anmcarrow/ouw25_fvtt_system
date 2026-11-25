@@ -5,7 +5,8 @@
   filter: invert(1);
 }
 
-.ouw25 {
+.ouw25,
+.application.ouw25-journal {
   --ouw25-color-ink: #370f00;
   --ouw25-color-accent: #2a0e06;
   --ouw25-color-accent-soft: rgba(42, 14, 6, 0.7);
@@ -40,7 +41,8 @@ body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .max
   min-block-size: 60vh;
 }
 
-.ouw25 .ouw25-notes {
+.ouw25 .ouw25-notes,
+.application.ouw25-journal {
   --ouw25-folder-light: #f0e2bd;
   --ouw25-folder-dark: #e0cb98;
   --ouw25-folder-ink: #8a6a3a;
@@ -52,6 +54,9 @@ body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .max
   --ouw25-tray-lip: linear-gradient(to top, #4f4d49 0, #7b7872 1px, #b8b4aa 2px, #e3dfd4 4px, #c9c5ba 6px, #9d9a92 8px, #6e6c66 9px, #3e3c39 10px);
   --ouw25-dog-ear: linear-gradient(to bottom left, var(--ouw25-sheet-edge) 0 50%, #cdb996 50% calc(50% + 1px), #f1e5cf calc(50% + 1px) 100%);
   --ouw25-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #80665b, 0 3px 4px #51413b66;
+}
+
+.ouw25 .ouw25-notes {
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -4134,7 +4139,8 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-actio
   outline-offset: 3px;
 }
 
-.ouw25 .ouw25-notes:has(.ouw25-cooperative-layout) {
+.ouw25 .ouw25-notes:has(.ouw25-cooperative-layout),
+.application.ouw25-journal-cooperative {
   --ouw25-folder-light: #dbe9d9;
   --ouw25-folder-dark: #c3dac5;
   --ouw25-folder-ink: #3f6f5f;
@@ -4209,5 +4215,172 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-co
 
   body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p:is([role="status"], [role="alert"]) {
     outline: 1px solid CanvasText;
+  }
+}
+
+body.game .application.ouw25-journal {
+  --ouw25-journal-teal: #22393a;
+  --background: var(--ouw25-color-paper);
+  --font-h1: var(--ouw25-font-heading);
+  --font-h2: var(--ouw25-font-heading);
+  --font-h3: var(--ouw25-font-heading);
+  --font-h4: var(--ouw25-font-heading);
+  --font-h5: var(--ouw25-font-heading);
+  --font-h6: var(--ouw25-font-heading);
+  background: var(--ouw25-journal-teal) url("./images/panel1.webp") center / cover;
+}
+
+body.game .application.ouw25-journal .journal-sidebar {
+  background: transparent;
+  box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.35);
+}
+
+body.game .application.ouw25-journal .journal-sidebar .toc li.page > .page-heading {
+  font-family: "Alice", Georgia, serif;
+}
+
+body.game .application.ouw25-journal .journal-sidebar .toc li.page.active > .page-heading {
+  background: linear-gradient(90deg, rgba(223, 197, 139, 0.28), transparent);
+  box-shadow: inset 3px 0 #dfc58b;
+}
+
+body.game .application.ouw25-journal .journal-entry-content {
+  color: var(--ouw25-color-ink);
+  background-color: var(--ouw25-color-paper);
+  background-image: var(--ouw25-sheet-vignette), var(--ouw25-sheet-perforation), url("./images/sheet_bgr.webp");
+  background-position: center, left top, center;
+  background-repeat: no-repeat, repeat-y, no-repeat;
+  background-size: 100% 100%, 16px 3rem, cover;
+}
+
+body.game .application.ouw25-journal .journal-header {
+  position: relative;
+  isolation: isolate;
+}
+
+body.game .application.ouw25-journal .journal-header::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline: -1rem;
+  background: url("./images/header_strip1.webp") left center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+body.game .application.ouw25-journal .journal-header .title,
+body.game .application.ouw25-journal.journal-entry-page .journal-header :is(.title, input[type="text"]) {
+  color: var(--ouw25-color-accent);
+  font-family: var(--ouw25-font-heading);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+body.game .application.ouw25-journal .journal-entry-pages {
+  border-block-end: 10px solid transparent;
+  border-image: var(--ouw25-tray-lip) 0 0 10 0;
+  margin-block-end: 6px;
+}
+
+body.game .application.ouw25-journal .journal-entry-page {
+  color: var(--ouw25-color-ink);
+  font-family: var(--ouw25-font-body);
+  padding: 0.75rem 1rem;
+  background: var(--ouw25-surface-translucent);
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+}
+
+body.game .application.ouw25-journal .journal-entry-page :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--ouw25-color-accent);
+  font-family: var(--ouw25-font-heading);
+}
+
+body.game .application.ouw25-journal .journal-entry-page :is(h1, h2) {
+  border-block-end: 1px solid transparent;
+  border-image: linear-gradient(90deg, var(--ouw25-folder-ink), transparent) 1;
+}
+
+body.game .application.ouw25-journal .journal-entry-page :is(h1, h2, h3):first-child {
+  background: linear-gradient(to bottom, var(--ouw25-folder-light), var(--ouw25-folder-dark));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ouw25-folder-ink) 45%, transparent);
+  margin-inline: -0.35rem;
+  padding-inline: 0.35rem;
+}
+
+body.game .application.ouw25-journal .journal-entry-page blockquote {
+  margin-inline: 0;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ouw25-folder-light) 80%, transparent), var(--ouw25-surface-translucent));
+  border: 0;
+  border-inline-start: 3px solid rgba(181, 70, 61, 0.55);
+  border-radius: 0.25rem;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+body.game .application.ouw25-journal .journal-entry-page hr {
+  border: 0;
+  border-block-start: 2px dotted color-mix(in srgb, var(--ouw25-folder-ink) 70%, transparent);
+}
+
+body.game .application.ouw25-journal .journal-entry-page :is(ul, ol) li::marker {
+  color: var(--ouw25-folder-ink);
+}
+
+body.game .application.ouw25-journal .journal-entry-page table {
+  color: var(--ouw25-color-ink);
+  background: var(--ouw25-color-surface);
+  border: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+body.game .application.ouw25-journal .journal-entry-page table :is(th, td) {
+  color: var(--ouw25-color-ink);
+  border: 0;
+  box-shadow: inset 0 -1px rgba(112, 84, 45, 0.22);
+}
+
+body.game .application.ouw25-journal .journal-entry-page table :is(thead, thead tr, tbody tr) {
+  background-color: transparent;
+}
+
+body.game .application.ouw25-journal .journal-entry-page table :is(thead th, tr:first-child th) {
+  background-color: rgba(215, 192, 154, 0.32);
+  background-image: linear-gradient(var(--ouw25-folder-ink), var(--ouw25-folder-ink)), linear-gradient(var(--ouw25-folder-ink), var(--ouw25-folder-ink));
+  background-size: 100% 1px;
+  background-position: 0 100%, 0 calc(100% - 3px);
+  background-repeat: no-repeat;
+}
+
+body.game .application.ouw25-journal .journal-entry-page table tbody tr:nth-child(even) {
+  background-color: var(--ouw25-greenbar);
+}
+
+body.game .application.ouw25-journal .journal-entry-page :is(section.secret, .secret) {
+  color: var(--ouw25-color-ink);
+  background: var(--ouw25-color-paper) url("./images/smallpaper5.webp") center top / 100% auto no-repeat;
+  border: 0;
+  border-radius: 0.35rem;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ouw25-color-warning) 60%, transparent), 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+body.game .application.ouw25-journal .journal-entry-page a.content-link {
+  color: var(--ouw25-color-accent-calm);
+  background: color-mix(in srgb, var(--ouw25-folder-light) 70%, transparent);
+  border-color: color-mix(in srgb, var(--ouw25-folder-ink) 55%, transparent);
+}
+
+body.game .application.ouw25-journal.journal-entry-page .window-content {
+  color: var(--ouw25-color-ink);
+  background: var(--ouw25-color-paper) url("./images/sheet_bgr.webp") center / cover no-repeat;
+}
+
+@media (forced-colors: active) {
+  body.game .application.ouw25-journal .journal-entry-pages {
+    border-image: none;
+    border-block-end-color: CanvasText;
   }
 }

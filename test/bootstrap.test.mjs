@@ -812,7 +812,7 @@ test("the built package registers models and an editable notes sheet for its dec
   hooks.get("deleteActor")(merchant);
   assert.equal(renders, 2);
   await memberSheet._onClose({});
-  assert.equal(hooks.size, 0);
+  assert.deepEqual([...hooks.keys()], ["renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
 
   const placeSheet = new Sheet();
   placeSheet.isEditable = true;
@@ -1944,6 +1944,22 @@ test("bargain dialog orders payment fields and validates contact and partial out
     globalThis.ResizeObserver = previous.ResizeObserver;
     Math.random = previous.random;
   }
+});
+
+test("only system record journals receive the journal style classes, tinted by actor type", async () => {
+  const { styleSystemJournal } = await import(new URL("module/record-journal.mjs", dist));
+  const classes = new Set(["stale"]);
+  const element = { classList: { add: (...names) => names.forEach(name => classes.add(name)), remove: (...names) => names.forEach(name => classes.delete(name)) } };
+  const flags = { ouw25: { actorUuid: "Actor.a", tableKey: "contact" } };
+  const entry = { documentName: "JournalEntry", flags };
+  styleSystemJournal({ document: entry }, element, uuid => ({ type: uuid === "Actor.a" ? "cooperative" : "merchant" }));
+  assert.deepEqual([...classes], ["stale", "ouw25-journal", "ouw25-journal-cooperative"]);
+  styleSystemJournal({ document: { documentName: "JournalEntryPage", parent: entry } }, element, () => ({ type: "merchant" }));
+  assert.deepEqual([...classes], ["stale", "ouw25-journal", "ouw25-journal-merchant"]);
+  classes.clear();
+  styleSystemJournal({ document: { documentName: "JournalEntry", flags: {} } }, element);
+  styleSystemJournal({ document: { documentName: "JournalEntry", flags: { ouw25: { actorUuid: "Actor.a" } } } }, element);
+  assert.equal(classes.size, 0);
 });
 
 test("the check button opens a separate dialog", async () => {

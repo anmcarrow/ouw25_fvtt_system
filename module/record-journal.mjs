@@ -6,6 +6,18 @@ export function journalTableKey(item) {
   return ["debt", "relationship"].includes(item.type) ? `${item.type}-${item.system.direction}` : item.type;
 }
 
+const JOURNAL_CLASSES = ["ouw25-journal", "ouw25-journal-cooperative", "ouw25-journal-merchant"];
+
+export function styleSystemJournal(application, element, resolve = uuid => fromUuidSync(uuid, { strict: false })) {
+  const document = application.document;
+  const journal = document?.documentName === "JournalEntryPage" ? document.parent : document;
+  const flags = journal?.flags?.[SYSTEM_ID];
+  if (!flags?.actorUuid || !flags.tableKey || !element?.classList) return;
+  element.classList.remove(...JOURNAL_CLASSES);
+  const tone = resolve(flags.actorUuid)?.type === "cooperative" ? "cooperative" : "merchant";
+  element.classList.add("ouw25-journal", `ouw25-journal-${tone}`);
+}
+
 export function copyPageOwnership(source, journal, users) {
   const parentDefault = source.parent.ownership.default ?? 0;
   const ownDefault = source.ownership.default;

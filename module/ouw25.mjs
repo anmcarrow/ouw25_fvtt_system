@@ -15,7 +15,7 @@ import { personalActions, personalOutcome, provisionFormula } from "./personal-a
 import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
 import { filterRecordTable, setupRecordSorting } from "./record-search.mjs";
-import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink } from "./record-journal.mjs";
+import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink, styleSystemJournal } from "./record-journal.mjs";
 import { openBargain } from "./bargain-dialog.mjs";
 import { openUnluck } from "./unluck-dialog.mjs";
 
@@ -1723,6 +1723,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 }
 
 Hooks.once("init", () => {
+  for (const event of ["renderJournalEntrySheet", "renderJournalEntryPageSheet"]) {
+    Hooks.on(event, (application, element) => styleSystemJournal(application, element));
+  }
   for (const event of ["deleteJournalEntryPage", "deleteJournalEntry"]) {
     Hooks.on(event, (document, _options, userId) => {
       if (game.users.activeGM ? !game.user.isActiveGM : userId !== game.user.id) return;

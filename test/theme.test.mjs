@@ -511,8 +511,17 @@ test("sheet finishing evokes a retro office without taking layout space or overr
   assert.match(styles, /\.ouw25-voyage-statuses > p:is\(\[role="status"\], \[role="alert"\]\)\s*\{\s*box-shadow:\s*inset/);
   assert.match(styles, /background-image:\s*var\(--ouw25-dog-ear\), var\(--ouw25-card-paper, url\("\.\/images\/smallpaper5\.webp"\)\);/);
   assert.match(styles, /fieldset > legend,[\s\S]*?\{\s*background:\s*linear-gradient\(to bottom, var\(--ouw25-folder-light\)[^}]*margin-inline-start:\s*-0\.35rem;\s*padding-inline:\s*0\.35rem;/);
-  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-cooperative-layout\)\s*\{\s*--ouw25-folder-light:/);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-cooperative-layout\),\s*\.application\.ouw25-journal-cooperative\s*\{\s*--ouw25-folder-light:/);
   assert.match(styles, /@media \(forced-colors: active\) \{\s*\.ouw25 \.ouw25-notes\s*\{\s*border-image:\s*none;/);
+});
+
+test("record journals share the sheet palette, paper and tray, and only they get the journal classes", async () => {
+  assert.match(styles, /\.ouw25-notes,\s*\.application\.ouw25-journal\s*\{\s*--ouw25-folder-light:/);
+  assert.match(styles, /\.application\.ouw25-journal \.journal-entry-content\s*\{[^}]*sheet_bgr\.webp/s);
+  assert.match(styles, /\.application\.ouw25-journal \.journal-entry-pages\s*\{[^}]*border-image:\s*var\(--ouw25-tray-lip\) 0 0 10 0;/s);
+  assert.match(styles, /\.application\.ouw25-journal \.journal-sidebar[\s\S]*?panel1\.webp|panel1\.webp[\s\S]*?ouw25-journal/);
+  assert.match(styles, /\.ouw25-journal \.journal-entry-page table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-greenbar\);/);
+  assert.match(styles, /\.ouw25-journal \.journal-entry-page blockquote\s*\{[^}]*border-inline-start:\s*3px solid/s);
 });
 
 test("hiring actions match past action dimensions and voyage content has bottom clearance", () => {

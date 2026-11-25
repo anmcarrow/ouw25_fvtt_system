@@ -475,6 +475,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
   margin-inline: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout .ouw25-founders {
+  background-image: linear-gradient(rgba(255, 248, 238, 0.55), rgba(255, 248, 238, 0.55)), url("./images/cork.svg");
+  background-size: auto, 192px 192px;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-founders ul {
   display: grid;
   gap: 0.6rem;
@@ -630,8 +635,24 @@ body.game .application.ouw25 .ouw25-notes :is(
   gap: 20px;
 }
 
-.ouw25 .ouw25-cooperative-notes > .ouw25-cooperative-budget-column > fieldset:last-child {
+.ouw25 .ouw25-cooperative-traits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.ouw25 .ouw25-cooperative-traits > fieldset {
+  margin-inline: 0;
   margin-block-end: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-cooperative-budget, .ouw25-cooperative-traits > fieldset) {
+  box-shadow: inset 0 0 0 1px rgba(112, 84, 45, 0.18);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-cooperative-budget, .ouw25-cooperative-traits > fieldset) > legend {
+  box-shadow: inset 0 -1px rgba(112, 84, 45, 0.32);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-columns.ouw25-cooperative-layout .ouw25-sheet-column.ouw25-cooperative-notes > textarea[name="system.notes"] {
@@ -640,6 +661,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-columns.ouw25-cooperative
   min-block-size: 0;
   padding-block: 0;
   margin: 0;
+  box-shadow: inset 0 2px 5px rgba(55, 15, 0, 0.12);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes > .ouw25-journal-index > summary {
+  background: linear-gradient(to right, rgba(218, 196, 159, 0.38), transparent 80%);
+  box-shadow: inset 0 -1px rgba(112, 84, 45, 0.24);
 }
 
 .ouw25 .ouw25-merchant-profile {
@@ -685,6 +712,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
 }
 
 .ouw25 .ouw25-portrait-frame {
+  position: relative;
   inline-size: 200px;
   block-size: 200px;
   display: grid;
@@ -693,6 +721,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   box-shadow: 0 2px 6px rgba(20, 15, 12, 0.24);
   translate: 3px 0;
   transform: rotate(-2deg);
+}
+
+.ouw25 .ouw25-portrait-frame::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 4px;
+  inset-inline-end: 8px;
+  inline-size: 7px;
+  block-size: 25px;
+  border: 1.5px solid #8a7049;
+  border-radius: 6px;
+  box-shadow: inset 1px 0 #e7d5a7, 1px 1px 2px rgba(55, 15, 0, 0.3);
+  transform: rotate(12deg);
+  pointer-events: none;
 }
 
 .ouw25 .ouw25-portrait-view::before {
@@ -740,6 +783,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
 
 .ouw25 .ouw25-merchant-profile-fields > fieldset {
   margin-inline: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-profile-fields :is(
+  input[name="name"], select[name="system.specialty"], textarea[name="system.dream"]
+):not(:focus-visible) {
+  box-shadow: inset 0 -2px rgba(112, 84, 45, 0.26);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair {
@@ -1166,7 +1215,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw
   background: var(--ouw25-color-paper) var(--ouw25-card-paper) center top / 100% auto no-repeat;
   border: 0;
   border-radius: 0.35rem;
-  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(132, 97, 44, 0.5), 2px 3px 6px rgba(55, 15, 0, 0.2);
   padding: var(--ouw25-reference-padding);
   color: var(--ouw25-color-ink);
   font-size: 16px;
@@ -1176,6 +1225,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):hover:not(:disabled) {
   color: var(--ouw25-color-ink);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):focus-visible {
+  outline: 2px solid var(--ouw25-color-accent-calm);
+  outline-offset: 2px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):disabled {
+  filter: grayscale(0.65);
 }
 
 .ouw25 .ouw25-merchant-sidebar > .ouw25-merchant-wounds + .ouw25-merchant-tools {

@@ -92,6 +92,23 @@
 {{#*inline "ouw25-journal"}}
   <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
 {{/inline}}
+{{#*inline "ouw25-journal-index"}}
+  {{#if journalIndex.length}}
+  <details class="ouw25-journal-index">
+    <summary>{{localize "OUW25.Journal.Index"}}</summary>
+    <ul>
+      {{#each journalIndex}}
+        <li class="ouw25-journal-index-entry">
+          <button type="button" data-action="openJournalBacklink" data-uuid="{{uuid}}">{{name}}</button> <span>({{localize table}})</span>
+          <button type="button" data-action="showJournalBacklinks" data-uuid="{{uuid}}">{{localize "OUW25.Journal.Backlinks"}}</button>
+          {{#each copies}}<button type="button" data-action="recordJournal" data-record-type="{{type}}" data-record-id="{{id}}" data-copy="true">{{localize "OUW25.Journal.Copy"}}</button>{{/each}}
+          <div data-backlinks role="status"></div>
+        </li>
+      {{/each}}
+    </ul>
+  </details>
+  {{/if}}
+{{/inline}}
 {{#*inline "ouw25-tab"}}
   <section class="tab ouw25-tab {{tab.cssClass}}" data-group="{{tab.group}}" data-tab="{{tab.id}}">
     <div class="ouw25-sheet-columns{{#if layout}} {{layout}}{{/if}}">
@@ -117,21 +134,7 @@
       <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDestroyed}} class="ouw25-tab-ship-destroyed"{{/if}}{{/if}}>{{localize label}}{{#if (eq id "ports")}} ({{@root.ports.discovered}}/{{@root.ports.total}}){{/if}}{{#if (eq id "cargo")}} ({{@root.ship.hold.occupied}}){{/if}}</span>{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDamage}}<span class="ouw25-tab-damage" style="font-size: {{@root.ship.condition.tabIconPercent}}%">{{#each @root.ship.condition.tabDamage}}<span role="img" aria-label="{{#if beyondLimit}}{{localize "OUW25.ShipCondition.BeyondLimit" number=number}}{{else}}{{localize "OUW25.ShipCondition.Damage" number=number}}{{/if}}">{{#if @root.ship.condition.tabDestroyed}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>{{/each}}</span>{{/if}}{{/if}}</button>
     {{/each}}
   </nav>
-  {{#if journalIndex.length}}
-  <details class="ouw25-journal-index">
-    <summary>{{localize "OUW25.Journal.Index"}}</summary>
-    <ul>
-      {{#each journalIndex}}
-        <li class="ouw25-journal-index-entry">
-          <button type="button" data-action="openJournalBacklink" data-uuid="{{uuid}}">{{name}}</button> <span>({{localize table}})</span>
-          <button type="button" data-action="showJournalBacklinks" data-uuid="{{uuid}}">{{localize "OUW25.Journal.Backlinks"}}</button>
-          {{#each copies}}<button type="button" data-action="recordJournal" data-record-type="{{type}}" data-record-id="{{id}}" data-copy="true">{{localize "OUW25.Journal.Copy"}}</button>{{/each}}
-          <div data-backlinks role="status"></div>
-        </li>
-      {{/each}}
-    </ul>
-  </details>
-  {{/if}}
+  {{#unless ship}}{{> ouw25-journal-index}}{{/unless}}
   <div class="ouw25-tab-stack">
   {{#if ship}}
   {{#> ouw25-tab tab=tabs.attributes layout="ouw25-cooperative-layout"}}
@@ -192,22 +195,25 @@
           <div class="ouw25-cooperative-budget-controls">{{> ouw25-money-input}} <span>{{localize "OUW25.Finance.Currency"}}</span></div>
           {{#unless (eq contacts.total "0")}}<p><span>{{localize "OUW25.Contact.Total" amount=contacts.total}}</span></p>{{/unless}}
         </fieldset>
-        <fieldset>
-          {{> ouw25-block-heading heading="OUW25.Cooperative.Reputation.Title"}}
-          <select name="system.reputation" aria-label="{{localize "OUW25.Cooperative.Reputation.Title"}}" {{#unless editable}}disabled{{/unless}}>
-            {{#each cooperative.reputation.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
-          </select>
-          {{#if cooperative.reputation.help}}<p class="ouw25-trait-description">{{localize cooperative.reputation.help}}</p>{{/if}}
-        </fieldset>
-        <fieldset>
-          {{> ouw25-block-heading heading="OUW25.Cooperative.Memory.Title"}}
-          <select name="system.memory" aria-label="{{localize "OUW25.Cooperative.Memory.Title"}}" {{#unless editable}}disabled{{/unless}}>
-            {{#each cooperative.memory.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
-          </select>
-          {{#if cooperative.memory.help}}<p class="ouw25-trait-description">{{localize cooperative.memory.help}}</p>{{/if}}
-        </fieldset>
+        <div class="ouw25-cooperative-traits">
+          <fieldset>
+            {{> ouw25-block-heading heading="OUW25.Cooperative.Reputation.Title"}}
+            <select name="system.reputation" aria-label="{{localize "OUW25.Cooperative.Reputation.Title"}}" {{#unless editable}}disabled{{/unless}}>
+              {{#each cooperative.reputation.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+            </select>
+            {{#if cooperative.reputation.help}}<p class="ouw25-trait-description">{{localize cooperative.reputation.help}}</p>{{/if}}
+          </fieldset>
+          <fieldset>
+            {{> ouw25-block-heading heading="OUW25.Cooperative.Memory.Title"}}
+            <select name="system.memory" aria-label="{{localize "OUW25.Cooperative.Memory.Title"}}" {{#unless editable}}disabled{{/unless}}>
+              {{#each cooperative.memory.choices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>{{/each}}
+            </select>
+            {{#if cooperative.memory.help}}<p class="ouw25-trait-description">{{localize cooperative.memory.help}}</p>{{/if}}
+          </fieldset>
+        </div>
       </div>
       {{> ouw25-journal}}
+      {{> ouw25-journal-index}}
     </div>
   {{/ouw25-tab}}
   {{#*inline "ouw25-ship-basics"}}

@@ -281,6 +281,21 @@ test("cooperative titled blocks use a translucent background without fading cont
   assert.doesNotMatch(rule, /\bopacity\s*:/);
 });
 
+test("founder cards retain their paper over a packaged cork background", async () => {
+  assert.match(styles, /\.ouw25-cooperative-layout \.ouw25-founders\s*\{[^}]*url\("\.\/images\/cork\.svg"\)/s);
+  assert.match(styles, /\.ouw25-founder-card\s*\{[^}]*url\("\.\/images\/smallpaper5\.webp"\)/s);
+  const cork = await readFile(new URL("../dist/ouw25/styles/images/cork.svg", import.meta.url), "utf8");
+  assert.match(cork, /<svg\b[\s\S]*<feTurbulence\b/);
+  assert.match(styles, /\.ouw25-portrait-frame::after\s*\{[^}]*pointer-events:\s*none;/s);
+});
+
+test("cooperative notes and merchant tools retain scoped decorative and focus states", () => {
+  assert.match(styles, /\.ouw25-cooperative-notes > \.ouw25-journal-index > summary\s*\{[^}]*background:\s*linear-gradient/s);
+  assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):focus-visible\s*\{[^}]*outline:\s*2px solid/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):disabled\s*\{[^}]*filter:\s*grayscale/s);
+});
+
 test("cooperative attributes put founders on the left and other blocks above the journal", () => {
   const attributes = template.match(/\{\{#> ouw25-tab tab=tabs\.attributes layout="ouw25-cooperative-layout"\}\}([\s\S]*?)\{\{\/ouw25-tab\}\}/)?.[1];
   assert.ok(attributes);
@@ -289,10 +304,13 @@ test("cooperative attributes put founders on the left and other blocks above the
   assert.match(left, /<div class="ouw25-choice-row ouw25-identity">\s*<input type="text" name="name" aria-label="\{\{localize "OUW25\.Cooperative\.Name"\}\}" value="\{\{cooperative\.name\}\}" required \{\{#unless editable\}\}readonly\{\{\/unless\}\}>\s*<\/div>\s*<fieldset class="ouw25-founders">/);
   assert.match(left, /OUW25\.Founders\.Title/);
   assert.doesNotMatch(left, /OUW25\.Finance\.Budget|OUW25\.Cooperative\.(Reputation|Memory)\.Title|ouw25-journal/);
-  assert.match(right, /OUW25\.Finance\.Budget[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*\{\{> ouw25-journal\}\}/);
+  assert.match(right, /OUW25\.Finance\.Budget[\s\S]*<div class="ouw25-cooperative-traits">\s*<fieldset>[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*<\/fieldset>\s*<fieldset>[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*<\/fieldset>\s*<\/div>\s*<\/div>\s*\{\{> ouw25-journal\}\}\s*\{\{> ouw25-journal-index\}\}/);
   assert.doesNotMatch(right, /OUW25\.Founders\.Title/);
   assert.match(styles, /\.ouw25-sheet-column\.ouw25-cooperative-notes\s*\{\s*gap:\s*20px;/);
+  assert.match(styles, /\.ouw25-cooperative-traits\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
   assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*0 0 auto;[^}]*block-size:\s*10em;/s);
+  assert.match(template, /\{\{#unless ship\}\}\{\{> ouw25-journal-index\}\}\{\{\/unless\}\}\s*<div class="ouw25-tab-stack">/);
+  assert.match(template, /\{\{#\*inline "ouw25-journal-index"\}\}\s*\{\{#if journalIndex\.length\}\}/);
 });
 
 test("founder summary keeps each localized subblock together", async () => {

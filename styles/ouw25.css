@@ -795,7 +795,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   place-items: center;
   background: url("./images/smallphoto_frame.webp") center / 100% 100% no-repeat;
   box-shadow: 0 2px 6px rgba(20, 15, 12, 0.24);
-  translate: 3px 0;
+  translate: 3px 4px;
   transform: rotate(-2deg);
 }
 
@@ -816,17 +816,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   content: "";
   position: absolute;
   z-index: 2147483647;
-  inset-block-start: -4px;
-  inset-inline-end: -10px;
+  inset-block-start: -7px;
+  inset-inline-end: 20px;
   inline-size: 24.5px;
   block-size: 50px;
   background: url("./images/clipper_small.webp") center / 100% 100% no-repeat;
   pointer-events: none;
-}
-
-.ouw25 .ouw25-portrait-frame.ouw25-header-clip::after {
-  inset-block-start: -7px;
-  inset-inline-end: 20px;
 }
 
 .ouw25 .ouw25-portrait-view::before {
@@ -1661,6 +1656,8 @@ body.game .application.ouw25 .ouw25-sheet-heading.ouw25-token-heading h2 {
 body.game .application.ouw25 .ouw25-notes fieldset > legend > h3 {
   font-size: calc(1.1rem / 1.5 * 2);
   margin: 0.25rem 0;
+  transform: scale(0.9);
+  transform-origin: left center;
 }
 
 body.game .application.ouw25 .ouw25-notes :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select:not(.ouw25-choice-heading, [name="system.specialty"]), textarea),
@@ -4220,6 +4217,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-co
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ouw25-folder-ink) 45%, transparent), 0 1px 1px rgba(55, 15, 0, 0.2);
   margin-inline-start: -0.35rem;
   padding-inline: 0.35rem;
+  translate: 3px 0;
+}
+
+body.game .application.ouw25 .ouw25-notes fieldset > legend.ouw25-clipped-heading {
+  padding-inline-end: calc(44.5px + 0.35rem);
+}
+
+body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-clipped-heading) {
+  padding-block-start: 1.25rem;
 }
 
 @media (forced-colors: active) {

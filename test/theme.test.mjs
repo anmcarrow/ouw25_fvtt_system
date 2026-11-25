@@ -335,10 +335,16 @@ test("the reusable header clip is decorative and packaged", async () => {
   assert.match(template, /class="ouw25-portrait-frame ouw25-header-clip"/);
   assert.match(styles, /:has\(> \.ouw25-header-clip\)[^{]*\{[^}]*overflow:\s*visible;/s);
   assert.match(styles, /\.ouw25-header-clip\s*\{[^}]*position:\s*relative;[^}]*isolation:\s*isolate;[^}]*overflow:\s*visible;/s);
-  assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-4px;[^}]*inset-inline-end:\s*-10px;[^}]*inline-size:\s*24\.5px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
-  assert.match(styles, /\.ouw25-portrait-frame\.ouw25-header-clip::after\s*\{\s*inset-block-start:\s*-7px;\s*inset-inline-end:\s*20px;/);
+  assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-7px;[^}]*inset-inline-end:\s*20px;[^}]*inline-size:\s*24\.5px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
+  assert.match(template, /<legend\{\{#if clip\}\} class="ouw25-header-clip ouw25-clipped-heading"\{\{\/if\}\}>/);
+  assert.match(template, /\{\{> ouw25-block-heading heading=label clip=\(eq kind "flaw"\)\}\}/);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/clipper_small.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+});
+
+test("sheet block headings move without resizing their labels", () => {
+  assert.match(styles, /\.ouw25-notes fieldset > legend > h3\s*\{[^}]*transform:\s*scale\(0\.9\);[^}]*transform-origin:\s*left center;/s);
+  assert.match(styles, /\.ouw25-notes fieldset > legend,[^{]*\{[^}]*translate:\s*3px 0;/s);
 });
 
 test("cooperative notes and merchant tools retain scoped decorative and focus states", () => {
@@ -467,7 +473,7 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(module, /hasPortrait:\s*Boolean\(this\.actor\.img && this\.actor\.img !== DEFAULT_ACTOR_IMAGE\)/);
   assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*180px;[^}]*block-size:\s*170px;[^}]*translate:\s*0 -5px;/s);
   assert.match(styles, /\.ouw25-portrait-view::before\s*\{[^}]*background:\s*url\("\.\/images\/bugger\.webp"\)/s);
-  assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*translate:\s*3px 0;[^}]*transform:\s*rotate\(-2deg\);/s);
+  assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*translate:\s*3px 4px;[^}]*transform:\s*rotate\(-2deg\);/s);
   assert.match(styles, /\.ouw25-portrait-frame:hover\s*\{\s*transform:\s*rotate\(0deg\) scale\(1\.035\);/);
   assert.match(styles, /\.ouw25-identity:has\(> \.ouw25-roll-icon\) > input\s*\{\s*padding-inline-end:\s*39px;/);
   assert.match(styles, /\.ouw25-identity > \.ouw25-roll-icon\s*\{\s*inset-inline-end:\s*4px;/);

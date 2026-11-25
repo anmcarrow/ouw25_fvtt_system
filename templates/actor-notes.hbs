@@ -14,12 +14,10 @@
   <div class="ouw25-record-search">
     <label><span>{{localize "OUW25.Search.Label"}}</span><input type="search" data-search-input aria-label="{{localize "OUW25.Search.Label"}}"></label>
     <button type="button" data-search-clear>{{localize "OUW25.Search.Clear"}}</button>
-    <label><span>{{localize "OUW25.Search.Sort"}}</span><select data-sort-select>
-      <option value="original">{{localize "OUW25.Search.Original"}}</option>
-      <option value="name">{{localize "OUW25.Search.ByName"}}</option>
-      {{#if sortNumeric}}<option value="number">{{localize sortLabel}}</option>{{/if}}
-    </select></label>
   </div>
+{{/inline}}
+{{#*inline "ouw25-sort-heading"}}
+  <th scope="col"{{#if numeric}} class="ouw25-debt-amount"{{/if}}><button type="button" data-sort-column{{#if numeric}} data-sort-numeric{{/if}} data-tooltip="{{localize "OUW25.Search.SortHint"}}">{{localize label}} <span aria-hidden="true" class="ouw25-sort-indicator"></span></button></th>
 {{/inline}}
 {{#*inline "ouw25-record-journal"}}
   <td class="ouw25-record-note">
@@ -131,7 +129,7 @@
   </header>
   <nav class="tabs ouw25-sheet-tabs" aria-label="{{localize "OUW25.Tabs.Label"}}">
     {{#each tabs}}
-      <button type="button" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDestroyed}} class="ouw25-tab-ship-destroyed"{{/if}}{{/if}}>{{localize label}}{{#if (eq id "ports")}} ({{@root.ports.discovered}}/{{@root.ports.total}}){{/if}}{{#if (eq id "cargo")}} ({{@root.ship.hold.occupied}}){{/if}}</span>{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDamage}}<span class="ouw25-tab-damage" style="font-size: {{@root.ship.condition.tabIconPercent}}%">{{#each @root.ship.condition.tabDamage}}<span role="img" aria-label="{{#if beyondLimit}}{{localize "OUW25.ShipCondition.BeyondLimit" number=number}}{{else}}{{localize "OUW25.ShipCondition.Damage" number=number}}{{/if}}">{{#if @root.ship.condition.tabDestroyed}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>{{/each}}</span>{{/if}}{{/if}}</button>
+      <button type="button" {{#if (eq id "ports")}}data-tooltip="{{localize "OUW25.Port.Discovered" count=@root.ports.discovered total=@root.ports.total}}" {{/if}}class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDestroyed}} class="ouw25-tab-ship-destroyed"{{/if}}{{/if}}>{{localize label}}{{#if (eq id "ports")}} ({{@root.ports.discovered}}/{{@root.ports.total}}){{/if}}{{#if (eq id "cargo")}} ({{@root.ship.hold.occupied}}){{/if}}</span>{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDamage}}<span class="ouw25-tab-damage" style="font-size: {{@root.ship.condition.tabIconPercent}}%">{{#each @root.ship.condition.tabDamage}}<span role="img" aria-label="{{#if beyondLimit}}{{localize "OUW25.ShipCondition.BeyondLimit" number=number}}{{else}}{{localize "OUW25.ShipCondition.Damage" number=number}}{{/if}}">{{#if @root.ship.condition.tabDestroyed}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>{{/each}}</span>{{/if}}{{/if}}</button>
     {{/each}}
   </nav>
   {{#unless ship}}{{> ouw25-journal-index}}{{/unless}}
@@ -310,24 +308,23 @@
   {{#> ouw25-tab tab=tabs.contacts}}
     <div class="ouw25-sheet-column">
   {{#if contacts}}
-    <p class="ouw25-contacts-total">{{localize "OUW25.Contact.Total" amount=contacts.total}}</p>
     <fieldset class="ouw25-contacts" aria-label="{{localize "OUW25.Contact.Title"}}">
       <div data-search-key="contact">
-      {{> ouw25-record-search sortNumeric=true sortLabel="OUW25.Search.ByAmount"}}
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contact.Title"}}">
         <thead>
           <tr>
-            <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
-            <th scope="col">{{localize "OUW25.Debt.Location"}}</th>
-            <th scope="col">{{localize "OUW25.Contact.Relation"}}</th>
-            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Contact.Debt"}}</th>
+            {{> ouw25-sort-heading label="OUW25.Debt.Counterparty"}}
+            {{> ouw25-sort-heading label="OUW25.Debt.Location"}}
+            {{> ouw25-sort-heading label="OUW25.Contact.Relation"}}
+            {{> ouw25-sort-heading label="OUW25.Contact.Debt" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
             {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
           {{#each contacts.entries}}
-            <tr data-record-row data-search-text="{{name}} {{location}} {{reason}}" data-sort-name="{{name}}" data-sort-number="{{amount}}">
+            <tr data-record-row data-search-text="{{name}} {{location}} {{reason}}">
               <td>{{name}}</td>
               <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
               <td>{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
@@ -354,21 +351,20 @@
   {{#> ouw25-tab tab=tabs.ports}}
     <div class="ouw25-sheet-column">
       {{#if ports}}
-        <p>{{localize "OUW25.Port.Discovered" count=ports.discovered total=ports.total}}</p>
         <fieldset class="ouw25-ports" aria-label="{{localize "OUW25.Port.Title"}}">
           <div data-search-key="port">
           {{> ouw25-record-search}}
           <table class="ouw25-debt-table ouw25-ports-table" aria-label="{{localize "OUW25.Port.Title"}}">
             <thead><tr>
-              <th scope="col">{{localize "OUW25.Port.Name"}}</th>
-              <th scope="col">{{localize "OUW25.Port.Region"}}</th>
-              <th scope="col">{{localize "OUW25.Port.Description"}}</th>
+              {{> ouw25-sort-heading label="OUW25.Port.Name"}}
+              {{> ouw25-sort-heading label="OUW25.Port.Region"}}
+              {{> ouw25-sort-heading label="OUW25.Port.Description"}}
               <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
               {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
             </tr></thead>
             <tbody>
               {{#each ports.entries}}
-                <tr data-record-row data-search-text="{{name}} {{region}} {{description}}" data-sort-name="{{name}}">
+                <tr data-record-row data-search-text="{{name}} {{region}} {{description}}">
                   <td>{{name}}</td>
                   <td>{{region}}</td>
                   <td><div class="ouw25-port-description"><span>{{description}}</span></div></td>
@@ -392,21 +388,21 @@
   {{#if showContracts}}
     <fieldset class="ouw25-contracts" aria-label="{{localize "OUW25.Contract.Title"}}">
       <div data-search-key="contract">
-      {{> ouw25-record-search sortNumeric=true sortLabel="OUW25.Search.ByAmount"}}
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Contract.Title"}}">
         <thead>
           <tr>
-            <th scope="col">{{localize "OUW25.Contract.Subject"}}</th>
-            <th scope="col">{{localize "OUW25.Contract.Destination"}}</th>
-            <th scope="col">{{localize "OUW25.Contract.Deadline"}}</th>
-            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Contract.Cost"}}</th>
+            {{> ouw25-sort-heading label="OUW25.Contract.Subject"}}
+            {{> ouw25-sort-heading label="OUW25.Contract.Destination"}}
+            {{> ouw25-sort-heading label="OUW25.Contract.Deadline"}}
+            {{> ouw25-sort-heading label="OUW25.Contract.Cost" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
             {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
           {{#each contracts}}
-            <tr data-record-row data-search-text="{{name}} {{location}} {{deadline}}" data-sort-name="{{name}}" data-sort-number="{{amount}}">
+            <tr data-record-row data-search-text="{{name}} {{location}} {{deadline}}">
               <td>{{name}}</td>
               <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
               <td>{{#if deadline}}{{deadline}}{{else}}—{{/if}}</td>
@@ -436,20 +432,20 @@
     <p class="ouw25-cargo-summary">{{localize "OUW25.Cargo.HoldSummary" listed=ship.hold.breakdown.listed unlisted=ship.hold.breakdown.unlisted compartments=ship.hold.breakdown.compartments fuel=ship.hold.breakdown.fuel provisions=ship.hold.breakdown.provisions}}</p>
     <fieldset class="ouw25-cargo" aria-label="{{localize "OUW25.Cargo.Title"}}">
       <div data-search-key="cargo">
-      {{> ouw25-record-search sortNumeric=true sortLabel="OUW25.Search.ByVolume"}}
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Cargo.Title"}}">
         <thead>
           <tr>
-            <th scope="col">{{localize "OUW25.Cargo.Name"}}</th>
-            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Cargo.Quantity"}}</th>
-            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Cargo.Volume"}}</th>
+            {{> ouw25-sort-heading label="OUW25.Cargo.Name"}}
+            {{> ouw25-sort-heading label="OUW25.Cargo.Quantity" numeric=true}}
+            {{> ouw25-sort-heading label="OUW25.Cargo.Volume" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
             {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
           {{#each cargo.entries}}
-            <tr data-record-row data-search-text="{{name}}" data-sort-name="{{name}}" data-sort-number="{{volume}}">
+            <tr data-record-row data-search-text="{{name}}">
               <td>{{name}}</td>
               <td class="ouw25-debt-amount">{{quantity}}</td>
               <td class="ouw25-debt-amount">{{volume}}</td>
@@ -489,31 +485,22 @@
       {{> ouw25-ship-basics}}
       <fieldset class="ouw25-voyage">
         {{> ouw25-block-heading heading="OUW25.Voyage.Title"}}
-        {{#if editable}}
-        <p class="ouw25-voyage-action-label">{{localize "OUW25.Voyage.TravelActions"}}</p>
-        <div class="ouw25-voyage-actions ouw25-voyage-primary">
-          <button type="button" data-action="travelSector" {{#unless ship.canTravel}}disabled{{/unless}}>{{localize "OUW25.Voyage.TravelSector"}}</button>
-          <button type="button" data-action="undoSector" {{#unless ship.canUndoTransition}}disabled{{/unless}}>{{localize "OUW25.Voyage.UndoSector"}}</button>
-        </div>
-        {{/if}}
-        <p class="ouw25-voyage-action-label">{{localize "OUW25.Voyage.Modes"}}</p>
         <div class="ouw25-voyage-actions">
           {{#if editable}}
+            <button type="button" data-action="travelSector" {{#unless ship.canTravel}}disabled{{/unless}}>{{localize "OUW25.Voyage.TravelSector"}}</button>
+            <button type="button" data-action="undoSector" {{#unless ship.canUndoTransition}}disabled{{/unless}}>{{localize "OUW25.Voyage.UndoSector"}}</button>
             <button type="button" data-action="toggleForcedMode" aria-pressed="{{#if ship.forcedMode}}true{{else}}false{{/if}}" {{#if ship.forcedDisabled}}disabled{{/if}}>
               {{#if ship.forcedMode}}{{localize "OUW25.Voyage.DisableForced"}}{{else}}{{localize "OUW25.Voyage.EnableForced"}}{{/if}}
             </button>
           {{/if}}
           <input type="checkbox" name="system.illuminationMode" {{checked ship.illuminationMode}} {{#unless editable}}disabled{{/unless}} hidden>
           <button type="button" data-action="toggleIlluminationMode" aria-pressed="{{#if ship.illuminationMode}}true{{else}}false{{/if}}" {{#unless editable}}disabled{{/unless}}>{{localize "OUW25.Voyage.IlluminationMode"}}</button>
+          {{#if editable}}
+            <button type="button" data-action="resetVoyage">{{localize "OUW25.Voyage.ResetCounters"}}</button>
+            <button type="button" data-action="psychotherapy">{{localize "OUW25.Voyage.Psychotherapy"}}</button>
+            <button type="button" data-action="increaseUnrest">{{localize "OUW25.Voyage.IncreaseUnrest"}}</button>
+          {{/if}}
         </div>
-        {{#if editable}}
-        <p class="ouw25-voyage-action-label">{{localize "OUW25.Voyage.OtherActions"}}</p>
-        <div class="ouw25-voyage-actions">
-          <button type="button" data-action="resetVoyage">{{localize "OUW25.Voyage.ResetCounters"}}</button>
-          <button type="button" data-action="psychotherapy">{{localize "OUW25.Voyage.Psychotherapy"}}</button>
-          <button type="button" data-action="increaseUnrest">{{localize "OUW25.Voyage.IncreaseUnrest"}}</button>
-        </div>
-        {{/if}}
         <p class="ouw25-voyage-summary">{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}} {{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
         <div class="ouw25-voyage-statuses">
           {{#unless ship.forcedMode}}<p>{{localize "OUW25.Voyage.ForcedOff"}}</p>{{/unless}}
@@ -556,14 +543,14 @@
     <fieldset class="ouw25-ledger" aria-label="{{localize "OUW25.Debt.Title"}}">
       {{#each ledger.groups}}
         <div data-search-key="debt-{{label}}">
-        {{> ouw25-record-search sortNumeric=true sortLabel="OUW25.Search.ByAmount"}}
+        {{> ouw25-record-search}}
         <table class="ouw25-debt-table">
           <caption><h4>{{localize label}}</h4></caption>
           <thead>
             <tr>
-              <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
-              <th scope="col">{{localize "OUW25.Debt.Location"}}</th>
-              <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Debt.Amount"}}</th>
+              {{> ouw25-sort-heading label="OUW25.Debt.Counterparty"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.Location"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.Amount" numeric=true}}
               <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
               {{#if @root.editable}}
                 <th scope="col">{{localize "OUW25.Debt.Actions"}}</th>
@@ -572,7 +559,7 @@
           </thead>
           <tbody>
             {{#each entries}}
-              <tr data-record-row data-search-text="{{name}} {{location}}" data-sort-name="{{name}}" data-sort-number="{{amount}}">
+              <tr data-record-row data-search-text="{{name}} {{location}}">
                 <th scope="row">{{name}}</th>
                 <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
                 <td class="ouw25-debt-amount">{{amount}}</td>
@@ -604,16 +591,16 @@
         <table class="ouw25-debt-table" aria-label="{{localize tab.label}}">
           <thead>
             <tr>
-              <th scope="col">{{localize "OUW25.Debt.Counterparty"}}</th>
-              <th scope="col">{{localize "OUW25.Debt.Location"}}</th>
-              <th scope="col">{{localize "OUW25.Relationship.Reason"}}</th>
+              {{> ouw25-sort-heading label="OUW25.Debt.Counterparty"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.Location"}}
+              {{> ouw25-sort-heading label="OUW25.Relationship.Reason"}}
               <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
               {{#if @root.editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
             </tr>
           </thead>
           <tbody>
             {{#each entries}}
-              <tr data-record-row data-search-text="{{name}} {{location}} {{reason}}" data-sort-name="{{name}}">
+              <tr data-record-row data-search-text="{{name}} {{location}} {{reason}}">
                 <th scope="row">{{name}}</th>
                 <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
                 <td>{{#if reason}}{{reason}}{{else}}—{{/if}}</td>
@@ -640,19 +627,19 @@
   {{#if possessions}}
     <fieldset class="ouw25-possessions" aria-label="{{localize "OUW25.Possession.Title"}}">
       <div data-search-key="possession">
-      {{> ouw25-record-search sortNumeric=true sortLabel="OUW25.Search.ByAmount"}}
+      {{> ouw25-record-search}}
       <table class="ouw25-debt-table" aria-label="{{localize "OUW25.Possession.Title"}}">
         <thead>
           <tr>
-            <th scope="col">{{localize "OUW25.Possession.Description"}}</th>
-            <th scope="col" class="ouw25-debt-amount">{{localize "OUW25.Possession.Cost"}}</th>
+            {{> ouw25-sort-heading label="OUW25.Possession.Description"}}
+            {{> ouw25-sort-heading label="OUW25.Possession.Cost" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
             {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
           {{#each possessions.entries}}
-            <tr data-record-row data-search-text="{{name}}" data-sort-name="{{name}}" data-sort-number="{{amount}}">
+            <tr data-record-row data-search-text="{{name}}">
               <th scope="row">{{name}}</th>
               <td class="ouw25-debt-amount">{{amount}}</td>
               {{> ouw25-record-journal recordType="possession"}}

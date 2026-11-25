@@ -29,7 +29,7 @@ test("the built package registers models and an editable notes sheet for its dec
         async _onRender() {}
         async _onFirstRender() {}
         _onClose() {}
-        _toggleDisabled() {}
+        _toggleDisabled(disabled) { for (const control of this._controls ?? []) control.disabled = disabled; }
         async _onDropDocument() { return "base"; }
         _getTabsConfig(group) { return this.constructor.TABS[group]; }
         _onChangeForm() {}
@@ -750,10 +750,18 @@ test("the built package registers models and an editable notes sheet for its dec
   const outside = { target: { closest: () => null } };
   assert.equal(await memberSheet._onDropDocument(inside, { documentName: "Item" }), null);
   assert.equal(await memberSheet._onDropDocument(outside, { documentName: "Item" }), "base");
-  const portraitButton = { disabled: true };
-  memberSheet._element = { querySelectorAll: () => [portraitButton] };
+  const portraitButton = { disabled: false };
+  const recordFieldset = { disabled: false };
+  const sortButton = { disabled: false };
+  const editButton = { disabled: false };
+  memberSheet._controls = [portraitButton, recordFieldset, sortButton, editButton];
+  memberSheet._element = { querySelectorAll: selector => selector === "fieldset:has([data-search-key])"
+    ? [recordFieldset] : [portraitButton, sortButton] };
   memberSheet._toggleDisabled(true);
   assert.equal(portraitButton.disabled, false);
+  assert.equal(recordFieldset.disabled, false);
+  assert.equal(sortButton.disabled, false);
+  assert.equal(editButton.disabled, true);
   await memberSheet._onDropActor(outside, merchant);
   assert.deepEqual(memberSystem.founders, []);
   await memberSheet._onDropActor(inside, { ...merchant, type: "cooperative" });
@@ -993,27 +1001,44 @@ test("record search filters text without changing record data or confusing empty
   assert.equal((template.match(/<tr data-record-row/g) ?? []).length, 7);
 });
 
-test("record sorting is stable, reversible and independent of search", async () => {
-  const { sortRecordTable, filterRecordTable } = await import(new URL("module/record-search.mjs", dist));
+test("column sorting toggles direction, preserves ties and search, and restores after rendering", async () => {
+  const { setupRecordSorting, filterRecordTable } = await import(new URL("module/record-search.mjs", dist));
   const rows = [
-    { dataset: { searchText: "pear", sortName: "pear", sortNumber: "2.5" } },
-    { dataset: { searchText: "apple", sortName: "apple", sortNumber: "12" } },
-    { dataset: { searchText: "apricot", sortName: "apricot", sortNumber: "12" } }
+    { dataset: { searchText: "pear" }, cells: [{ textContent: "pear" }, { textContent: "2.5" }] },
+    { dataset: { searchText: "apple" }, cells: [{ textContent: "apple" }, { textContent: "12" }] },
+    { dataset: { searchText: "apricot" }, cells: [{ textContent: "apricot" }, { textContent: "12" }] }
   ];
+  const buttons = [0, 1].map(column => {
+    const heading = { cellIndex: column, attributes: {}, setAttribute(key, value) { this.attributes[key] = value; }, removeAttribute(key) { delete this.attributes[key]; } };
+    return { heading, closest: () => heading, hasAttribute: () => column === 1,
+      addEventListener(_type, callback) { this.click = callback; } };
+  });
   const marker = { hidden: true, parentNode: { insertBefore(row) {
     rows.splice(rows.indexOf(row), 1);
     rows.push(row);
   } } };
-  const container = { querySelectorAll: () => rows, querySelector: () => marker };
+  const container = { querySelectorAll: selector => selector === "[data-record-row]" ? rows : buttons, querySelector: () => marker };
+  let state;
+  setupRecordSorting(container, null, value => { state = value; });
   filterRecordTable(container, "ap");
-  sortRecordTable(container, "number");
-  assert.deepEqual(rows.map(row => row.dataset.sortName), ["apple", "apricot", "pear"]);
+  buttons[1].click();
+  assert.deepEqual(rows.map(row => row.cells[0].textContent), ["pear", "apple", "apricot"]);
+  assert.deepEqual(state, { column: 1, direction: "ascending" });
+  assert.equal(buttons[1].heading.attributes["aria-sort"], "ascending");
+  buttons[1].click();
+  assert.deepEqual(rows.map(row => row.cells[0].textContent), ["apple", "apricot", "pear"]);
   assert.deepEqual(rows.map(row => row.hidden), [false, false, true]);
-  sortRecordTable(container, "name");
-  assert.deepEqual(rows.map(row => row.dataset.sortName), ["apple", "apricot", "pear"]);
-  sortRecordTable(container, "original");
-  assert.deepEqual(rows.map(row => row.dataset.sortName), ["pear", "apple", "apricot"]);
-  assert.deepEqual(rows.map(row => row.dataset.sortNumber), ["2.5", "12", "12"]);
+  assert.equal(buttons[1].heading.attributes["aria-sort"], "descending");
+  buttons[0].click();
+  assert.deepEqual(rows.map(row => row.cells[0].textContent), ["apple", "apricot", "pear"]);
+  assert.equal(buttons[1].heading.attributes["aria-sort"], undefined);
+  buttons[0].click();
+  assert.deepEqual(rows.map(row => row.cells[0].textContent), ["pear", "apricot", "apple"]);
+  setupRecordSorting(container, state, value => { state = value; });
+  assert.equal(buttons[0].heading.attributes["aria-sort"], "descending");
+  assert.deepEqual(rows.map(row => row.cells[0].textContent), ["pear", "apricot", "apple"]);
+  filterRecordTable(container, "missing");
+  assert.equal(marker.hidden, false);
 });
 
 test("backlinks only reveal accessible visible explicit references and recheck access on opening", async () => {

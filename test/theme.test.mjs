@@ -256,12 +256,50 @@ test("record tables retain accessible names without visible block headings", () 
   }
   assert.match(template, /<caption><h4>\{\{localize label\}\}<\/h4><\/caption>/);
   assert.match(template, /<p class="ouw25-ledger-totals">[\s\S]*?<\/p>\s*<fieldset class="ouw25-ledger"/);
-  assert.match(template, /<p class="ouw25-contacts-total">[\s\S]*?<\/p>\s*<fieldset class="ouw25-contacts"/);
+  const contactsTab = template.match(/\{\{#> ouw25-tab tab=tabs\.contacts\}\}([\s\S]*?)\{\{\/ouw25-tab\}\}/)?.[1];
+  assert.ok(contactsTab);
+  assert.doesNotMatch(contactsTab, /OUW25\.Contact\.Total|ouw25-contacts-total/);
+  assert.match(contactsTab, /<fieldset class="ouw25-contacts"/);
+});
+
+test("record table data columns have sortable headers, but notes and actions do not", () => {
+  assert.doesNotMatch(template, /data-sort-select/);
+  assert.match(template, /<button type="button" data-sort-column[\s\S]*?OUW25\.Search\.SortHint/);
+  assert.match(module, /querySelectorAll\("[^"]*\[data-sort-column\]/);
+  assert.match(styles, /th\[aria-sort="ascending"\] \.ouw25-sort-indicator::after/);
+  assert.match(styles, /th\[aria-sort="descending"\] \.ouw25-sort-indicator::after/);
+  for (const [kind, labels] of Object.entries({
+    contacts: ["Debt.Counterparty", "Debt.Location", "Contact.Relation", "Contact.Debt"],
+    ports: ["Port.Name", "Port.Region", "Port.Description"],
+    contracts: ["Contract.Subject", "Contract.Destination", "Contract.Deadline", "Contract.Cost"],
+    cargo: ["Cargo.Name", "Cargo.Quantity", "Cargo.Volume"],
+    ledger: ["Debt.Counterparty", "Debt.Location", "Debt.Amount"],
+    relationships: ["Debt.Counterparty", "Debt.Location", "Relationship.Reason"],
+    possessions: ["Possession.Description", "Possession.Cost"]
+  })) {
+    const block = template.match(new RegExp(`<fieldset class="ouw25-${kind}"[\\s\\S]*?<thead>([\\s\\S]*?)</thead>`))?.[1];
+    assert.ok(block, `missing ${kind} headings`);
+    const actual = [...block.matchAll(/\{\{> ouw25-sort-heading label="OUW25\.([^"]+)"/g)].map(match => match[1]);
+    assert.deepEqual(actual, labels);
+    assert.match(block, /<th scope="col" class="ouw25-record-note">\{\{localize "OUW25\.Journal\.Column"\}\}<\/th>/);
+    assert.match(block, /<th scope="col">\{\{localize "OUW25\.Debt\.Actions"\}\}<\/th>/);
+  }
+  for (const label of ["Contact.Debt", "Contract.Cost", "Cargo.Quantity", "Cargo.Volume", "Debt.Amount", "Possession.Cost"]) {
+    assert.ok(template.includes(`label="OUW25.${label}" numeric=true`));
+  }
 });
 
 test("voyage status cards follow a single travel summary", () => {
   const voyage = template.match(/<fieldset class="ouw25-voyage">([\s\S]*?)<\/fieldset>/)?.[1];
   assert.ok(voyage);
+  assert.equal((voyage.match(/class="ouw25-voyage-actions"/g) ?? []).length, 1);
+  assert.doesNotMatch(voyage, /ouw25-voyage-action-label|OUW25\.Voyage\.(TravelActions|Modes|OtherActions)/);
+  const actions = voyage.match(/<div class="ouw25-voyage-actions">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(actions);
+  const actionOrder = ["travelSector", "undoSector", "toggleForcedMode", "toggleIlluminationMode", "resetVoyage", "psychotherapy", "increaseUnrest"];
+  const actionPositions = actionOrder.map(action => actions.indexOf(`data-action="${action}"`));
+  assert.ok(actionPositions.every((position, index) => position >= 0 && (!index || position > actionPositions[index - 1])));
+  assert.match(actions, /data-action="toggleIlluminationMode"[^>]*\{\{#unless editable\}\}disabled\{\{\/unless\}\}/);
   assert.match(voyage, /<p class="ouw25-voyage-summary">[\s\S]*?OUW25\.Voyage\.TravelCounters[\s\S]*?OUW25\.Voyage\.TravelRates[\s\S]*?<\/p>\s*<div class="ouw25-voyage-statuses">/);
   for (const key of ["ForcedBlocked", "FuelLow", "ProvisionsLow", "TravelInfo"]) {
     assert.match(voyage, new RegExp(`<div class="ouw25-voyage-statuses">[\\s\\S]*?OUW25\\.Voyage\\.${key}`));
@@ -295,12 +333,27 @@ test("founder cards retain their paper over a packaged cork background", async (
 });
 
 test("cooperative notes and merchant tools retain scoped decorative and focus states", () => {
-  assert.match(styles, /\.ouw25-cooperative-notes > \.ouw25-journal-index > summary\s*\{[^}]*background:\s*linear-gradient/s);
-  assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-notes \.ouw25-journal-index > summary\s*\{[^}]*background:\s*linear-gradient/s);
+  assert.match(styles, /\.ouw25-journal-index > summary:focus-visible\s*\{[^}]*outline:\s*2px solid/s);
+  assert.match(styles, /\.ouw25-notes :is\(\s*\.ouw25-cooperative-notes,\s*\.ouw25-tab\[data-tab="notes"\] > \.ouw25-sheet-columns > \.ouw25-sheet-column\s*\) > textarea\[name="system\.notes"\]\s*\{\s*box-shadow:\s*inset/s);
+  assert.match(styles, /textarea\[name="system\.notes"\]\[readonly\]\s*\{\s*background-color:\s*color-mix/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):focus-visible\s*\{[^}]*outline:\s*2px solid/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):disabled\s*\{[^}]*filter:\s*grayscale/s);
   assert.match(styles, /\.ouw25-merchant-tools\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
   assert.match(styles, /\.ouw25-sheet-column button\s*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*anywhere;/);
+});
+
+test("merchant dossier cards and high-contrast sheet controls retain visible states", () => {
+  assert.match(styles, /\.ouw25-merchant-pair > fieldset\s*\{\s*box-shadow:\s*inset/);
+  assert.match(styles, /\.ouw25-merchant-pair > fieldset > legend\s*\{\s*box-shadow:\s*inset/);
+  assert.match(styles, /\.ouw25-notes :is\(\s*input:not\(\[type="checkbox"\]\)\[readonly\],\s*textarea\[readonly\],\s*select:disabled\s*\)\s*\{\s*background-color:/s);
+  assert.match(styles, /\.ouw25-luck-value:focus-visible\s*\{\s*outline:\s*2px solid/);
+  const forced = styles.match(/@media \(forced-colors: active\) \{\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-sheet-tabs[\s\S]*?\n\}/)?.[0];
+  assert.ok(forced);
+  assert.match(forced, /button\.active:focus-visible\s*\{\s*outline:\s*2px solid Highlight/);
+  assert.match(forced, /\.ouw25-luck-value[\s\S]*?background:\s*none;\s*color:\s*CanvasText/);
+  assert.match(forced, /\.ouw25-condition-check > span\s*\{\s*clip-path:\s*none;\s*outline:\s*1px solid CanvasText/);
+  assert.match(forced, /input:focus-visible \+ span\s*\{\s*outline:\s*2px solid Highlight/);
 });
 
 test("record registers share headings and highlight actual rows", () => {
@@ -318,7 +371,7 @@ test("record search controls form a paper strip without adding layout dimensions
   assert.match(styles, /\.ouw25-record-search\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset/s);
   assert.match(styles, /\.ouw25-record-search label > span\s*\{\s*color:\s*var\(--ouw25-color-accent\);/);
   assert.match(styles, /\.ouw25-record-search button\[data-search-clear\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset[^}]*filter:\s*none;/s);
-  assert.match(styles, /\.ouw25-record-search :is\(input, select\)\s*\{\s*box-shadow:\s*inset/);
+  assert.match(styles, /\.ouw25-record-search input\s*\{\s*box-shadow:\s*inset/);
 });
 
 test("cooperative attributes put founders on the left and other blocks above the journal", () => {
@@ -353,10 +406,17 @@ test("founder summary keeps each localized subblock together", async () => {
   }
 });
 
-test("cooperative tab labels show discovered ports, occupied hold and marked damage", () => {
+test("cooperative tab labels show discovered ports in a tooltip, occupied hold and marked damage", async () => {
   const nav = template.match(/<nav class="tabs ouw25-sheet-tabs"[\s\S]*?<\/nav>/)?.[0];
   assert.ok(nav);
+  assert.match(nav, /\{\{#if \(eq id "ports"\)\}\}data-tooltip="\{\{localize "OUW25\.Port\.Discovered" count=@root\.ports\.discovered total=@root\.ports\.total\}\}"/);
   assert.match(nav, /\{\{#if \(eq id "ports"\)\}\} \(\{\{@root\.ports\.discovered\}\}\/\{\{@root\.ports\.total\}\}\)/);
+  assert.doesNotMatch(template, /<p>\{\{localize "OUW25\.Port\.Discovered"/);
+  for (const [language, expected] of [["en", "Discovered {count} of {total} ports"], ["ru", "Открыто {count} из {total} портов"]]) {
+    const data = JSON.parse(await readFile(new URL(`../dist/ouw25/lang/${language}.json`, import.meta.url), "utf8"));
+    assert.equal(data.OUW25.Port.Discovered, expected);
+    assert.doesNotMatch(data.OUW25.Port.Discovered, /:/);
+  }
   assert.match(nav, /\{\{#if \(eq id "cargo"\)\}\} \(\{\{@root\.ship\.hold\.occupied\}\}\)/);
   assert.match(nav, /\{\{#if @root\.ship\.condition\.tabDestroyed\}\} class="ouw25-tab-ship-destroyed"/);
   assert.match(nav, /<\/span>\{\{#if \(eq id "ship"\)\}\}[\s\S]*?<span class="ouw25-tab-damage"/);
@@ -400,7 +460,7 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(styles, /\.ouw25-identity:has\(> \.ouw25-roll-icon\) > input\s*\{\s*padding-inline-end:\s*39px;/);
   assert.match(styles, /\.ouw25-identity > \.ouw25-roll-icon\s*\{\s*inset-inline-end:\s*4px;/);
   assert.match(styles, /\.ouw25-choice-row:has\(> \.ouw25-roll-icon\[data-creation="specialty"\]\)\s*\{[^}]*padding-inline-end:\s*4px;/s);
-  assert.match(styles, /button:not\(:disabled\):not\(:where\(\.ouw25-roll-icon, \.ouw25-trait-icon, \.ouw25-portrait, \[data-action="tab"\]\)\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
+  assert.match(styles, /button:not\(:disabled\):not\(:where\(\.ouw25-roll-icon, \.ouw25-trait-icon, \.ouw25-portrait, \[data-action="tab"\], \[data-sort-column\]\)\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
   const utilityIconRule = styles.match(/\.ouw25-notes button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\)\s*\{[^}]*\}/s)?.[0];
   assert.ok(utilityIconRule);
   assert.match(utilityIconRule, /transition:\s*none;/);

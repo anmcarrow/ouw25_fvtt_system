@@ -14,7 +14,7 @@ import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
-import { filterRecordTable, sortRecordTable } from "./record-search.mjs";
+import { filterRecordTable, setupRecordSorting } from "./record-search.mjs";
 import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink } from "./record-journal.mjs";
 import { openBargain } from "./bargain-dialog.mjs";
 import { openUnluck } from "./unluck-dialog.mjs";
@@ -448,7 +448,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   _toggleDisabled(disabled) {
     super._toggleDisabled(disabled);
     if (disabled) {
-      for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait, [data-search-input], [data-search-clear], [data-sort-select], [data-action='recordJournal'], [data-action='showJournalBacklinks'], [data-action='openJournalBacklink']")) button.disabled = false;
+      for (const fieldset of this.element.querySelectorAll("fieldset:has([data-search-key])")) fieldset.disabled = false;
+      for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait, [data-search-input], [data-search-clear], [data-sort-column], [data-action='recordJournal'], [data-action='showJournalBacklinks'], [data-action='openJournalBacklink']")) button.disabled = false;
     }
   }
 
@@ -464,9 +465,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     for (const container of this.element.querySelectorAll("[data-search-key]")) {
       const input = container.querySelector("[data-search-input]");
       const clear = container.querySelector("[data-search-clear]");
-      const sort = container.querySelector("[data-sort-select]");
       input.value = this.#recordSearches.get(container.dataset.searchKey) ?? "";
-      sort.value = this.#recordSorts.get(container.dataset.searchKey) ?? "original";
       const filter = () => {
         this.#recordSearches.set(container.dataset.searchKey, input.value);
         filterRecordTable(container, input.value);
@@ -477,12 +476,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         filter();
         input.focus();
       });
-      sort.addEventListener("change", () => {
-        this.#recordSorts.set(container.dataset.searchKey, sort.value);
-        sortRecordTable(container, sort.value);
+      setupRecordSorting(container, this.#recordSorts.get(container.dataset.searchKey), state => {
+        this.#recordSorts.set(container.dataset.searchKey, state);
       });
       filter();
-      sortRecordTable(container, sort.value);
     }
   }
 

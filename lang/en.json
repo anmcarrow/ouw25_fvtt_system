@@ -42,7 +42,7 @@
       "Name": "Name",
       "Region": "Region",
       "Description": "Description",
-      "Discovered": "Discovered: {count} of {total} ports",
+      "Discovered": "Discovered {count} of {total} ports",
       "Add": "Add place",
       "Empty": "No places yet.",
       "Invalid": "Enter a place name.",
@@ -215,9 +215,6 @@
     },
     "Voyage": {
       "Title": "Set sail",
-      "TravelActions": "Travel",
-      "Modes": "Modes",
-      "OtherActions": "Other actions",
       "Crew": "Crew count",
       "Capacity": "of {capacity}",
       "CrewSummary": "Crew: {crew} / {capacity} ({band})",
@@ -664,11 +661,7 @@
     "Search": {
       "Label": "Search",
       "Clear": "Clear",
-      "Sort": "Sort",
-      "Original": "Original order",
-      "ByName": "Name",
-      "ByAmount": "Amount, highest first",
-      "ByVolume": "Volume, highest first",
+      "SortHint": "Click to sort; click again to reverse the order.",
       "NoMatches": "No matches."
     },
     "Journal": {

@@ -803,14 +803,16 @@
       {{/if}}
     </div>
   {{/if}}
-    <button type="button" class="ouw25-sidebar-card ouw25-bargain-reference" data-action="openBargain" data-tooltip="{{localize "OUW25.BargainCalc.Open"}}" {{#unless editable}}disabled{{/unless}}>
-      <span aria-hidden="true">&#x1F9EE;</span> {{localize "OUW25.Bargain.Title"}}
-    </button>
-  {{#if showCollision}}
-    <button type="button" class="ouw25-sidebar-card ouw25-collision" data-action="rollCollision" data-tooltip="{{localize "OUW25.Unluck.Open"}}">
-      <span aria-hidden="true">&#x1F630;</span> {{localize "OUW25.Collision.Title"}}
-    </button>
-  {{/if}}
+    <div class="ouw25-merchant-tools">
+      <button type="button" class="ouw25-sidebar-card ouw25-bargain-reference" data-action="openBargain" data-tooltip="{{localize "OUW25.BargainCalc.Open"}}" {{#unless editable}}disabled{{/unless}}>
+        {{localize "OUW25.BargainCalc.Title"}}
+      </button>
+    {{#if showCollision}}
+      <button type="button" class="ouw25-sidebar-card ouw25-collision" data-action="rollCollision" data-tooltip="{{localize "OUW25.Unluck.Open"}}">
+        {{localize "OUW25.Unluck.ToCheck"}}
+      </button>
+    {{/if}}
+    </div>
     </div>
   {{/ouw25-tab}}
   {{#*inline "ouw25-merchant-traits"}}

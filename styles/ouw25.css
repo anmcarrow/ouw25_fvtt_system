@@ -1153,12 +1153,20 @@ body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots
   border-radius: 0.35rem;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button:is(.ouw25-bargain-reference, .ouw25-collision) {
+.ouw25 .ouw25-merchant-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ouw25-sidebar-gap);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision) {
   --ouw25-card-paper: var(--ouw25-reference-paper);
   justify-content: flex-start;
+  min-width: 0;
   background: var(--ouw25-color-paper) var(--ouw25-card-paper) center top / 100% auto no-repeat;
   border: 0;
   border-radius: 0.35rem;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
   padding: var(--ouw25-reference-padding);
   color: var(--ouw25-color-ink);
   font-size: 16px;
@@ -1166,11 +1174,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button:is(.o
   text-align: start;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar > button:is(.ouw25-bargain-reference, .ouw25-collision):hover:not(:disabled) {
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):hover:not(:disabled) {
   color: var(--ouw25-color-ink);
 }
 
-.ouw25 .ouw25-merchant-sidebar > .ouw25-merchant-wounds + .ouw25-sidebar-card {
+.ouw25 .ouw25-merchant-sidebar > .ouw25-merchant-wounds + .ouw25-merchant-tools {
   margin-block-start: calc(var(--ouw25-sidebar-gap) * 1.2);
 }
 
@@ -1978,7 +1986,7 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer {
   z-index: 1;
   justify-content: center;
   padding-inline: calc(0.5rem + 20px) calc(0.5rem + 12px + 20px);
-  padding-block: 0.4375rem 0.0625rem;
+  padding-block: calc(0.4375rem + 10.89px) calc(0.0625rem + 10.89px);
 }
 
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer::before {
@@ -2412,9 +2420,14 @@ body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="nu
 body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="number"]::-webkit-inner-spin-button,
 body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: auto;
-  height: calc(var(--input-height, 2rem) - 4px);
+  height: calc(var(--input-height, 2rem) * 0.9 - 8px);
   margin-block-start: 2px;
   opacity: 1;
+}
+
+body.game .application.ouw25 .dialog-content .ouw25-unluck-counts input[type="number"]::-webkit-inner-spin-button {
+  margin-inline-end: 3px;
+  filter: sepia(0.65) saturate(1.2);
 }
 
 .ouw25-unluck-reels {

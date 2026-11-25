@@ -1923,6 +1923,11 @@ test("the check button opens a separate dialog", async () => {
   const template = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
   assert.match(template, /<button[^>]+ouw25-collision[^>]+data-action="rollCollision"/);
   assert.doesNotMatch(template, /<details class="ouw25-sidebar-card ouw25-collision">/);
+  const tools = template.match(/<div class="ouw25-merchant-tools">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(tools);
+  assert.match(tools, /data-action="openBargain"[\s\S]*?OUW25\.BargainCalc\.Title[\s\S]*?data-action="rollCollision"[\s\S]*?OUW25\.Unluck\.ToCheck/);
+  assert.doesNotMatch(tools, /&#x|<span/);
+  assert.match(tools, /\{\{#if showCollision\}\}/);
 });
 
 test("the bargain panel opens the calculator and its reference is inside the dialog", async () => {

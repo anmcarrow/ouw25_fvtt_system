@@ -703,7 +703,7 @@
       }
     },
     "BargainCalc": {
-      "Open": "Open calculator",
+      "Open": "Helps you make a dramatic bargain",
       "Title": "Success Calculator",
       "Initiator": "Initiator",
       "WindowTitle": "{title} — {initiator}: {name}",
@@ -818,7 +818,7 @@
       "Inflation": "With Compensate for inflation enabled, each complication adds 1 point, a point costs 8 advantages, & partial success costs half the full price, rounded down. Other payment methods are unchanged."
     },
     "Unluck": {
-      "Open": "Open (un)luck check",
+      "Open": "Helps you make an (un)luck check",
       "WindowTitle": "(Un)lucky Gambler – {name}",
       "Help": "Agree on the goal, risks, advantages & complications. Roll 4d6 plus advantages; each complication removes one six. Two remaining sixes are a full success, one is partial, & none is failure. Luck marks add guaranteed successes.",
       "ToBargain": "Success Calculator",
@@ -845,7 +845,7 @@
       "DonationTotal": "{amount} og.",
       "Odds": "Chances: Fail / Part / Full",
       "OddsValues": "{failure}% / {partial}% / {success}%",
-      "OddsBroken": "Display broken: %!?/—",
+      "OddsBroken": "Ye, Lucky Basterd!",
       "Summary": "{dice}d6; complications: {deduction}; luck: {luck}",
       "Staged": "Wounds, luck & donations are recorded only when the roll is confirmed.",
       "Roll": "Roll!",

@@ -41,6 +41,16 @@ body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .max
 }
 
 .ouw25 .ouw25-notes {
+  --ouw25-folder-light: #f0e2bd;
+  --ouw25-folder-dark: #e0cb98;
+  --ouw25-folder-ink: #8a6a3a;
+  --ouw25-greenbar: #e5ecdd;
+  --ouw25-paper-rule: rgba(19, 62, 97, 0.2);
+  --ouw25-sheet-edge: #f8e8d4;
+  --ouw25-sheet-vignette: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(160, 110, 60, 0.16) 100%);
+  --ouw25-sheet-perforation: radial-gradient(circle at 5px 50%, rgba(58, 40, 30, 0.5) 0 2.3px, rgba(120, 90, 50, 0.4) 2.3px 3.1px, transparent 3.5px);
+  --ouw25-tray-lip: linear-gradient(to top, #4f4d49 0, #7b7872 1px, #b8b4aa 2px, #e3dfd4 4px, #c9c5ba 6px, #9d9a92 8px, #6e6c66 9px, #3e3c39 10px);
+  --ouw25-dog-ear: linear-gradient(to bottom left, var(--ouw25-sheet-edge) 0 50%, #cdb996 50% calc(50% + 1px), #f1e5cf calc(50% + 1px) 100%);
   --ouw25-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #80665b, 0 3px 4px #51413b66;
   box-sizing: border-box;
   display: flex;
@@ -49,11 +59,15 @@ body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .max
   color-scheme: light;
   color: var(--ouw25-color-ink);
   background-color: var(--ouw25-color-paper);
-  background-image: url("./images/sheet_bgr.webp");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-image: var(--ouw25-sheet-vignette), var(--ouw25-sheet-perforation), url("./images/sheet_bgr.webp");
+  background-attachment: scroll, local, scroll;
+  background-position: center, left top, center;
+  background-repeat: no-repeat, repeat-y, no-repeat;
+  background-size: 100% 100%, 16px 3rem, cover;
+  border-block-end: 10px solid transparent;
+  border-image: var(--ouw25-tray-lip) 0 0 10 0;
   padding: 1rem;
+  padding-block-end: calc(1rem - 10px);
   min-width: 0;
   min-height: 0;
   overflow: auto;
@@ -4094,4 +4108,82 @@ body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-actio
 body.game .application.ouw25.ouw25-bargain-dialog .form-footer button[data-action="ok"]:focus-visible {
   outline: 2px solid #ffecad;
   outline-offset: 3px;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-cooperative-layout) {
+  --ouw25-folder-light: #dbe9d9;
+  --ouw25-folder-dark: #c3dac5;
+  --ouw25-folder-ink: #3f6f5f;
+}
+
+body.game .application.ouw25 .ouw25-notes :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea:not([name="system.notes"])
+) {
+  background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--ouw25-folder-ink) 70%, transparent) 0 2px, transparent 2px 5px);
+  background-size: 100% 1px;
+  background-position: 0 calc(100% - 3px);
+  background-repeat: no-repeat;
+}
+
+body.game .application.ouw25 .ouw25-notes textarea[name="system.notes"] {
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1lh - 1px), var(--ouw25-paper-rule) calc(1lh - 1px), var(--ouw25-paper-rule) 1lh);
+  background-attachment: local;
+  background-origin: content-box;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-debt-table tbody tr:nth-child(even) {
+  background-color: var(--ouw25-greenbar);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-debt-table thead th {
+  background-image: linear-gradient(var(--ouw25-folder-ink), var(--ouw25-folder-ink)), linear-gradient(var(--ouw25-folder-ink), var(--ouw25-folder-ink));
+  background-size: 100% 1px;
+  background-position: 0 100%, 0 calc(100% - 3px);
+  background-repeat: no-repeat;
+}
+
+body.game .application.ouw25 .ouw25-notes p:is([role="status"], [role="alert"]):not(.ouw25-voyage-statuses > p) {
+  outline: 1.5px solid color-mix(in srgb, currentColor 70%, transparent);
+  outline-offset: 2px;
+  border-radius: 3px;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p:is([role="status"], [role="alert"]) {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 60%, transparent), 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+body.game .application.ouw25 .ouw25-notes :is(
+  .ouw25-founder-card,
+  .ouw25-ship-equipment-card,
+  .ouw25-voyage-statuses > p,
+  .ouw25-merchant-sidebar > .ouw25-sidebar-card
+) {
+  background-image: var(--ouw25-dog-ear), var(--ouw25-card-paper, url("./images/smallpaper5.webp"));
+  background-size: 12px 12px, 100% auto;
+  background-position: right top, center top;
+  background-repeat: no-repeat;
+}
+
+body.game .application.ouw25 .ouw25-notes fieldset > legend,
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-cooperative-budget, .ouw25-cooperative-traits > fieldset) > legend {
+  background: linear-gradient(to bottom, var(--ouw25-folder-light), var(--ouw25-folder-dark));
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ouw25-folder-ink) 45%, transparent), 0 1px 1px rgba(55, 15, 0, 0.2);
+  margin-inline-start: -0.35rem;
+  padding-inline: 0.35rem;
+}
+
+@media (forced-colors: active) {
+  .ouw25 .ouw25-notes {
+    border-image: none;
+    border-block-end-color: CanvasText;
+  }
+
+  body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p:is([role="status"], [role="alert"]) {
+    outline: 1px solid CanvasText;
+  }
 }

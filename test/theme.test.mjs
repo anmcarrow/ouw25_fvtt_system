@@ -497,6 +497,22 @@ test("sheet buttons retain raised, pressed and accessible states", () => {
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*height:\s*auto;[^}]*min-height:/s);
 });
 
+test("sheet finishing evokes a retro office without taking layout space or overriding existing paper", () => {
+  assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*background-image:\s*var\(--ouw25-sheet-vignette\), var\(--ouw25-sheet-perforation\), url\("\.\/images\/sheet_bgr\.webp"\);[^}]*background-attachment:\s*scroll, local, scroll;/s);
+  assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*border-block-end:\s*10px solid transparent;[^}]*border-image:\s*var\(--ouw25-tray-lip\) 0 0 10 0;[^}]*padding-block-end:\s*calc\(1rem - 10px\);/s);
+  assert.match(styles, /--ouw25-tray-lip:\s*linear-gradient\(to top,/);
+  assert.match(styles, /textarea\[name="system\.notes"\]\s*\{\s*background-image:\s*repeating-linear-gradient\(to bottom[^}]*background-attachment:\s*local;/s);
+  assert.match(styles, /textarea:not\(\[name="system\.notes"\]\)[\s\S]*?\{\s*background-image:\s*repeating-linear-gradient\(90deg[^}]*background-size:\s*100% 1px;/);
+  assert.match(styles, /\.ouw25-debt-table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-greenbar\);/);
+  assert.match(styles, /\.ouw25-debt-table thead th\s*\{[^}]*background-position:\s*0 100%, 0 calc\(100% - 3px\);/s);
+  assert.match(styles, /p:is\(\[role="status"\], \[role="alert"\]\):not\(\.ouw25-voyage-statuses > p\)\s*\{\s*outline:/);
+  assert.match(styles, /\.ouw25-voyage-statuses > p:is\(\[role="status"\], \[role="alert"\]\)\s*\{\s*box-shadow:\s*inset/);
+  assert.match(styles, /background-image:\s*var\(--ouw25-dog-ear\), var\(--ouw25-card-paper, url\("\.\/images\/smallpaper5\.webp"\)\);/);
+  assert.match(styles, /fieldset > legend,[\s\S]*?\{\s*background:\s*linear-gradient\(to bottom, var\(--ouw25-folder-light\)[^}]*margin-inline-start:\s*-0\.35rem;\s*padding-inline:\s*0\.35rem;/);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-cooperative-layout\)\s*\{\s*--ouw25-folder-light:/);
+  assert.match(styles, /@media \(forced-colors: active\) \{\s*\.ouw25 \.ouw25-notes\s*\{\s*border-image:\s*none;/);
+});
+
 test("hiring actions match past action dimensions and voyage content has bottom clearance", () => {
   assert.match(styles, /\.ouw25-personal-actions > button,\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-profile-details > button\[data-source="hiring"\]\s*\{[^}]*inline-size:\s*auto;[^}]*padding:\s*0\.2rem 0\.35rem;/s);
   assert.match(styles, /\.ouw25-personal-actions > button,\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-profile-details > button\[data-source="hiring"\],[^}]*font-size:\s*0\.8em;/s);

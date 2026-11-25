@@ -1310,7 +1310,7 @@ test("identity rolls use independent name indices and preserve the Roll20 table 
 test("the built styles reference the packaged paper background", async () => {
   const styles = await readFile(new URL("styles/ouw25.css", dist), "utf8");
   const background = await readFile(new URL("styles/images/sheet_bgr.webp", dist));
-  assert.match(styles, /background-image: url\("\.\/images\/sheet_bgr\.webp"\)/);
+  assert.match(styles, /background-image:[^;]*url\("\.\/images\/sheet_bgr\.webp"\)/);
   assert.equal(background.subarray(8, 12).toString(), "WEBP");
 });
 

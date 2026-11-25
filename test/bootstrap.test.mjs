@@ -1953,7 +1953,7 @@ test("the check button opens a separate dialog", async () => {
   const tools = template.match(/<div class="ouw25-merchant-tools">([\s\S]*?)<\/div>/)?.[1];
   assert.ok(tools);
   assert.match(tools, /data-action="openBargain" data-tooltip="\{\{localize "OUW25\.BargainCalc\.Open"\}\}"[\s\S]*?OUW25\.BargainCalc\.Title[\s\S]*?data-action="rollCollision" data-tooltip="\{\{localize "OUW25\.Unluck\.Open"\}\}"[\s\S]*?OUW25\.Unluck\.ToCheck/);
-  assert.doesNotMatch(tools, /&#x|<span/);
+  assert.doesNotMatch(tools, /&#x/);
   assert.match(tools, /\{\{#if showCollision\}\}/);
 });
 

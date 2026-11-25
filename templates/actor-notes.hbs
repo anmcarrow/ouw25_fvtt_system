@@ -798,11 +798,11 @@
   {{/if}}
     <div class="ouw25-merchant-tools">
       <button type="button" class="ouw25-sidebar-card ouw25-bargain-reference" data-action="openBargain" data-tooltip="{{localize "OUW25.BargainCalc.Open"}}" {{#unless editable}}disabled{{/unless}}>
-        {{localize "OUW25.BargainCalc.Title"}}
+        <span>{{localize "OUW25.BargainCalc.Title"}}</span>
       </button>
     {{#if showCollision}}
       <button type="button" class="ouw25-sidebar-card ouw25-collision" data-action="rollCollision" data-tooltip="{{localize "OUW25.Unluck.Open"}}">
-        {{localize "OUW25.Unluck.ToCheck"}}
+        <span>{{localize "OUW25.Unluck.ToCheck"}}</span>
       </button>
     {{/if}}
     </div>

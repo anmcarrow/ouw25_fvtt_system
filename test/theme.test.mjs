@@ -371,6 +371,7 @@ test("record search controls form a paper strip without adding layout dimensions
   assert.match(styles, /\.ouw25-record-search\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset/s);
   assert.match(styles, /\.ouw25-record-search label > span\s*\{\s*color:\s*var\(--ouw25-color-accent\);/);
   assert.match(styles, /\.ouw25-record-search button\[data-search-clear\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset[^}]*filter:\s*none;/s);
+  assert.match(styles, /\.ouw25-record-search button\[data-search-clear\]:hover:not\(:disabled\)\s*\{[^}]*text-shadow:\s*none;/s);
   assert.match(styles, /\.ouw25-record-search input\s*\{\s*box-shadow:\s*inset/);
 });
 
@@ -463,6 +464,7 @@ test("the portrait uses a framed image and keeps utility buttons free of hover m
   assert.match(styles, /button:not\(:disabled\):not\(:where\(\.ouw25-roll-icon, \.ouw25-trait-icon, \.ouw25-portrait, \[data-action="tab"\], \[data-sort-column\]\)\)\s*\{\s*transition:\s*translate 150ms ease, scale 150ms ease, filter 150ms ease;/);
   const utilityIconRule = styles.match(/\.ouw25-notes button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\)\s*\{[^}]*\}/s)?.[0];
   assert.ok(utilityIconRule);
+  assert.match(utilityIconRule, /background:\s*none;\s*box-shadow:\s*none;/);
   assert.match(utilityIconRule, /transition:\s*none;/);
   assert.match(utilityIconRule, /scale:\s*1;/);
   assert.doesNotMatch(utilityIconRule, /transform:\s*none;/);
@@ -479,7 +481,7 @@ test("actor sheet hover and panel styles retain their distinct visual roles", ()
   assert.match(template, /data-action="tab"[^>]*><span[\s\S]*?>\{\{localize label\}\}/);
   assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*color:\s*color-mix\(/);
   assert.match(styles, /background:\s*linear-gradient\(160deg, var\(--ouw25-button-color/);
-  assert.match(styles, /background:\s*linear-gradient\(160deg, #617b98, #32445e 48%, #19273b\)/);
+  assert.match(styles, /background:\s*linear-gradient\(160deg, #617b98, #506b86 48%, #405a74\)/);
   assert.match(styles, /button:not\(:disabled\) > span\s*\{[^}]*background-clip:\s*text;[^}]*text-shadow:\s*none;/s);
 });
 
@@ -489,10 +491,25 @@ test("sheet buttons retain raised, pressed and accessible states", () => {
   assert.match(styles, /button:active:not\(:disabled\):not\(:where\(\.ouw25-roll-icon[^}]*box-shadow:\s*inset/s);
   assert.match(styles, /\.ouw25-voyage-actions > \[data-action="toggleForcedMode"\]\[aria-pressed="true"\]\s*\{[^}]*box-shadow:\s*var\(--ouw25-button-bevel\)/s);
   assert.match(styles, /\.ouw25-voyage-actions > button\[aria-pressed="true"\]\s*\{[^}]*outline:\s*2px solid Highlight[^}]*text-decoration:\s*underline double/s);
-  assert.match(styles, /button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\):disabled\s*\{[^}]*filter:\s*grayscale[^}]*opacity:/s);
-  assert.match(styles, /\.ouw25-debt-table button\[data-sort-column\]:active\s*\{[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-debt-table button\[data-sort-column\]\s*\{[^}]*background:\s*transparent;/s);
+  assert.doesNotMatch(styles, /\.ouw25-debt-table button\[data-sort-column\]:active\s*\{/);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):active:not\(:disabled\)\s*\{[^}]*box-shadow:\s*inset/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*height:\s*auto;[^}]*min-height:/s);
+});
+
+test("hiring actions match past action dimensions and voyage content has bottom clearance", () => {
+  assert.match(styles, /\.ouw25-personal-actions > button,\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-profile-details > button\[data-source="hiring"\]\s*\{[^}]*inline-size:\s*auto;[^}]*padding:\s*0\.2rem 0\.35rem;/s);
+  assert.match(styles, /\.ouw25-personal-actions > button,\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-profile-details > button\[data-source="hiring"\],[^}]*font-size:\s*0\.8em;/s);
+  assert.match(styles, /fieldset\.ouw25-voyage\s*\{\s*padding-block-end:\s*1\.25rem;/);
+});
+
+test("sheet tool buttons match the corresponding dialog toolbar treatments", () => {
+  assert.match(template, /data-action="openBargain"[^>]*>[\s\S]*?<span>\{\{localize "OUW25\.BargainCalc\.Title"\}\}<\/span>/);
+  assert.match(template, /data-action="rollCollision"[^>]*>[\s\S]*?<span>\{\{localize "OUW25\.Unluck\.ToCheck"\}\}<\/span>/);
+  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*linear-gradient\(20deg, #78303b 0%, #4f1725 40%, #2d0b16 100%\)[^}]*border-radius:\s*999px;/s);
+  assert.match(styles, /\.ouw25-merchant-tools > \.ouw25-bargain-reference:not\(:disabled\)\s*\{\s*background:\s*linear-gradient\(160deg, #4d7271 0%, #355253 40%, #1d3535 100%\)/);
+  assert.match(styles, /\.ouw25-merchant-tools > button > span\s*\{[^}]*-webkit-text-fill-color:\s*transparent;/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button:disabled > span\s*\{[^}]*-webkit-text-fill-color:\s*GrayText;/s);
 });
 
 test("light interface inverts only default actor artwork in the actor directories", () => {

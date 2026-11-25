@@ -1930,6 +1930,13 @@ test("the check button opens a separate dialog", async () => {
   assert.match(tools, /\{\{#if showCollision\}\}/);
 });
 
+test("both collision dialogs describe the contact switch", async () => {
+  for (const file of ["bargain.hbs", "unluck-check.hbs"]) {
+    const template = await readFile(new URL(`templates/${file}`, dist), "utf8");
+    assert.match(template, /<label[^>]*data-tooltip="\{\{localize "OUW25\.BargainCalc\.KnowOpponentHelp"\}\}"[^>]*>[\s\S]*?<input name="knowOpponent"[^>]*aria-description="\{\{localize "OUW25\.BargainCalc\.KnowOpponentHelp"\}\}"/);
+  }
+});
+
 test("the bargain panel opens the calculator and its reference is inside the dialog", async () => {
   const sheet = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
   const dialog = await readFile(new URL("templates/bargain.hbs", dist), "utf8");

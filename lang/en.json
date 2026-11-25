@@ -765,6 +765,7 @@
       "EnemyDescription": "Enemy description (optional)",
       "DefaultOpponent": "some irrelevant gonkel",
       "KnowOpponent": "... and now you know them? (Y/N)",
+      "KnowOpponentHelp": "On confirmation, add the opponent to the cooperative's contacts. Requires edit access; existing contacts are unchanged.",
       "ContactTarget": "Cooperative contacts: {name}",
       "ContactUnavailable": "Select a cooperative you can edit.",
       "ContactFailed": "The payment, any debt or enemy records & lost friends were processed, but the contact could not be recorded. Check the sheets & balances before retrying.",

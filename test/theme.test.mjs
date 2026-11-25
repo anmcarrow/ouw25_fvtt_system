@@ -335,6 +335,8 @@ test("founder cards retain their paper over a packaged cork background", async (
 test("cooperative notes and merchant tools retain scoped decorative and focus states", () => {
   assert.match(styles, /\.ouw25-notes \.ouw25-journal-index > summary\s*\{[^}]*background:\s*linear-gradient/s);
   assert.match(styles, /\.ouw25-journal-index > summary:focus-visible\s*\{[^}]*outline:\s*2px solid/s);
+  assert.match(styles, /\.ouw25-notes \.ouw25-journal-index\s*\{[^}]*smallpaper4\.webp[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-journal-index\[open\] > summary\s*\{\s*border-end-start-radius:\s*0;/);
   assert.match(styles, /\.ouw25-notes :is\(\s*\.ouw25-cooperative-notes,\s*\.ouw25-tab\[data-tab="notes"\] > \.ouw25-sheet-columns > \.ouw25-sheet-column\s*\) > textarea\[name="system\.notes"\]\s*\{\s*box-shadow:\s*inset/s);
   assert.match(styles, /textarea\[name="system\.notes"\]\[readonly\]\s*\{\s*background-color:\s*color-mix/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):focus-visible\s*\{[^}]*outline:\s*2px solid/s);

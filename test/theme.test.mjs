@@ -221,6 +221,11 @@ test("the active actor tab uses a bundled WebP background", async () => {
   assert.equal(asset.toString("ascii", 8, 12), "WEBP");
 });
 
+test("inactive sheet tabs have an inset card edge without replacing the active artwork", () => {
+  assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover:not\(:disabled\)\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-sheet-tabs > button\.active:hover:not\(:disabled\)\s*\{\s*background:\s*url\("\.\/images\/smalltab_header\.webp"\)/);
+});
+
 test("actor type headings use the bundled Roll20 header background", async () => {
   assert.match(template, /<header class="ouw25-sheet-heading ouw25-token-heading\{\{#if identity\}\} ouw25-merchant-heading\{\{\/if\}\}">[\s\S]*?<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
   assert.match(styles, /\.ouw25-sheet-heading::before\s*\{[^}]*inset-inline:\s*-10px -1rem;[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) left center \/ calc\(100% \+ 1rem - 10px\) 100% no-repeat/s);
@@ -294,6 +299,17 @@ test("cooperative notes and merchant tools retain scoped decorative and focus st
   assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*box-shadow:\s*inset/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):focus-visible\s*\{[^}]*outline:\s*2px solid/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):disabled\s*\{[^}]*filter:\s*grayscale/s);
+});
+
+test("record registers share headings and highlight actual rows", () => {
+  const classes = ["contacts", "contracts", "ports", "cargo", "ledger", "relationships", "possessions"];
+  for (const [suffix, property] of [["thead th", "background-color:"], ["tbody :is\\(th, td\\)", "box-shadow:"],
+    ["tbody tr\\[data-record-row\\]:hover", "background-color:"]]) {
+    const rules = styles.matchAll(new RegExp(`:is\\(([^)]*)\\) \\.ouw25-debt-table ${suffix}\\s*\\{([^}]*)\\}`, "g"));
+    const rule = [...rules].find(match => match[2].includes(property));
+    assert.ok(rule);
+    for (const name of classes) assert.match(rule[1], new RegExp(`\\.ouw25-${name}(?:,|$)`));
+  }
 });
 
 test("cooperative attributes put founders on the left and other blocks above the journal", () => {

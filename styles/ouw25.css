@@ -368,6 +368,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:hove
   background: url("./images/smalltab_header.webp") center / 100% 100% no-repeat;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:not(.active),
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:not(.active):hover:not(:disabled) {
+  background: linear-gradient(to bottom, rgba(224, 207, 176, 0.38), rgba(224, 207, 176, 0.12));
+  box-shadow: inset 1px 0 rgba(112, 84, 45, 0.18), inset -1px 0 rgba(112, 84, 45, 0.18), inset 0 1px rgba(112, 84, 45, 0.18);
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:not(:focus-visible) {
   outline: none;
 }
@@ -727,13 +733,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   content: "";
   position: absolute;
   z-index: 3;
-  inset-block-start: 4px;
+  inset-block-start: -1px;
   inset-inline-end: 8px;
-  inline-size: 7px;
-  block-size: 25px;
-  border: 1.5px solid #8a7049;
-  border-radius: 6px;
-  box-shadow: inset 1px 0 #e7d5a7, 1px 1px 2px rgba(55, 15, 0, 0.3);
+  inline-size: 14px;
+  block-size: 50px;
+  border: 3px solid #8a7049;
+  border-radius: 12px;
+  box-shadow: inset 2px 0 #e7d5a7, 2px 2px 4px rgba(55, 15, 0, 0.3);
   transform: rotate(12deg);
   pointer-events: none;
 }
@@ -1791,6 +1797,18 @@ body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts,
   border-block-end: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   font-weight: 700;
+}
+
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-ports, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead th {
+  background-color: rgba(215, 192, 154, 0.32);
+}
+
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-ports, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table tbody :is(th, td) {
+  box-shadow: inset 0 -1px rgba(112, 84, 45, 0.22);
+}
+
+body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-ports, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table tbody tr[data-record-row]:hover {
+  background-color: #ede0c9;
 }
 
 .ouw25 .ouw25-ports-table {

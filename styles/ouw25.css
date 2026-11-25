@@ -1656,7 +1656,7 @@ body.game .application.ouw25 .ouw25-sheet-heading.ouw25-token-heading h2 {
 body.game .application.ouw25 .ouw25-notes fieldset > legend > h3 {
   font-size: calc(1.1rem / 1.5 * 2);
   margin: 0.25rem 0;
-  transform: scale(0.9);
+  transform: scale(0.765);
   transform-origin: left center;
 }
 
@@ -4218,10 +4218,6 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-co
   margin-inline-start: -0.35rem;
   padding-inline: 0.35rem;
   translate: 3px 0;
-}
-
-body.game .application.ouw25 .ouw25-notes fieldset > legend.ouw25-clipped-heading {
-  padding-inline-end: calc(44.5px + 0.35rem);
 }
 
 body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-clipped-heading) {

@@ -336,14 +336,14 @@ test("the reusable header clip is decorative and packaged", async () => {
   assert.match(styles, /:has\(> \.ouw25-header-clip\)[^{]*\{[^}]*overflow:\s*visible;/s);
   assert.match(styles, /\.ouw25-header-clip\s*\{[^}]*position:\s*relative;[^}]*isolation:\s*isolate;[^}]*overflow:\s*visible;/s);
   assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-7px;[^}]*inset-inline-end:\s*20px;[^}]*inline-size:\s*24\.5px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
-  assert.match(template, /<legend\{\{#if clip\}\} class="ouw25-header-clip ouw25-clipped-heading"\{\{\/if\}\}>/);
-  assert.match(template, /\{\{> ouw25-block-heading heading=label clip=\(eq kind "flaw"\)\}\}/);
+  assert.match(template, /\{\{#\*inline "ouw25-block-heading"\}\}\s*<legend class="ouw25-header-clip ouw25-clipped-heading"><h3>\{\{localize heading\}\}<\/h3><\/legend>/);
+  assert.match(template, /\{\{> ouw25-block-heading heading=label\}\}/);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/clipper_small.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
 });
 
 test("sheet block headings move without resizing their labels", () => {
-  assert.match(styles, /\.ouw25-notes fieldset > legend > h3\s*\{[^}]*transform:\s*scale\(0\.9\);[^}]*transform-origin:\s*left center;/s);
+  assert.match(styles, /\.ouw25-notes fieldset > legend > h3\s*\{[^}]*transform:\s*scale\(0\.765\);[^}]*transform-origin:\s*left center;/s);
   assert.match(styles, /\.ouw25-notes fieldset > legend,[^{]*\{[^}]*translate:\s*3px 0;/s);
 });
 

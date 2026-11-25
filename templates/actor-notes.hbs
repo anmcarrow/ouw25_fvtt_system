@@ -1,5 +1,5 @@
 {{#*inline "ouw25-block-heading"}}
-  <legend{{#if clip}} class="ouw25-header-clip ouw25-clipped-heading"{{/if}}><h3>{{localize heading}}</h3></legend>
+  <legend class="ouw25-header-clip ouw25-clipped-heading"><h3>{{localize heading}}</h3></legend>
 {{/inline}}
 {{#*inline "ouw25-roll-icon"}}
   <button type="button" class="ouw25-roll-icon" data-action="rollCreation" data-creation="{{creation}}" {{#if recordId}}data-record-id="{{recordId}}"{{/if}} aria-label="{{localize label}}" data-tooltip="{{localize label}}"><span aria-hidden="true">&#x1F3B2;</span></button>
@@ -811,7 +811,7 @@
   {{#*inline "ouw25-merchant-traits"}}
   {{#each traits}}
     <fieldset class="ouw25-traits">
-      {{> ouw25-block-heading heading=label clip=(eq kind "flaw")}}
+      {{> ouw25-block-heading heading=label}}
       {{#if help}}
         {{#each choices}}{{#if selected}}<h4 class="ouw25-trait-name">{{localize label}}</h4>{{/if}}{{/each}}
         <p class="ouw25-trait-description">{{localize help}}</p>

@@ -1602,7 +1602,9 @@ test("English bargain text uses ampersands", async () => {
   const { KnowOpponent, ...otherTexts } = BargainCalc;
   assert.equal(KnowOpponent, "... and now you know them? (Y/N)");
   assert.equal(BargainCalc.Title, "Success Calculator");
+  assert.equal(BargainCalc.Open, "Helps you make a dramatic bargain");
   assert.equal(Unluck.ToBargain, "Success Calculator");
+  assert.equal(Unluck.Open, "Helps you make an (un)luck check");
   assert.equal(Unluck.ToCheck, "(Un)lucky Gambler");
   assert.equal(Unluck.DonationMore, "Spend more!");
   assert.equal(Unluck.DonationLess, "Spend less!");
@@ -1925,9 +1927,35 @@ test("the check button opens a separate dialog", async () => {
   assert.doesNotMatch(template, /<details class="ouw25-sidebar-card ouw25-collision">/);
   const tools = template.match(/<div class="ouw25-merchant-tools">([\s\S]*?)<\/div>/)?.[1];
   assert.ok(tools);
-  assert.match(tools, /data-action="openBargain"[\s\S]*?OUW25\.BargainCalc\.Title[\s\S]*?data-action="rollCollision"[\s\S]*?OUW25\.Unluck\.ToCheck/);
+  assert.match(tools, /data-action="openBargain" data-tooltip="\{\{localize "OUW25\.BargainCalc\.Open"\}\}"[\s\S]*?OUW25\.BargainCalc\.Title[\s\S]*?data-action="rollCollision" data-tooltip="\{\{localize "OUW25\.Unluck\.Open"\}\}"[\s\S]*?OUW25\.Unluck\.ToCheck/);
   assert.doesNotMatch(tools, /&#x|<span/);
   assert.match(tools, /\{\{#if showCollision\}\}/);
+});
+
+test("merchant tool names and hints are localized", async () => {
+  for (const [language, labels] of Object.entries({
+    en: {
+      bargain: "Success Calculator",
+      bargainHint: "Helps you make a dramatic bargain",
+      check: "(Un)lucky Gambler",
+      checkHint: "Helps you make an (un)luck check"
+    },
+    ru: {
+      bargain: "Калькулятор успеха",
+      bargainHint: "Поможет произвести драматический торг",
+      check: "(Не)удачливый катала",
+      checkHint: "Поможет сделать проверку (не)удачи"
+    }
+  })) {
+    const { OUW25: { BargainCalc, Unluck } } =
+      JSON.parse(await readFile(new URL(`lang/${language}.json`, dist), "utf8"));
+    assert.equal(BargainCalc.Title, labels.bargain);
+    assert.equal(BargainCalc.Open, labels.bargainHint);
+    assert.ok(Unluck.WindowTitle.startsWith(`${labels.check} `));
+    assert.equal(Unluck.ToCheck, labels.check);
+    assert.equal(Unluck.ToBargain, labels.bargain);
+    assert.equal(Unluck.Open, labels.checkHint);
+  }
 });
 
 test("both collision dialogs describe the contact switch", async () => {

@@ -299,6 +299,8 @@ test("cooperative notes and merchant tools retain scoped decorative and focus st
   assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*box-shadow:\s*inset/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):focus-visible\s*\{[^}]*outline:\s*2px solid/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):disabled\s*\{[^}]*filter:\s*grayscale/s);
+  assert.match(styles, /\.ouw25-merchant-tools\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
+  assert.match(styles, /\.ouw25-sheet-column button\s*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*anywhere;/);
 });
 
 test("record registers share headings and highlight actual rows", () => {
@@ -310,6 +312,13 @@ test("record registers share headings and highlight actual rows", () => {
     assert.ok(rule);
     for (const name of classes) assert.match(rule[1], new RegExp(`\\.ouw25-${name}(?:,|$)`));
   }
+});
+
+test("record search controls form a paper strip without adding layout dimensions", () => {
+  assert.match(styles, /\.ouw25-record-search\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-record-search label > span\s*\{\s*color:\s*var\(--ouw25-color-accent\);/);
+  assert.match(styles, /\.ouw25-record-search button\[data-search-clear\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset[^}]*filter:\s*none;/s);
+  assert.match(styles, /\.ouw25-record-search :is\(input, select\)\s*\{\s*box-shadow:\s*inset/);
 });
 
 test("cooperative attributes put founders on the left and other blocks above the journal", () => {
@@ -364,6 +373,15 @@ test("ship resource capacities accompany their inputs while retaining calculated
   assert.match(basics, /name="system\.crewCount"[\s\S]*?OUW25\.Voyage\.CrewSummary[\s\S]*?OUW25\.Voyage\.Capacity" capacity=ship\.voyage\.crewCapacity/);
   assert.match(basics, /name="system\.unrest"[\s\S]*?OUW25\.Voyage\.UnrestCurrent" unrest=ship\.voyage\.unrest[\s\S]*?OUW25\.Voyage\.Capacity" capacity=25/);
   assert.doesNotMatch(basics, /<p>\{\{localize "OUW25\.Voyage\.(CrewSummary|UnrestCurrent)"/);
+  assert.match(styles, /\.ouw25-ship-resources :is\(label > input, \.ouw25-ship-resource-value > input\)\s*\{[^}]*box-shadow:\s*inset 0 1px 3px/);
+});
+
+test("ship travel indicators use restrained paper-and-brass surfaces", () => {
+  assert.match(styles, /\.ouw25-ship-stats > div\s*\{[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;[^}]*background:\s*linear-gradient\(180deg,[^;]*\);[^}]*box-shadow:\s*inset 0 1px 2px/s);
+  assert.match(styles, /\.ouw25-ship-heading > :is\(input, select\)\s*\{[^}]*box-shadow:\s*inset 0 1px 3px/);
+  assert.match(styles, /\.ouw25-ship-layout fieldset\.ouw25-traits\s*\{[^}]*background-color:\s*var\(--ouw25-surface-translucent\);[^}]*box-shadow:\s*inset 0 1px 5px/s);
+  assert.match(styles, /\.ouw25-ship-list li:not\(:last-child\)\s*\{\s*box-shadow:\s*inset 0 -1px 0 rgba\(112, 84, 45, 0\.18\);/);
+  assert.match(styles, /\.ouw25-ship :is\(input:read-only, select:disabled\)\s*\{[^}]*background-color:\s*color-mix\(/);
 });
 
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {

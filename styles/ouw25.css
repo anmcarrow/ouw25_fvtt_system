@@ -825,6 +825,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
 }
 
 .ouw25 .ouw25-portrait-frame.ouw25-header-clip::after {
+  inset-block-start: -7px;
   inset-inline-end: 20px;
 }
 

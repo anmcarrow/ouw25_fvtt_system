@@ -818,10 +818,14 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   z-index: 2147483647;
   inset-block-start: -4px;
   inset-inline-end: -10px;
-  inline-size: 14px;
+  inline-size: 24.5px;
   block-size: 50px;
   background: url("./images/clipper_small.webp") center / 100% 100% no-repeat;
   pointer-events: none;
+}
+
+.ouw25 .ouw25-portrait-frame.ouw25-header-clip::after {
+  inset-inline-end: 20px;
 }
 
 .ouw25 .ouw25-portrait-view::before {

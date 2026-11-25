@@ -335,7 +335,8 @@ test("the reusable header clip is decorative and packaged", async () => {
   assert.match(template, /class="ouw25-portrait-frame ouw25-header-clip"/);
   assert.match(styles, /:has\(> \.ouw25-header-clip\)[^{]*\{[^}]*overflow:\s*visible;/s);
   assert.match(styles, /\.ouw25-header-clip\s*\{[^}]*position:\s*relative;[^}]*isolation:\s*isolate;[^}]*overflow:\s*visible;/s);
-  assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-4px;[^}]*inset-inline-end:\s*-10px;[^}]*inline-size:\s*14px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-4px;[^}]*inset-inline-end:\s*-10px;[^}]*inline-size:\s*24\.5px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-portrait-frame\.ouw25-header-clip::after\s*\{\s*inset-inline-end:\s*20px;/);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/clipper_small.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
 });

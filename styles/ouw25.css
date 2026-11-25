@@ -799,18 +799,28 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   transform: rotate(-2deg);
 }
 
-.ouw25 .ouw25-portrait-frame::after {
+.ouw25 :has(> .ouw25-header-clip),
+.application.ouw25-journal :has(> .ouw25-header-clip) {
+  overflow: visible;
+}
+
+.ouw25 .ouw25-header-clip,
+.application.ouw25-journal .ouw25-header-clip {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.ouw25 .ouw25-header-clip::after,
+.application.ouw25-journal .ouw25-header-clip::after {
   content: "";
   position: absolute;
-  z-index: 3;
-  inset-block-start: -1px;
-  inset-inline-end: 8px;
+  z-index: 2147483647;
+  inset-block-start: -4px;
+  inset-inline-end: -10px;
   inline-size: 14px;
   block-size: 50px;
-  border: 3px solid #8a7049;
-  border-radius: 12px;
-  box-shadow: inset 2px 0 #e7d5a7, 2px 2px 4px rgba(55, 15, 0, 0.3);
-  transform: rotate(12deg);
+  background: url("./images/clipper_small.webp") center / 100% 100% no-repeat;
   pointer-events: none;
 }
 

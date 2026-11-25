@@ -329,7 +329,15 @@ test("founder cards retain their paper over a packaged cork background", async (
   assert.match(styles, /\.ouw25-founder-card\s*\{[^}]*url\("\.\/images\/smallpaper5\.webp"\)/s);
   const cork = await readFile(new URL("../dist/ouw25/styles/images/cork.svg", import.meta.url), "utf8");
   assert.match(cork, /<svg\b[\s\S]*<feTurbulence\b/);
-  assert.match(styles, /\.ouw25-portrait-frame::after\s*\{[^}]*pointer-events:\s*none;/s);
+});
+
+test("the reusable header clip is decorative and packaged", async () => {
+  assert.match(template, /class="ouw25-portrait-frame ouw25-header-clip"/);
+  assert.match(styles, /:has\(> \.ouw25-header-clip\)[^{]*\{[^}]*overflow:\s*visible;/s);
+  assert.match(styles, /\.ouw25-header-clip\s*\{[^}]*position:\s*relative;[^}]*isolation:\s*isolate;[^}]*overflow:\s*visible;/s);
+  assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-4px;[^}]*inset-inline-end:\s*-10px;[^}]*inline-size:\s*14px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
+  const asset = await readFile(new URL("../dist/ouw25/styles/images/clipper_small.webp", import.meta.url));
+  assert.equal(asset.subarray(8, 12).toString(), "WEBP");
 });
 
 test("cooperative notes and merchant tools retain scoped decorative and focus states", () => {
@@ -448,7 +456,7 @@ test("ship travel indicators use restrained paper-and-brass surfaces", () => {
 });
 
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {
-  assert.match(template, /<div class="ouw25-portrait-frame">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
+  assert.match(template, /<div class="ouw25-portrait-frame ouw25-header-clip">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
   assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*200px;[^}]*block-size:\s*200px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);
   assert.match(template, /\{\{#if identity\.hasPortrait\}\}\s*<img src="\{\{identity\.img\}\}"/);
   assert.match(actorCreateTemplate, /<input type="radio" name="type" value="\{\{type\}\}"/);

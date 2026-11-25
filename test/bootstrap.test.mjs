@@ -1937,6 +1937,16 @@ test("both collision dialogs describe the contact switch", async () => {
   }
 });
 
+test("collision transfer buttons contain only their localized labels", async () => {
+  for (const [file, action, label] of [
+    ["bargain.hbs", "check", "ToCheck"],
+    ["unluck-check.hbs", "bargain", "ToBargain"]
+  ]) {
+    const template = await readFile(new URL(`templates/${file}`, dist), "utf8");
+    assert.ok(template.includes(`<button type="button" data-transfer-${action}><span>{{localize "OUW25.Unluck.${label}"}}</span></button>`));
+  }
+});
+
 test("the bargain panel opens the calculator and its reference is inside the dialog", async () => {
   const sheet = await readFile(new URL("templates/actor-notes.hbs", dist), "utf8");
   const dialog = await readFile(new URL("templates/bargain.hbs", dist), "utf8");
@@ -2071,7 +2081,7 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document,
     Hooks: globalThis.Hooks, ui: globalThis.ui, ResizeObserver: globalThis.ResizeObserver };
   const actor = { id: "repeat", uuid: "Actor.repeat", name: "Merchant", documentName: "Actor", type: "merchant",
-    system: { past: "artist", luck: 2, pocketMoney: 500, wound1: false, wound2: false },
+    system: { past: "artist", luck: 2, pocketMoney: 500, wound1: true, wound2: false },
     testUserPermission: () => true };
   const cooperative = { id: "coop", uuid: "Actor.coop", name: "Coop", documentName: "Actor", type: "cooperative",
     system: { budget: 179, founders: [actor.uuid] }, testUserPermission: () => true };
@@ -2093,12 +2103,18 @@ test("check stays open for repeated rolls and clears only spent draft resources"
   const form = Object.assign(new EventTarget(), { elements: fields, inert: false, reset() {
     fields.partial.checked = false; fields.source.value = "cash";
   } });
+  const oddsDisplay = element();
+  oddsDisplay.replaceChildren = function (...items) { this.children = items; this.value = undefined; };
+  Object.defineProperty(oddsDisplay, "textContent", {
+    get() { return this.value ?? this.children.map(child => child.textContent).join(""); },
+    set(value) { this.value = value; this.children = []; }
+  });
   let donationWidth = 220, observer;
   const selectors = {
     form, "[data-custom]": {}, "[data-luck-marks]": element(), "[data-luck-selected]": {}, "[data-helper-bonus]": element(),
     "[data-donation-amount]": {}, "[data-check-error]": {},
     '[data-action="ok"]': element(), "[data-dice-count]": { style: { values: {}, setProperty(name, value) { this.values[name] = value; } } },
-    "[data-odds]": {},
+    "[data-odds]": oddsDisplay,
     "[data-wounds]": element(), "[data-cooperative]": element(), "[data-cooperative-hint]": {},
     "[data-leader]": element(), "[data-helpers]": element(), "[data-helper-hint]": {},
     "[data-transfer-bargain]": element(), "[data-luck-minus]": element(), "[data-luck-plus]": element(),
@@ -2153,12 +2169,39 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     assert.equal(selectors['[data-action="ok"]']["aria-description"], "OUW25.Unluck.Staged");
     assert.equal(selectors[".ouw25-unluck-status"].style.width, "220px");
     assert.equal(selectors["[data-odds]"].textContent, "48.2% / 38.6% / 13.2%");
+    assert.deepEqual(oddsDisplay.children.filter(child => child.dataset?.oddsOutcome).map(child => [child.dataset.oddsOutcome, child.textContent]),
+      [["failure", "48.2%"], ["partial", "38.6%"], ["success", "13.2%"]]);
+    assert.equal(selectors["[data-wounds]"].children[0].children[0].checked, true);
+    assert.equal(selectors["[data-wounds]"].children[0].children[0].disabled, true);
+    assert.equal(selectors["[data-wounds]"].children[1].children[0].disabled, false);
+    assert.equal(selectors["[data-dice-count]"].textContent, 4);
+    actor.system.wound1 = false;
+    hook(actor);
     language = 1;
+    const localizedOdds = oddsLabels[1].OddsValues;
+    oddsLabels[1].OddsValues = "{success}% | {partial}% | {failure}%";
+    form.dispatchEvent(new Event("input"));
+    assert.equal(oddsDisplay.textContent, "13.2% | 38.6% | 48.2%");
+    assert.deepEqual(oddsDisplay.children.filter(child => child.dataset?.oddsOutcome).map(child => child.dataset.oddsOutcome),
+      ["success", "partial", "failure"]);
+    oddsLabels[1].OddsValues = localizedOdds;
     form.dispatchEvent(new Event("input"));
     assert.equal(selectors["[data-odds]"].textContent, "48.2% / 38.6% / 13.2%");
+    fields.complications.value = "-1";
+    form.dispatchEvent(new Event("input"));
+    assert.equal(oddsDisplay.textContent, "—");
+    assert.equal(oddsDisplay.children.length, 0);
+    fields.complications.value = "0";
+    fields.advantages.value = "1";
+    form.dispatchEvent(new Event("input"));
+    assert.notEqual(oddsDisplay.textContent, "48.2% / 38.6% / 13.2%");
+    assert.deepEqual(oddsDisplay.children.filter(child => child.dataset?.oddsOutcome).map(child => child.dataset.oddsOutcome),
+      ["failure", "partial", "success"]);
     fields.advantages.value = "96";
     form.dispatchEvent(new Event("input"));
     assert.equal(selectors["[data-dice-count]"].textContent, 100);
+    assert.equal(oddsDisplay.textContent, "OUW25.Unluck.OddsBroken");
+    assert.equal(oddsDisplay.children.length, 0);
     assert.equal(selectors["[data-dice-count]"].style.values["--dice-digits"], 3);
     fields.advantages.value = "97";
     form.dispatchEvent(new Event("input"));

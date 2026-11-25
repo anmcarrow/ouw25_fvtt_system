@@ -7,6 +7,30 @@ const pending = new Set();
 const consequences = ["damage", "threat", "omen", "news", "worsening", "past", "hidden",
   "deadline", "responsibility", "bystanders", "grudge"];
 
+function renderOdds(display, odds) {
+  if (!odds) {
+    display.textContent = game.i18n.localize("OUW25.Unluck.OddsBroken");
+    return;
+  }
+  const outcomes = [
+    { key: "failure", value: odds.Failure, marker: "\uE000" },
+    { key: "partial", value: odds.Partial, marker: "\uE001" },
+    { key: "success", value: odds.Success, marker: "\uE002" }
+  ];
+  // Markers preserve the localized order without treating the translation as HTML.
+  const formatted = game.i18n.format("OUW25.Unluck.OddsValues",
+    Object.fromEntries(outcomes.map(({ key, marker }) => [key, marker])));
+  const nodes = formatted.split(/([\uE000-\uE002]%?)/).filter(Boolean).map(part => {
+    const outcome = outcomes.find(item => part.startsWith(item.marker));
+    if (!outcome) return document.createTextNode(part);
+    const span = document.createElement("span");
+    span.dataset.oddsOutcome = outcome.key;
+    span.textContent = `${(outcome.value * 100).toFixed(1)}${part.slice(1)}`;
+    return span;
+  });
+  display.replaceChildren(...nodes);
+}
+
 function eligible(actor, type, permission = "OBSERVER") {
   return actor?.documentName === "Actor" && actor.type === type && game.actors.get(actor.id) === actor
     && actor.testUserPermission(game.user, permission);
@@ -191,10 +215,7 @@ export async function openUnluck(actor, draft = null, title = null) {
             diceCount.textContent = calc.diceCount;
             diceCount.style.setProperty("--dice-digits", String(calc.diceCount).length);
             const odds = checkProbabilities(calc.diceCount, calc.deduction, calc.luck);
-            root.querySelector("[data-odds]").textContent = odds ? game.i18n.format("OUW25.Unluck.OddsValues", {
-              failure: (odds.Failure * 100).toFixed(1), partial: (odds.Partial * 100).toFixed(1),
-              success: (odds.Success * 100).toFixed(1)
-            }) : game.i18n.localize("OUW25.Unluck.OddsBroken");
+            renderOdds(root.querySelector("[data-odds]"), odds);
             try {
               if (values.knowOpponent && (!cooperative || !contactCooperative(cooperative, leader))) throw new Error("contact");
               checkCostUpdates(leader, cooperative, snapshot, { ...calc, source: values.source, wounds: values.woundSlots });

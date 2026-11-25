@@ -2112,15 +2112,6 @@ body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-donation-actions 
   filter: drop-shadow(2px -2px 0.3rem rgba(0, 0, 0, 0.7));
 }
 
-body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check] > span > span,
-body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-toolbar > [data-transfer-bargain] > span > span {
-  position: relative;
-  top: 2px;
-  background: var(--ouw25-bargain-brass);
-  background-clip: text;
-  -webkit-background-clip: text;
-}
-
 body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check]:hover:not(:disabled),
 body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-toolbar > [data-transfer-bargain]:hover:not(:disabled),
 body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-donation-actions > button:hover:not(:disabled) {
@@ -2137,9 +2128,7 @@ body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-donation-actions 
 
 @media (forced-colors: active) {
   body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check] > span,
-  body.game .application.ouw25.ouw25-bargain-dialog .ouw25-bargain-toolbar > [data-transfer-check] > span > span,
   body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-toolbar > [data-transfer-bargain] > span,
-  body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-toolbar > [data-transfer-bargain] > span > span,
   body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck-donation-actions > button > span {
     background: none;
     color: ButtonText;
@@ -2607,7 +2596,14 @@ body.game .application.ouw25 .ouw25-unluck .ouw25-wound-slots > .ouw25-condition
   block-size: 49px;
 }
 
+body.game .application.ouw25 .ouw25-unluck .ouw25-wound-slots > .ouw25-condition-check:has(input:checked:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 body.game .application.ouw25 .ouw25-unluck .ouw25-wound-slots .ouw25-condition-check::before {
+  position: relative;
+  z-index: 1;
   inline-size: 41px;
   block-size: 41px;
 }
@@ -2785,6 +2781,24 @@ body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck [data-odds] {
   font-family: "Iosevka Charon Mono", monospace;
   font-weight: 700;
   text-shadow: 0 1px 2px #000;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck [data-odds] [data-odds-outcome="failure"] {
+  color: #ff8b82;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck [data-odds] [data-odds-outcome="partial"] {
+  color: #ffe078;
+}
+
+body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck [data-odds] [data-odds-outcome="success"] {
+  color: #a6e89a;
+}
+
+@media (forced-colors: active) {
+  body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck [data-odds] [data-odds-outcome] {
+    color: CanvasText;
+  }
 }
 
 body.game .application.ouw25.ouw25-unluck-dialog .dialog-content .ouw25-unluck-luck-actions > button {

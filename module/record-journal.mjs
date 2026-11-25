@@ -13,9 +13,9 @@ export function styleSystemJournal(application, element, resolve = uuid => fromU
   const journal = document?.documentName === "JournalEntryPage" ? document.parent : document;
   const flags = journal?.flags?.[SYSTEM_ID];
   if (!flags?.actorUuid || !flags.tableKey || !element?.classList) return;
-  element.classList.remove(...JOURNAL_CLASSES);
+  element.classList.remove(...JOURNAL_CLASSES, "theme-dark");
   const tone = resolve(flags.actorUuid)?.type === "cooperative" ? "cooperative" : "merchant";
-  element.classList.add("ouw25-journal", `ouw25-journal-${tone}`);
+  element.classList.add("ouw25-journal", `ouw25-journal-${tone}`, "themed", "theme-light");
 }
 
 export function copyPageOwnership(source, journal, users) {

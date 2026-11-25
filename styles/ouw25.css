@@ -4220,6 +4220,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-co
 
 body.game .application.ouw25-journal {
   --ouw25-journal-teal: #22393a;
+  color-scheme: light;
   --background: var(--ouw25-color-paper);
   --font-h1: var(--ouw25-font-heading);
   --font-h2: var(--ouw25-font-heading);

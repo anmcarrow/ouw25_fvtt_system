@@ -1948,14 +1948,14 @@ test("bargain dialog orders payment fields and validates contact and partial out
 
 test("only system record journals receive the journal style classes, tinted by actor type", async () => {
   const { styleSystemJournal } = await import(new URL("module/record-journal.mjs", dist));
-  const classes = new Set(["stale"]);
+  const classes = new Set(["stale", "theme-dark"]);
   const element = { classList: { add: (...names) => names.forEach(name => classes.add(name)), remove: (...names) => names.forEach(name => classes.delete(name)) } };
   const flags = { ouw25: { actorUuid: "Actor.a", tableKey: "contact" } };
   const entry = { documentName: "JournalEntry", flags };
   styleSystemJournal({ document: entry }, element, uuid => ({ type: uuid === "Actor.a" ? "cooperative" : "merchant" }));
-  assert.deepEqual([...classes], ["stale", "ouw25-journal", "ouw25-journal-cooperative"]);
+  assert.deepEqual([...classes].sort(), ["ouw25-journal", "ouw25-journal-cooperative", "stale", "theme-light", "themed"]);
   styleSystemJournal({ document: { documentName: "JournalEntryPage", parent: entry } }, element, () => ({ type: "merchant" }));
-  assert.deepEqual([...classes], ["stale", "ouw25-journal", "ouw25-journal-merchant"]);
+  assert.deepEqual([...classes].sort(), ["ouw25-journal", "ouw25-journal-merchant", "stale", "theme-light", "themed"]);
   classes.clear();
   styleSystemJournal({ document: { documentName: "JournalEntry", flags: {} } }, element);
   styleSystemJournal({ document: { documentName: "JournalEntry", flags: { ouw25: { actorUuid: "Actor.a" } } } }, element);

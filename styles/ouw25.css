@@ -41,6 +41,7 @@ body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .max
 }
 
 .ouw25 .ouw25-notes {
+  --ouw25-button-bevel: inset 0 1px 1px #ffe2b777, inset 0 -2px 3px #1c090ab3, 0 2px 0 #301b14, 0 3px 4px #0006;
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -92,12 +93,18 @@ body.game .application.ouw25 .form-footer button {
 }
 
 body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"], [data-sort-column])) {
-  background: radial-gradient(ellipse at center, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-color-accent-soft)), white 18%));
+  background: linear-gradient(160deg, var(--ouw25-button-color, #783b35), color-mix(in srgb, var(--ouw25-button-color, #783b35) 72%, #260e12) 48%, color-mix(in srgb, var(--ouw25-button-color, #783b35) 45%, #16090b));
+  box-shadow: var(--ouw25-button-bevel);
+  text-shadow: 0 1px 2px #210c0c;
 }
 
 body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"], [data-sort-column])) {
   color: #fff8ee;
   filter: brightness(1.08) drop-shadow(0 2px 2px rgba(55, 15, 0, 0.18));
+}
+
+body.game .application.ouw25 .ouw25-notes button:active:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"], [data-sort-column])) {
+  box-shadow: inset 0 2px 4px #170809bb, 0 1px 0 #301b14;
 }
 
 body.game .application.ouw25 .dialog-content button:hover:not(:disabled),
@@ -122,7 +129,7 @@ body.game .application.ouw25 .form-footer button:disabled {
   }
 
   body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"], [data-sort-column])) {
-    scale: 1.025;
+    scale: 1;
   }
 }
 
@@ -307,6 +314,7 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-actor-token:hover:not(:di
   block-size: 100%;
   border: 0;
   object-fit: contain;
+  filter: drop-shadow(0 2px 2px #2b160e99);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -366,12 +374,17 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:hover:not(:
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active,
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:hover:not(:disabled) {
   background: url("./images/smalltab_header.webp") center / 100% 100% no-repeat;
+  box-shadow: inset 0 1px #fff0c888, inset 1px 0 #58351466, inset -1px 0 #58351466, 0 2px 3px #27130866;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:not(.active),
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:not(.active):hover:not(:disabled) {
-  background: linear-gradient(to bottom, rgba(224, 207, 176, 0.38), rgba(224, 207, 176, 0.12));
-  box-shadow: inset 1px 0 rgba(112, 84, 45, 0.18), inset -1px 0 rgba(112, 84, 45, 0.18), inset 0 1px rgba(112, 84, 45, 0.18);
+  background: linear-gradient(to bottom, #f2dfbb, #c3a77d 65%, #a9845c);
+  box-shadow: inset 0 1px #fff3d4, inset 1px 0 #80603d88, inset -1px 0 #80603d88, inset 0 -2px 2px #56381966, 0 2px 3px #27130855;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:not(.active):hover:not(:disabled) {
+  background: linear-gradient(to bottom, #ffedc9, #d6ba8e 65%, #b99267);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:not(:focus-visible) {
@@ -512,6 +525,7 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait {
   border-radius: 50%;
   overflow: hidden;
   background: linear-gradient(var(--ouw25-color-surface), var(--ouw25-color-surface)) padding-box, var(--ouw25-border-gradient) border-box;
+  box-shadow: 0 2px 0 #55351e, 0 3px 5px #27130888;
 }
 
 body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait img {
@@ -888,8 +902,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-traits .ouw25-profile-details >
 }
 
 body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-trait-icon) {
-  background: none;
-  box-shadow: none;
+  background: linear-gradient(145deg, #fbe7bb, #d2ae76 55%, #a77a4b);
+  box-shadow: inset 0 1px #fff3d3, inset 0 -1px 2px #57331688, 0 1px 2px #28130888;
   color: inherit;
   flex: none;
   font-size: 0.961875rem;
@@ -902,7 +916,16 @@ body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-tra
 }
 
 body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-trait-icon):hover:not(:disabled) {
-  filter: none;
+  filter: brightness(1.12);
+}
+
+body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-trait-icon):active:not(:disabled) {
+  box-shadow: inset 0 2px 3px #573316aa, 0 1px #fff3d399;
+}
+
+body.game .application.ouw25 .ouw25-notes button:is(.ouw25-roll-icon, .ouw25-trait-icon):disabled {
+  filter: grayscale(0.8);
+  opacity: 0.6;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-trait-actions {
@@ -1062,7 +1085,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
 }
 
 body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-luck-actions) > button:not(:disabled) {
-  background: radial-gradient(ellipse at center, #32445e, #485d78);
+  background: linear-gradient(160deg, #617b98, #32445e 48%, #19273b);
   color: #edcd79;
 }
 
@@ -1071,6 +1094,7 @@ body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-lu
     background: linear-gradient(90deg, #edcd79, #ed9d79, #ede579, #edbd79);
     background-clip: text;
     color: transparent;
+    text-shadow: none;
   }
 }
 
@@ -1248,19 +1272,25 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw
   --ouw25-card-paper: var(--ouw25-reference-paper);
   justify-content: flex-start;
   min-width: 0;
-  background: var(--ouw25-color-paper) var(--ouw25-card-paper) center top / 100% auto no-repeat;
+  height: auto;
+  min-height: var(--button-size, 2rem);
+  background: linear-gradient(160deg, #834d3cd9, #401a15ed), var(--ouw25-color-paper) var(--ouw25-card-paper) center top / 100% auto no-repeat;
   border: 0;
   border-radius: 0.35rem;
-  box-shadow: inset 0 0 0 1px rgba(132, 97, 44, 0.5), 2px 3px 6px rgba(55, 15, 0, 0.2);
+  box-shadow: inset 0 0 0 1px #caa568, var(--ouw25-button-bevel);
   padding: var(--ouw25-reference-padding);
-  color: var(--ouw25-color-ink);
+  color: #fff0cb;
   font-size: 16px;
   line-height: 1.4;
   text-align: start;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):hover:not(:disabled) {
-  color: var(--ouw25-color-ink);
+  color: #fff0cb;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):active:not(:disabled) {
+  box-shadow: inset 0 0 0 1px #caa568, inset 0 2px 5px #1c090acc, 0 1px 0 #301b14;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):focus-visible {
@@ -1270,6 +1300,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):disabled {
   filter: grayscale(0.65);
+  opacity: 0.7;
 }
 
 .ouw25 .ouw25-merchant-sidebar > .ouw25-merchant-wounds + .ouw25-merchant-tools {
@@ -1632,6 +1663,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value:focus-visible {
     outline-offset: 2px;
   }
 
+  body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+    text-decoration: underline double;
+  }
+
   body.game .application.ouw25 .ouw25-notes :is(.ouw25-luck-value, .ouw25-pension-controls > button, .ouw25-luck-actions > button) > span {
     background: none;
     color: CanvasText;
@@ -1720,12 +1757,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button:disable
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="toggleForcedMode"][aria-pressed="true"] {
   --ouw25-button-color: var(--ouw25-color-danger);
-  box-shadow: 0 0 8px 3px rgba(255, 90, 35, 0.45), 0 0 18px 6px rgba(255, 90, 35, 0.2);
+  box-shadow: var(--ouw25-button-bevel), 0 0 8px 3px rgba(255, 90, 35, 0.45), 0 0 18px 6px rgba(255, 90, 35, 0.2);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="toggleIlluminationMode"][aria-pressed="true"] {
   --ouw25-button-color: #536b37;
-  box-shadow: 0 0 8px 3px rgba(0, 220, 235, 0.45), 0 0 18px 6px rgba(0, 220, 235, 0.2);
+  box-shadow: var(--ouw25-button-bevel), 0 0 8px 3px rgba(0, 220, 235, 0.45), 0 0 18px 6px rgba(0, 220, 235, 0.2);
 }
 
 .ouw25 .ouw25-notes textarea {
@@ -1921,15 +1958,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-debt-table button[data-sort-col
   margin: 0;
   padding: 0;
   border: 0;
-  background: transparent;
+  background: linear-gradient(#f0ddba, #cdb18a);
+  box-shadow: inset 0 1px #fff3d5, inset 0 -1px #79552f88, 0 1px 2px #301b1444;
   color: inherit;
   font: inherit;
   text-align: inherit;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-debt-table button[data-sort-column]:hover {
+  background: linear-gradient(#ffedcc, #d8bc92);
   color: var(--ouw25-color-accent);
   text-decoration: underline;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-debt-table button[data-sort-column]:active {
+  box-shadow: inset 0 2px 3px #58391f88;
 }
 
 .ouw25-debt-table .ouw25-sort-indicator::after {
@@ -2046,10 +2089,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-search button[data-searc
   --button-hover-background-color: color-mix(in srgb, var(--ouw25-color-paper) 80%, #b99b6a);
   --button-hover-border-color: transparent;
   --button-hover-text-color: var(--ouw25-color-ink);
-  background: linear-gradient(var(--ouw25-color-paper), color-mix(in srgb, var(--ouw25-color-paper) 78%, #b99b6a));
-  box-shadow: inset 0 0 0 1px rgba(112, 84, 45, 0.35);
+  background: linear-gradient(#f9e6bf, #c9a56d 65%, #a57a4c);
+  box-shadow: inset 0 0 0 1px #79542f99, inset 0 1px #fff3d3, inset 0 -2px 2px #57331677, 0 2px 2px #301b1455;
   color: var(--ouw25-color-ink);
   filter: none;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-record-search button[data-search-clear]:hover:not(:disabled) {
+  background: linear-gradient(#fff0d0, #dbbb84 65%, #b58b59);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-record-search button[data-search-clear]:active:not(:disabled) {
+  box-shadow: inset 0 2px 4px #573316aa, 0 1px #fff3d3;
 }
 
 .ouw25 .ouw25-record-search input {

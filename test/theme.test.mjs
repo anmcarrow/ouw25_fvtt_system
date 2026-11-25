@@ -478,8 +478,21 @@ test("actor sheet hover and panel styles retain their distinct visual roles", ()
   assert.match(styles, /\.ouw25-create-actor-types img\s*\{[^}]*filter:\s*invert\(1\)/s);
   assert.match(template, /data-action="tab"[^>]*><span[\s\S]*?>\{\{localize label\}\}/);
   assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*color:\s*color-mix\(/);
-  assert.match(styles, /background:\s*radial-gradient\(ellipse at center, var\(--ouw25-button-color/);
-  assert.match(styles, /background:\s*radial-gradient\(ellipse at center, #32445e, #485d78\)/);
+  assert.match(styles, /background:\s*linear-gradient\(160deg, var\(--ouw25-button-color/);
+  assert.match(styles, /background:\s*linear-gradient\(160deg, #617b98, #32445e 48%, #19273b\)/);
+  assert.match(styles, /button:not\(:disabled\) > span\s*\{[^}]*background-clip:\s*text;[^}]*text-shadow:\s*none;/s);
+});
+
+test("sheet buttons retain raised, pressed and accessible states", () => {
+  assert.match(styles, /--ouw25-button-bevel:\s*inset[^;]*,\s*0 2px 0/s);
+  assert.match(styles, /button:not\(:disabled\):not\(:where\(\.ouw25-roll-icon[^}]*box-shadow:\s*var\(--ouw25-button-bevel\)/s);
+  assert.match(styles, /button:active:not\(:disabled\):not\(:where\(\.ouw25-roll-icon[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-voyage-actions > \[data-action="toggleForcedMode"\]\[aria-pressed="true"\]\s*\{[^}]*box-shadow:\s*var\(--ouw25-button-bevel\)/s);
+  assert.match(styles, /\.ouw25-voyage-actions > button\[aria-pressed="true"\]\s*\{[^}]*outline:\s*2px solid Highlight[^}]*text-decoration:\s*underline double/s);
+  assert.match(styles, /button:is\(\.ouw25-roll-icon, \.ouw25-trait-icon\):disabled\s*\{[^}]*filter:\s*grayscale[^}]*opacity:/s);
+  assert.match(styles, /\.ouw25-debt-table button\[data-sort-column\]:active\s*\{[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\):active:not\(:disabled\)\s*\{[^}]*box-shadow:\s*inset/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*height:\s*auto;[^}]*min-height:/s);
 });
 
 test("light interface inverts only default actor artwork in the actor directories", () => {

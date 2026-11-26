@@ -47,6 +47,14 @@ test("bargain summary and payment breakdown are alongside their help buttons", a
   assert.match(styles, /\.ouw25-bargain-payment-help > summary::before,\s*\.ouw25-bargain-payment-help > summary::after\s*\{[^}]*background:\s*var\(--ouw25-border-gradient\);/s);
 });
 
+test("pension reference uses the standard accessible help control", () => {
+  assert.match(template, /<div class="ouw25-pension-heading">\s*<h3>\{\{localize "OUW25\.Finance\.PensionLabel"\}\}:[\s\S]*?<\/h3>\s*<details class="ouw25-bargain-help ouw25-pension-reference">/);
+  assert.match(template, /<details class="ouw25-bargain-help ouw25-pension-reference">\s*<summary data-tooltip="\{\{localize "OUW25\.Finance\.PensionReference"\}\}" aria-label="\{\{localize "OUW25\.Finance\.PensionReference"\}\}"><span aria-hidden="true">\?<\/span><\/summary>\s*<div class="ouw25-bargain-help-content"><p>\{\{localize "OUW25\.Finance\.PensionHelp"\}\}<\/p><\/div>/);
+  assert.match(styles, /\.ouw25-pension-heading\s*\{\s*display:\s*grid;[^}]*grid-template-columns:\s*subgrid;/s);
+  assert.match(styles, /\.ouw25-pension-controls\s*\{[^}]*grid-template-columns:\s*subgrid;[^}]*margin-block-start:\s*4px;/s);
+  assert.match(styles, /\.ouw25-pension-reference\s*\{[^}]*justify-self:\s*center;/s);
+});
+
 test("bargain status keeps payment rates and unrest without covered totals", async () => {
   for (const language of ["en", "ru"]) {
     const data = JSON.parse(await readFile(new URL(`../dist/ouw25/lang/${language}.json`, import.meta.url), "utf8"));
@@ -221,8 +229,8 @@ test("the active actor tab uses a bundled WebP background", async () => {
   assert.equal(asset.toString("ascii", 8, 12), "WEBP");
 });
 
-test("inactive sheet tabs have an inset card edge without replacing the active artwork", () => {
-  assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover:not\(:disabled\)\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset/s);
+test("inactive sheet tabs retain their background without top or side edges", () => {
+  assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover:not\(:disabled\)\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*none/s);
   assert.match(styles, /\.ouw25-sheet-tabs > button\.active:hover:not\(:disabled\)\s*\{\s*background:\s*url\("\.\/images\/smalltab_header\.webp"\)/);
 });
 
@@ -255,7 +263,8 @@ test("record tables retain accessible names without visible block headings", () 
     assert.doesNotMatch(block[2], /<legend\b|ouw25-block-heading/);
   }
   assert.match(template, /<caption><h4>\{\{localize label\}\}<\/h4><\/caption>/);
-  assert.match(template, /<p class="ouw25-ledger-totals">[\s\S]*?<\/p>\s*<fieldset class="ouw25-ledger"/);
+  assert.match(template, /<caption>\s*<h4>\{\{localize "OUW25\.Tabs\.creditors"\}\}<\/h4>\s*<p class="ouw25-ledger-totals">[\s\S]*?<\/p>\s*<\/caption>/);
+  assert.match(styles, /\.ouw25-ledger-totals\s*\{[^}]*font-family:\s*var\(--ouw25-font-accent\);[^}]*margin-inline-start:\s*0\.5rem;/s);
   const contactsTab = template.match(/\{\{#> ouw25-tab tab=tabs\.contacts\}\}([\s\S]*?)\{\{\/ouw25-tab\}\}/)?.[1];
   assert.ok(contactsTab);
   assert.doesNotMatch(contactsTab, /OUW25\.Contact\.Total|ouw25-contacts-total/);
@@ -273,7 +282,7 @@ test("record table data columns have sortable headers, but notes and actions do 
     ports: ["Port.Name", "Port.Region", "Port.Description"],
     contracts: ["Contract.Subject", "Contract.Destination", "Contract.Deadline", "Contract.Cost"],
     cargo: ["Cargo.Name", "Cargo.Quantity", "Cargo.Volume"],
-    ledger: ["Debt.Counterparty", "Debt.Location", "Debt.Amount"],
+    ledger: ["Debt.TableName", "Debt.Location", "Debt.TableWho", "Debt.Amount"],
     relationships: ["Debt.Counterparty", "Debt.Location", "Relationship.Reason"],
     possessions: ["Possession.Description", "Possession.Cost"]
   })) {
@@ -282,8 +291,9 @@ test("record table data columns have sortable headers, but notes and actions do 
     const actual = [...block.matchAll(/\{\{> ouw25-sort-heading label="OUW25\.([^"]+)"/g)].map(match => match[1]);
     assert.deepEqual(actual, labels);
     assert.match(block, /<th scope="col" class="ouw25-record-note">\{\{localize "OUW25\.Journal\.Column"\}\}<\/th>/);
-    assert.match(block, /<th scope="col">\{\{localize "OUW25\.Debt\.Actions"\}\}<\/th>/);
+    assert.match(block, /<th scope="col" class="ouw25-debt-actions">\{\{localize "OUW25\.Debt\.Actions"\}\}<\/th>/);
   }
+  assert.match(styles, /\.ouw25-debt-table \.ouw25-debt-actions\s*\{\s*inline-size:\s*1%;\s*white-space:\s*nowrap;/);
   for (const label of ["Contact.Debt", "Contract.Cost", "Cargo.Quantity", "Cargo.Volume", "Debt.Amount", "Possession.Cost"]) {
     assert.ok(template.includes(`label="OUW25.${label}" numeric=true`));
   }
@@ -317,25 +327,33 @@ test("equipment effects follow the compartment list", () => {
   assert.match(template, /<strong><span\{\{#if ship\.voyage\.forced\}\} class="ouw25-speed-forced"[^>]*>\{\{ship\.voyage\.speed\}\}<\/span><\/strong>/);
 });
 
-test("cooperative titled blocks use a translucent background without fading content", () => {
-  const rule = styles.match(/\.ouw25-notes:has\(\.ouw25-cooperative-layout\) fieldset:has\(> legend\)\s*\{([^}]*)\}/)?.[1];
-  assert.ok(rule);
-  assert.match(rule, /background-color:\s*color-mix\(in srgb, var\(--ouw25-color-surface\) 70%, transparent\)/);
-  assert.doesNotMatch(rule, /\bopacity\s*:/);
+test("clipped blocks use paper and shadows without visible borders", async () => {
+  assert.match(styles, /fieldset:has\(> legend\.ouw25-header-clip\.ouw25-clipped-heading\)\s*\{[^}]*border-image:\s*none;[^}]*border-color:\s*transparent;[^}]*smallpaper7\.webp[^}]*background-origin:\s*border-box;[^}]*box-shadow:/s);
+  assert.match(styles, /fieldset:has\(> legend\.ouw25-clipped-heading\) > legend\.ouw25-clipped-heading\s*\{[^}]*smallpaper8\.webp[^}]*box-shadow:/s);
+  assert.match(styles, /\.ouw25-founder-card\s*\{[^}]*url\("\.\/images\/smallpaper5\.webp"\)/s);
+  for (const paper of ["smallpaper7", "smallpaper8"]) {
+    const asset = await readFile(new URL(`../dist/ouw25/styles/images/${paper}.webp`, import.meta.url));
+    assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+  }
 });
 
-test("founder cards retain their paper over a packaged cork background", async () => {
-  assert.match(styles, /\.ouw25-cooperative-layout \.ouw25-founders\s*\{[^}]*url\("\.\/images\/cork\.svg"\)/s);
-  assert.match(styles, /\.ouw25-founder-card\s*\{[^}]*url\("\.\/images\/smallpaper5\.webp"\)/s);
-  const cork = await readFile(new URL("../dist/ouw25/styles/images/cork.svg", import.meta.url), "utf8");
-  assert.match(cork, /<svg\b[\s\S]*<feTurbulence\b/);
+test("sheet writing lines and founder portrait shadows are subdued", () => {
+  assert.match(styles, /repeating-linear-gradient\(90deg, color-mix\(in srgb, var\(--ouw25-folder-ink\) 20%, transparent\)/);
+  assert.match(styles, /textarea\[name="system\.notes"\]\s*\{[^}]*color-mix\(in srgb, var\(--ouw25-paper-rule\) 50%, transparent\)/s);
+  assert.match(styles, /\.ouw25-founder-portrait\s*\{[^}]*box-shadow:\s*0 2px 0 rgba\(85, 53, 30, 0\.2\), 0 3px 5px rgba\(39, 19, 8, 0\.2\)/s);
+});
+
+test("sheet textareas hide the resize grip and Big dream has extra separation", () => {
+  assert.match(styles, /\.ouw25-notes textarea::-webkit-resizer\s*\{\s*background:\s*transparent;/);
+  assert.match(styles, /\.ouw25-merchant-profile-fields > fieldset:has\(> \.ouw25-choice-row > textarea\[name="system\.dream"\]\)\s*\{\s*margin-block-start:\s*0\.75rem;/);
 });
 
 test("the reusable header clip is decorative and packaged", async () => {
   assert.match(template, /class="ouw25-portrait-frame ouw25-header-clip"/);
   assert.match(styles, /:has\(> \.ouw25-header-clip\)[^{]*\{[^}]*overflow:\s*visible;/s);
   assert.match(styles, /\.ouw25-header-clip\s*\{[^}]*position:\s*relative;[^}]*isolation:\s*isolate;[^}]*overflow:\s*visible;/s);
-  assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-7px;[^}]*inset-inline-end:\s*20px;[^}]*inline-size:\s*24\.5px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-header-clip::after\s*\{[^}]*z-index:\s*2147483647;[^}]*inset-block-start:\s*-7px;[^}]*inset-inline-end:\s*10px;[^}]*inline-size:\s*24\.5px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-portrait-frame\.ouw25-header-clip::after\s*\{\s*inset-inline-end:\s*20px;\s*\}/);
   assert.match(template, /\{\{#\*inline "ouw25-block-heading"\}\}\s*<legend class="ouw25-header-clip ouw25-clipped-heading"><h3>\{\{localize heading\}\}<\/h3><\/legend>/);
   assert.match(template, /\{\{> ouw25-block-heading heading=label\}\}/);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/clipper_small.webp", import.meta.url));
@@ -384,12 +402,28 @@ test("record registers share headings and highlight actual rows", () => {
   }
 });
 
-test("record search controls form a paper strip without adding layout dimensions", () => {
-  assert.match(styles, /\.ouw25-record-search\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset/s);
-  assert.match(styles, /\.ouw25-record-search label > span\s*\{\s*color:\s*var\(--ouw25-color-accent\);/);
+test("record search keeps an accessible label and a non-interactive magnifying glass", () => {
+  assert.match(template, /<label><input type="search" data-search-input aria-label="\{\{localize "OUW25\.Search\.Label"\}\}" data-tooltip="\{\{localize "OUW25\.Tooltip\.Search"\}\}"><\/label>/);
+  assert.match(styles, /\.ouw25-record-search label::before\s*\{[^}]*content:\s*"🔍";[^}]*opacity:\s*0\.3;[^}]*pointer-events:\s*none;[^}]*user-select:\s*none;/s);
+  assert.match(styles, /\.ouw25-record-search input\s*\{\s*padding-inline-start:\s*2rem;/);
+  assert.match(styles, /\.ouw25-record-search :is\(input, button\[data-search-clear\]\)\s*\{\s*box-sizing:\s*border-box;\s*block-size:\s*2em;/);
+  assert.doesNotMatch(styles.match(/\.ouw25-record-search\s*\{([^}]*)\}/)?.[1] ?? "", /background:|box-shadow:/);
   assert.match(styles, /\.ouw25-record-search button\[data-search-clear\]:hover:not\(:disabled\)\s*\{[^}]*background:\s*linear-gradient[^}]*box-shadow:\s*inset[^}]*filter:\s*none;/s);
   assert.match(styles, /\.ouw25-record-search button\[data-search-clear\]:hover:not\(:disabled\)\s*\{[^}]*text-shadow:\s*none;/s);
   assert.match(styles, /\.ouw25-record-search input\s*\{\s*box-shadow:\s*inset/);
+});
+
+test("merchant contacts combine relationship and debt tables under one search", () => {
+  const block = template.match(/\{\{#> ouw25-tab tab=tabs\.contacts\}\}[\s\S]*?\{\{\/ouw25-tab\}\}/g)?.at(-1);
+  assert.ok(block);
+  assert.match(block, /data-search-key="merchant-contacts" data-sort-groups/);
+  assert.equal((block.match(/\{\{> ouw25-record-search\}\}/g) ?? []).length, 1);
+  assert.match(block, /\{\{#each relationships\}\}[\s\S]*?\{\{> ouw25-relationship-list\}\}/);
+  assert.match(block, /\{\{> ouw25-creditors\}\}/);
+  assert.match(template, /data-record-group="\{\{kind\}\}"[\s\S]*?<caption><h4>\{\{localize label\}\}<\/h4><\/caption>/);
+  assert.match(template, /data-record-group="debt"[\s\S]*?<caption>\s*<h4>\{\{localize "OUW25\.Tabs\.creditors"\}\}<\/h4>/);
+  assert.match(template, /key="who"[\s\S]*?\{\{#each ledger\.entries\}\}[\s\S]*?\{\{localize directionLabel\}\}/);
+  assert.doesNotMatch(template, /tab=tabs\.(?:friends|illwishers|creditors)/);
 });
 
 test("cooperative attributes put founders on the left and other blocks above the journal", () => {
@@ -424,10 +458,32 @@ test("founder summary keeps each localized subblock together", async () => {
   }
 });
 
+test("merchant sheet controls have localized tooltips, including disabled journal controls", async () => {
+  const shared = template.slice(0, template.indexOf("  {{#if ship}}\n  {{#> ouw25-tab"));
+  const merchant = template.slice(template.indexOf('  {{#*inline "ouw25-creditors"}}'));
+  for (const line of `${shared}\n${merchant}`.split("\n")) {
+    if (!/<(?:button|input|select|textarea|summary|output)\b/.test(line)) continue;
+    assert.match(line, /data-tooltip=/, line.trim());
+  }
+  assert.match(shared, /<span data-tooltip="\{\{localize "OUW25\.Journal\.Unavailable"\}\}"><button[^>]*disabled/);
+  assert.match(shared, /<label class="ouw25-condition-check" data-tooltip=/);
+  assert.match(shared, /data-tooltip="\{\{#if \(eq id "ports"\)\}\}\{\{localize "OUW25\.Port\.Discovered"/);
+  const source = await readFile(new URL("../dist/ouw25/module/ouw25.mjs", import.meta.url), "utf8");
+  assert.match(source, /button\.dataset\.tooltip = game\.i18n\.format\("OUW25\.Tooltip\.OpenReference", \{ name: link\.name \}\)/);
+  const translations = await Promise.all(["en", "ru"].map(async language =>
+    JSON.parse(await readFile(new URL(`../dist/ouw25/lang/${language}.json`, import.meta.url), "utf8")).OUW25.Tooltip));
+  assert.deepEqual(Object.keys(translations[0]).sort(), Object.keys(translations[1]).sort());
+  for (const [key, english] of Object.entries(translations[0])) {
+    const russian = translations[1][key];
+    assert.ok(english.trim() && russian.trim(), key);
+    assert.deepEqual(english.match(/\{\w+\}/g) ?? [], russian.match(/\{\w+\}/g) ?? [], key);
+  }
+});
+
 test("cooperative tab labels show discovered ports in a tooltip, occupied hold and marked damage", async () => {
   const nav = template.match(/<nav class="tabs ouw25-sheet-tabs"[\s\S]*?<\/nav>/)?.[0];
   assert.ok(nav);
-  assert.match(nav, /\{\{#if \(eq id "ports"\)\}\}data-tooltip="\{\{localize "OUW25\.Port\.Discovered" count=@root\.ports\.discovered total=@root\.ports\.total\}\}"/);
+  assert.match(nav, /data-tooltip="\{\{#if \(eq id "ports"\)\}\}\{\{localize "OUW25\.Port\.Discovered" count=@root\.ports\.discovered total=@root\.ports\.total\}\}/);
   assert.match(nav, /\{\{#if \(eq id "ports"\)\}\} \(\{\{@root\.ports\.discovered\}\}\/\{\{@root\.ports\.total\}\}\)/);
   assert.doesNotMatch(template, /<p>\{\{localize "OUW25\.Port\.Discovered"/);
   for (const [language, expected] of [["en", "Discovered {count} of {total} ports"], ["ru", "Открыто {count} из {total} портов"]]) {
@@ -464,14 +520,14 @@ test("ship travel indicators use restrained paper-and-brass surfaces", () => {
 
 test("the portrait uses a framed image and keeps utility buttons free of hover motion", async () => {
   assert.match(template, /<div class="ouw25-portrait-frame ouw25-header-clip">\s*<div class="ouw25-portrait-view">\s*\{\{#if editable\}\}\s*<button[^>]*class="ouw25-portrait"/);
-  assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*200px;[^}]*block-size:\s*200px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);
+  assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*inline-size:\s*230px;[^}]*block-size:\s*230px;[^}]*background:\s*url\("\.\/images\/smallphoto_frame\.webp"\)/s);
   assert.match(template, /\{\{#if identity\.hasPortrait\}\}\s*<img src="\{\{identity\.img\}\}"/);
   assert.match(actorCreateTemplate, /<input type="radio" name="type" value="\{\{type\}\}"/);
   assert.match(actorCreateTemplate, /<img src="\{\{icon\}\}" alt="" aria-hidden="true">/);
   assert.match(module, /static async createDialog\(data = \{\}, createOptions = \{\}, dialogOptions = \{\}\)/);
   assert.match(module, /DEFAULT_ACTOR_IMAGE = "icons\/svg\/mystery-man\.svg"/);
   assert.match(module, /hasPortrait:\s*Boolean\(this\.actor\.img && this\.actor\.img !== DEFAULT_ACTOR_IMAGE\)/);
-  assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*180px;[^}]*block-size:\s*170px;[^}]*translate:\s*0 -5px;/s);
+  assert.match(styles, /\.ouw25-portrait-view\s*\{[^}]*inline-size:\s*207px;[^}]*block-size:\s*195\.5px;[^}]*translate:\s*0 -5\.75px;/s);
   assert.match(styles, /\.ouw25-portrait-view::before\s*\{[^}]*background:\s*url\("\.\/images\/bugger\.webp"\)/s);
   assert.match(styles, /\.ouw25-portrait-frame\s*\{[^}]*translate:\s*3px 4px;[^}]*transform:\s*rotate\(-2deg\);/s);
   assert.match(styles, /\.ouw25-portrait-frame:hover\s*\{\s*transform:\s*rotate\(0deg\) scale\(1\.035\);/);
@@ -514,26 +570,34 @@ test("sheet buttons retain raised, pressed and accessible states", () => {
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*height:\s*auto;[^}]*min-height:/s);
 });
 
-test("sheet finishing evokes a retro office without taking layout space or overriding existing paper", () => {
-  assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*background-image:\s*var\(--ouw25-sheet-vignette\), var\(--ouw25-sheet-perforation\), url\("\.\/images\/sheet_bgr\.webp"\);[^}]*background-attachment:\s*scroll, local, scroll;/s);
+test("sheet perforation reserves centered space without adding it to journals", () => {
+  assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*--ouw25-perforation-width:\s*30px;[^}]*--ouw25-sheet-perforation-center:\s*radial-gradient\(circle at calc\(50% \+ 1px\) calc\(50% \+ 1px\),\s*rgba\(255, 247, 231, 0\.3\) 0 5\.4px, transparent 6\.9px\);[^}]*--ouw25-sheet-perforation:\s*radial-gradient\(circle at 50% 50%,\s*rgba\(120, 90, 50, 0\.3\) 0 8\.2667px, transparent 9\.3333px\);/s);
+  assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*background-position:\s*center, calc\(1rem \/ 2\) top, calc\(1rem \/ 2\) top, center;/s);
+  assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*background-size:\s*100% 100%, var\(--ouw25-perforation-width\) 3rem, var\(--ouw25-perforation-width\) 3rem, cover;[^}]*padding-inline-start:\s*calc\(1rem \+ var\(--ouw25-perforation-width\)\);/s);
+  assert.match(styles, /\.application\.ouw25-journal \.journal-entry-content\s*\{[^}]*background-image:\s*var\(--ouw25-sheet-vignette\), url\("\.\/images\/sheet_bgr\.webp"\);/s);
+});
+
+test("sheet finishing evokes a retro office without overriding existing paper", () => {
+  assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*background-image:\s*var\(--ouw25-sheet-vignette\), var\(--ouw25-sheet-perforation-center\), var\(--ouw25-sheet-perforation\), url\("\.\/images\/sheet_bgr\.webp"\);[^}]*background-attachment:\s*scroll, local, local, scroll;/s);
   assert.match(styles, /\.ouw25 \.ouw25-notes\s*\{[^}]*border-block-end:\s*10px solid transparent;[^}]*border-image:\s*var\(--ouw25-tray-lip\) 0 0 10 0;[^}]*padding-block-end:\s*calc\(1rem - 10px\);/s);
   assert.match(styles, /--ouw25-tray-lip:\s*linear-gradient\(to top,/);
   assert.match(styles, /textarea\[name="system\.notes"\]\s*\{\s*background-image:\s*repeating-linear-gradient\(to bottom[^}]*background-attachment:\s*local;/s);
   assert.match(styles, /textarea:not\(\[name="system\.notes"\]\)[\s\S]*?\{\s*background-image:\s*repeating-linear-gradient\(90deg[^}]*background-size:\s*100% 1px;/);
   assert.match(styles, /\.ouw25-debt-table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-greenbar\);/);
-  assert.match(styles, /\.ouw25-debt-table thead th\s*\{[^}]*background-position:\s*0 100%, 0 calc\(100% - 3px\);/s);
+  assert.doesNotMatch(styles, /\.ouw25-notes \.ouw25-debt-table thead th\s*\{[^}]*background-image:/s);
   assert.match(styles, /p:is\(\[role="status"\], \[role="alert"\]\):not\(\.ouw25-voyage-statuses > p\)\s*\{\s*outline:/);
   assert.match(styles, /\.ouw25-voyage-statuses > p:is\(\[role="status"\], \[role="alert"\]\)\s*\{\s*box-shadow:\s*inset/);
-  assert.match(styles, /background-image:\s*var\(--ouw25-dog-ear\), var\(--ouw25-card-paper, url\("\.\/images\/smallpaper5\.webp"\)\);/);
+  assert.match(styles, /background-image:\s*var\(--ouw25-card-paper, url\("\.\/images\/smallpaper5\.webp"\)\);/);
+  assert.doesNotMatch(styles, /--ouw25-dog-ear|--ouw25-sheet-edge/);
   assert.match(styles, /fieldset > legend,[\s\S]*?\{\s*background:\s*linear-gradient\(to bottom, var\(--ouw25-folder-light\)[^}]*margin-inline-start:\s*-0\.35rem;\s*padding-inline:\s*0\.35rem;/);
   assert.match(styles, /\.ouw25-notes:has\(\.ouw25-cooperative-layout\),\s*\.application\.ouw25-journal-cooperative\s*\{\s*--ouw25-folder-light:/);
   assert.match(styles, /@media \(forced-colors: active\) \{\s*\.ouw25 \.ouw25-notes\s*\{\s*border-image:\s*none;/);
 });
 
-test("record journals share the sheet palette, paper and tray, and only they get the journal classes", async () => {
+test("record journals share the sheet palette and paper without perforation or tray", async () => {
   assert.match(styles, /\.ouw25-notes,\s*\.application\.ouw25-journal\s*\{\s*--ouw25-folder-light:/);
   assert.match(styles, /\.application\.ouw25-journal \.journal-entry-content\s*\{[^}]*sheet_bgr\.webp/s);
-  assert.match(styles, /\.application\.ouw25-journal \.journal-entry-pages\s*\{[^}]*border-image:\s*var\(--ouw25-tray-lip\) 0 0 10 0;/s);
+  assert.doesNotMatch(styles, /\.application\.ouw25-journal \.journal-entry-pages\s*\{/);
   assert.match(styles, /\.application\.ouw25-journal \.journal-sidebar[\s\S]*?panel1\.webp|panel1\.webp[\s\S]*?ouw25-journal/);
   assert.match(styles, /\.ouw25-journal \.journal-entry-page table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-greenbar\);/);
   assert.match(styles, /\.ouw25-journal \.journal-entry-page blockquote\s*\{[^}]*border-inline-start:\s*3px solid/s);
@@ -541,6 +605,7 @@ test("record journals share the sheet palette, paper and tray, and only they get
 
 test("hiring actions match past action dimensions and voyage content has bottom clearance", () => {
   assert.match(styles, /\.ouw25-personal-actions > button,\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-profile-details > button\[data-source="hiring"\]\s*\{[^}]*inline-size:\s*auto;[^}]*padding:\s*0\.2rem 0\.35rem;/s);
+  assert.match(styles, /\.ouw25-profile-details > button\[data-source="hiring"\]:last-child\s*\{\s*margin-block-end:\s*0\.25rem;/);
   assert.match(styles, /\.ouw25-personal-actions > button,\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-profile-details > button\[data-source="hiring"\],[^}]*font-size:\s*0\.8em;/s);
   assert.match(styles, /fieldset\.ouw25-voyage\s*\{\s*padding-block-end:\s*1\.25rem;/);
 });
@@ -548,9 +613,12 @@ test("hiring actions match past action dimensions and voyage content has bottom 
 test("sheet tool buttons match the corresponding dialog toolbar treatments", () => {
   assert.match(template, /data-action="openBargain"[^>]*>[\s\S]*?<span>\{\{localize "OUW25\.BargainCalc\.Title"\}\}<\/span>/);
   assert.match(template, /data-action="rollCollision"[^>]*>[\s\S]*?<span>\{\{localize "OUW25\.Unluck\.ToCheck"\}\}<\/span>/);
-  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*linear-gradient\(20deg, #78303b 0%, #4f1725 40%, #2d0b16 100%\)[^}]*border-radius:\s*999px;/s);
+  assert.match(styles, /\.ouw25-merchant-tools\s*\{[^}]*background:\s*#355253 url\("\.\/images\/panel1\.webp"\) center \/ cover no-repeat;[^}]*box-shadow:\s*0 8px 16px #000a, 0 3px 5px #000b;/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*linear-gradient\(160deg, #78303b 0%, #4f1725 40%, #2d0b16 100%\)[^}]*border-radius:\s*999px;/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*width:\s*min\(100%, calc\(\(125cqi - var\(--ouw25-sidebar-gap\)\) \* 0\.375\)\);[^}]*0 2px 3px rgba\(0, 0, 0, 0\.5\)/s);
   assert.match(styles, /\.ouw25-merchant-tools > \.ouw25-bargain-reference:not\(:disabled\)\s*\{\s*background:\s*linear-gradient\(160deg, #4d7271 0%, #355253 40%, #1d3535 100%\)/);
   assert.match(styles, /\.ouw25-merchant-tools > button > span\s*\{[^}]*-webkit-text-fill-color:\s*transparent;/s);
+  assert.match(styles, /\.ouw25-merchant-tools > button > span\s*\{[^}]*drop-shadow\(0 1px 1px #000c\)/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:disabled > span\s*\{[^}]*-webkit-text-fill-color:\s*GrayText;/s);
 });
 
@@ -623,12 +691,13 @@ test("the sheet uses light text surfaces with contrasting foreground colors", ()
 });
 
 test("the Merchant sidebar uses bundled Roll20 textures", async () => {
+  assert.match(styles, /\.ouw25-merchant-sidebar > \.ouw25-money-card\s*\{[^}]*rotate:\s*-0\.25deg;/);
+  assert.doesNotMatch(styles.match(/\.ouw25-merchant-sidebar > \.ouw25-pension\s*\{[^}]*\}/)?.[0], /rotate:/);
   for (const [pattern, image] of [
     [/\.ouw25-pension\s*\{[^}]*--ouw25-card-paper:/, "smallpaper3"],
     [/\.ouw25-money-card\s*\{[^}]*--ouw25-card-paper:/, "smallpaper4"],
     [/--ouw25-reference-paper:/, "smallpaper5"],
-    [/\.ouw25-luck\s*\{[^}]*background:/, "lucky_point"],
-    [/\.ouw25-merchant-wounds\s*\{[^}]*background:/, "blood"]
+    [/\.ouw25-unluck-luck-mark\s*\{[^}]*background:/, "lucky_point_clean"]
   ]) {
     const ref = `./images/${image}.webp`;
     const match = styles.match(pattern);
@@ -637,6 +706,66 @@ test("the Merchant sidebar uses bundled Roll20 textures", async () => {
     const asset = await readFile(new URL(`../dist/ouw25/styles/${ref}`, import.meta.url));
     assert.equal(asset.subarray(8, 12).toString(), "WEBP");
   }
+});
+
+test("the Merchant corkboard sits behind all tabs and its resized sidebar", async () => {
+  assert.match(styles, /\.application\.ouw25:has\(\.ouw25-merchant-heading\):not\(\.minimizing, \.minimized\)\s*\{\s*min-inline-size:\s*1280px;\s*max-inline-size:\s*1280px;/);
+  assert.match(template, /<div class="ouw25-merchant-column">\s*<div class="ouw25-sheet-column ouw25-merchant-sidebar">/);
+  assert.match(template, /\{\{#if identity\}\}\{\{> ouw25-merchant-sidebar\}\}\{\{\/if\}\}\s*<\/section>/);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-heading\)\s*\{[^}]*container-type:\s*inline-size;[^}]*border-block-end:\s*0;[^}]*border-image:\s*none;/s);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-heading\)::before\s*\{(?=[^}]*position:\s*sticky;)(?=[^}]*inset-block-start:\s*-1rem;)(?=[^}]*block-size:\s*calc\(100% \+ 2rem\);)(?=[^}]*margin-block-end:\s*-1rem;)(?=[^}]*linear-gradient\(to right, #0006, transparent\) 7\.5px 0 \/ 8px 100%)(?=[^}]*corkboard\.webp"\) 7\.5px 0 \/ calc\(100% - 7\.5px\) auto repeat-y)(?=[^}]*linear-gradient\(#f5deb333, #f5deb333\) left top \/ 7\.5px 100%)(?=[^}]*panel4\.webp)(?=[^}]*pointer-events:\s*none;)(?=[^}]*box-shadow:\s*inset 2px 0 3px #0005, -5px 0 12px #0005;)[^}]*\}/s);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-heading\)\s*\{[^}]*grid-template-rows:[^;]*minmax\(0, 1fr\);[^}]*overflow:\s*clip;/s);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-heading\) > \.ouw25-tab-stack\s*\{[^}]*min-block-size:\s*0;[^}]*overflow:\s*auto;/s);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-heading\) > \.ouw25-tab-stack\s*\{[^}]*inline-size:\s*calc\(var\(--ouw25-merchant-content-end\) - 0\.75rem\);/s);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-heading\) > \.ouw25-journal-index\s*\{[^}]*inline-size:\s*calc\(var\(--ouw25-merchant-content-end\) - 0\.75rem\);/s);
+  assert.match(styles, /\.ouw25-merchant-layout\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\);\s*min-inline-size:\s*0;/);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-heading\):has\(\.ouw25-tab\[data-tab="attributes"\]\.active\) > \.ouw25-tab-stack\s*\{\s*margin-block-start:\s*-8px;\s*padding-block-start:\s*8px;/);
+  assert.match(styles, /\.application\.ouw25:has\(\.ouw25-merchant-heading\) > \.window-content\s*\{\s*padding-inline-end:\s*0;/);
+  assert.match(styles, /--ouw25-merchant-content-end:\s*calc\([^;]*\+ 20px\);/);
+  assert.match(styles, /--ouw25-merchant-column-start:\s*calc\(var\(--ouw25-merchant-content-end\) \+ 10px\);/);
+  assert.match(styles, /\.ouw25-sheet-heading\.ouw25-merchant-heading\s*\{[^}]*isolation:\s*auto;[^}]*z-index:\s*auto;/s);
+  assert.match(styles, /\.ouw25-merchant-heading > \.ouw25-actor-token\s*\{\s*z-index:\s*3;/);
+  assert.match(styles, /\.ouw25-notes > \.ouw25-merchant-column\s*\{[^}]*margin-block-start:\s*-9px;[^}]*padding-block-start:\s*6px;/s);
+  assert.match(styles, /\.ouw25-notes > \.ouw25-merchant-column\s*\{[^}]*min-block-size:\s*0;[^}]*overflow-y:\s*auto;/s);
+  assert.match(styles, /\.ouw25-notes > \.ouw25-merchant-column\s*\{[^}]*inline-size:\s*calc\(var\(--ouw25-merchant-column-width\) - 7\.5px\);[^}]*margin-inline-start:\s*calc\(var\(--ouw25-merchant-column-start\) \+ 7\.5px\);/s);
+  assert.match(styles, /\.ouw25-notes > \.ouw25-merchant-column\s*\{\s*display:\s*block;/);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-column\) > \.ouw25-merchant-heading\s*\{[^}]*padding-inline-end:/);
+  assert.match(styles, /\.ouw25-notes:has\(\.ouw25-merchant-column\) > \.ouw25-sheet-tabs\s*\{[^}]*inline-size:\s*calc\(var\(--ouw25-merchant-content-end\) - 0\.75rem\);/);
+  assert.match(styles, /\.ouw25-sheet-column\.ouw25-merchant-sidebar\s*\{[^}]*inline-size:\s*80%;/s);
+  assert.match(styles, /\.ouw25-merchant-wounds \.ouw25-condition-check > span\s*\{\s*background:\s*rgba\(15, 8, 10, 0\.6\);/);
+  for (const [selector, image] of [["luck", "felt1"], ["merchant-wounds", "felt2"]]) {
+    assert.match(styles, new RegExp(`\\.ouw25-${selector}\\s*\\{[^}]*background:[^;]*${image}\\.webp`));
+    const rule = styles.match(new RegExp(`\\.ouw25-${selector}\\s*\\{[^}]*\\}`))?.[0];
+    assert.match(rule, /url\("\.\/images\/panel3\.webp"\) center \/ 120px auto border-box repeat/);
+    assert.match(rule, /linear-gradient\(165deg, #c9c5b8 0%, #949590 24%, #767978 50%, #afada4 72%, #6a6c6c 100%\) border-box/);
+    assert.match(rule, /background-blend-mode:\s*normal, soft-light, normal/);
+    assert.match(rule, /box-shadow:\s*inset 0 0 8px 2px #000b, 0 8px 16px #000a, 0 3px 5px #000b;/);
+  }
+  const asset = await readFile(new URL("../dist/ouw25/styles/images/corkboard.webp", import.meta.url));
+  assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+});
+
+test("the luck counter artwork extends 20px beyond each side of the original ring", () => {
+  const rule = styles.match(/\.ouw25-luck-marks\s*\{[^}]*\}/s)?.[0];
+  assert.ok(rule);
+  assert.match(rule, /inset:\s*calc\(-20px \/ var\(--ouw25-luck-scale\)\)/);
+  assert.match(styles, /\.ouw25-luck-marks > \.ouw25-unluck-luck-mark\s*\{\s*width:\s*85%;/);
+  assert.match(template, /<span class="ouw25-unluck-luck-marks ouw25-luck-marks" aria-hidden="true"><\/span><span class="ouw25-luck-number" style="--ouw25-luck-number-scale: \{\{condition\.luckNumberScale\}\}">/);
+});
+
+test("the luck counter has an outer shadow and brass-gradient numeral", () => {
+  assert.match(styles, /\.ouw25-luck-value\s*\{[^}]*font-size:\s*calc\(clamp\(2rem, 27cqi, 5\.3125rem\) \* 1\.5\);/s);
+  assert.match(styles, /\.ouw25-luck-value > \.ouw25-luck-number\s*\{(?=[^}]*font-size:\s*max\(0\.75rem, calc\(1em \* var\(--ouw25-luck-number-scale, 1\)\)\);)(?=[^}]*min-inline-size:\s*max-content;)(?=[^}]*white-space:\s*nowrap;)[^}]*\}/s);
+  assert.match(styles, /\.ouw25-luck-marks > \.ouw25-unluck-luck-mark\s*\{[^}]*box-shadow:\s*0 6px 14px rgba\(0, 0, 0, 0\.65\);/s);
+  assert.match(styles, /\.ouw25-luck\s*\{[^}]*--ouw25-bargain-brass:\s*linear-gradient\(135deg, #70542d 0%, #dfc58b 26%, #98733e 54%, #e8d39e 77%, #6f512b 100%\);/s);
+  assert.match(styles, /\.ouw25-luck-value > \.ouw25-luck-number\s*\{[^}]*background-image:\s*var\(--ouw25-bargain-brass\);[^}]*background-clip:\s*text;/s);
+  assert.match(styles, /\.ouw25-luck-value > \.ouw25-luck-number\s*\{[^}]*filter:\s*drop-shadow\(1px 1px 3px #000\);/s);
+});
+
+test("merchant luck buttons share the Gambler styling while retaining their height", () => {
+  assert.match(styles, /\.ouw25-luck-actions > button\s*\{[^}]*block-size:\s*28px;/s);
+  assert.match(styles, /\.ouw25-unluck-luck-actions > button,\s*body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-luck-actions > button:is\(:disabled, :not\(:disabled\)\)\s*\{[^}]*background:\s*linear-gradient\(#7e3040, #3a101a\);/s);
+  assert.match(styles, /\.ouw25-luck-actions > button:disabled\s*\{\s*opacity:\s*0\.5;/);
 });
 
 test("Roll20 body, display, field, and accent fonts are bundled and applied within the AppV2 root", async () => {
@@ -664,4 +793,5 @@ test("Roll20 body, display, field, and accent fonts are bundled and applied with
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-sheet-heading h2\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*font-size:\s*1\.7rem;)(?=[^}]*margin:\s*0;)[^}]*\}/s);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes :is\(h2, h3\),\s*body\.game \.application\.ouw25 \.dialog-content :is\(h2, h3\)\s*\{(?=[^}]*color:\s*var\(--ouw25-color-accent\);)(?=[^}]*margin-block:\s*0\.8rem;)[^}]*\}/s);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes \.ouw25-debt-table tbody td\.ouw25-debt-amount\s*\{[^}]*font-family:\s*var\(--ouw25-font-accent\);/s);
+  assert.match(styles, /\.ouw25-ledger \.ouw25-debt-table tbody td\.ouw25-debt-amount\s*\{[^}]*font-family:\s*var\(--ouw25-font-body\);[^}]*font-size:\s*1em;/s);
 });

@@ -37,8 +37,17 @@ body.game .application.ouw25:has(.ouw25-notes) {
   max-inline-size: min(1120px, 100vw);
 }
 
+body.game .application.ouw25:has(.ouw25-merchant-heading):not(.minimizing, .minimized) {
+  min-inline-size: 1280px;
+  max-inline-size: 1280px;
+}
+
 body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .maximizing) {
   min-block-size: 60vh;
+}
+
+body.game .application.ouw25:has(.ouw25-merchant-heading) > .window-content {
+  padding-inline-end: 0;
 }
 
 .ouw25 .ouw25-notes,
@@ -48,15 +57,15 @@ body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .max
   --ouw25-folder-ink: #8a6a3a;
   --ouw25-greenbar: #e5ecdd;
   --ouw25-paper-rule: rgba(19, 62, 97, 0.2);
-  --ouw25-sheet-edge: #f8e8d4;
   --ouw25-sheet-vignette: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(160, 110, 60, 0.16) 100%);
-  --ouw25-sheet-perforation: radial-gradient(circle at 5px 50%, rgba(58, 40, 30, 0.5) 0 2.3px, rgba(120, 90, 50, 0.4) 2.3px 3.1px, transparent 3.5px);
   --ouw25-tray-lip: linear-gradient(to top, #4f4d49 0, #7b7872 1px, #b8b4aa 2px, #e3dfd4 4px, #c9c5ba 6px, #9d9a92 8px, #6e6c66 9px, #3e3c39 10px);
-  --ouw25-dog-ear: linear-gradient(to bottom left, var(--ouw25-sheet-edge) 0 50%, #cdb996 50% calc(50% + 1px), #f1e5cf calc(50% + 1px) 100%);
   --ouw25-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #80665b, 0 3px 4px #51413b66;
 }
 
 .ouw25 .ouw25-notes {
+  --ouw25-perforation-width: 30px;
+  --ouw25-sheet-perforation-center: radial-gradient(circle at calc(50% + 1px) calc(50% + 1px), rgba(255, 247, 231, 0.3) 0 5.4px, transparent 6.9px);
+  --ouw25-sheet-perforation: radial-gradient(circle at 50% 50%, rgba(120, 90, 50, 0.3) 0 8.2667px, transparent 9.3333px);
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -64,18 +73,136 @@ body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .max
   color-scheme: light;
   color: var(--ouw25-color-ink);
   background-color: var(--ouw25-color-paper);
-  background-image: var(--ouw25-sheet-vignette), var(--ouw25-sheet-perforation), url("./images/sheet_bgr.webp");
-  background-attachment: scroll, local, scroll;
-  background-position: center, left top, center;
-  background-repeat: no-repeat, repeat-y, no-repeat;
-  background-size: 100% 100%, 16px 3rem, cover;
+  background-image: var(--ouw25-sheet-vignette), var(--ouw25-sheet-perforation-center), var(--ouw25-sheet-perforation), url("./images/sheet_bgr.webp");
+  background-attachment: scroll, local, local, scroll;
+  background-position: center, calc(1rem / 2) top, calc(1rem / 2) top, center;
+  background-repeat: no-repeat, repeat-y, repeat-y, no-repeat;
+  background-size: 100% 100%, var(--ouw25-perforation-width) 3rem, var(--ouw25-perforation-width) 3rem, cover;
   border-block-end: 10px solid transparent;
   border-image: var(--ouw25-tray-lip) 0 0 10 0;
   padding: 1rem;
+  padding-inline-start: calc(1rem + var(--ouw25-perforation-width));
   padding-block-end: calc(1rem - 10px);
   min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading) {
+  --ouw25-merchant-expansion: calc(1rem + var(--spacer-16, 1rem));
+  --ouw25-merchant-base-width: max(39rem, 100cqi - var(--ouw25-merchant-expansion));
+  --ouw25-merchant-layout-width: max(calc(39rem + var(--ouw25-merchant-expansion)), 100cqi);
+  --ouw25-merchant-content-end: calc((var(--ouw25-merchant-base-width) - 0.75rem) * 0.67 + 0.75rem + 20px);
+  --ouw25-merchant-column-start: calc(var(--ouw25-merchant-content-end) + 10px);
+  --ouw25-merchant-column-width: calc(var(--ouw25-merchant-layout-width) - var(--ouw25-merchant-column-start));
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: max-content max-content max-content minmax(0, 1fr);
+  border-block-end: 0;
+  border-image: none;
+  padding-block-end: 1rem;
+  padding-inline-end: 0;
+  overflow: clip;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading) > .ouw25-sheet-heading {
+  grid-area: 1 / 1;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading) > .ouw25-sheet-tabs {
+  grid-area: 2 / 1;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading) > .ouw25-journal-index {
+  grid-area: 3 / 1;
+  min-inline-size: 0;
+  inline-size: calc(var(--ouw25-merchant-content-end) - 0.75rem);
+  overflow-wrap: anywhere;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading) > .ouw25-tab-stack {
+  grid-area: 4 / 1;
+  min-inline-size: 0;
+  inline-size: calc(var(--ouw25-merchant-content-end) - 0.75rem);
+  min-block-size: 0;
+  overflow: auto;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading):has(.ouw25-tab[data-tab="attributes"].active) > .ouw25-tab-stack {
+  margin-block-start: -8px;
+  padding-block-start: 8px;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading)::before {
+  content: "";
+  position: sticky;
+  z-index: 0;
+  grid-area: 1 / 1 / 5 / 2;
+  inset-block-start: -1rem;
+  align-self: start;
+  justify-self: start;
+  block-size: calc(100% + 2rem);
+  inline-size: var(--ouw25-merchant-column-width);
+  margin-inline-start: var(--ouw25-merchant-column-start);
+  margin-block-start: -1rem;
+  margin-block-end: -1rem;
+  box-sizing: border-box;
+  background:
+    linear-gradient(to right, #0006, transparent) 7.5px 0 / 8px 100% no-repeat,
+    url("./images/corkboard.webp") 7.5px 0 / calc(100% - 7.5px) auto repeat-y,
+    linear-gradient(#f5deb333, #f5deb333) left top / 7.5px 100% no-repeat,
+    #723815 url("./images/panel4.webp") left top / auto 500px repeat;
+  box-shadow: inset 2px 0 3px #0005, -5px 0 12px #0005;
+  pointer-events: none;
+}
+
+.ouw25 .ouw25-notes > .ouw25-merchant-column {
+  display: block;
+  position: relative;
+  z-index: 2;
+  grid-area: 1 / 1 / 5 / 2;
+  align-self: stretch;
+  justify-self: start;
+  inline-size: calc(var(--ouw25-merchant-column-width) - 7.5px);
+  margin-inline-start: calc(var(--ouw25-merchant-column-start) + 7.5px);
+  margin-block-start: -9px;
+  min-block-size: 0;
+  padding-block-start: 6px;
+  padding-block-end: 0.5rem;
+  overflow-y: auto;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-column) > .ouw25-merchant-heading {
+  min-inline-size: var(--ouw25-merchant-layout-width);
+  padding-inline-end: calc(var(--ouw25-merchant-column-width) + 10px + 0.75rem);
+}
+
+body.game .application.ouw25 .ouw25-notes:has(.ouw25-merchant-column) > .ouw25-sheet-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-inline-size: 0;
+  inline-size: calc(var(--ouw25-merchant-content-end) - 0.75rem);
+}
+
+.ouw25 .ouw25-sheet-heading.ouw25-merchant-heading {
+  isolation: auto;
+  z-index: auto;
+}
+
+.ouw25 .ouw25-merchant-heading > :not(.ouw25-actor-token) {
+  position: relative;
+  z-index: 2;
+}
+
+.ouw25 .ouw25-merchant-heading > .ouw25-actor-token {
+  z-index: 3;
+}
+
+.ouw25 .ouw25-notes:has(.ouw25-merchant-heading) > :is(.ouw25-sheet-tabs, .ouw25-tab-stack, .ouw25-journal-index) {
+  position: relative;
+  z-index: 1;
 }
 
 .ouw25 .ouw25-notes * {
@@ -398,7 +525,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:hove
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:not(.active),
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button:not(.active):hover:not(:disabled) {
   background: linear-gradient(to bottom, rgba(224, 207, 176, 0.38), rgba(224, 207, 176, 0.12));
-  box-shadow: inset 1px 0 rgba(112, 84, 45, 0.18), inset -1px 0 rgba(112, 84, 45, 0.18), inset 0 1px rgba(112, 84, 45, 0.18);
+  box-shadow: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-sheet-tabs > button.active:not(:focus-visible) {
@@ -476,8 +603,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-tab[data-tab="attributes"]:not(
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-layout {
-  grid-template-columns: minmax(0, 67fr) minmax(0, 33fr);
-  min-inline-size: 39rem;
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
@@ -539,7 +666,7 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait {
   border-radius: 50%;
   overflow: hidden;
   background: linear-gradient(var(--ouw25-color-surface), var(--ouw25-color-surface)) padding-box, var(--ouw25-border-gradient) border-box;
-  box-shadow: 0 2px 0 #55351e, 0 3px 5px #27130888;
+  box-shadow: 0 2px 0 rgba(85, 53, 30, 0.2), 0 3px 5px rgba(39, 19, 8, 0.2);
 }
 
 body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait img {
@@ -747,7 +874,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-journal-index > summary:focus-v
 
 .ouw25 .ouw25-merchant-profile {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 230px minmax(0, 1fr);
   align-items: start;
   gap: 20px;
 }
@@ -780,21 +907,23 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
 
 .ouw25 .ouw25-portrait-view {
   position: relative;
-  inline-size: 180px;
-  block-size: 170px;
-  translate: 0 -5px;
+  inline-size: 207px;
+  block-size: 195.5px;
+  translate: 0 -5.75px;
   border-radius: 0.35rem;
   overflow: hidden;
 }
 
 .ouw25 .ouw25-portrait-frame {
   position: relative;
-  inline-size: 200px;
-  block-size: 200px;
+  inline-size: 230px;
+  block-size: 230px;
   display: grid;
   place-items: center;
   background: url("./images/smallphoto_frame.webp") center / 100% 100% no-repeat;
   box-shadow: 0 2px 6px rgba(20, 15, 12, 0.24);
+  /* The enlarged frame occupies the extra space above the traits. */
+  margin-block-end: -30px;
   translate: 3px 4px;
   transform: rotate(-2deg);
 }
@@ -817,11 +946,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   position: absolute;
   z-index: 2147483647;
   inset-block-start: -7px;
-  inset-inline-end: 20px;
+  inset-inline-end: 10px;
   inline-size: 24.5px;
   block-size: 50px;
   background: url("./images/clipper_small.webp") center / 100% 100% no-repeat;
   pointer-events: none;
+}
+
+.ouw25 .ouw25-portrait-frame.ouw25-header-clip::after {
+  inset-inline-end: 20px;
 }
 
 .ouw25 .ouw25-portrait-view::before {
@@ -871,6 +1004,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-portrait:hover {
   margin-inline: 0;
 }
 
+.ouw25 .ouw25-merchant-profile-fields > fieldset:has(> .ouw25-choice-row > textarea[name="system.dream"]) {
+  margin-block-start: 0.75rem;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-profile-fields :is(
   input[name="name"], select[name="system.specialty"], textarea[name="system.dream"]
 ):not(:focus-visible) {
@@ -882,6 +1019,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: 0.75rem;
+}
+
+.ouw25 .ouw25-merchant-profile + .ouw25-merchant-pair {
+  margin-block-start: 40px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-pair > fieldset {
@@ -934,6 +1075,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-profile-details > button[data-s
   inline-size: auto;
   margin-block: 0;
   padding: 0.2rem 0.35rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-profile-details > button[data-source="hiring"]:last-child {
+  margin-block-end: 0.25rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-personal-actions > button:not(:disabled) {
@@ -1060,6 +1205,8 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
   --ouw25-reference-paper: url("./images/smallpaper5.webp");
   gap: var(--ouw25-sidebar-gap);
   container-type: inline-size;
+  inline-size: 80%;
+  margin-inline: auto;
   overflow-wrap: anywhere;
 }
 
@@ -1071,16 +1218,32 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
   padding: 20px 15px 15px;
 }
 
+.ouw25 .ouw25-merchant-sidebar > :is(.ouw25-money-card, .ouw25-pension) {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
 .ouw25 .ouw25-merchant-sidebar > .ouw25-money-card {
   --ouw25-card-paper: url("./images/smallpaper4.webp");
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: 0.6rem;
   padding-block-end: 7.5px;
+  rotate: -0.25deg;
 }
 
 .ouw25 .ouw25-merchant-sidebar > .ouw25-pension {
   --ouw25-card-paper: url("./images/smallpaper3.webp");
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  position: relative;
+}
+
+.ouw25 .ouw25-pension:not(:has(.ouw25-pension-controls)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.ouw25 .ouw25-pension > p {
+  grid-column: 1 / -1;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-sidebar-card h3, .ouw25-total-debt > p) {
@@ -1089,7 +1252,11 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-sid
   margin: 0;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-total-debt, .ouw25-pocket-money > h3, .ouw25-cash-controls > span, .ouw25-pension > h3) {
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-pocket-money > h3, .ouw25-total-debt > p, .ouw25-pension-heading > h3) {
+  font-size: 1.26rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-total-debt, .ouw25-pocket-money > h3, .ouw25-cash-controls > span, .ouw25-pension-heading > h3) {
   font-family: var(--ouw25-font-accent);
 }
 
@@ -1102,7 +1269,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
 }
 
 .ouw25 .ouw25-debt-balance {
-  font-size: 1.4rem;
+  font-size: 1.26rem;
   line-height: 1;
   margin-block-start: -0.3em;
 }
@@ -1115,23 +1282,50 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
   color: var(--ouw25-color-warning);
 }
 
-.ouw25 .ouw25-pension > h3 > span {
+.ouw25 .ouw25-pension-heading {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.ouw25 .ouw25-pension-heading > h3 {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.ouw25 .ouw25-pension-heading > h3 > span {
   color: var(--ouw25-color-accent-calm);
   font-size: 1.5em;
   line-height: 1;
 }
 
-.ouw25 .ouw25-pension-controls > button {
-  max-inline-size: 65%;
+body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  margin-block-start: 4px;
 }
 
-body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-luck-actions) > button:not(:disabled) {
+body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button {
+  min-inline-size: 0;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
+  min-block-size: 2rem;
+  padding-block: 0.25rem;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button:not(:disabled) {
   background: linear-gradient(160deg, #617b98, #506b86 48%, #405a74);
   color: #edcd79;
 }
 
 @supports (background-clip: text) {
-  body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-luck-actions) > button:not(:disabled) > span {
+  body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button:not(:disabled) > span {
     background: linear-gradient(90deg, #edcd79, #ed9d79, #ede579, #edbd79);
     background-clip: text;
     color: transparent;
@@ -1139,25 +1333,10 @@ body.game .application.ouw25 .ouw25-notes :is(.ouw25-pension-controls, .ouw25-lu
   }
 }
 
-.ouw25 .ouw25-pension-reference,
-.ouw25 .ouw25-pension-reference > p {
-  background: var(--ouw25-color-paper) var(--ouw25-reference-paper) center top / 100% auto no-repeat;
-  border-radius: 0.35rem;
-  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
-}
-
 .ouw25 .ouw25-pension-reference {
-  padding: var(--ouw25-reference-padding);
-  position: relative;
-}
-
-.ouw25 .ouw25-pension-reference > p {
-  position: absolute;
-  inset-block-start: 100%;
-  inset-inline: 0;
-  z-index: 1;
+  --ouw25-bargain-brass: linear-gradient(135deg, #70542d 0%, #dfc58b 26%, #98733e 54%, #e8d39e 77%, #6f512b 100%);
+  justify-self: center;
   margin: 0;
-  padding: 0.8rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-input > input {
@@ -1170,11 +1349,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-inpu
 }
 
 .ouw25 .ouw25-luck {
-  --ouw25-luck-gradient: linear-gradient(to right, #edcd79, #ed9d79, #ede579, #edbd79);
+  --ouw25-bargain-brass: linear-gradient(135deg, #70542d 0%, #dfc58b 26%, #98733e 54%, #e8d39e 77%, #6f512b 100%);
   --ouw25-luck-ring-size: min(60cqi, 9rem);
   --ouw25-luck-scale: 0.65;
   --ouw25-luck-button-size: 2rem;
-  background: url("./images/lucky_point.webp") center / calc(17.71875rem * 0.65) auto no-repeat;
+  background: url("./images/felt1.webp") center / cover padding-box no-repeat,
+    url("./images/panel3.webp") center / 120px auto border-box repeat,
+    linear-gradient(165deg, #c9c5b8 0%, #949590 24%, #767978 50%, #afada4 72%, #6a6c6c 100%) border-box;
+  background-blend-mode: normal, soft-light, normal;
+  border: 4px solid transparent;
+  border-radius: 0.35rem;
+  box-shadow: inset 0 0 8px 2px #000b, 0 8px 16px #000a, 0 3px 5px #000b;
+  margin-block: var(--ouw25-sidebar-gap) calc(var(--ouw25-sidebar-gap) * 1.1);
   min-block-size: min(100cqi, 12rem);
   display: grid;
   place-items: center;
@@ -1186,37 +1372,41 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
   display: grid;
   place-items: center;
   position: relative;
+  isolation: isolate;
   inline-size: var(--ouw25-luck-ring-size);
   aspect-ratio: 1;
   font-family: "Limelight", var(--ouw25-font-accent);
-  font-size: clamp(2rem, 27cqi, 5.3125rem);
+  font-size: calc(clamp(2rem, 27cqi, 5.3125rem) * 1.5);
   line-height: 1;
   text-align: center;
   transform: scale(var(--ouw25-luck-scale));
 }
 
-.ouw25 .ouw25-luck-value::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  padding: 2px;
-  background: var(--ouw25-luck-gradient);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
+.ouw25 .ouw25-luck-marks {
+  inset: calc(-20px / var(--ouw25-luck-scale));
 }
 
-.ouw25 .ouw25-luck-value > span {
+.ouw25 .ouw25-luck-marks > .ouw25-unluck-luck-mark {
+  width: 85%;
+  border-radius: 50%;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.65);
+}
+
+.ouw25 .ouw25-luck-value > .ouw25-luck-number {
+  color: #dfc58b;
+  font-size: max(0.75rem, calc(1em * var(--ouw25-luck-number-scale, 1)));
+  min-inline-size: max-content;
   position: relative;
   inset-block-start: calc(3px / var(--ouw25-luck-scale));
+  white-space: nowrap;
 }
 
 @supports (background-clip: text) {
-  body.game .application.ouw25 .ouw25-notes .ouw25-luck-value > span {
-    background-image: var(--ouw25-luck-gradient);
+  body.game .application.ouw25 .ouw25-notes .ouw25-luck-value > .ouw25-luck-number {
+    background-image: var(--ouw25-bargain-brass);
     background-clip: text;
     color: transparent;
+    filter: drop-shadow(1px 1px 3px #000);
   }
 }
 
@@ -1227,14 +1417,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-luck-actions > button {
+  box-sizing: border-box;
   inline-size: var(--ouw25-luck-button-size);
+  block-size: 28px;
   padding: 0.25rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds {
-  background: url("./images/blood.webp") center / cover no-repeat;
-  border-block: 1px solid transparent;
-  border-image: var(--ouw25-border-gradient) 1;
+  background: url("./images/felt2.webp") center / cover padding-box no-repeat,
+    url("./images/panel3.webp") center / 120px auto border-box repeat,
+    linear-gradient(165deg, #c9c5b8 0%, #949590 24%, #767978 50%, #afada4 72%, #6a6c6c 100%) border-box;
+  background-blend-mode: normal, soft-light, normal;
+  border: 4px solid transparent;
+  border-radius: 0.35rem;
+  box-shadow: inset 0 0 8px 2px #000b, 0 8px 16px #000a, 0 3px 5px #000b;
+  color: #f3e5c4;
   display: grid;
   justify-items: center;
   margin-block-start: calc(var(--ouw25-sidebar-gap) * 0.1);
@@ -1288,6 +1485,10 @@ body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots
   border: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds .ouw25-condition-check > span {
+  background: rgba(15, 8, 10, 0.6);
+}
+
 body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots .ouw25-condition-check:has(input:focus-visible) {
   outline: 2px solid var(--ouw25-color-accent-calm);
   border-radius: 0.25rem;
@@ -1306,23 +1507,30 @@ body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots
 .ouw25 .ouw25-merchant-tools {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--ouw25-sidebar-gap);
+  gap: calc(var(--ouw25-sidebar-gap) * 0.25);
+  padding: 0.6rem;
+  background: #355253 url("./images/panel1.webp") center / cover no-repeat;
+  border-radius: 0.35rem;
+  box-shadow: 0 8px 16px #000a, 0 3px 5px #000b;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision) {
   --ouw25-bargain-brass: linear-gradient(135deg, #70542d 0%, #dfc58b 26%, #98733e 54%, #e8d39e 77%, #6f512b 100%);
   justify-content: center;
+  justify-self: center;
   min-width: 0;
+  width: min(100%, calc((125cqi - var(--ouw25-sidebar-gap)) * 0.375));
+  box-sizing: border-box;
   height: auto;
-  min-height: var(--button-size, 2rem);
-  background: linear-gradient(20deg, #78303b 0%, #4f1725 40%, #2d0b16 100%);
+  min-height: calc(var(--button-size, 2rem) * 0.75);
+  background: linear-gradient(160deg, #78303b 0%, #4f1725 40%, #2d0b16 100%);
   border: 1px solid #290b14;
   border-radius: 999px;
-  box-shadow: inset 0 1px 2px rgba(255, 207, 194, 0.3), inset 0 -2px 3px rgba(0, 0, 0, 0.55), 0 -2px 3px rgba(0, 0, 0, 0.5);
-  padding: var(--ouw25-reference-padding);
+  box-shadow: inset 0 1px 2px rgba(255, 207, 194, 0.3), inset 0 -2px 3px rgba(0, 0, 0, 0.55), 0 2px 3px rgba(0, 0, 0, 0.5);
+  padding: calc(var(--ouw25-reference-padding) * 0.75);
   color: #dfc58b;
   font-family: "Alice", Georgia, serif;
-  font-size: 16px;
+  font-size: 14.52px;
   line-height: 1.4;
   text-align: center;
   text-shadow: none;
@@ -1338,13 +1546,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button > span 
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(2px -2px 0.3rem rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 1px 1px #000c);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw25-bargain-reference, .ouw25-collision):hover:not(:disabled) {
-  background: linear-gradient(20deg, #914151 0%, #612031 40%, #38101e 100%);
+  background: linear-gradient(160deg, #914151 0%, #612031 40%, #38101e 100%);
   color: #dfc58b;
-  filter: brightness(1.08) drop-shadow(0 -2px 2px rgba(55, 15, 0, 0.18));
+  filter: brightness(1.08) drop-shadow(0 2px 2px rgba(55, 15, 0, 0.18));
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button.ouw25-bargain-reference:hover:not(:disabled) {
@@ -1383,14 +1591,14 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button:is(.ouw
   margin-block-start: calc(var(--ouw25-sidebar-gap) * 1.2);
 }
 
-.ouw25 :is(.ouw25-sidebar-card, .ouw25-pension-reference) > summary {
+.ouw25 .ouw25-sidebar-card > summary {
   font-size: 16px;
   line-height: 1.4;
   cursor: pointer;
 }
 
 @container (inline-size < 16rem) {
-  .ouw25 :is(.ouw25-sidebar-card, .ouw25-pension-reference) > summary {
+  .ouw25 .ouw25-sidebar-card > summary {
     min-block-size: 2lh;
     align-content: center;
   }
@@ -1594,9 +1802,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > span {
   min-width: 0;
 }
 
-.ouw25 .ouw25-ledger-totals,
 .ouw25 .ouw25-cargo-summary {
   margin: 0 0 -0.5rem;
+}
+
+.ouw25 .ouw25-ledger caption > h4 {
+  margin-block-end: 0;
+}
+
+.ouw25 .ouw25-ledger-totals {
+  font-family: var(--ouw25-font-accent);
+  margin: 2px 0 0.25rem;
+  margin-inline-start: 0.5rem;
 }
 
 .ouw25 .ouw25-notes fieldset {
@@ -1688,6 +1905,10 @@ body.game .application.ouw25 .ouw25-notes :is(select[name="system.specialty"], s
   border-image: var(--ouw25-border-gradient) 1;
 }
 
+body.game .application.ouw25 .ouw25-notes textarea::-webkit-resizer {
+  background: transparent;
+}
+
 body.game .application.ouw25 .ouw25-notes :is(
   input:not([type="checkbox"])[readonly],
   textarea[readonly],
@@ -1747,9 +1968,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-luck-value:focus-visible {
     text-decoration: underline double;
   }
 
-  body.game .application.ouw25 .ouw25-notes :is(.ouw25-luck-value, .ouw25-pension-controls > button, .ouw25-luck-actions > button) > span {
+  body.game .application.ouw25 .ouw25-notes :is(.ouw25-luck-value > .ouw25-luck-number, .ouw25-pension-controls > button > span, .ouw25-luck-actions > button > span) {
     background: none;
     color: CanvasText;
+  }
+
+  body.game .application.ouw25 .ouw25-notes .ouw25-luck-value > .ouw25-luck-number {
+    filter: none;
   }
 
   body.game .application.ouw25 .ouw25-notes :is(.ouw25-wound-slots, .ouw25-ship-damage) .ouw25-condition-check > span {
@@ -1987,8 +2212,6 @@ body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts,
 
 body.game .application.ouw25 .ouw25-notes :is(.ouw25-contacts, .ouw25-contracts, .ouw25-ports, .ouw25-cargo, .ouw25-ledger, .ouw25-relationships, .ouw25-possessions) .ouw25-debt-table thead th {
   border: 0;
-  border-block-end: 1px solid transparent;
-  border-image: var(--ouw25-border-gradient) 1;
   font-weight: 700;
 }
 
@@ -2073,8 +2296,15 @@ body.game .application.ouw25 .ouw25-notes .ouw25-debt-table tbody td.ouw25-debt-
   line-height: 1.1;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-ledger .ouw25-debt-table tbody td.ouw25-debt-amount {
+  font-family: var(--ouw25-font-body);
+  font-size: 1em;
+  line-height: inherit;
+}
+
 .ouw25 .ouw25-debt-table .ouw25-debt-actions {
   inline-size: 1%;
+  white-space: nowrap;
 }
 
 .ouw25 .ouw25-debt-table .ouw25-record-note {
@@ -2136,21 +2366,38 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
   align-items: end;
   gap: 0.35rem;
   margin-bottom: 0.35rem;
-  background: linear-gradient(90deg, rgba(218, 196, 159, 0.2), rgba(218, 196, 159, 0.06) 72%, transparent);
-  box-shadow: inset 0 -1px rgba(112, 84, 45, 0.2);
-}
-
-.ouw25-record-search label > span {
-  color: var(--ouw25-color-accent);
 }
 
 .ouw25-record-search label {
+  position: relative;
   flex: 1;
   min-width: 0;
 }
 
+.ouw25-record-search label::before {
+  content: "🔍";
+  position: absolute;
+  z-index: 1;
+  inset-inline-start: 0.5rem;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+}
+
 .ouw25-record-search input {
   width: 100%;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-record-search input {
+  padding-inline-start: 2rem;
+  line-height: normal;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-record-search :is(input, button[data-search-clear]) {
+  box-sizing: border-box;
+  block-size: 2em;
 }
 
 .ouw25-record-search button {
@@ -3132,12 +3379,21 @@ body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck [data-odds] [data
   }
 }
 
-body.game .application.ouw25.ouw25-unluck-dialog .dialog-content .ouw25-unluck-luck-actions > button {
+body.game .application.ouw25.ouw25-unluck-dialog .dialog-content .ouw25-unluck-luck-actions > button,
+body.game .application.ouw25 .ouw25-notes .ouw25-luck-actions > button:is(:disabled, :not(:disabled)) {
   border: 1px solid #9b8052;
   border-radius: 0.35rem;
   background: linear-gradient(#7e3040, #3a101a);
   color: #fff0c8;
   box-shadow: inset 0 1px 1px #f6cab855, 0 2px 2px #0009;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-luck-actions > button {
+  text-shadow: none;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-luck-actions > button:disabled {
+  opacity: 0.5;
 }
 
 body.game .application.ouw25.ouw25-unluck-dialog .form-footer {
@@ -3262,6 +3518,15 @@ body.game .application.ouw25.ouw25-unluck-dialog .form-footer button[data-action
   list-style: none;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-bargain-help > summary {
+  color: #20452e;
+  font-weight: bold;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-bargain-help > summary > span {
+  font-weight: 700;
+}
+
 body.game .application.ouw25 .dialog-content .ouw25-bargain-help > summary > span {
   font-weight: 700;
 }
@@ -3282,6 +3547,10 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain-help > summary > spa
 .ouw25-bargain-help > summary:focus-visible {
   outline: 2px solid #ffecad;
   outline-offset: 3px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-bargain-help > summary:focus-visible {
+  outline-color: var(--ouw25-color-accent-calm);
 }
 
 .ouw25-bargain-help > summary::-webkit-details-marker {
@@ -4163,27 +4432,20 @@ body.game .application.ouw25 .ouw25-notes :is(
   select,
   textarea:not([name="system.notes"])
 ) {
-  background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--ouw25-folder-ink) 70%, transparent) 0 2px, transparent 2px 5px);
+  background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--ouw25-folder-ink) 20%, transparent) 0 2px, transparent 2px 5px);
   background-size: 100% 1px;
   background-position: 0 calc(100% - 3px);
   background-repeat: no-repeat;
 }
 
 body.game .application.ouw25 .ouw25-notes textarea[name="system.notes"] {
-  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1lh - 1px), var(--ouw25-paper-rule) calc(1lh - 1px), var(--ouw25-paper-rule) 1lh);
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1lh - 1px), color-mix(in srgb, var(--ouw25-paper-rule) 50%, transparent) calc(1lh - 1px), color-mix(in srgb, var(--ouw25-paper-rule) 50%, transparent) 1lh);
   background-attachment: local;
   background-origin: content-box;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-debt-table tbody tr:nth-child(even) {
   background-color: var(--ouw25-greenbar);
-}
-
-body.game .application.ouw25 .ouw25-notes .ouw25-debt-table thead th {
-  background-image: linear-gradient(var(--ouw25-folder-ink), var(--ouw25-folder-ink)), linear-gradient(var(--ouw25-folder-ink), var(--ouw25-folder-ink));
-  background-size: 100% 1px;
-  background-position: 0 100%, 0 calc(100% - 3px);
-  background-repeat: no-repeat;
 }
 
 body.game .application.ouw25 .ouw25-notes p:is([role="status"], [role="alert"]):not(.ouw25-voyage-statuses > p) {
@@ -4204,9 +4466,9 @@ body.game .application.ouw25 .ouw25-notes :is(
   .ouw25-voyage-statuses > p,
   .ouw25-merchant-sidebar > .ouw25-sidebar-card
 ) {
-  background-image: var(--ouw25-dog-ear), var(--ouw25-card-paper, url("./images/smallpaper5.webp"));
-  background-size: 12px 12px, 100% auto;
-  background-position: right top, center top;
+  background-image: var(--ouw25-card-paper, url("./images/smallpaper5.webp"));
+  background-size: 100% auto;
+  background-position: center top;
   background-repeat: no-repeat;
 }
 
@@ -4220,8 +4482,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-notes :is(.ouw25-co
   translate: 3px 0;
 }
 
-body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-clipped-heading) {
+body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-header-clip.ouw25-clipped-heading) {
   padding-block-start: 1.25rem;
+  border-image: none;
+  border-color: transparent;
+  background: var(--ouw25-color-surface) url("./images/smallpaper7.webp") center top / 100% auto repeat-y;
+  background-origin: border-box;
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-clipped-heading) > legend.ouw25-clipped-heading {
+  background: var(--ouw25-color-surface) url("./images/smallpaper8.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 1px 2px rgba(55, 15, 0, 0.2);
 }
 
 @media (forced-colors: active) {
@@ -4265,10 +4537,10 @@ body.game .application.ouw25-journal .journal-sidebar .toc li.page.active > .pag
 body.game .application.ouw25-journal .journal-entry-content {
   color: var(--ouw25-color-ink);
   background-color: var(--ouw25-color-paper);
-  background-image: var(--ouw25-sheet-vignette), var(--ouw25-sheet-perforation), url("./images/sheet_bgr.webp");
-  background-position: center, left top, center;
-  background-repeat: no-repeat, repeat-y, no-repeat;
-  background-size: 100% 100%, 16px 3rem, cover;
+  background-image: var(--ouw25-sheet-vignette), url("./images/sheet_bgr.webp");
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100% 100%, cover;
 }
 
 body.game .application.ouw25-journal .journal-header {
@@ -4294,12 +4566,6 @@ body.game .application.ouw25-journal.journal-entry-page .journal-header :is(.tit
   border: 0;
   box-shadow: none;
   text-shadow: none;
-}
-
-body.game .application.ouw25-journal .journal-entry-pages {
-  border-block-end: 10px solid transparent;
-  border-image: var(--ouw25-tray-lip) 0 0 10 0;
-  margin-block-end: 6px;
 }
 
 body.game .application.ouw25-journal .journal-entry-page {
@@ -4394,11 +4660,4 @@ body.game .application.ouw25-journal .journal-entry-page a.content-link {
 body.game .application.ouw25-journal.journal-entry-page .window-content {
   color: var(--ouw25-color-ink);
   background: var(--ouw25-color-paper) url("./images/sheet_bgr.webp") center / cover no-repeat;
-}
-
-@media (forced-colors: active) {
-  body.game .application.ouw25-journal .journal-entry-pages {
-    border-image: none;
-    border-block-end-color: CanvasText;
-  }
 }

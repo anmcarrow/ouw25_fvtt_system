@@ -57,3 +57,38 @@ export function setupRecordSorting(container, initial, onChange) {
   }
   apply();
 }
+
+export function setupGroupedRecordSorting(container, initial, onChange) {
+  const tables = [...container.querySelectorAll("table[data-record-group]")];
+  const state = { ...initial };
+  const apply = () => {
+    for (const table of tables) {
+      const selected = state[table.dataset.recordGroup];
+      const buttons = [...table.querySelectorAll("[data-sort-column]")];
+      for (const button of buttons) {
+        const heading = button.closest("th");
+        if (selected && button.dataset.sortKey === selected.key) heading.setAttribute("aria-sort", selected.direction);
+        else heading.removeAttribute("aria-sort");
+      }
+      const button = buttons.find(item => item.dataset.sortKey === selected?.key);
+      if (button) sortRecordTable(table, button.closest("th").cellIndex, selected.direction, button.hasAttribute("data-sort-numeric"));
+    }
+  };
+  for (const table of tables) {
+    for (const button of table.querySelectorAll("[data-sort-column]")) {
+      button.addEventListener("click", () => {
+        const key = button.dataset.sortKey;
+        const previous = state[table.dataset.recordGroup];
+        const direction = previous?.key === key && previous.direction === "ascending" ? "descending" : "ascending";
+        for (const target of tables) {
+          if ([...target.querySelectorAll("[data-sort-column]")].some(item => item.dataset.sortKey === key)) {
+            state[target.dataset.recordGroup] = { key, direction };
+          }
+        }
+        onChange({ ...state });
+        apply();
+      });
+    }
+  }
+  apply();
+}

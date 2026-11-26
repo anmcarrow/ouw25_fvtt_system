@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.mjs",
+    "dev:prepare": "node scripts/dev-prepare.mjs",
     "package": "npm run build && cd dist/ouw25 && zip -q -FS -r ../ouw25.zip system.json module templates styles lang",
     "test": "npm run build && node --test"
   }

@@ -91,7 +91,7 @@ test("the built package registers models and an editable notes sheet for its dec
     foundry.applications.api.DialogV2 = { input: async () => response };
     CONFIG.Actor.documentClass.create = async (data, options) => ({ data, options });
     for (const [type, supplied, expected] of [
-      ["cooperative", "", "LLC W'Ell"], ["cooperative", "My company", "My company"],
+      ["cooperative", "", "W'ell Inc."], ["cooperative", "My company", "My company"],
       ["merchant", "", "Brrg Caddck"], ["merchant", "My merchant", "My merchant"]
     ]) {
       response = { type, name: supplied };
@@ -301,7 +301,7 @@ test("the built package registers models and an editable notes sheet for its dec
       sheet.actor.isOwner = false;
     }
     assert.deepEqual(sheet._getTabsConfig("sheet").tabs.map(({ id }) => id), merchant
-      ? ["attributes", "items", "friends", "illwishers", "creditors", "notes"]
+      ? ["attributes", "items", "contacts", "notes"]
       : ["attributes", "contacts", "contracts", "ports", "ship", "cargo"]);
     for (const editable of [true, false]) {
       sheet.isEditable = editable;
@@ -385,10 +385,8 @@ test("the built package registers models and an editable notes sheet for its dec
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
         pension: merchant ? { balance: 30_005, leaves: 1, untilNext: 29_995, complete: false } : null,
         ledger: merchant ? { totals: { payable: "12", receivable: "0" },
-          payableWarning: false, payableScale: 2 - 0.16 * Math.log10(13), groups: [
-          { label: "OUW25.Debt.payable", entries: [{ id: "debt-1", name: "Creditor", amount: 12, location: "Port" }] },
-          { label: "OUW25.Debt.receivable", entries: [] }
-        ] } : null,
+          payableWarning: false, payableScale: 2 - 0.16 * Math.log10(13),
+          entries: [{ id: "debt-1", name: "Creditor", amount: 12, location: "Port", directionLabel: "OUW25.Debt.TablePayable" }] } : null,
         relationships: merchant ? [
           { kind: "friend", tab: "friends", label: "OUW25.Relationship.friend", entries: [{ id: "friend-1", name: "Friend", location: "Harbor", reason: "Rescue" }] },
           { kind: "enemy", tab: "illwishers", label: "OUW25.Relationship.enemy", entries: [] }
@@ -400,12 +398,23 @@ test("the built package registers models and an editable notes sheet for its dec
         })), specialtyConflict: false,
         specialtyRestriction: null, specialtyFormula: "1d4", pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === "unset"
-        })), showFragile: false, fragile: false, luck: 0, canSpend: false, canAdd: true, wounds: [
+        })), showFragile: false, fragile: false, luck: 0, luckNumberScale: 1, canSpend: false, canAdd: true, wounds: [
           { slot: 1, marked: true, lethal: false }, { slot: 2, marked: false, lethal: false },
           { slot: 3, marked: false, lethal: true }
         ] } : null
       });
 
+    }
+    if (merchant) {
+      sheet.actor.items.push({ type: "debt", id: "debt-2", name: "Debtor", system: {
+        direction: "receivable", amount: 37, location: "Bay"
+      } });
+      const { ledger } = await sheet._prepareContext({});
+      assert.deepEqual(ledger.totals, { payable: "12", receivable: "37" });
+      assert.deepEqual(ledger.entries.map(entry => [entry.id, entry.directionLabel]), [
+        ["debt-1", "OUW25.Debt.TablePayable"], ["debt-2", "OUW25.Debt.TableReceivable"]
+      ]);
+      sheet.actor.items.pop();
     }
     if (!merchant) {
       for (const [count, percent] of [[0, 100], [4, 100], [5, 50], [6, 50], [11, 50], [2, 100]]) {
@@ -755,7 +764,7 @@ test("the built package registers models and an editable notes sheet for its dec
   const sortButton = { disabled: false };
   const editButton = { disabled: false };
   memberSheet._controls = [portraitButton, recordFieldset, sortButton, editButton];
-  memberSheet._element = { querySelectorAll: selector => selector === "fieldset:has([data-search-key])"
+  memberSheet._element = { querySelectorAll: selector => selector.startsWith("fieldset:has([data-search-key])")
     ? [recordFieldset] : [portraitButton, sortButton] };
   memberSheet._toggleDisabled(true);
   assert.equal(portraitButton.disabled, false);
@@ -1039,6 +1048,65 @@ test("column sorting toggles direction, preserves ties and search, and restores 
   assert.deepEqual(rows.map(row => row.cells[0].textContent), ["pear", "apricot", "apple"]);
   filterRecordTable(container, "missing");
   assert.equal(marker.hidden, false);
+});
+
+test("contacts search and sorting keep categories separate and synchronize shared columns", async () => {
+  const { setupGroupedRecordSorting, filterRecordTable } = await import(new URL("module/record-search.mjs", dist));
+  const makeTable = (group, lastKey, values) => {
+    const rows = values.map(value => ({
+      dataset: { searchText: value.join(" ") }, cells: value.map(textContent => ({ textContent }))
+    }));
+    const marker = { hidden: true, parentNode: { insertBefore(row) {
+      rows.splice(rows.indexOf(row), 1);
+      rows.push(row);
+    } } };
+    const buttons = ["name", "location", lastKey].map((key, index) => {
+      const heading = { cellIndex: index, attributes: {},
+        setAttribute(name, value) { this.attributes[name] = value; }, removeAttribute(name) { delete this.attributes[name]; } };
+      return { dataset: { sortKey: key }, heading, closest: () => heading,
+        hasAttribute: name => name === "data-sort-numeric" && key === "amount",
+        addEventListener(_type, callback) { this.click = callback; } };
+    });
+    return { dataset: { recordGroup: group }, rows, marker, buttons,
+      querySelectorAll: selector => selector === "[data-record-row]" ? rows : buttons,
+      querySelector: () => marker };
+  };
+  const tables = [
+    makeTable("friend", "reason", [["Zoe", "Port", "Rescue"], ["Amy", "Bay", "Help"]]),
+    makeTable("enemy", "reason", [["Zed", "Bay", "War"], ["Al", "Port", "Anger"]]),
+    makeTable("payable", "amount", [["Zara", "Port", "12"], ["Ada", "Bay", "2"]]),
+    makeTable("receivable", "amount", [["Zoe", "Bay", "9"], ["Ann", "Port", "3"]])
+  ];
+  const container = { querySelectorAll: () => tables };
+  let state;
+  setupGroupedRecordSorting(container, null, value => { state = value; });
+  tables[0].buttons[0].click();
+  assert.deepEqual(tables.map(table => table.rows.map(row => row.cells[0].textContent)), [
+    ["Amy", "Zoe"], ["Al", "Zed"], ["Ada", "Zara"], ["Ann", "Zoe"]
+  ]);
+  assert.ok(tables.every(table => table.buttons[0].heading.attributes["aria-sort"] === "ascending"));
+  tables[2].buttons[2].click();
+  assert.deepEqual(tables[2].rows.map(row => row.cells[2].textContent), ["2", "12"]);
+  assert.deepEqual(tables[3].rows.map(row => row.cells[2].textContent), ["3", "9"]);
+  assert.equal(tables[0].buttons[0].heading.attributes["aria-sort"], "ascending");
+  assert.equal(tables[2].buttons[2].heading.attributes["aria-sort"], "ascending");
+  tables[1].buttons[2].click();
+  assert.equal(tables[0].buttons[2].heading.attributes["aria-sort"], "ascending");
+  assert.equal(tables[2].buttons[2].heading.attributes["aria-sort"], "ascending");
+  for (const table of tables) filterRecordTable(table, "port");
+  assert.deepEqual(tables.map(table => table.rows.filter(row => !row.hidden).length), [1, 1, 1, 1]);
+  tables[3].buttons[1].click();
+  assert.ok(tables.every(table => table.buttons[1].heading.attributes["aria-sort"] === "ascending"));
+  tables[0].buttons[1].click();
+  assert.ok(tables.every(table => table.buttons[1].heading.attributes["aria-sort"] === "descending"));
+  assert.deepEqual(tables.map(table => table.rows.filter(row => !row.hidden).length), [1, 1, 1, 1]);
+  const restored = tables.map(table => makeTable(table.dataset.recordGroup, table.buttons[2].dataset.sortKey,
+    table.rows.map(row => row.cells.map(cell => cell.textContent)).reverse()));
+  setupGroupedRecordSorting({ querySelectorAll: () => restored }, state, () => {});
+  assert.ok(restored.every(table => table.buttons[1].heading.attributes["aria-sort"] === "descending"));
+  assert.ok(restored.every(table => table.rows[0].cells[1].textContent === "Port"));
+  for (const table of tables) filterRecordTable(table, "missing");
+  assert.ok(tables.every(table => table.marker.hidden === false));
 });
 
 test("backlinks only reveal accessible visible explicit references and recheck access on opening", async () => {
@@ -2100,6 +2168,174 @@ test("check includes its first viewable founder cooperative even without ownersh
   } finally {
     globalThis.game = previous.game;
     globalThis.foundry = previous.foundry;
+  }
+});
+
+test("every third added merchant merit creates an unused random flaw", async () => {
+  const previous = Object.fromEntries(["Hooks", "CONFIG", "foundry", "game", "ui"].map(key => [key, globalThis[key]]));
+  let Sheet;
+  let selection = "agile";
+  let duringRoll = () => {};
+  const warnings = [];
+  globalThis.Hooks = { once(event, callback) { if (event === "init") callback(); }, on() {} };
+  globalThis.CONFIG = { Actor: { dataModels: {} }, Item: { dataModels: {} } };
+  globalThis.game = { settings: { register() {} }, i18n: { localize: key => key } };
+  globalThis.ui = { notifications: { warn: message => warnings.push(message) } };
+  globalThis.foundry = {
+    abstract: { TypeDataModel: class {} },
+    dice: { Roll: class {
+      constructor(formula) { this.formula = formula; }
+      async evaluate() { duringRoll(); this.total = 1; return this; }
+    } },
+    applications: {
+      api: {
+        HandlebarsApplicationMixin: base => base,
+        DialogV2: { input: async () => selection && { code: selection } }
+      },
+      handlebars: { renderTemplate: async () => "" },
+      sheets: { ActorSheetV2: class {} }
+    },
+    documents: { Actor: class {}, collections: { Actors: { registerSheet(_id, sheet) { Sheet = sheet; } } } }
+  };
+  try {
+    const { MERCHANT_TRAITS } = await import(new URL("module/traits.mjs", dist));
+    await import(new URL("module/ouw25.mjs?automatic-flaw-test", dist));
+    const sheet = new Sheet();
+    const items = Object.assign([], { get(id) { return this.find(item => item.id === id); } });
+    const batches = [];
+    sheet.isEditable = true;
+    sheet.actor = {
+      type: "merchant", system: { merit: "strong", flaw: "addiction" }, items,
+      async createEmbeddedDocuments(_type, records) {
+        batches.push(records);
+        for (const record of records) items.push({ ...record, id: `item-${items.length}` });
+      },
+      async updateEmbeddedDocuments(_type, records) { batches.push(records); }
+    };
+    const add = kind => Sheet.DEFAULT_OPTIONS.actions.editTrait.call(sheet, null, { dataset: { creation: kind } });
+    await add("merit");
+    assert.deepEqual(batches.at(-1).map(item => item.system.code), ["agile"]);
+    selection = "erudite";
+    await add("merit");
+    assert.deepEqual(batches.at(-1).map(item => item.system.code), ["erudite", "cruel"]);
+    selection = "trader";
+    await add("merit");
+    selection = "prepared";
+    await add("merit");
+    selection = "intuitive";
+    await add("merit");
+    assert.deepEqual(batches.at(-1).map(item => item.system.code), ["intuitive", "apathetic"]);
+
+    selection = null;
+    await add("merit");
+    assert.equal(batches.length, 5);
+    selection = "connections";
+    await Sheet.DEFAULT_OPTIONS.actions.editTrait.call(sheet, null, { dataset: { creation: "merit", recordId: "item-0" } });
+    assert.equal(batches.at(-1).length, 1);
+    for (const code of MERCHANT_TRAITS.flaw) items.push({ type: "trait", system: { code } });
+    sheet.actor.system.merit = "unset";
+    await add("merit");
+    assert.deepEqual(batches.at(-1).map(item => item.system.code), ["connections"]);
+    assert.equal(warnings.pop(), "OUW25.Trait.NoUniqueFlaws");
+
+    items.splice(0, items.length, { type: "trait", system: { code: "strong" } },
+      { type: "trait", system: { code: "agile" } });
+    duringRoll = () => items.push({ type: "trait", system: { code: "cruel" } });
+    const before = batches.length;
+    await add("merit");
+    assert.equal(batches.length, before);
+    assert.equal(warnings.pop(), "OUW25.Creation.Changed");
+  } finally {
+    Object.assign(globalThis, previous);
+  }
+});
+
+test("merchant sheet luck decorations survive rerenders and bound large counters", async () => {
+  const previous = Object.fromEntries(["Hooks", "CONFIG", "foundry", "game", "document"].map(key => [key, globalThis[key]]));
+  let Sheet;
+  globalThis.Hooks = { once(event, callback) { if (event === "init") callback(); }, on() {} };
+  globalThis.CONFIG = { Actor: { dataModels: {} }, Item: { dataModels: {} } };
+  globalThis.game = { settings: { register() {} } };
+  globalThis.foundry = {
+    abstract: { TypeDataModel: class {} },
+    applications: {
+      api: { HandlebarsApplicationMixin: base => base },
+      sheets: { ActorSheetV2: class {
+        get element() { return this._element; }
+        async _onRender() {}
+        _onClose() {}
+      } }
+    },
+    documents: { Actor: class {}, collections: { Actors: { registerSheet(_id, sheet) { Sheet = sheet; } } } }
+  };
+  const makeMarks = () => ({
+    children: [], empty: false,
+    append(mark) { mark.parent = this; this.children.push(mark); },
+    replaceChildren(...children) { this.children = []; for (const mark of children) this.append(mark); },
+    get firstElementChild() { return this.children[0]; },
+    get lastElementChild() { return this.children.at(-1); },
+    classList: { toggle(_name, empty) { this.owner.empty = empty; }, owner: null }
+  });
+  globalThis.document = { createElement: () => ({
+    style: { values: {}, setProperty(key, value) { this.values[key] = value; } },
+    getBoundingClientRect() { return { width: 114, height: 114 }; },
+    remove() { this.parent.children.splice(this.parent.children.indexOf(this), 1); }
+  }) };
+  try {
+    const { luckNumberScale } = await import(new URL("module/ouw25.mjs?luck-render-test", dist));
+    assert.equal(luckNumberScale(0), 1);
+    assert.equal(luckNumberScale(9), 1);
+    assert.equal(luckNumberScale(10), 0.7);
+    assert.ok(Math.abs(luckNumberScale(100) - 0.49) < 1e-10);
+    assert.ok(luckNumberScale(1000) < luckNumberScale(100));
+    const sheet = new Sheet();
+    sheet.actor = { type: "merchant", uuid: "Actor.merchant", system: { luck: 0 } };
+    sheet.isEditable = false;
+    let dragstart;
+    const render = async luck => {
+      sheet.actor.system.luck = luck;
+      const marks = makeMarks();
+      marks.classList.owner = marks;
+      sheet._element = { querySelector: selector => selector === ".ouw25-luck-marks" ? marks :
+        selector === ".ouw25-luck-value[draggable='true']" && sheet.isEditable
+          ? { addEventListener(_type, listener) { dragstart = listener; } } : null,
+        querySelectorAll: () => [] };
+      await sheet._onRender({}, {});
+      return marks;
+    };
+    const empty = await render(0);
+    assert.equal(empty.children.length, 1);
+    assert.equal(empty.empty, true);
+    const one = await render(1);
+    assert.equal(one.children[0], empty.children[0]);
+    assert.equal(one.empty, false);
+    const three = await render(3);
+    assert.equal(three.children[0], one.children[0]);
+    const second = three.children[1];
+    assert.ok(Math.hypot(parseFloat(second.style.values["--luck-x"]), parseFloat(second.style.values["--luck-y"])) >= 19.999999);
+    const same = await render(3);
+    assert.equal(same.children[1], second);
+    assert.equal((await render(1)).children.length, 1);
+    assert.equal((await render(0)).empty, true);
+    assert.equal((await render(Number.MAX_SAFE_INTEGER)).children.length, 20);
+    assert.equal(sheet.actor.system.luck, Number.MAX_SAFE_INTEGER);
+    sheet.isEditable = true;
+    const draggable = await render(3);
+    const dataTransfer = {
+      setData(type, data) { this.type = type; this.data = data; },
+      setDragImage(element, x, y) { this.image = element; this.x = x; this.y = y; }
+    };
+    dragstart({ dataTransfer, stopPropagation() {}, preventDefault() { assert.fail("drag was prevented"); } });
+    assert.equal(dataTransfer.image, draggable.children[0]);
+    assert.deepEqual([dataTransfer.x, dataTransfer.y], [57, 57]);
+    assert.equal(dataTransfer.effectAllowed, "copy");
+    assert.deepEqual(JSON.parse(dataTransfer.data), { type: "OUW25Luck", uuid: "Actor.merchant" });
+    sheet.actor.system.luck = 0;
+    let prevented = false;
+    dragstart({ preventDefault() { prevented = true; } });
+    assert.equal(prevented, true);
+  } finally {
+    Object.assign(globalThis, previous);
   }
 });
 

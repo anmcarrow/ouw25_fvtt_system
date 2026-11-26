@@ -14,14 +14,19 @@ import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
-import { filterRecordTable, setupRecordSorting } from "./record-search.mjs";
+import { filterRecordTable, setupGroupedRecordSorting, setupRecordSorting } from "./record-search.mjs";
 import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink, styleSystemJournal } from "./record-journal.mjs";
 import { openBargain } from "./bargain-dialog.mjs";
-import { openUnluck } from "./unluck-dialog.mjs";
+import { openUnluck, renderLuckMarks } from "./unluck-dialog.mjs";
+import { installTooltipDelay } from "./tooltip-delay.mjs";
 
 const SYSTEM_ID = "ouw25";
+export function luckNumberScale(luck) {
+  return 0.7 ** (String(luck).length - 1);
+}
+
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
-const DEFAULT_COOPERATIVE_NAME = "LLC W'Ell";
+const DEFAULT_COOPERATIVE_NAME = "W'ell Inc.";
 const DEFAULT_MERCHANT_NAME = "Brrg Caddck";
 const DEFAULT_ACTOR_TOKENS = {
   merchant: "systems/ouw25/styles/images/pc_token.webp",
@@ -37,7 +42,7 @@ const COOPERATIVE_REPUTATIONS = ["unset", "profiteers", "hunters", "purists", "s
 const COOPERATIVE_MEMORIES = ["unset", "rescue", "lost_profit", "scandal", "secret", "fame", "blood"];
 const RELATION_KINDS = ["friend", "enemy"];
 const SHEET_TABS = {
-  merchant: ["attributes", "items", "friends", "illwishers", "creditors", "notes"],
+  merchant: ["attributes", "items", "contacts", "notes"],
   cooperative: ["attributes", "contacts", "contracts", "ports", "ship", "cargo"]
 };
 const RECORD_LABELS = new Map([
@@ -376,15 +381,16 @@ function traitChoices(kind, selected, includeUnset = false) {
 }
 
 function personalActionButtons(source, value) {
-  return personalActions(source, value).map(({ id }) => ({
-    id, source, value,
-    caption: game.i18n.localize(`OUW25.PersonalAction.Moves.${id}.label`).split(" \u00b7 ", 1)[0]
-  }));
+  return personalActions(source, value).map(({ id }) => {
+    const label = game.i18n.localize(`OUW25.PersonalAction.Moves.${id}.label`);
+    return { id, source, value, caption: label.split(" \u00b7 ", 1)[0], label };
+  });
 }
 
 class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #depositPending = false;
   #luckPending = false;
+  #luckMarks = null;
   #creationRollPending = false;
   #recordPending = false;
   #autosaveQueue = Promise.resolve();
@@ -448,27 +454,40 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   _toggleDisabled(disabled) {
     super._toggleDisabled(disabled);
     if (disabled) {
-      for (const fieldset of this.element.querySelectorAll("fieldset:has([data-search-key])")) fieldset.disabled = false;
+      for (const fieldset of this.element.querySelectorAll("fieldset:has([data-search-key]), [data-search-key='merchant-contacts'] fieldset")) fieldset.disabled = false;
       for (const button of this.element.querySelectorAll(".ouw25-sheet-tabs button, .ouw25-founder-portrait, [data-search-input], [data-search-clear], [data-sort-column], [data-action='recordJournal'], [data-action='showJournalBacklinks'], [data-action='openJournalBacklink']")) button.disabled = false;
     }
   }
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+    const marks = this.element.querySelector(".ouw25-luck-marks");
+    if (marks) {
+      if (this.#luckMarks && this.#luckMarks !== marks) marks.replaceChildren(...this.#luckMarks.children);
+      this.#luckMarks = marks;
+      renderLuckMarks(marks, Math.min(this.actor.system.luck, 20));
+    }
     const luck = this.element.querySelector(".ouw25-luck-value[draggable='true']");
     luck?.addEventListener("dragstart", event => {
       if (!this.isEditable || this.actor.system.luck < 1) { event.preventDefault(); return; }
       event.stopPropagation();
       event.dataTransfer.setData("text/plain", JSON.stringify({ type: "OUW25Luck", uuid: this.actor.uuid }));
       event.dataTransfer.effectAllowed = "copy";
+      const chip = marks?.firstElementChild;
+      if (chip) {
+        const { width, height } = chip.getBoundingClientRect();
+        event.dataTransfer.setDragImage(chip, width / 2, height / 2);
+      }
     });
     for (const container of this.element.querySelectorAll("[data-search-key]")) {
       const input = container.querySelector("[data-search-input]");
       const clear = container.querySelector("[data-search-clear]");
+      const groups = container.hasAttribute("data-sort-groups")
+        ? [...container.querySelectorAll("table[data-record-group]")] : null;
       input.value = this.#recordSearches.get(container.dataset.searchKey) ?? "";
       const filter = () => {
         this.#recordSearches.set(container.dataset.searchKey, input.value);
-        filterRecordTable(container, input.value);
+        for (const table of groups ?? [container]) filterRecordTable(table, input.value);
       };
       input.addEventListener("input", filter);
       clear.addEventListener("click", () => {
@@ -476,7 +495,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         filter();
         input.focus();
       });
-      setupRecordSorting(container, this.#recordSorts.get(container.dataset.searchKey), state => {
+      const setupSorting = groups ? setupGroupedRecordSorting : setupRecordSorting;
+      setupSorting(container, this.#recordSorts.get(container.dataset.searchKey), state => {
         this.#recordSorts.set(container.dataset.searchKey, state);
       });
       filter();
@@ -505,6 +525,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   _onClose(options) {
     for (const [event, hook] of this.#founderHooks) Hooks.off(event, hook);
     this.#founderHooks = [];
+    this.#luckMarks = null;
     return super._onClose(options);
   }
 
@@ -719,13 +740,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         totals,
         payableWarning: BigInt(totals.payable) > 1000n,
         payableScale: Math.max(0.9, 2 - 0.16 * Math.log10(1 + Number(totals.payable))),
-        groups: DEBT_DIRECTIONS.map(direction => ({
-          label: `OUW25.Debt.${direction}`,
-          entries: debts.filter(item => item.system.direction === direction).map(item => ({
+        entries: DEBT_DIRECTIONS.flatMap(direction =>
+          debts.filter(item => item.system.direction === direction).map(item => ({
             id: item.id, name: item.name, location: item.system.location, amount: item.system.amount,
+            directionLabel: `OUW25.Debt.Table${direction === "payable" ? "Payable" : "Receivable"}`,
             ...journal(item)
           }))
-        }))
+        )
       } : null,
       relationships: merchant ? RELATION_KINDS.map(kind => ({
         kind, tab: kind === "friend" ? "friends" : "illwishers", label: `OUW25.Relationship.${kind}`,
@@ -775,6 +796,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         showFragile: system.past === "deprived",
         fragile: system.fragile,
         luck: system.luck,
+        luckNumberScale: luckNumberScale(system.luck),
         canSpend: system.luck > 0,
         canAdd: system.luck < Number.MAX_SAFE_INTEGER,
         wounds: WOUND_SLOTS.slice(0, lethal).map(slot => ({ slot, marked: system[`wound${slot}`], lethal: slot === lethal }))
@@ -934,6 +956,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           button.type = "button";
           button.dataset.action = "openJournalBacklink";
           button.dataset.uuid = link.uuid;
+          button.dataset.tooltip = game.i18n.format("OUW25.Tooltip.OpenReference", { name: link.name });
           button.textContent = link.name;
           entry.append(button);
           list.append(entry);
@@ -1058,7 +1081,29 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       }
       const fields = { name: i18n.localize(`OUW25.Trait.Names.${data.code}`), system: { code: data.code } };
       if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, ...fields }]);
-      else await actor.createEmbeddedDocuments("Item", [{ type: "trait", ...fields }]);
+      else {
+        const records = [{ type: "trait", ...fields }];
+        const traitState = () => [
+          actor.system.merit, actor.system.flaw,
+          ...actor.items.filter(item => item.type === "trait").map(item => item.system.code)
+        ];
+        const state = traitState();
+        const meritCount = state.filter(code => MERCHANT_TRAITS.merit.includes(code)).length;
+        const needsFlaw = kind === "merit" && (meritCount + 1) % 3 === 0;
+        const available = needsFlaw ? MERCHANT_TRAITS.flaw.filter(code => !state.includes(code)) : [];
+        if (available.length) {
+          const roll = await new foundry.dice.Roll(`1d${available.length}`).evaluate({ allowInteractive: false });
+          if (!this.isEditable) return;
+          if (JSON.stringify(traitState()) !== JSON.stringify(state)) {
+            ui.notifications.warn(i18n.localize("OUW25.Creation.Changed"));
+            return;
+          }
+          const code = available[roll.total - 1];
+          records.push({ type: "trait", name: i18n.localize(`OUW25.Trait.Names.${code}`), system: { code } });
+        }
+        await actor.createEmbeddedDocuments("Item", records);
+        if (needsFlaw && !available.length) ui.notifications.warn(i18n.localize("OUW25.Trait.NoUniqueFlaws"));
+      }
     } finally {
       this.#recordPending = false;
     }
@@ -1756,6 +1801,7 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", async () => {
+  if (game.tooltip && globalThis.document) installTooltipDelay(game.tooltip, document);
   if (!game.user.isActiveGM || game.settings.get(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION)) return;
   try {
     for (const actor of game.actors) {

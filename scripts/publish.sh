@@ -23,6 +23,8 @@ if [[ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$branch")" ]]; then
   exit 1
 fi
 
+npm test
+
 version="$(REPOSITORY="$repository" node --input-type=module <<'NODE'
 import { readFile, writeFile } from "node:fs/promises";
 
@@ -38,9 +40,7 @@ NODE
 )"
 tag="v$version"
 
-npm test
-
-git add -A -- module styles templates lang test docs system.json scripts/publish.sh
+git add -- module styles templates lang test docs system.json scripts package.json
 if git diff --cached --quiet; then
   printf 'No publishable source files were found.\n' >&2
   exit 1

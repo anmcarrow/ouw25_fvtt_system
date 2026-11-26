@@ -12,12 +12,12 @@
 {{/inline}}
 {{#*inline "ouw25-record-search"}}
   <div class="ouw25-record-search">
-    <label><span>{{localize "OUW25.Search.Label"}}</span><input type="search" data-search-input aria-label="{{localize "OUW25.Search.Label"}}"></label>
-    <button type="button" data-search-clear>{{localize "OUW25.Search.Clear"}}</button>
+    <label><input type="search" data-search-input aria-label="{{localize "OUW25.Search.Label"}}" data-tooltip="{{localize "OUW25.Tooltip.Search"}}"></label>
+    <button type="button" data-search-clear data-tooltip="{{localize "OUW25.Tooltip.ClearSearch"}}">{{localize "OUW25.Search.Clear"}}</button>
   </div>
 {{/inline}}
 {{#*inline "ouw25-sort-heading"}}
-  <th scope="col"{{#if numeric}} class="ouw25-debt-amount"{{/if}}><button type="button" data-sort-column{{#if numeric}} data-sort-numeric{{/if}} data-tooltip="{{localize "OUW25.Search.SortHint"}}">{{localize label}} <span aria-hidden="true" class="ouw25-sort-indicator"></span></button></th>
+  <th scope="col"{{#if numeric}} class="ouw25-debt-amount"{{/if}}><button type="button" data-sort-column{{#if key}} data-sort-key="{{key}}"{{/if}}{{#if numeric}} data-sort-numeric{{/if}} data-tooltip="{{localize "OUW25.Search.SortHint"}}">{{localize label}} <span aria-hidden="true" class="ouw25-sort-indicator"></span></button></th>
 {{/inline}}
 {{#*inline "ouw25-record-journal"}}
   <td class="ouw25-record-note">
@@ -37,7 +37,7 @@
   </td>
 {{/inline}}
 {{#*inline "ouw25-money-input"}}
-  <input type="number" name="system.{{money.field}}" aria-label="{{localize money.label}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
+  <input type="number" name="system.{{money.field}}" aria-label="{{localize money.label}}" data-tooltip="{{localize "OUW25.Tooltip.Money" account=(localize money.label)}}" min="0" max="9007199254740991" step="1" inputmode="numeric" required value="{{money.value}}" {{#unless editable}}readonly{{/unless}}>
 {{/inline}}
 {{#*inline "ouw25-finances"}}
   {{#if pension}}
@@ -58,11 +58,17 @@
       </div>
     </div>
     <div class="ouw25-sidebar-card ouw25-pension">
-      <h3>{{localize "OUW25.Finance.PensionLabel"}}: <span>{{pension.balance}}</span> {{localize "OUW25.Finance.Currency"}}</h3>
+      <div class="ouw25-pension-heading">
+        <h3>{{localize "OUW25.Finance.PensionLabel"}}: <span>{{pension.balance}}</span> {{localize "OUW25.Finance.Currency"}}</h3>
+        <details class="ouw25-bargain-help ouw25-pension-reference">
+          <summary data-tooltip="{{localize "OUW25.Finance.PensionReference"}}" aria-label="{{localize "OUW25.Finance.PensionReference"}}"><span aria-hidden="true">?</span></summary>
+          <div class="ouw25-bargain-help-content"><p>{{localize "OUW25.Finance.PensionHelp"}}</p></div>
+        </details>
+      </div>
       {{#if editable}}
         <div class="ouw25-choice-row ouw25-pension-controls">
-          <input type="number" step="any" inputmode="numeric" aria-label="{{localize "OUW25.Finance.DepositAmount"}}" data-deposit>
-          <button type="button" data-action="depositPension"><span>{{localize "OUW25.Finance.Deposit"}}</span></button>
+          <input type="number" step="any" inputmode="numeric" aria-label="{{localize "OUW25.Finance.DepositAmount"}}" data-tooltip="{{localize "OUW25.Tooltip.DepositAmount"}}" data-deposit>
+          <button type="button" data-action="depositPension" data-tooltip="{{localize "OUW25.Tooltip.Deposit"}}"><span>{{localize "OUW25.Finance.Deposit"}}</span></button>
         </div>
       {{/if}}
       <p>{{localize "OUW25.Finance.Leaves" leaves=pension.leaves}}</p>
@@ -71,10 +77,6 @@
       {{else}}
         <p>{{localize "OUW25.Finance.UntilNext" amount=pension.untilNext}}</p>
       {{/if}}
-      <details class="ouw25-pension-reference">
-        <summary><span aria-hidden="true">&#x1F4D7;</span> {{localize "OUW25.Finance.PensionReference"}}</summary>
-        <p>{{localize "OUW25.Finance.PensionHelp"}}</p>
-      </details>
     </div>
   {{else}}
     <fieldset>
@@ -87,19 +89,63 @@
     </fieldset>
   {{/if}}
 {{/inline}}
+{{#*inline "ouw25-merchant-sidebar"}}
+  <div class="ouw25-merchant-column">
+    <div class="ouw25-sheet-column ouw25-merchant-sidebar">
+      {{> ouw25-finances}}
+      {{#if condition}}
+        <div class="ouw25-luck">
+          <output class="ouw25-luck-value" tabindex="0" {{#if editable}}draggable="true"{{/if}} aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{#if editable}}{{localize "OUW25.Tooltip.LuckDrag"}}{{else}}{{localize "OUW25.Condition.LuckHelp"}}{{/if}}"><span class="ouw25-unluck-luck-marks ouw25-luck-marks" aria-hidden="true"></span><span class="ouw25-luck-number" style="--ouw25-luck-number-scale: {{condition.luckNumberScale}}">{{condition.luck}}</span></output>
+          {{#if editable}}
+            <div class="ouw25-luck-actions">
+              <button type="button" data-action="changeLuck" data-luck="add" aria-label="{{localize "OUW25.Condition.AddLuck"}}" data-tooltip="{{localize "OUW25.Condition.AddLuck"}}" {{#unless condition.canAdd}}disabled{{/unless}}><span>+</span></button>
+              <button type="button" data-action="changeLuck" data-luck="spend" aria-label="{{localize "OUW25.Condition.SpendLuck"}}" data-tooltip="{{localize "OUW25.Condition.SpendLuck"}}" {{#unless condition.canSpend}}disabled{{/unless}}><span>&minus;</span></button>
+            </div>
+          {{/if}}
+        </div>
+        <div class="ouw25-merchant-wounds">
+          <div class="ouw25-wound-slots" data-count="{{condition.wounds.length}}">
+            {{#each condition.wounds}}
+              <label class="ouw25-condition-check" data-tooltip="{{#if lethal}}{{localize "OUW25.Tooltip.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Tooltip.Wound" slot=slot}}{{/if}}">
+                <input type="checkbox" name="system.wound{{slot}}" aria-label="{{#if lethal}}{{localize "OUW25.Condition.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Condition.Wound" slot=slot}}{{/if}}" data-tooltip="{{#if lethal}}{{localize "OUW25.Tooltip.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Tooltip.Wound" slot=slot}}{{/if}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
+                <span aria-hidden="true">{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}</span>
+              </label>
+            {{/each}}
+          </div>
+          {{#if condition.showFragile}}
+            <label data-tooltip="{{localize "OUW25.Past.Fragile"}}">
+              <input type="checkbox" name="system.fragile" data-tooltip="{{localize "OUW25.Past.Fragile"}}" {{checked condition.fragile}} {{#unless editable}}disabled{{/unless}}>
+              {{localize "OUW25.Past.Fragile"}}
+            </label>
+          {{/if}}
+        </div>
+      {{/if}}
+      <div class="ouw25-merchant-tools">
+        <button type="button" class="ouw25-sidebar-card ouw25-bargain-reference" data-action="openBargain" data-tooltip="{{localize "OUW25.BargainCalc.Open"}}" {{#unless editable}}disabled{{/unless}}>
+          <span>{{localize "OUW25.BargainCalc.Title"}}</span>
+        </button>
+        {{#if showCollision}}
+          <button type="button" class="ouw25-sidebar-card ouw25-collision" data-action="rollCollision" data-tooltip="{{localize "OUW25.Unluck.Open"}}">
+            <span>{{localize "OUW25.Unluck.ToCheck"}}</span>
+          </button>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+{{/inline}}
 {{#*inline "ouw25-journal"}}
-  <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
+  <textarea name="system.notes" aria-label="{{localize "OUW25.Notes"}}" data-tooltip="{{localize "OUW25.Tooltip.Notes"}}" rows="6" {{#unless editable}}readonly{{/unless}}>{{notes}}</textarea>
 {{/inline}}
 {{#*inline "ouw25-journal-index"}}
   {{#if journalIndex.length}}
   <details class="ouw25-journal-index">
-    <summary>{{localize "OUW25.Journal.Index"}}</summary>
+    <summary data-tooltip="{{localize "OUW25.Tooltip.JournalIndex"}}">{{localize "OUW25.Journal.Index"}}</summary>
     <ul>
       {{#each journalIndex}}
         <li class="ouw25-journal-index-entry">
-          <button type="button" data-action="openJournalBacklink" data-uuid="{{uuid}}">{{name}}</button> <span>({{localize table}})</span>
-          <button type="button" data-action="showJournalBacklinks" data-uuid="{{uuid}}">{{localize "OUW25.Journal.Backlinks"}}</button>
-          {{#each copies}}<button type="button" data-action="recordJournal" data-record-type="{{type}}" data-record-id="{{id}}" data-copy="true">{{localize "OUW25.Journal.Copy"}}</button>{{/each}}
+          <button type="button" data-action="openJournalBacklink" data-uuid="{{uuid}}" data-tooltip="{{localize "OUW25.Tooltip.OpenReference" name=name}}">{{name}}</button> <span>({{localize table}})</span>
+          <button type="button" data-action="showJournalBacklinks" data-uuid="{{uuid}}" data-tooltip="{{localize "OUW25.Tooltip.Backlinks"}}">{{localize "OUW25.Journal.Backlinks"}}</button>
+          {{#each copies}}<button type="button" data-action="recordJournal" data-record-type="{{type}}" data-record-id="{{id}}" data-copy="true" data-tooltip="{{localize "OUW25.Journal.Copy"}}">{{localize "OUW25.Journal.Copy"}}</button>{{/each}}
           <div data-backlinks role="status"></div>
         </li>
       {{/each}}
@@ -124,12 +170,12 @@
     <h2>{{localize actorTypeLabel}}</h2>
     <span class="ouw25-save-status" data-autosave-status data-state="{{autosaveStatusState}}" role="status" aria-live="polite">{{autosaveStatus}}</span>
     {{#if editable}}
-      <button type="submit">{{localize "OUW25.Save"}}</button>
+      <button type="submit" data-tooltip="{{localize "OUW25.Tooltip.Save"}}">{{localize "OUW25.Save"}}</button>
     {{/if}}
   </header>
   <nav class="tabs ouw25-sheet-tabs" aria-label="{{localize "OUW25.Tabs.Label"}}">
     {{#each tabs}}
-      <button type="button" {{#if (eq id "ports")}}data-tooltip="{{localize "OUW25.Port.Discovered" count=@root.ports.discovered total=@root.ports.total}}" {{/if}}class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDestroyed}} class="ouw25-tab-ship-destroyed"{{/if}}{{/if}}>{{localize label}}{{#if (eq id "ports")}} ({{@root.ports.discovered}}/{{@root.ports.total}}){{/if}}{{#if (eq id "cargo")}} ({{@root.ship.hold.occupied}}){{/if}}</span>{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDamage}}<span class="ouw25-tab-damage" style="font-size: {{@root.ship.condition.tabIconPercent}}%">{{#each @root.ship.condition.tabDamage}}<span role="img" aria-label="{{#if beyondLimit}}{{localize "OUW25.ShipCondition.BeyondLimit" number=number}}{{else}}{{localize "OUW25.ShipCondition.Damage" number=number}}{{/if}}">{{#if @root.ship.condition.tabDestroyed}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>{{/each}}</span>{{/if}}{{/if}}</button>
+      <button type="button" data-tooltip="{{#if (eq id "ports")}}{{localize "OUW25.Port.Discovered" count=@root.ports.discovered total=@root.ports.total}}{{else}}{{localize "OUW25.Tooltip.OpenTab" section=(localize label)}}{{/if}}" class="{{cssClass}}" data-action="tab" data-group="{{group}}" data-tab="{{id}}" aria-pressed="{{#if active}}true{{else}}false{{/if}}"><span{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDestroyed}} class="ouw25-tab-ship-destroyed"{{/if}}{{/if}}>{{localize label}}{{#if (eq id "ports")}} ({{@root.ports.discovered}}/{{@root.ports.total}}){{/if}}{{#if (eq id "cargo")}} ({{@root.ship.hold.occupied}}){{/if}}</span>{{#if (eq id "ship")}}{{#if @root.ship.condition.tabDamage}}<span class="ouw25-tab-damage" style="font-size: {{@root.ship.condition.tabIconPercent}}%">{{#each @root.ship.condition.tabDamage}}<span role="img" aria-label="{{#if beyondLimit}}{{localize "OUW25.ShipCondition.BeyondLimit" number=number}}{{else}}{{localize "OUW25.ShipCondition.Damage" number=number}}{{/if}}">{{#if @root.ship.condition.tabDestroyed}}&#x1F480;{{else}}&#x1F4A5;{{/if}}</span>{{/each}}</span>{{/if}}{{/if}}</button>
     {{/each}}
   </nav>
   {{#unless ship}}{{> ouw25-journal-index}}{{/unless}}
@@ -227,7 +273,7 @@
       {{> ouw25-ship-damage}}
       </div>
       <div class="ouw25-ship-stats">
-        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong><span{{#if ship.voyage.forced}} class="ouw25-speed-forced" title="{{localize "OUW25.Voyage.ForcedOn"}}"{{/if}}>{{ship.voyage.speed}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong><span{{#if ship.voyage.forced}} class="ouw25-speed-forced" data-tooltip-text="{{localize "OUW25.Voyage.ForcedOn"}}"{{/if}}>{{ship.voyage.speed}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong><span>{{ship.voyage.fuelPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.ProvisionsRate"}}</span><strong><span>{{ship.voyage.provisionsPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.FreeMountsLabel"}}</span><strong><span>{{ship.freeMounts}}</span></strong></div>
@@ -238,7 +284,7 @@
         {{localize "OUW25.Voyage.Crew"}}
         <span class="ouw25-ship-resource-value">
           <input type="number" name="system.crewCount" min="0" max="9007199254740991" step="1" value="{{ship.crewCount}}" required {{#unless editable}}readonly{{/unless}}>
-          <span title="{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}">{{localize "OUW25.Voyage.Capacity" capacity=ship.voyage.crewCapacity}}</span>
+          <span data-tooltip-text="{{localize "OUW25.Voyage.CrewSummary" crew=ship.crewCount capacity=ship.voyage.crewCapacity band=(localize ship.voyage.crewBandLabel)}}">{{localize "OUW25.Voyage.Capacity" capacity=ship.voyage.crewCapacity}}</span>
         </span>
       </label>
       <label>
@@ -257,7 +303,7 @@
         {{localize "OUW25.Voyage.Unrest"}}
         <span class="ouw25-ship-resource-value">
           <input type="number" name="system.unrest" min="0" max="25" step="1" value="{{ship.unrestInput}}" required {{#unless editable}}readonly{{/unless}}>
-          <span title="{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}">{{localize "OUW25.Voyage.Capacity" capacity=25}}</span>
+          <span data-tooltip-text="{{localize "OUW25.Voyage.UnrestCurrent" unrest=ship.voyage.unrest}}">{{localize "OUW25.Voyage.Capacity" capacity=25}}</span>
         </span>
       </label>
       </div>
@@ -319,7 +365,7 @@
             {{> ouw25-sort-heading label="OUW25.Contact.Relation"}}
             {{> ouw25-sort-heading label="OUW25.Contact.Debt" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
-            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+            {{#if editable}}<th scope="col" class="ouw25-debt-actions">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
@@ -360,7 +406,7 @@
               {{> ouw25-sort-heading label="OUW25.Port.Region"}}
               {{> ouw25-sort-heading label="OUW25.Port.Description"}}
               <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
-              {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+              {{#if editable}}<th scope="col" class="ouw25-debt-actions">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
             </tr></thead>
             <tbody>
               {{#each ports.entries}}
@@ -397,7 +443,7 @@
             {{> ouw25-sort-heading label="OUW25.Contract.Deadline"}}
             {{> ouw25-sort-heading label="OUW25.Contract.Cost" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
-            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+            {{#if editable}}<th scope="col" class="ouw25-debt-actions">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
@@ -440,7 +486,7 @@
             {{> ouw25-sort-heading label="OUW25.Cargo.Quantity" numeric=true}}
             {{> ouw25-sort-heading label="OUW25.Cargo.Volume" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
-            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+            {{#if editable}}<th scope="col" class="ouw25-debt-actions">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
@@ -537,31 +583,31 @@
   {{/ouw25-tab}}
   {{else}}
   {{#*inline "ouw25-creditors"}}
-    <div class="ouw25-sheet-column">
   {{#if ledger}}
-    <p class="ouw25-ledger-totals">{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
     <fieldset class="ouw25-ledger" aria-label="{{localize "OUW25.Debt.Title"}}">
-      {{#each ledger.groups}}
-        <div data-search-key="debt-{{label}}">
-        {{> ouw25-record-search}}
-        <table class="ouw25-debt-table">
-          <caption><h4>{{localize label}}</h4></caption>
+        <table class="ouw25-debt-table" data-record-group="debt">
+          <caption>
+            <h4>{{localize "OUW25.Tabs.creditors"}}</h4>
+            <p class="ouw25-ledger-totals">{{localize "OUW25.Debt.Totals" payable=ledger.totals.payable receivable=ledger.totals.receivable}}</p>
+          </caption>
           <thead>
             <tr>
-              {{> ouw25-sort-heading label="OUW25.Debt.Counterparty"}}
-              {{> ouw25-sort-heading label="OUW25.Debt.Location"}}
-              {{> ouw25-sort-heading label="OUW25.Debt.Amount" numeric=true}}
+              {{> ouw25-sort-heading label="OUW25.Debt.TableName" key="name"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.Location" key="location"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.TableWho" key="who"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.Amount" numeric=true key="amount"}}
               <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
               {{#if @root.editable}}
-                <th scope="col">{{localize "OUW25.Debt.Actions"}}</th>
+                <th scope="col" class="ouw25-debt-actions">{{localize "OUW25.Debt.Actions"}}</th>
               {{/if}}
             </tr>
           </thead>
           <tbody>
-            {{#each entries}}
-              <tr data-record-row data-search-text="{{name}} {{location}}">
+            {{#each ledger.entries}}
+              <tr data-record-row data-search-text="{{name}} {{location}} {{localize directionLabel}} {{amount}}">
                 <th scope="row">{{name}}</th>
                 <td>{{#if location}}{{location}}{{else}}{{localize "OUW25.Debt.NoLocation"}}{{/if}}</td>
+                <td>{{localize directionLabel}}</td>
                 <td class="ouw25-debt-amount">{{amount}}</td>
                 {{> ouw25-record-journal recordType="debt"}}
                 {{#if @root.editable}}
@@ -571,31 +617,26 @@
                 {{/if}}
               </tr>
             {{else}}
-              <tr><td colspan="{{#if @root.editable}}5{{else}}4{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
+              <tr><td colspan="{{#if @root.editable}}6{{else}}5{{/if}}">{{localize "OUW25.Debt.Empty"}}</td></tr>
             {{/each}}
-            <tr data-search-no-matches hidden><td colspan="{{#if @root.editable}}5{{else}}4{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
+            <tr data-search-no-matches hidden><td colspan="{{#if @root.editable}}6{{else}}5{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
           </tbody>
         </table>
-        </div>
-      {{/each}}
-      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="debt">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="debt" data-tooltip="{{localize "OUW25.Debt.Add"}}">{{localize "OUW25.Debt.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
-    </div>
   {{/inline}}
   {{#*inline "ouw25-relationship-list"}}
-    <div class="ouw25-sheet-column">
-    <fieldset class="ouw25-relationships" aria-label="{{localize tab.label}}">
-        <div data-search-key="relationship-{{kind}}">
-        {{> ouw25-record-search}}
-        <table class="ouw25-debt-table" aria-label="{{localize tab.label}}">
+    <fieldset class="ouw25-relationships" aria-label="{{localize label}}">
+        <table class="ouw25-debt-table" data-record-group="{{kind}}" aria-label="{{localize label}}">
+          <caption><h4>{{localize label}}</h4></caption>
           <thead>
             <tr>
-              {{> ouw25-sort-heading label="OUW25.Debt.Counterparty"}}
-              {{> ouw25-sort-heading label="OUW25.Debt.Location"}}
-              {{> ouw25-sort-heading label="OUW25.Relationship.Reason"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.Counterparty" key="name"}}
+              {{> ouw25-sort-heading label="OUW25.Debt.Location" key="location"}}
+              {{> ouw25-sort-heading label="OUW25.Relationship.Reason" key="reason"}}
               <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
-              {{#if @root.editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+              {{#if @root.editable}}<th scope="col" class="ouw25-debt-actions">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
             </tr>
           </thead>
           <tbody>
@@ -617,10 +658,8 @@
             <tr data-search-no-matches hidden><td colspan="{{#if @root.editable}}5{{else}}4{{/if}}">{{localize "OUW25.Search.NoMatches"}}</td></tr>
           </tbody>
         </table>
-        </div>
-      {{#if @root.editable}}<button type="button" data-action="editRecord" data-record-type="relationship" data-record-direction="{{kind}}">{{localize "OUW25.Relationship.Add"}}</button>{{/if}}
+      {{#if @root.editable}}<button type="button" data-action="editRecord" data-record-type="relationship" data-record-direction="{{kind}}" data-tooltip="{{localize "OUW25.Relationship.Add"}}">{{localize "OUW25.Relationship.Add"}}</button>{{/if}}
     </fieldset>
-    </div>
   {{/inline}}
   {{#*inline "ouw25-items"}}
     <div class="ouw25-sheet-column">
@@ -634,7 +673,7 @@
             {{> ouw25-sort-heading label="OUW25.Possession.Description"}}
             {{> ouw25-sort-heading label="OUW25.Possession.Cost" numeric=true}}
             <th scope="col" class="ouw25-record-note">{{localize "OUW25.Journal.Column"}}</th>
-            {{#if editable}}<th scope="col">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
+            {{#if editable}}<th scope="col" class="ouw25-debt-actions">{{localize "OUW25.Debt.Actions"}}</th>{{/if}}
           </tr>
         </thead>
         <tbody>
@@ -656,7 +695,7 @@
         </tbody>
       </table>
       </div>
-      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="possession">{{localize "OUW25.Possession.Add"}}</button>{{/if}}
+      {{#if editable}}<button type="button" data-action="editRecord" data-record-type="possession" data-tooltip="{{localize "OUW25.Possession.Add"}}">{{localize "OUW25.Possession.Add"}}</button>{{/if}}
     </fieldset>
   {{/if}}
     </div>
@@ -665,7 +704,7 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Identity.HiringTitle"}}
       <div class="ouw25-choice-row">
-        <select class="ouw25-choice-heading" name="system.hiring" aria-label="{{localize "OUW25.Identity.HiringTitle"}}" {{#unless editable}}disabled{{/unless}}>
+        <select class="ouw25-choice-heading" name="system.hiring" aria-label="{{localize "OUW25.Identity.HiringTitle"}}" data-tooltip="{{localize "OUW25.Tooltip.Hiring"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each identity.hiring}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
@@ -676,7 +715,7 @@
         {{#if identity.hiringHelp}}<p>{{localize identity.hiringHelp}}</p>{{/if}}
         {{#if editable}}
           {{#each identity.actions}}
-            <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{caption}}</button>
+            <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}" data-tooltip="{{localize "OUW25.Tooltip.PersonalAction" action=label}}">{{caption}}</button>
           {{/each}}
         {{/if}}
       </div>
@@ -703,13 +742,13 @@
         <div class="ouw25-merchant-profile-fields">
         {{#if identity}}
           <div class="ouw25-choice-row ouw25-identity ouw25-rolled-input">
-            <input type="text" name="name" aria-label="{{localize "OUW25.Identity.Name"}}" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
+            <input type="text" name="name" aria-label="{{localize "OUW25.Identity.Name"}}" data-tooltip="{{localize "OUW25.Tooltip.Name"}}" value="{{identity.name}}" required {{#unless editable}}readonly{{/unless}}>
             {{#if editable}}{{> ouw25-roll-icon creation="name" label="OUW25.Creation.RollName"}}{{/if}}
           </div>
         {{/if}}
         {{#if condition}}
           <div class="ouw25-choice-row">
-            <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" {{#unless editable}}disabled{{/unless}}>
+            <select name="system.specialty" aria-label="{{localize "OUW25.Specialty.Title"}}" data-tooltip="{{localize "OUW25.Tooltip.Specialty"}}" {{#unless editable}}disabled{{/unless}}>
               {{#each condition.specialties}}
                 <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}{{#if help}} &mdash; {{localize help}}{{/if}}</option>
               {{/each}}
@@ -725,7 +764,7 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Identity.Dream"}}
       <div class="ouw25-choice-row">
-        <textarea name="system.dream" aria-label="{{localize "OUW25.Identity.Dream"}}" rows="1" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
+        <textarea name="system.dream" aria-label="{{localize "OUW25.Identity.Dream"}}" data-tooltip="{{localize "OUW25.Tooltip.Dream"}}" rows="1" {{#unless editable}}readonly{{/unless}}>{{identity.dream}}</textarea>
         {{#if editable}}{{> ouw25-roll-icon creation="dream" label="OUW25.Creation.RollDream"}}{{/if}}
       </div>
     </fieldset>
@@ -740,7 +779,7 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Past.Title"}}
       <div class="ouw25-choice-row">
-        <select class="ouw25-choice-heading" name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" {{#unless editable}}disabled{{/unless}}>
+        <select class="ouw25-choice-heading" name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" data-tooltip="{{localize "OUW25.Tooltip.Past"}}" {{#unless editable}}disabled{{/unless}}>
           {{#each condition.pasts}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
@@ -754,7 +793,7 @@
           {{#if pastMoves.actions}}
             <div class="ouw25-personal-actions">
               {{#each pastMoves.actions}}
-                <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}">{{caption}}</button>
+                <button type="button" data-action="rollPersonalAction" data-source="{{source}}" data-profile="{{value}}" data-move="{{id}}" data-tooltip="{{localize "OUW25.Tooltip.PersonalAction" action=label}}">{{caption}}</button>
               {{/each}}
             </div>
             <p>{{localize "OUW25.PersonalAction.Manual"}}</p>
@@ -765,46 +804,6 @@
     </fieldset>
   {{/if}}
   {{#if identity}}{{> ouw25-hiring}}{{/if}}
-    </div>
-    </div>
-    <div class="ouw25-sheet-column ouw25-merchant-sidebar">
-    {{> ouw25-finances}}
-  {{#if condition}}
-    <div class="ouw25-luck">
-      <output class="ouw25-luck-value" tabindex="0" {{#if editable}}draggable="true"{{/if}} aria-label="{{localize "OUW25.Condition.Luck" count=condition.luck}}" data-tooltip="{{localize "OUW25.Condition.LuckHelp"}}"><span>{{condition.luck}}</span></output>
-      {{#if editable}}
-        <div class="ouw25-luck-actions">
-          <button type="button" data-action="changeLuck" data-luck="add" aria-label="{{localize "OUW25.Condition.AddLuck"}}" data-tooltip="{{localize "OUW25.Condition.AddLuck"}}" {{#unless condition.canAdd}}disabled{{/unless}}><span>+</span></button>
-          <button type="button" data-action="changeLuck" data-luck="spend" aria-label="{{localize "OUW25.Condition.SpendLuck"}}" data-tooltip="{{localize "OUW25.Condition.SpendLuck"}}" {{#unless condition.canSpend}}disabled{{/unless}}><span>&minus;</span></button>
-        </div>
-      {{/if}}
-    </div>
-    <div class="ouw25-merchant-wounds">
-      <div class="ouw25-wound-slots" data-count="{{condition.wounds.length}}">
-        {{#each condition.wounds}}
-          <label class="ouw25-condition-check">
-            <input type="checkbox" name="system.wound{{slot}}" aria-label="{{#if lethal}}{{localize "OUW25.Condition.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Condition.Wound" slot=slot}}{{/if}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
-            <span aria-hidden="true">{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}</span>
-          </label>
-        {{/each}}
-      </div>
-      {{#if condition.showFragile}}
-        <label>
-          <input type="checkbox" name="system.fragile" {{checked condition.fragile}} {{#unless editable}}disabled{{/unless}}>
-          {{localize "OUW25.Past.Fragile"}}
-        </label>
-      {{/if}}
-    </div>
-  {{/if}}
-    <div class="ouw25-merchant-tools">
-      <button type="button" class="ouw25-sidebar-card ouw25-bargain-reference" data-action="openBargain" data-tooltip="{{localize "OUW25.BargainCalc.Open"}}" {{#unless editable}}disabled{{/unless}}>
-        <span>{{localize "OUW25.BargainCalc.Title"}}</span>
-      </button>
-    {{#if showCollision}}
-      <button type="button" class="ouw25-sidebar-card ouw25-collision" data-action="rollCollision" data-tooltip="{{localize "OUW25.Unluck.Open"}}">
-        <span>{{localize "OUW25.Unluck.ToCheck"}}</span>
-      </button>
-    {{/if}}
     </div>
     </div>
   {{/ouw25-tab}}
@@ -837,7 +836,7 @@
       {{/if}}
       {{#if @root.editable}}
         <div class="ouw25-profile-details">
-          <button type="button" data-action="editTrait" data-creation="{{kind}}">{{localize add}}</button>
+          <button type="button" data-action="editTrait" data-creation="{{kind}}" data-tooltip="{{localize add}}">{{localize add}}</button>
         </div>
       {{/if}}
     </fieldset>
@@ -846,13 +845,14 @@
   {{#> ouw25-tab tab=tabs.items}}
     {{> ouw25-items}}
   {{/ouw25-tab}}
-  {{#each relationships}}
-    {{#> ouw25-tab tab=(lookup @root.tabs tab)}}
-      {{> ouw25-relationship-list}}
-    {{/ouw25-tab}}
-  {{/each}}
-  {{#> ouw25-tab tab=tabs.creditors}}
-    {{> ouw25-creditors}}
+  {{#> ouw25-tab tab=tabs.contacts}}
+    <div class="ouw25-sheet-column" data-search-key="merchant-contacts" data-sort-groups>
+      {{> ouw25-record-search}}
+      {{#each relationships}}
+        {{> ouw25-relationship-list}}
+      {{/each}}
+      {{> ouw25-creditors}}
+    </div>
   {{/ouw25-tab}}
   {{#> ouw25-tab tab=tabs.notes}}
     <div class="ouw25-sheet-column">
@@ -861,4 +861,5 @@
   {{/ouw25-tab}}
   {{/if}}
   </div>
+  {{#if identity}}{{> ouw25-merchant-sidebar}}{{/if}}
 </section>

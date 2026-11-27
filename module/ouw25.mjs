@@ -20,6 +20,8 @@ import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, j
 import { openBargain } from "./bargain-dialog.mjs";
 import { openUnluck, renderLuckMarks } from "./unluck-dialog.mjs";
 import { installTooltipDelay } from "./tooltip-delay.mjs";
+import { renderSystemInfo } from "./settings-sidebar.mjs";
+import { renderBrandedPause } from "./pause.mjs";
 import { findEligibleCaptain, firstEligibleCaptain, founderActor, hasTraitPair, isPastLocked, publishCaptainChange, reconcileCaptain, resolveCaptain } from "./captain.mjs";
 
 const SYSTEM_ID = "ouw25";
@@ -1966,6 +1968,8 @@ function guardTraitChange(item) {
 }
 
 Hooks.once("init", () => {
+  Hooks.on("renderSettings", (_app, html) => renderSystemInfo(html));
+  Hooks.on("renderGamePause", (_app, html) => renderBrandedPause(html));
   Hooks.on("preUpdateItem", guardTraitChange);
   Hooks.on("preDeleteItem", guardTraitChange);
   Hooks.on("createItem", (item, _options, userId) => lockPastAfterTrait(item, userId));

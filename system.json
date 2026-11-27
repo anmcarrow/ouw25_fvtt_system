@@ -1,13 +1,19 @@
 {
   "id": "ouw25",
   "title": "Укрытое море: Благословенный прилив",
-  "description": "Ранняя сборка системы для Foundry VTT: листы Коммерсанта и Кооператива, деньги и проверка (не)удачи.",
-  "version": "0.1.113",
+  "description": "Система для настольной ролевой игры «Укрытое море: Благословенный прилив»: листы Коммерсанта и Кооператива, инструменты проверок, драматический размен и управление рейсом. Ранняя сборка для Foundry VTT 14.",
+  "version": "0.1.114",
   "compatibility": {
     "minimum": "14",
     "verified": "14.370",
     "maximum": "14"
   },
+  "authors": [
+    {
+      "name": "anmcarrow",
+      "url": "https://github.com/anmcarrow"
+    }
+  ],
   "esmodules": [
     "module/ouw25.mjs"
   ],
@@ -28,8 +34,16 @@
     }
   ],
   "url": "https://github.com/anmcarrow/ouw25_fvtt_system",
+  "readme": "https://github.com/anmcarrow/ouw25_fvtt_system#readme",
+  "bugs": "https://github.com/anmcarrow/ouw25_fvtt_system/issues",
+  "changelog": "https://github.com/anmcarrow/ouw25_fvtt_system/releases",
   "manifest": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/latest/download/system.json",
-  "download": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/download/v0.1.113/ouw25.zip",
+  "download": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/download/v0.1.114/ouw25.zip",
+  "flags": {
+    "ouw25": {
+      "wiki": "https://wiki.ukrytoemore.ru/"
+    }
+  },
   "documentTypes": {
     "Actor": {
       "merchant": {},

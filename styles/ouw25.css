@@ -5,6 +5,68 @@
   filter: invert(1);
 }
 
+#pause.ouw25-pause {
+  background: linear-gradient(to right, transparent, rgba(45, 24, 66, 0.9) 40%, rgba(45, 24, 66, 0.9) 60%, transparent);
+  gap: 0.5rem;
+}
+
+#pause.ouw25-pause img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+#pause.ouw25-pause figcaption {
+  color: #f3efe3;
+  font-family: "Viaoda Libre", Georgia, serif;
+  text-shadow: 0 2px 4px #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #pause.ouw25-pause.paused {
+    animation: none;
+  }
+}
+
+.ouw25-settings-info .ouw25-system-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.ouw25-settings-info .ouw25-system-badge > img {
+  width: 72px;
+  height: 72px;
+  border: 0;
+  object-fit: contain;
+}
+
+.ouw25-settings-info .ouw25-system-title {
+  font-weight: bold;
+}
+
+.ouw25-settings-info .ouw25-system-badge > .value {
+  position: relative;
+}
+
+.ouw25-settings-info .notification-pip {
+  position: initial;
+  margin-left: 0.25rem;
+  color: var(--color-text-accent);
+}
+
+.ouw25-settings-info .ouw25-system-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.75rem;
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+}
+
 .ouw25,
 .application.ouw25-journal,
 body.game .chat-message:has(.ouw25-chat-card) {

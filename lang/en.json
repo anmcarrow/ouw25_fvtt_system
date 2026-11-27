@@ -8,6 +8,11 @@
   },
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
+    "SystemInfo": {
+      "ReleaseNotes": "Release notes",
+      "Issues": "Issue tracker",
+      "Wiki": "Wiki"
+    },
     "TokenMigrationError": "Couldn't update default token images. The system will retry when a GM next opens the world.",
     "Notes": "Notes",
     "Save": "Save",

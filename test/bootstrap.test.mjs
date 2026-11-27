@@ -71,6 +71,8 @@ test("the built package registers models and an editable notes sheet for its dec
 
   await import(new URL(manifest.esmodules[0], dist));
   const captainUpdateHook = hooks.get("updateActor");
+  assert.equal(typeof hooks.get("renderSettings"), "function");
+  assert.equal(typeof hooks.get("renderGamePause"), "function");
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   assert.deepEqual(Object.keys(CONFIG.Item.dataModels), Object.keys(manifest.documentTypes.Item));
@@ -929,7 +931,7 @@ test("the built package registers models and an editable notes sheet for its dec
   hooks.get("deleteActor")(merchant);
   assert.equal(renders, 2);
   await memberSheet._onClose({});
-  assert.deepEqual([...hooks.keys()], ["preUpdateItem", "preDeleteItem", "renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
+  assert.deepEqual([...hooks.keys()], ["renderSettings", "renderGamePause", "preUpdateItem", "preDeleteItem", "renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
 
   const placeSheet = new Sheet();
   placeSheet.isEditable = true;

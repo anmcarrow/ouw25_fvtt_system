@@ -7,6 +7,113 @@ const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", impo
 const template = await readFile(new URL("../dist/ouw25/templates/actor-notes.hbs", import.meta.url), "utf8");
 const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/actor-create.hbs", import.meta.url), "utf8");
 
+test("ordinary system dialogs use paper and raised buttons without restyling the tools", () => {
+  const scope = String.raw`body\.game \.application\.ouw25\.dialog:not\(\.ouw25-bargain-dialog, \.ouw25-unluck-dialog\)`;
+  assert.match(styles, new RegExp(`${scope} \\.window-header\\s*\\{[^}]*header_strip1\\.webp`, "s"));
+  assert.match(styles, new RegExp(`${scope} \\.window-content\\s*\\{[^}]*sheet_bgr\\.webp`, "s"));
+  assert.match(styles, new RegExp(`${scope} \\.dialog-content\\s*\\{[^}]*background:\\s*transparent`, "s"));
+  assert.match(styles, /\.ouw25,\s*\.application\.ouw25-journal,\s*body\.game \.chat-message:has\(\.ouw25-chat-card\)\s*\{[^}]*--ouw25-dialog-button-color:\s*#915450;/s);
+  assert.match(styles, new RegExp(`${scope}\\s*\\{[^}]*--ouw25-dialog-button-gradient:\\s*linear-gradient\\([^}]*var\\(--ouw25-dialog-button-color\\)`, "s"));
+  assert.match(styles, new RegExp(`${scope} :is\\(\\.dialog-content, \\.form-footer\\) button\\s*\\{[^}]*border-radius:\\s*0\\.65rem`, "s"));
+  assert.match(styles, new RegExp(`${scope} :is\\(\\.dialog-content, \\.form-footer\\) button:not\\(:disabled\\)\\s*\\{[^}]*background:\\s*var\\(--ouw25-dialog-button-gradient\\)[^}]*box-shadow`, "s"));
+  assert.match(styles, new RegExp(`${scope} :is\\(\\.dialog-content, \\.form-footer\\) button:hover:not\\(:disabled\\)\\s*\\{[^}]*background:\\s*var\\(--ouw25-dialog-button-gradient\\)`, "s"));
+  assert.match(styles, new RegExp(`${scope} :is\\(\\.dialog-content, \\.form-footer\\) button:focus-visible\\s*\\{[^}]*outline:`, "s"));
+});
+
+test("system messages use a width-scaled frame while retaining private message borders", async () => {
+  assert.match(styles, /body\.game \.chat-message:has\(\.ouw25-chat-card\)\s*\{[^}]*background:\s*#f3efe3 url\("\.\/images\/card_bgr2\.webp"\) center top \/ 100% auto no-repeat;[^}]*border-color:/s);
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\)\s*\{[^}]*border-radius:\s*2px;/s);
+  assert.match(styles, /\.chat-message\.whisper:has\(\.ouw25-chat-card\)\s*\{\s*border-color:\s*var\(--color-whisper-border\);/);
+  assert.match(styles, /\.chat-message\.blind:has\(\.ouw25-chat-card\)\s*\{\s*border-color:\s*var\(--color-blind-border\);/);
+  assert.ok((await readFile(new URL("../dist/ouw25/styles/images/card_bgr2.webp", import.meta.url))).length > 0);
+});
+
+test("system messages reserve space for a non-interactive horizontal perforation", () => {
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\):not\(\.deleting\)\s*\{\s*padding-block-start:\s*38px;/);
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\):not\(\.deleting\)::before\s*\{[^}]*height:\s*30px;[^}]*radial-gradient[^}]*radial-gradient[^}]*background-size:\s*24px 20px;[^}]*background-repeat:\s*repeat-x;[^}]*pointer-events:\s*none;/s);
+});
+
+test("system chat cards share width-scaled paper without tiling or cropping to height", async () => {
+  assert.match(styles, /\.ouw25-chat-card\s*\{[^}]*background:\s*#f3efe3 url\("\.\/images\/card_bgr\.webp"\) center top \/ 100% auto no-repeat;/s);
+  assert.match(styles, /\.ouw25-chat-card\s*\{[^}]*border-radius:\s*2px;/s);
+  assert.match(styles, /\.ouw25-chat-card\s*\{[^}]*border:\s*0;[^}]*box-shadow:\s*0 2px 4px /s);
+  assert.ok((await readFile(new URL("../dist/ouw25/styles/images/card_bgr.webp", import.meta.url))).length > 0);
+});
+
+test("chat card clips use the standard image without affecting text layout", () => {
+  assert.match(styles, /\.chat-message \.ouw25-chat-card\s*\{\s*position:\s*relative;/);
+  assert.match(styles, /\.chat-message \.ouw25-chat-card::before\s*\{[^}]*inset-block-start:\s*-6px;[^}]*inset-inline-end:\s*50px;[^}]*inline-size:\s*24\.5px;[^}]*block-size:\s*50px;[^}]*clipper_small\.webp[^}]*pointer-events:\s*none;/s);
+  assert.doesNotMatch(styles, /\.chat-message \.ouw25-chat-card h3\s*\{[^}]*padding-inline:/s);
+  assert.doesNotMatch(styles, /\.chat-message \.ouw25-chat-card:not\(:has\(> header\)\) > p:first-child\s*\{/);
+});
+
+test("system chat card headers use the card background without a separate image", async () => {
+  assert.match(styles, /\.ouw25-chat-card header\s*\{[^}]*margin:\s*-0\.6rem -0\.6rem 0\.4rem;[^}]*padding:\s*0\.73125rem 0\.6rem 0\.3rem;/s);
+  assert.doesNotMatch(styles, /--ouw25-chat-card-header-image|\.ouw25-chat-card header::before/);
+  const captainCard = await readFile(new URL("../dist/ouw25/templates/captain-card.hbs", import.meta.url), "utf8");
+  assert.match(captainCard, /^<article class="ouw25-chat-card">/);
+});
+
+test("system cards separate their headings and interactive controls", async () => {
+  assert.match(styles, /\.ouw25-chat-card header::after\s*\{[^}]*aspect-ratio:\s*512 \/ 51;[^}]*card_divider1\.webp[^}]*pointer-events:\s*none;/s);
+  assert.doesNotMatch(styles, /\.ouw25-chat-card header\s*\{[^}]*border-bottom:/s);
+  assert.match(styles, /\.ouw25-chat-card h3\s*\{[^}]*font-size:\s*calc\(var\(--font-h3-size,\s*1\.75rem\) \* 0\.646875\);/s);
+  assert.match(styles, /\.ouw25-chat-card h3\s*\{[^}]*text-align:\s*center;/s);
+  assert.match(styles, /\.ouw25-chat-card p\s*\{\s*font-size:\s*1\.15em;/);
+  assert.match(styles, /\.ouw25-chat-card p\s*\{[^}]*text-wrap:\s*pretty;/s);
+  assert.match(styles, /\.ouw25-check-card details\s*\{\s*margin-top:\s*1rem;/);
+  assert.match(styles, /\.chat-message \.message-header \.flavor-text:has\(\.ouw25-chat-card\)\s*\{\s*margin-top:\s*6px;/);
+  assert.match(styles, /\.chat-message \.message-content:has\(\.ouw25-chat-card\)\s*\{\s*padding-top:\s*6px;/);
+  assert.match(styles, /\.chat-message:has\(\.message-header \.ouw25-chat-card\) \.message-content:has\(\.dice-roll\)\s*\{\s*padding-top:\s*12px;/);
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\) \.message-header\s*\{[^}]*font-family:\s*"Alice"/s);
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\) \.message-header \.message-sender\s*\{\s*font-family:\s*"Alice"/);
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\) \.dice-roll :is\(\.dice-formula, \.dice-total, \.part-total, \.dice-rolls \.roll\)\s*\{\s*font-family:\s*"Alice"/);
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\) \.dice-roll \.dice-formula\s*\{\s*font-size:\s*1\.25em;/);
+  assert.ok((await readFile(new URL("../dist/ouw25/styles/images/card_divider1.webp", import.meta.url))).length > 0);
+});
+
+test("system dice results use the sheet field surface and accent border", () => {
+  assert.match(styles, /\.chat-message:has\(\.ouw25-chat-card\) \.dice-roll :is\(\.dice-formula, \.dice-total\)\s*\{[^}]*background:\s*var\(--ouw25-field-background\);[^}]*border:\s*1px solid transparent;[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;/s);
+  assert.match(styles, /@media \(forced-colors: active\)\s*\{\s*body\.game \.chat-message:has\(\.ouw25-chat-card\) \.dice-roll :is\(\.dice-formula, \.dice-total\)\s*\{\s*border-image:\s*none;\s*border-color:\s*CanvasText;/s);
+});
+
+test("card details use a shadow-free disclosure with an accent divider", async () => {
+  assert.match(styles, /body\.game \.ouw25-chat-card,\s*body\.game \.ouw25-chat-card \*\s*\{\s*text-shadow:\s*none;/);
+  assert.match(styles, /\.ouw25-check-card details > summary\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*center;[^}]*list-style:\s*none;[^}]*font-family:\s*"Alice"[^}]*font-size:\s*1\.25em;[^}]*font-weight:\s*bold;[^}]*border-image:\s*var\(--ouw25-border-gradient\) 0 0 1;/s);
+  assert.match(styles, /\.ouw25-check-card details > summary::-webkit-details-marker\s*\{\s*display:\s*none;/);
+  assert.doesNotMatch(styles, /\.ouw25-check-card details > summary::before\s*\{/);
+  assert.match(styles, /\.ouw25-check-card details > summary::after\s*\{\s*content:\s*"▸";/);
+  assert.match(styles, /\.ouw25-check-card details\[open\] > summary::after\s*\{\s*content:\s*"▾";/);
+  assert.match(styles, /@media \(forced-colors: active\)\s*\{\s*\.ouw25-check-card details > summary\s*\{\s*border-image:\s*none;\s*border-bottom-color:\s*CanvasText;/s);
+  const checkCard = await readFile(new URL("../dist/ouw25/templates/check-card.hbs", import.meta.url), "utf8");
+  assert.match(checkCard, /<details>\s*<summary>\{\{localize "OUW25\.CheckCard\.Details"\}\}<\/summary>/);
+});
+
+test("bargain card text matches voyage introductions without shrinking the details heading", async () => {
+  const checkCard = await readFile(new URL("../dist/ouw25/templates/check-card.hbs", import.meta.url), "utf8");
+  assert.match(checkCard, /\{\{#if bargainCard\}\} ouw25-bargain-card\{\{\/if\}\}/);
+  assert.match(styles, /\.ouw25-bargain-card p\s*\{\s*font-size:\s*1\.035em;/);
+  assert.match(styles, /\.ouw25-bargain-card details > dl\s*\{\s*font-size:\s*0\.9em;/);
+  assert.match(styles, /\.ouw25-bargain-card details > summary\s*\{\s*font-size:\s*calc\(var\(--font-size-12,\s*12px\) \* 1\.25\);/);
+});
+
+test("new chat cards do not repeat the message speaker in their headers", async () => {
+  const checkCard = await readFile(new URL("../dist/ouw25/templates/check-card.hbs", import.meta.url), "utf8");
+  const voyageCard = await readFile(new URL("../dist/ouw25/templates/voyage-card.hbs", import.meta.url), "utf8");
+  assert.match(checkCard, /<h3>\{\{title\}\}<\/h3>/);
+  assert.doesNotMatch(checkCard, /\{\{actorName\}\}/);
+  assert.match(voyageCard, /<\/header>\s*<p class="ouw25-voyage-card-intro">\{\{#if undo\}\}\{\{localize "OUW25\.Voyage\.CardUndoIntro"\}\}\{\{else\}\}\{\{localize "OUW25\.Voyage\.CardTravelIntro" shipName=shipName\}\}\{\{\/if\}\}<\/p>\s*<dl>/);
+  assert.match(styles, /\.ouw25-chat-card \.ouw25-voyage-card-intro\s*\{[^}]*font-size:\s*1\.035em;[^}]*font-style:\s*italic;[^}]*border-bottom:\s*1px solid transparent;[^}]*border-image:\s*var\(--ouw25-border-gradient\) 0 0 1;/s);
+  assert.match(styles, /@media \(forced-colors: active\)\s*\{\s*\.ouw25-chat-card \.ouw25-voyage-card-intro\s*\{\s*border-image:\s*none;\s*border-bottom-color:\s*CanvasText;/s);
+  const en = JSON.parse(await readFile(new URL("../dist/ouw25/lang/en.json", import.meta.url), "utf8"));
+  const ru = JSON.parse(await readFile(new URL("../dist/ouw25/lang/ru.json", import.meta.url), "utf8"));
+  assert.equal(en.OUW25.Voyage.CardTravelIntro.replace("{shipName}", "Ship"), "... and your Ship travelled some more...");
+  assert.equal(en.OUW25.Voyage.CardUndoIntro, "It was a dream, a dream...");
+  assert.ok(ru.OUW25.Voyage.CardTravelIntro.includes("{shipName}"));
+  assert.ok(ru.OUW25.Voyage.CardUndoIntro);
+  assert.doesNotMatch(voyageCard, /\{\{actorName\}\}/);
+});
+
 test("the Gambler uses the bundled etched metal background", async () => {
   assert.match(styles, /\.ouw25-unluck-dialog \.dialog-content\s*\{[^}]*background:[^;]*panel3\.webp[^;]*100% auto repeat-y local;/s);
   assert.ok((await readFile(new URL("../dist/ouw25/styles/images/panel3.webp", import.meta.url))).length > 0);
@@ -51,7 +158,11 @@ test("pension reference uses the standard accessible help control", () => {
   assert.match(template, /<div class="ouw25-pension-heading">\s*<h3>\{\{localize "OUW25\.Finance\.PensionLabel"\}\}:[\s\S]*?<\/h3>\s*<details class="ouw25-bargain-help ouw25-pension-reference">/);
   assert.match(template, /<details class="ouw25-bargain-help ouw25-pension-reference">\s*<summary data-tooltip="\{\{localize "OUW25\.Finance\.PensionReference"\}\}" aria-label="\{\{localize "OUW25\.Finance\.PensionReference"\}\}"><span aria-hidden="true">\?<\/span><\/summary>\s*<div class="ouw25-bargain-help-content"><p>\{\{localize "OUW25\.Finance\.PensionHelp"\}\}<\/p><\/div>/);
   assert.match(styles, /\.ouw25-pension-heading\s*\{\s*display:\s*grid;[^}]*grid-template-columns:\s*subgrid;/s);
+  assert.match(styles, /\.ouw25-pension > p\s*\{[^}]*font-family:\s*var\(--ouw25-font-accent\);[^}]*font-size:\s*1\.3em;/s);
   assert.match(styles, /\.ouw25-pension-controls\s*\{[^}]*grid-template-columns:\s*subgrid;[^}]*margin-block-start:\s*4px;/s);
+  assert.match(styles, /\.ouw25-pension-controls \+ p\s*\{\s*margin-block-start:\s*1\.220703125rem;/);
+  assert.match(styles, /\.ouw25-pension > p:first-of-type\s*\{\s*margin-block-end:\s*0\.30704rem;/);
+  assert.match(styles, /\.ouw25-pension > p \+ p\s*\{\s*margin-block-start:\s*0\.036rem;/);
   assert.match(styles, /\.ouw25-pension-reference\s*\{[^}]*justify-self:\s*center;/s);
 });
 
@@ -236,9 +347,17 @@ test("inactive sheet tabs retain their background without top or side edges", ()
 
 test("actor type headings use the bundled Roll20 header background", async () => {
   assert.match(template, /<header class="ouw25-sheet-heading ouw25-token-heading\{\{#if identity\}\} ouw25-merchant-heading\{\{\/if\}\}">[\s\S]*?<h2>\{\{localize actorTypeLabel\}\}<\/h2>/);
-  assert.match(styles, /\.ouw25-sheet-heading::before\s*\{[^}]*inset-inline:\s*-10px -1rem;[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) left center \/ calc\(100% \+ 1rem - 10px\) 100% no-repeat/s);
+  assert.match(styles, /\.ouw25-sheet-heading::before\s*\{[^}]*inset-block-start:\s*0;[^}]*inset-inline:\s*calc\(-1rem - var\(--ouw25-perforation-width\)\) -1rem;[^}]*aspect-ratio:\s*1524 \/ 85;[^}]*z-index:\s*-1;[^}]*translate:\s*0 5px;[^}]*background:\s*url\("\.\/images\/header_strip1\.webp"\) center \/ 100% 100% no-repeat/s);
+  assert.match(styles, /\.ouw25-sheet-heading\.ouw25-merchant-heading::before\s*\{\s*inset-inline-end:\s*auto;\s*inline-size:\s*calc\(min\(1120px, 100vw\) - 2rem - 2px\);\s*\}/);
   const asset = await readFile(new URL("../dist/ouw25/styles/images/header_strip1.webp", import.meta.url));
   assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+});
+
+test("saved status and sheet save button share a green color", () => {
+  assert.match(styles, /\.ouw25-sheet-heading\s*\{\s*--ouw25-save-color:\s*#3c7252;/);
+  assert.match(styles, /\.ouw25-notes \.ouw25-save-status\[data-state="saved"\]\s*\{\s*color:\s*var\(--ouw25-save-color\);/);
+  assert.match(styles, /\.ouw25-sheet-heading > button\[type="submit"\]\s*\{\s*--ouw25-button-color:\s*var\(--ouw25-save-color\);/);
+  assert.match(styles, /\.ouw25-save-status\[data-state="error"\],\s*\.ouw25 \.ouw25-save-status\[data-state="invalid"\]\s*\{\s*color:\s*var\(--ouw25-color-danger\);/);
 });
 
 test("actor headings use bundled tokens as accessible configuration buttons", async () => {
@@ -438,6 +557,7 @@ test("cooperative attributes put founders on the left and other blocks above the
   assert.doesNotMatch(right, /OUW25\.Founders\.Title/);
   assert.match(styles, /\.ouw25-sheet-column\.ouw25-cooperative-notes\s*\{\s*gap:\s*20px;/);
   assert.match(styles, /\.ouw25-cooperative-traits\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
+  assert.match(styles, /\.ouw25-cooperative-traits\s*\{[^}]*padding-block-start:\s*20px;/s);
   assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*0 0 auto;[^}]*block-size:\s*10em;/s);
   assert.match(template, /\{\{#unless ship\}\}\{\{> ouw25-journal-index\}\}\{\{\/unless\}\}\s*<div class="ouw25-tab-stack">/);
   assert.match(template, /\{\{#\*inline "ouw25-journal-index"\}\}\s*\{\{#if journalIndex\.length\}\}/);
@@ -511,6 +631,9 @@ test("ship resource capacities accompany their inputs while retaining calculated
 });
 
 test("ship travel indicators use restrained paper-and-brass surfaces", () => {
+  assert.match(template, /<div class="ouw25-ship-pair ouw25-ship-wide-pair">\s*\{\{#each ship\.qualities\}\}/);
+  assert.match(template, /<div class="ouw25-ship-pair ouw25-ship-wide-pair">\s*<div class="ouw25-sheet-column">\s*\{\{> ouw25-ship-list list=ship\.mounts\}\}[\s\S]*?\{\{> ouw25-ship-list list=ship\.gear\}\}/);
+  assert.match(styles, /\.ouw25-ship-wide-pair\s*\{\s*gap:\s*1\.5rem;/);
   assert.match(styles, /\.ouw25-ship-stats > div\s*\{[^}]*border-image:\s*var\(--ouw25-border-gradient\) 1;[^}]*background:\s*linear-gradient\(180deg,[^;]*\);[^}]*box-shadow:\s*inset 0 1px 2px/s);
   assert.match(styles, /\.ouw25-ship-heading > :is\(input, select\)\s*\{[^}]*box-shadow:\s*inset 0 1px 3px/);
   assert.match(styles, /\.ouw25-ship-layout fieldset\.ouw25-traits\s*\{[^}]*background-color:\s*var\(--ouw25-surface-translucent\);[^}]*box-shadow:\s*inset 0 1px 5px/s);
@@ -554,6 +677,7 @@ test("actor sheet hover and panel styles retain their distinct visual roles", ()
   assert.match(template, /data-action="tab"[^>]*><span[\s\S]*?>\{\{localize label\}\}/);
   assert.match(styles, /\.ouw25-sheet-tabs > button:not\(\.active\):hover > span\s*\{\s*color:\s*color-mix\(/);
   assert.match(styles, /background:\s*linear-gradient\(160deg, var\(--ouw25-button-color/);
+  assert.match(styles, /background:\s*linear-gradient\(160deg, var\(--ouw25-button-color, var\(--ouw25-dialog-button-color\)\)/);
   assert.match(styles, /background:\s*linear-gradient\(160deg, #617b98, #506b86 48%, #405a74\)/);
   assert.match(styles, /button:not\(:disabled\) > span\s*\{[^}]*background-clip:\s*text;[^}]*text-shadow:\s*none;/s);
 });
@@ -586,7 +710,8 @@ test("sheet finishing evokes a retro office without overriding existing paper", 
   assert.match(styles, /\.ouw25-debt-table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-greenbar\);/);
   assert.doesNotMatch(styles, /\.ouw25-notes \.ouw25-debt-table thead th\s*\{[^}]*background-image:/s);
   assert.match(styles, /p:is\(\[role="status"\], \[role="alert"\]\):not\(\.ouw25-voyage-statuses > p\)\s*\{\s*outline:/);
-  assert.match(styles, /\.ouw25-voyage-statuses > p:is\(\[role="status"\], \[role="alert"\]\)\s*\{\s*box-shadow:\s*inset/);
+  assert.match(styles, /\.ouw25-voyage-statuses > p:is\(\[role="status"\], \[role="alert"\]\)\s*\{\s*box-shadow:\s*2px 3px 6px rgba\(55, 15, 0, 0\.2\);/);
+  assert.match(styles, /\.ouw25-voyage-statuses > p\s*\{\s*padding:\s*5px 7\.8125px;/);
   assert.match(styles, /background-image:\s*var\(--ouw25-card-paper, url\("\.\/images\/smallpaper5\.webp"\)\);/);
   assert.doesNotMatch(styles, /--ouw25-dog-ear|--ouw25-sheet-edge/);
   assert.match(styles, /fieldset > legend,[\s\S]*?\{\s*background:\s*linear-gradient\(to bottom, var\(--ouw25-folder-light\)[^}]*margin-inline-start:\s*-0\.35rem;\s*padding-inline:\s*0\.35rem;/);
@@ -597,8 +722,13 @@ test("sheet finishing evokes a retro office without overriding existing paper", 
 test("record journals share the sheet palette and paper without perforation or tray", async () => {
   assert.match(styles, /\.ouw25-notes,\s*\.application\.ouw25-journal\s*\{\s*--ouw25-folder-light:/);
   assert.match(styles, /\.application\.ouw25-journal \.journal-entry-content\s*\{[^}]*sheet_bgr\.webp/s);
+  assert.match(styles, /\.application\.ouw25-journal:not\(\.journal-entry-page\) \.journal-header::before\s*\{[^}]*header_strip1\.webp/s);
   assert.doesNotMatch(styles, /\.application\.ouw25-journal \.journal-entry-pages\s*\{/);
-  assert.match(styles, /\.application\.ouw25-journal \.journal-sidebar[\s\S]*?panel1\.webp|panel1\.webp[\s\S]*?ouw25-journal/);
+  assert.match(styles, /\.application\.ouw25-journal \.journal-sidebar\s*\{[^}]*background:\s*url\("\.\/images\/leather\.webp"\) center \/ auto 100% no-repeat;/s);
+  assert.match(styles, /\.ouw25-journal \.journal-sidebar \.toc li\.page\.active\s*\{\s*border-image:\s*var\(--ouw25-border-gradient\) 1 0;/);
+  assert.match(styles, /\.ouw25-journal \.journal-sidebar \.toc li\.page\.active \+ li\.page:not\(\.active\)\s*\{\s*border-top-color:\s*transparent;/);
+  assert.doesNotMatch(styles, /\.application\.ouw25-journal\s*\{[^}]*background:\s*var\(--ouw25-journal-teal\)/s);
+  assert.ok((await readFile(new URL("../dist/ouw25/styles/images/leather.webp", import.meta.url))).length > 0);
   assert.match(styles, /\.ouw25-journal \.journal-entry-page table tbody tr:nth-child\(even\)\s*\{\s*background-color:\s*var\(--ouw25-greenbar\);/);
   assert.match(styles, /\.ouw25-journal \.journal-entry-page blockquote\s*\{[^}]*border-inline-start:\s*3px solid/s);
 });
@@ -613,6 +743,7 @@ test("hiring actions match past action dimensions and voyage content has bottom 
 test("sheet tool buttons match the corresponding dialog toolbar treatments", () => {
   assert.match(template, /data-action="openBargain"[^>]*>[\s\S]*?<span>\{\{localize "OUW25\.BargainCalc\.Title"\}\}<\/span>/);
   assert.match(template, /data-action="rollCollision"[^>]*>[\s\S]*?<span>\{\{localize "OUW25\.Unluck\.ToCheck"\}\}<\/span>/);
+  assert.match(styles, /\.ouw25-merchant-tools > button > span\s*\{\s*translate:\s*0 -3px;/);
   assert.match(styles, /\.ouw25-merchant-tools\s*\{[^}]*background:\s*#355253 url\("\.\/images\/panel1\.webp"\) center \/ cover no-repeat;[^}]*box-shadow:\s*0 8px 16px #000a, 0 3px 5px #000b;/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*linear-gradient\(160deg, #78303b 0%, #4f1725 40%, #2d0b16 100%\)[^}]*border-radius:\s*999px;/s);
   assert.match(styles, /\.ouw25-merchant-tools > button:is\([^)]*\)\s*\{[^}]*width:\s*min\(100%, calc\(\(125cqi - var\(--ouw25-sidebar-gap\)\) \* 0\.375\)\);[^}]*0 2px 3px rgba\(0, 0, 0, 0\.5\)/s);
@@ -661,6 +792,8 @@ test("the sheet uses light text surfaces with contrasting foreground colors", ()
   assert.ok(accentSoft, "button color must match the Roll20 translucent brown");
   const buttonSurface = composite(surface, accentSoft.slice(1, 4).map(Number), Number(accentSoft[4]));
 
+  assert.match(styles, /body\.game \.application:is\(\.ouw25, \.ouw25-journal\) :is\([\s\S]*?textarea\s*\):focus,\s*body\.game \.application\.ouw25:is\(\.ouw25-bargain-dialog, \.ouw25-unluck-dialog\)[\s\S]*?\):focus\s*\{\s*border:\s*2px solid transparent;\s*border-image:\s*var\(--ouw25-border-gradient\) 1;\s*outline:\s*none;/);
+  assert.match(styles, /@media \(forced-colors: active\) \{[\s\S]*?\.application:is\(\.ouw25, \.ouw25-journal\)[\s\S]*?\):focus\s*\{\s*border-image:\s*none;\s*outline:\s*2px solid Highlight;/);
   assert.match(styles, /color-scheme:\s*light;/);
   assert.match(styles, /\.ouw25 \.ouw25-notes \*\s*\{\s*color:\s*inherit;/);
   assert.match(styles, /body\.game \.application\.ouw25 \.ouw25-notes input\[type="checkbox"\]\s*\{(?=[^}]*--checkbox-background-color:\s*var\(--ouw25-checkbox-background\);)(?=[^}]*--checkbox-checked-color:\s*var\(--ouw25-checkbox-background\);)(?=[^}]*--checkbox-checkmark-color:\s*var\(--ouw25-color-surface\);)(?=[^}]*--checkbox-font-weight:\s*unset;)(?=[^}]*accent-color:\s*var\(--ouw25-checkbox-background\);)(?=[^}]*color-scheme:\s*light;)[^}]*\}/s);
@@ -751,6 +884,17 @@ test("the luck counter artwork extends 20px beyond each side of the original rin
   assert.match(rule, /inset:\s*calc\(-20px \/ var\(--ouw25-luck-scale\)\)/);
   assert.match(styles, /\.ouw25-luck-marks > \.ouw25-unluck-luck-mark\s*\{\s*width:\s*85%;/);
   assert.match(template, /<span class="ouw25-unluck-luck-marks ouw25-luck-marks" aria-hidden="true"><\/span><span class="ouw25-luck-number" style="--ouw25-luck-number-scale: \{\{condition\.luckNumberScale\}\}">/);
+});
+
+test("merchant wound label stays behind interactive wound controls", async () => {
+  assert.match(template, /<div class="ouw25-wound-slots" data-count="\{\{condition\.wounds\.length\}\}">\s*<span class="ouw25-wound-label" aria-hidden="true">\{\{localize "OUW25\.Condition\.WoundsTitle"\}\}<\/span>\s*\{\{#each condition\.wounds\}\}/);
+  assert.match(styles, /\.ouw25-merchant-wounds \.ouw25-wound-slots\s*\{\s*position:\s*relative;\s*isolation:\s*isolate;/);
+  assert.match(styles, /\.ouw25-wound-label\s*\{[^}]*position:\s*absolute;[^}]*z-index:\s*0;[^}]*color:\s*#000;[^}]*font-family:\s*var\(--ouw25-font-accent\);[^}]*font-size:\s*52\.326px;[^}]*opacity:\s*0\.5;[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.ouw25-merchant-wounds \.ouw25-wound-slots > \.ouw25-condition-check\s*\{\s*z-index:\s*1;/);
+  for (const [language, title] of [["en", "Wounds"], ["ru", "Раны"]]) {
+    const texts = JSON.parse(await readFile(new URL(`../dist/ouw25/lang/${language}.json`, import.meta.url), "utf8"));
+    assert.equal(texts.OUW25.Condition.WoundsTitle, title);
+  }
 });
 
 test("the luck counter has an outer shadow and brass-gradient numeral", () => {

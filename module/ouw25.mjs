@@ -14,11 +14,13 @@ import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
+import { canOperateVoyage, hasVoyageRole } from "./voyage-access.mjs";
 import { filterRecordTable, setupGroupedRecordSorting, setupRecordSorting } from "./record-search.mjs";
 import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink, styleSystemJournal } from "./record-journal.mjs";
 import { openBargain } from "./bargain-dialog.mjs";
 import { openUnluck, renderLuckMarks } from "./unluck-dialog.mjs";
 import { installTooltipDelay } from "./tooltip-delay.mjs";
+import { findEligibleCaptain, firstEligibleCaptain, founderActor, hasTraitPair, isPastLocked, publishCaptainChange, reconcileCaptain, resolveCaptain } from "./captain.mjs";
 
 const SYSTEM_ID = "ouw25";
 export function luckNumberScale(luck) {
@@ -57,6 +59,11 @@ const RECORD_LABELS = new Map([
 ]);
 const COOPERATIVE_RECORDS = new Set(["contact", "contract", "cargo", "port"]);
 const PENDING_VOYAGE_OPERATIONS = new Set();
+async function requireVoyageRole(actor, role) {
+  const allowed = await canOperateVoyage(actor, game.user, role);
+  if (!allowed) ui.notifications.warn(game.i18n.localize(`OUW25.Voyage.Require${role[0].toUpperCase()}${role.slice(1)}`));
+  return allowed;
+}
 const VOYAGE_STATE_FIELDS = [
   "shipClass", "crewCount", "forcedMode", "illuminationMode", "unrest", "fuelStock",
   "provisionsStock", "travelSectors", "travelWatches", "lastTransition", "illuminationUnrestPending",
@@ -112,6 +119,28 @@ class Ouw25Actor extends foundry.documents.Actor {
   }
 
   async _preUpdate(changed, options, user) {
+    if (this.type === "merchant" && this.system) {
+      const past = changed["system.past"] ?? changed.system?.past;
+      if (past !== undefined && past !== this.system.past) {
+        if (isPastLocked(this)) {
+          ui.notifications.warn(game.i18n.localize("OUW25.Past.Locked"));
+          return false;
+        }
+        if (past === "slave" && !game.users?.activeGM && !game.user?.isGM) {
+          ui.notifications.warn(game.i18n.localize("OUW25.Founders.GmRequired"));
+          return false;
+        }
+      }
+      const projected = { ...this.system, ...changed.system };
+      for (const field of ["merit", "flaw"]) {
+        if (Object.hasOwn(changed, `system.${field}`)) projected[field] = changed[`system.${field}`];
+      }
+      if (this.system.pastLocked || hasTraitPair(this) || hasTraitPair(this, projected)) {
+        changed.system ??= {};
+        changed.system.pastLocked = true;
+        delete changed["system.pastLocked"];
+      }
+    }
     const hasExplicitTexture = Object.hasOwn(changed.prototypeToken?.texture ?? {}, "src")
       || Object.hasOwn(changed, "prototypeToken.texture.src");
     const keepDefaultToken = Object.hasOwn(DEFAULT_ACTOR_TOKENS, this.type) && !hasExplicitTexture
@@ -251,6 +280,7 @@ class MerchantModel extends NotesModel {
       luck: counterField(1),
       specialty: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_SPECIALTIES }),
       past: new foundry.data.fields.StringField({ initial: "unset", choices: MERCHANT_PASTS }),
+      pastLocked: new foundry.data.fields.BooleanField({ initial: false }),
       merit: new StringField({ initial: "unset", choices: ["unset", ...MERCHANT_TRAITS.merit] }),
       flaw: new StringField({ initial: "unset", choices: ["unset", ...MERCHANT_TRAITS.flaw] }),
       dream: new StringField({ initial: "" }),
@@ -273,6 +303,7 @@ class CooperativeModel extends NotesModel {
     const fields = {
       ...super.defineSchema(), budget: counterField(),
       founders: new ArrayField(new DocumentUUIDField({ type: "Actor", nullable: false })),
+      captain: new DocumentUUIDField({ type: "Actor", nullable: true, initial: null }),
       reputation: new StringField({ initial: "unset", choices: COOPERATIVE_REPUTATIONS }),
       memory: new StringField({ initial: "unset", choices: COOPERATIVE_MEMORIES }),
       shipName: new StringField({ initial: "Бежетка" }),
@@ -400,6 +431,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   #autosaveStatus = "Saved";
   #founderPending = false;
   #founderHooks = [];
+  #captainListeners = null;
   #recordSearches = new Map();
   #recordSorts = new Map();
   #journalPending = false;
@@ -427,6 +459,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       openBargain: Ouw25ActorSheet.openBargain,
       openFounder: Ouw25ActorSheet.openFounder,
       removeFounder: Ouw25ActorSheet.removeFounder,
+      setCaptain: Ouw25ActorSheet.setCaptain,
       toggleForcedMode: Ouw25ActorSheet.toggleForcedMode,
       toggleIlluminationMode: Ouw25ActorSheet.toggleIlluminationMode,
       travelSector: Ouw25ActorSheet.travelSector,
@@ -461,6 +494,37 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+    this.#captainListeners?.abort();
+    if (this.actor.type === "cooperative" && this.isEditable) {
+      this.#captainListeners = new AbortController();
+      const { signal } = this.#captainListeners;
+      const type = "application/x-ouw25-captain";
+      this.element.addEventListener("dragstart", event => {
+        const marker = event.target.closest("[data-captain-uuid]");
+        if (!marker || !event.dataTransfer) return;
+        event.stopPropagation();
+        event.dataTransfer.setData(type, JSON.stringify({ cooperative: this.actor.uuid, captain: marker.dataset.captainUuid }));
+        event.dataTransfer.effectAllowed = "move";
+      }, { signal });
+      this.element.addEventListener("dragover", event => {
+        if (event.target.closest("[data-founder-uuid]") && event.dataTransfer?.types.includes(type)) event.preventDefault();
+      }, { signal });
+      this.element.addEventListener("drop", async event => {
+        if (!event.dataTransfer?.types.includes(type)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const target = event.target.closest("[data-founder-uuid]");
+        if (!target) return;
+        try {
+          const data = JSON.parse(event.dataTransfer.getData(type));
+          if (data.cooperative !== this.actor.uuid || (await resolveCaptain(this.actor)).uuid !== data.captain) return;
+          await Ouw25ActorSheet.setCaptain.call(this, event, { dataset: { uuid: target.dataset.founderUuid } });
+        } catch (error) {
+          console.error("OUW25 | Captain transfer failed", error);
+          ui.notifications.error(game.i18n.localize("OUW25.Founders.CaptainUpdateFailed"));
+        }
+      }, { capture: true, signal });
+    }
     const marks = this.element.querySelector(".ouw25-luck-marks");
     if (marks) {
       if (this.#luckMarks && this.#luckMarks !== marks) marks.replaceChildren(...this.#luckMarks.children);
@@ -523,6 +587,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   }
 
   _onClose(options) {
+    this.#captainListeners?.abort();
     for (const [event, hook] of this.#founderHooks) Hooks.off(event, hook);
     this.#founderHooks = [];
     this.#luckMarks = null;
@@ -542,7 +607,14 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     if (founders.includes(actor.uuid)) return null;
     this.#founderPending = true;
     try {
-      await this.actor.update({ "system.founders": [...founders, actor.uuid] });
+      const next = [...founders, actor.uuid];
+      const captain = this.actor.system.captain ? null : await firstEligibleCaptain(next);
+      if (JSON.stringify(this.actor.system.founders ?? []) !== JSON.stringify(founders)) {
+        ui.notifications.warn(game.i18n.localize("OUW25.Creation.Changed"));
+        return null;
+      }
+      await this.actor.update({ "system.founders": next,
+        ...(!this.actor.system.captain && captain ? { "system.captain": captain.uuid } : {}) });
       return actor;
     } finally {
       this.#founderPending = false;
@@ -564,7 +636,67 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       || !this.actor.system.founders?.includes(uuid)) return;
     this.#founderPending = true;
     try {
-      await this.actor.update({ "system.founders": this.actor.system.founders.filter(value => value !== uuid) });
+      const originalFounders = [...this.actor.system.founders];
+      const previous = await resolveCaptain(this.actor);
+      const founders = originalFounders.filter(value => value !== uuid);
+      const selection = previous.uuid === uuid ? await findEligibleCaptain(founders) : null;
+      const next = selection?.actor ?? null;
+      const changeCaptain = previous.uuid === uuid && !selection.unknown;
+      if (JSON.stringify(this.actor.system.founders) !== JSON.stringify(originalFounders)
+        || (await resolveCaptain(this.actor)).uuid !== previous.uuid) {
+        ui.notifications.warn(game.i18n.localize("OUW25.Creation.Changed"));
+        return;
+      }
+      await this.actor.update({ "system.founders": founders,
+        ...(changeCaptain ? { "system.captain": next?.uuid ?? null } : {}) });
+      if (changeCaptain && !this.actor.system.founders.includes(uuid)
+        && (this.actor.system.captain ?? null) === (next?.uuid ?? null)) {
+        await publishCaptainChange(this.actor, previous.actor, next, { previousUnknown: !previous.actor });
+      }
+    } finally {
+      this.#founderPending = false;
+    }
+  }
+
+  static async setCaptain(_event, target) {
+    const uuid = target.dataset.uuid;
+    const cooperative = this.actor;
+    if (cooperative.type !== "cooperative" || !this.isEditable || this.#founderPending
+      || !cooperative.system.founders?.includes(uuid)) return;
+    this.#founderPending = true;
+    try {
+      const previous = await resolveCaptain(cooperative);
+      if (previous.uuid === uuid) return;
+      if (previous.unknown || (previous.uuid && !previous.actor)) {
+        ui.notifications.warn(game.i18n.localize("OUW25.Founders.UnavailableCaptain"));
+        return;
+      }
+      const next = await founderActor(uuid);
+      if (!next || next.system.past === "slave") {
+        ui.notifications.warn(game.i18n.localize(next ? "OUW25.Founders.Ineligible" : "OUW25.Founders.UnavailableCaptain"));
+        return;
+      }
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        classes: ["ouw25"], window: { title: game.i18n.localize("OUW25.Founders.Transfer") },
+        content: await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/captain-card.hbs", {
+          cooperative: cooperative.name, previous: previous.actor?.name ?? game.i18n.localize("OUW25.Founders.NoCaptain"),
+          next: next.name, confirm: true
+        }),
+        rejectClose: false
+      });
+      if (!confirmed) return;
+      if (!this.isEditable || !cooperative.system.founders?.includes(uuid)
+        || (await resolveCaptain(cooperative)).uuid !== previous.uuid) {
+        ui.notifications.warn(game.i18n.localize("OUW25.Creation.Changed"));
+        return;
+      }
+      const fresh = await founderActor(uuid);
+      if (!fresh || fresh.system.past === "slave" || !cooperative.system.founders?.includes(uuid)) {
+        ui.notifications.warn(game.i18n.localize(fresh ? "OUW25.Founders.Ineligible" : "OUW25.Founders.UnavailableCaptain"));
+        return;
+      }
+      await cooperative.update({ "system.captain": uuid });
+      if (cooperative.system.captain === uuid) await publishCaptainChange(cooperative, previous.actor, fresh);
     } finally {
       this.#founderPending = false;
     }
@@ -600,10 +732,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const founderDocuments = ship ? await Promise.all((system.founders ?? []).map(async uuid => {
       try { return await fromUuid(uuid); } catch { return null; }
     })) : [];
+    const voyageAccess = ship ? Object.fromEntries(["captain", "mechanic", "medic"].map(role =>
+      [role, hasVoyageRole(this.actor, founderDocuments, game.user, role)])) : null;
+    const captain = ship ? await resolveCaptain(this.actor) : null;
     const founders = ship ? (system.founders ?? []).map((uuid, index) => {
       const actor = founderDocuments[index];
-      if (actor?.type !== "merchant" || !actor.testUserPermission(game.user, "LIMITED")) return { uuid };
-      const member = { uuid, name: actor.name, img: actor.img, canView: true };
+      if (actor?.type !== "merchant" || !actor.testUserPermission(game.user, "LIMITED")) return { uuid, isCaptain: captain.uuid === uuid };
+      const member = { uuid, name: actor.name, img: actor.img, canView: true, isCaptain: captain.uuid === uuid };
       if (!actor.testUserPermission(game.user, "OBSERVER")) return member;
       const debts = actor.items.filter(item => item.type === "debt" && item.system.direction === "payable");
       const relationships = actor.items.filter(item => item.type === "relationship");
@@ -687,10 +822,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         travelStatus: ["EnableForced", "DisableForced"].some(key =>
           (system.travelStatus ?? "").startsWith(`${game.i18n.localize(`OUW25.Voyage.${key}`)}:`)
         ) ? "" : system.travelStatus,
-        canTravel: this.isEditable && !voyage.travelBlocked,
-        canUndoTransition: this.isEditable && Boolean(system.lastTransition),
+        canTravel: this.isEditable && voyageAccess.captain && !voyage.travelBlocked,
+        canUndoTransition: this.isEditable && voyageAccess.captain && Boolean(system.lastTransition),
+        access: voyageAccess,
         voyage: { ...voyage, displayShortages: voyage.shortages.filter(key => key !== "OUW25.Voyage.FuelShortage") },
-        forcedDisabled: voyage.wornEngine && !system.forcedMode,
+        forcedDisabled: !system.forcedMode && (voyage.wornEngine || !voyageAccess.mechanic),
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: shipList("mount"), compartments: shipList("compartment"), gear: shipList("gear"),
         equipmentEffects: [...ship.mounts, ...ship.compartments, ...shipGearSlots(system)]
@@ -793,6 +929,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === system.past
         })),
+        pastLocked: isPastLocked(this.actor),
         showFragile: system.past === "deprived",
         fragile: system.fragile,
         luck: system.luck,
@@ -889,6 +1026,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (this.#autosaveRevisions.get(path) !== revision) return true;
       const savedValue = actorName ? this.actor.name : this.actor.system[field];
       if (Object.is(value, savedValue)) return true;
+      if (!actorName && field === "past" && this.actor.type === "merchant" && isPastLocked(this.actor)) {
+        input.value = String(savedValue);
+        ui.notifications.warn(game.i18n.localize("OUW25.Past.Locked"));
+        return false;
+      }
       if (!actorName && field === "specialty" && !isSpecialtyAllowed(value, this.actor.system.past)) {
         ui.notifications.warn(game.i18n.localize(`OUW25.Specialty.Restriction.${this.actor.system.past}`));
         this.#invalidAutosaveFields.add(path);
@@ -903,6 +1045,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         }
       }
       await this.actor.update(actorName ? { name: value } : { [path]: value });
+      if (!actorName && field === "past" && this.actor.system.past !== value) {
+        input.value = String(this.actor.system.past);
+        this.#invalidAutosaveFields.add(path);
+        return false;
+      }
       return true;
     });
     this.#autosaveQueue = save;
@@ -1080,7 +1227,13 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         return;
       }
       const fields = { name: i18n.localize(`OUW25.Trait.Names.${data.code}`), system: { code: data.code } };
-      if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, ...fields }]);
+      if (id) {
+        if (isPastLocked(actor) && !actor.system.pastLocked) {
+          await actor.update({ "system.pastLocked": true });
+          if (!actor.system.pastLocked) return;
+        }
+        await actor.updateEmbeddedDocuments("Item", [{ _id: id, ...fields }]);
+      }
       else {
         const records = [{ type: "trait", ...fields }];
         const traitState = () => [
@@ -1201,6 +1354,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         rejectClose: false
       });
       if (confirmed && this.isEditable && actor.items.get(id)?.type === type) {
+        if (type === "trait" && isPastLocked(actor) && !actor.system.pastLocked) {
+          await actor.update({ "system.pastLocked": true });
+          if (!actor.system.pastLocked) return;
+        }
         await actor.deleteEmbeddedDocuments("Item", [id]);
       }
     } finally {
@@ -1211,6 +1368,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   async _processSubmitData(event, form, submitData, options) {
     const { type, system } = this.actor;
     const { specialty = system.specialty, past = system.past } = submitData.system ?? {};
+    if (type === "merchant" && past !== system.past && isPastLocked(this.actor)) {
+      this.#submitRejected = true;
+      this.#invalidAutosaveFields.add("system.past");
+      ui.notifications.warn(game.i18n.localize("OUW25.Past.Locked"));
+      return {};
+    }
     if (type === "merchant" && specialty !== system.specialty && !isSpecialtyAllowed(specialty, past)) {
       this.#submitRejected = true;
       this.#invalidAutosaveFields.add("system.specialty");
@@ -1265,9 +1428,16 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       }
       const value = resolve(roll.total, past, roll);
       const result = labels ? i18n.localize(`${labels}.${value}`) : value;
-      if (id) await actor.updateEmbeddedDocuments("Item", [{ _id: id, name: result, "system.code": value }]);
+      if (id) {
+        if (isPastLocked(actor) && !actor.system.pastLocked) {
+          await actor.update({ "system.pastLocked": true });
+          if (!actor.system.pastLocked) return;
+        }
+        await actor.updateEmbeddedDocuments("Item", [{ _id: id, name: result, "system.code": value }]);
+      }
       else if (actorName) await actor.update({ name: value });
       else await actor.update({ [`system.${field}`]: storeLabel ? result : value });
+      if (field === "past" && actor.system.past !== value) return;
       try {
         await roll.toMessage({
           speaker: foundry.documents.ChatMessage.getSpeaker({ actor }),
@@ -1369,6 +1539,11 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!this.isEditable || this.#invalidAutosaveFields.size) return;
       const { i18n } = game;
       const enabling = !actor.system.forcedMode;
+      if (enabling && (!(await requireVoyageRole(actor, "mechanic")) || !this.isEditable)) return;
+      if (actor.system.forcedMode === enabling) {
+        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+        return;
+      }
       if (enabling && hasWornEngine(actor.system)) {
         ui.notifications.warn(i18n.localize("OUW25.Voyage.ForcedBlocked"));
         return;
@@ -1385,6 +1560,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         ok: { label: i18n.localize("OUW25.Voyage.RollForced") }
       });
       if (!inputs || !this.isEditable) return;
+      if (enabling && (!(await requireVoyageRole(actor, "mechanic")) || !this.isEditable)) return;
       const additionalDice = Number(inputs.additionalDice);
       const complications = Number(inputs.complications);
       if (!Number.isSafeInteger(additionalDice) || additionalDice < 0 || additionalDice > 100
@@ -1408,9 +1584,10 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         outcome: i18n.localize(`OUW25.Collision.${outcome}`), remaining
       });
       const summary = `${title}: ${result}`;
-      if (!this.isEditable || forcedModeFingerprint(actor.system) !== fingerprint) {
-        const warning = i18n.localize("OUW25.Voyage.StateChanged");
-        ui.notifications.warn(warning);
+      const allowed = !enabling || await requireVoyageRole(actor, "mechanic");
+      if (!allowed || !this.isEditable || forcedModeFingerprint(actor.system) !== fingerprint) {
+        const warning = i18n.localize(allowed ? "OUW25.Voyage.StateChanged" : "OUW25.Voyage.RequireMechanic");
+        if (allowed) ui.notifications.warn(warning);
         await publishVoyageRoll(actor, `${summary} ${warning}`, [roll], false, title, details);
         return;
       }
@@ -1426,8 +1603,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       });
       await publishVoyageRoll(actor, status, [roll], true, title, details);
     } finally {
+      const mechanic = await canOperateVoyage(actor, game.user, "mechanic");
       PENDING_VOYAGE_OPERATIONS.delete(actor.id);
-      target.disabled = false;
+      target.disabled = !this.isEditable || (!actor.system.forcedMode && (hasWornEngine(actor.system) || !mechanic));
     }
   }
 
@@ -1438,23 +1616,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     target.disabled = true;
     try {
       const { i18n } = game;
+      if (!(await requireVoyageRole(actor, "captain")) || !this.isEditable) return;
       if (hasUnsavedVoyageInputs(target, actor.system)) {
         ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
         return;
       }
-      const fingerprint = voyageStateFingerprint(actor.system);
       const transition = prepareSectorTransition(actor.system, foundry.utils.randomID());
-      const confirmed = await foundry.applications.api.DialogV2.confirm({
-        classes: ["ouw25"],
-        window: { title: i18n.localize("OUW25.Voyage.TravelSector") },
-        content: `<p>${i18n.format("OUW25.Voyage.ConfirmTransition", transition.costs)}</p><p>${i18n.localize("OUW25.Voyage.SingleOperator")}</p>`,
-        rejectClose: false
-      });
-      if (!confirmed || !this.isEditable) return;
-      if (voyageStateFingerprint(actor.system) !== fingerprint) {
-        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
-        return;
-      }
       const update = Object.fromEntries(Object.entries(transition.update)
         .map(([field, value]) => [`system.${field}`, value]));
       update["system.travelStatus"] = i18n.format("OUW25.Voyage.TransitionDone", transition.costs);
@@ -1466,8 +1633,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));
     } finally {
+      const captain = await canOperateVoyage(actor, game.user, "captain");
       PENDING_VOYAGE_OPERATIONS.delete(actor.id);
-      target.disabled = false;
+      target.disabled = !this.isEditable || !captain || calculateVoyage(actor.system).travelBlocked;
     }
   }
 
@@ -1478,23 +1646,12 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     target.disabled = true;
     try {
       const { i18n } = game;
+      if (!(await requireVoyageRole(actor, "captain")) || !this.isEditable) return;
       if (hasUnsavedVoyageInputs(target, actor.system)) {
         ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
         return;
       }
-      const fingerprint = voyageStateFingerprint(actor.system);
       const rollback = rollbackSectorTransition(actor.system);
-      const confirmed = await foundry.applications.api.DialogV2.confirm({
-        classes: ["ouw25"],
-        window: { title: i18n.localize("OUW25.Voyage.UndoSector") },
-        content: `<p>${i18n.format("OUW25.Voyage.ConfirmUndo", rollback.costs)}</p><p>${i18n.localize("OUW25.Voyage.SingleOperator")}</p>`,
-        rejectClose: false
-      });
-      if (!confirmed || !this.isEditable) return;
-      if (voyageStateFingerprint(actor.system) !== fingerprint) {
-        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
-        return;
-      }
       const update = Object.fromEntries(Object.entries(rollback)
         .filter(([field]) => field !== "costs")
         .map(([field, value]) => [`system.${field}`, value]));
@@ -1507,8 +1664,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));
     } finally {
+      const captain = await canOperateVoyage(actor, game.user, "captain");
       PENDING_VOYAGE_OPERATIONS.delete(actor.id);
-      target.disabled = false;
+      target.disabled = !this.isEditable || !captain || !actor.system.lastTransition;
     }
   }
 
@@ -1558,6 +1716,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     target.disabled = true;
     try {
       const { i18n } = game;
+      if (!(await requireVoyageRole(actor, "medic")) || !this.isEditable) return;
       if (hasUnsavedVoyageInputs(target, actor.system)) {
         ui.notifications.warn(i18n.localize("OUW25.Voyage.SaveBeforeTransition"));
         return;
@@ -1573,6 +1732,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         ok: { label: i18n.localize("OUW25.Voyage.RollTherapy") }
       });
       if (!inputs || !this.isEditable) return;
+      if (!(await requireVoyageRole(actor, "medic")) || !this.isEditable) return;
       const additionalDice = Number(inputs.additionalDice);
       const complications = Number(inputs.complications);
       if (!Number.isSafeInteger(additionalDice) || additionalDice < 0 || additionalDice > 100
@@ -1594,8 +1754,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         { label: "OUW25.Collision.Dice", value: 4 + additionalDice },
         { label: "OUW25.Collision.Deduction", value: complications }
       ];
-      if (!this.isEditable || voyageStateFingerprint(actor.system) !== fingerprint) {
-        ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
+      const allowed = await requireVoyageRole(actor, "medic");
+      if (!allowed || !this.isEditable || voyageStateFingerprint(actor.system) !== fingerprint) {
+        if (allowed) ui.notifications.warn(i18n.localize("OUW25.Voyage.StateChanged"));
         await publishVoyageRoll(actor, i18n.format("OUW25.Voyage.TherapyNotApplied", {
           successes, relief: outcome.relief
         }), [successRoll, reliefRoll], false, i18n.localize("OUW25.Voyage.Psychotherapy"), details);
@@ -1612,8 +1773,9 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!(error instanceof RangeError)) throw error;
       ui.notifications.warn(i18n.localize(error.message));
     } finally {
+      const medic = await canOperateVoyage(actor, game.user, "medic");
       PENDING_VOYAGE_OPERATIONS.delete(actor.id);
-      target.disabled = false;
+      target.disabled = !this.isEditable || !medic;
     }
   }
 
@@ -1698,7 +1860,8 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     if (!action || actor.system[source] !== profile) return;
     const { i18n } = game;
     const title = i18n.localize(`OUW25.PersonalAction.Moves.${move}.label`);
-    if (action.collision) return Ouw25ActorSheet.#rollCollision.call(this, target, title);
+    const cardTitle = title.split(" \u00b7 ", 1)[0];
+    if (action.collision) return Ouw25ActorSheet.#rollCollision.call(this, target, cardTitle);
 
     target.disabled = true;
     try {
@@ -1739,7 +1902,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       const result = i18n.format(outcome.key, data);
       const message = {
         speaker: ChatMessage.getSpeaker({ actor }),
-        flavor: await checkCard(actor, title, result, details),
+        flavor: await checkCard(actor, cardTitle, result, details),
         rolls
       };
       ChatMessage.applyRollMode(message, messageMode);
@@ -1767,7 +1930,59 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   }
 }
 
+const captainQueues = new Map();
+function queueCaptainReconciliation(cooperative) {
+  if (!game.user?.isActiveGM || !cooperative?.system) return Promise.resolve();
+  const previous = captainQueues.get(cooperative.uuid) ?? Promise.resolve();
+  const current = previous.then(() => reconcileCaptain(cooperative)).catch(error => {
+    console.error("OUW25 | Captain reconciliation failed", error);
+    ui.notifications.error(game.i18n.localize("OUW25.Founders.CaptainUpdateFailed"));
+  }).finally(() => {
+    if (captainQueues.get(cooperative.uuid) === current) captainQueues.delete(cooperative.uuid);
+  });
+  captainQueues.set(cooperative.uuid, current);
+  return current;
+}
+
+function lockPastAfterTrait(item, userId) {
+  const actor = item.parent;
+  if (item.type !== "trait" || actor?.type !== "merchant" || !actor.isOwner || actor.system.pastLocked
+    || !hasTraitPair(actor) || (game.users?.activeGM ? !game.user.isActiveGM : game.user.id !== userId)) return;
+  actor.update({ "system.pastLocked": true }).catch(error => {
+    console.error("OUW25 | Failed to lock past", error);
+    ui.notifications.error(game.i18n.localize("OUW25.SaveStatus.Error"));
+  });
+}
+
+function guardTraitChange(item) {
+  const actor = item.parent;
+  if (item.type !== "trait" || actor?.type !== "merchant" || actor.system.pastLocked || !hasTraitPair(actor)) return;
+  if (actor.isOwner) actor.update({ "system.pastLocked": true }).catch(error => {
+    console.error("OUW25 | Failed to lock past", error);
+    ui.notifications.error(game.i18n.localize("OUW25.SaveStatus.Error"));
+  });
+  ui.notifications.warn(game.i18n.localize("OUW25.Past.LockPending"));
+  return false;
+}
+
 Hooks.once("init", () => {
+  Hooks.on("preUpdateItem", guardTraitChange);
+  Hooks.on("preDeleteItem", guardTraitChange);
+  Hooks.on("createItem", (item, _options, userId) => lockPastAfterTrait(item, userId));
+  Hooks.on("updateItem", (item, _changes, _options, userId) => lockPastAfterTrait(item, userId));
+  Hooks.on("updateActor", (actor, changes) => {
+    if (!game.user?.isActiveGM) return;
+    if (actor.type === "cooperative" && (changes.system?.founders || "captain" in (changes.system ?? {})
+      || "system.founders" in changes || "system.captain" in changes)) {
+      queueCaptainReconciliation(actor);
+    } else if (actor.type === "merchant" && (changes.system?.past !== undefined || "system.past" in changes)) {
+      for (const cooperative of game.actors) {
+        if (cooperative.type === "cooperative" && cooperative.system?.founders?.includes(actor.uuid)) {
+          queueCaptainReconciliation(cooperative);
+        }
+      }
+    }
+  });
   for (const event of ["renderJournalEntrySheet", "renderJournalEntryPageSheet"]) {
     Hooks.on(event, (application, element) => styleSystemJournal(application, element));
   }
@@ -1802,7 +2017,16 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", async () => {
   if (game.tooltip && globalThis.document) installTooltipDelay(game.tooltip, document);
-  if (!game.user.isActiveGM || game.settings.get(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION)) return;
+  if (!game.user.isActiveGM) return;
+  for (const actor of game.actors) {
+    if (actor.type === "merchant" && actor.system && !actor.system.pastLocked && hasTraitPair(actor)) {
+      try { await actor.update({ "system.pastLocked": true }); }
+      catch (error) { console.error("OUW25 | Failed to migrate past lock", error); }
+    } else if (actor.type === "cooperative" && actor.system?.founders?.length) {
+      await queueCaptainReconciliation(actor);
+    }
+  }
+  if (game.settings.get(SYSTEM_ID, TOKEN_DEFAULTS_MIGRATION)) return;
   try {
     for (const actor of game.actors) {
       if (!hasLegacyTokenArtwork(actor.type, actor.prototypeToken)) continue;

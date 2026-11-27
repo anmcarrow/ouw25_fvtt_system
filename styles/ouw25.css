@@ -6,7 +6,9 @@
 }
 
 .ouw25,
-.application.ouw25-journal {
+.application.ouw25-journal,
+body.game .chat-message:has(.ouw25-chat-card) {
+  color-scheme: light;
   --ouw25-color-ink: #370f00;
   --ouw25-color-accent: #2a0e06;
   --ouw25-color-accent-soft: rgba(42, 14, 6, 0.7);
@@ -15,6 +17,7 @@
   --ouw25-color-accent-calm: #133e61;
   --ouw25-color-paper: #f3efe3;
   --ouw25-color-surface: #fff8ee;
+  --ouw25-dialog-button-color: #915450;
   --ouw25-font-heading: "Viaoda Libre", Georgia, "Times New Roman", serif;
   --ouw25-font-body: "PT Sans", Arial, sans-serif;
   --ouw25-font-input: "LXGW WenKai Mono TC", "Courier New", monospace;
@@ -239,7 +242,7 @@ body.game .application.ouw25 .form-footer button {
 }
 
 body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"], [data-sort-column])) {
-  background: linear-gradient(160deg, var(--ouw25-button-color, #915450), color-mix(in srgb, var(--ouw25-button-color, #915450) 90%, #705e60) 48%, color-mix(in srgb, var(--ouw25-button-color, #915450) 75%, #705e60));
+  background: linear-gradient(160deg, var(--ouw25-button-color, var(--ouw25-dialog-button-color)), color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-dialog-button-color)) 90%, #705e60) 48%, color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-dialog-button-color)) 75%, #705e60));
   box-shadow: var(--ouw25-button-bevel);
   text-shadow: 0 1px 2px #60413e;
 }
@@ -295,6 +298,60 @@ body.game .application.ouw25 .dialog-content .form-group {
   margin-block: 0.5rem;
 }
 
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) {
+  --ouw25-dialog-button-gradient: linear-gradient(160deg, var(--ouw25-dialog-button-color), color-mix(in srgb, var(--ouw25-dialog-button-color) 90%, #705e60) 48%, color-mix(in srgb, var(--ouw25-dialog-button-color) 75%, #705e60));
+  --ouw25-dialog-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #80665b, 0 3px 4px #51413b66;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-header {
+  background: var(--ouw25-color-paper) url("./images/header_strip1.webp") center / 100% 100% no-repeat;
+  border-bottom: 1px solid #a48b72;
+  color: var(--ouw25-color-ink);
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-header .window-title {
+  color: var(--ouw25-color-ink);
+  font-family: var(--ouw25-font-heading);
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-header button.header-control {
+  --button-text-color: var(--ouw25-color-ink);
+  --button-hover-text-color: var(--ouw25-color-ink);
+  color: var(--ouw25-color-ink);
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-content {
+  background: var(--ouw25-color-paper) url("./images/sheet_bgr.webp") center / cover no-repeat;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .dialog-content {
+  background: transparent;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button {
+  border-radius: 0.65rem;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:not(:disabled) {
+  background: var(--ouw25-dialog-button-gradient);
+  box-shadow: var(--ouw25-dialog-button-bevel);
+  font-family: var(--ouw25-font-body);
+  text-shadow: 0 1px 2px #60413e;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:hover:not(:disabled) {
+  background: var(--ouw25-dialog-button-gradient);
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:active:not(:disabled) {
+  box-shadow: inset 0 2px 4px #674b4299, 0 1px 0 #80665b;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:focus-visible {
+  outline: 2px solid var(--ouw25-color-accent-calm);
+  outline-offset: 2px;
+}
+
 body.game .application.ouw25 .ouw25-create-actor-types {
   display: grid;
   gap: 0.4rem;
@@ -338,11 +395,6 @@ body.game .application.ouw25 .dialog-content :is(input:not([type="checkbox"]):no
   background: var(--ouw25-color-surface);
   border: 1px solid var(--ouw25-color-accent);
   border-image: none;
-}
-
-body.game .application.ouw25 .dialog-content :is(input, select, textarea):focus-visible {
-  outline: 2px solid var(--ouw25-color-accent-calm);
-  outline-offset: 1px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-hold-status {
@@ -399,6 +451,7 @@ body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-c
 }
 
 .ouw25 .ouw25-sheet-heading {
+  --ouw25-save-color: #3c7252;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -413,11 +466,18 @@ body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-c
 .ouw25 .ouw25-sheet-heading::before {
   content: "";
   position: absolute;
-  inset-block: 0 0.35rem;
-  inset-inline: -10px -1rem;
+  inset-block-start: 0;
+  inset-inline: calc(-1rem - var(--ouw25-perforation-width)) -1rem;
+  aspect-ratio: 1524 / 85;
   z-index: -1;
-  background: url("./images/header_strip1.webp") left center / calc(100% + 1rem - 10px) 100% no-repeat;
+  translate: 0 5px;
+  background: url("./images/header_strip1.webp") center / 100% 100% no-repeat;
   pointer-events: none;
+}
+
+.ouw25 .ouw25-sheet-heading.ouw25-merchant-heading::before {
+  inset-inline-end: auto;
+  inline-size: calc(min(1120px, 100vw) - 2rem - 2px);
 }
 
 .ouw25 .ouw25-sheet-heading h2 {
@@ -477,6 +537,14 @@ body.game .application.ouw25 .ouw25-notes button.ouw25-actor-token:hover:not(:di
   color: var(--ouw25-color-accent-calm);
   flex: 1;
   font-size: 0.9em;
+}
+
+.ouw25 .ouw25-notes .ouw25-save-status[data-state="saved"] {
+  color: var(--ouw25-save-color);
+}
+
+.ouw25 .ouw25-sheet-heading > button[type="submit"] {
+  --ouw25-button-color: var(--ouw25-save-color);
 }
 
 .ouw25 .ouw25-save-status[data-state="error"],
@@ -638,6 +706,13 @@ body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout {
 body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout .ouw25-founders {
   background-image: linear-gradient(rgba(255, 248, 238, 0.55), rgba(255, 248, 238, 0.55)), url("./images/cork.svg");
   background-size: auto, 192px 192px;
+  margin-block-start: calc(0.25rem + 25px);
+  padding-left: calc(2 * var(--ouw25-fieldset-padding));
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-cooperative-layout .ouw25-identity input[name="name"] {
+  position: relative;
+  top: 15px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-founders ul {
@@ -648,10 +723,36 @@ body.game .application.ouw25 .ouw25-notes .ouw25-founders ul {
   padding: 0;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-drop-hint {
+  margin-block-start: 1rem;
+  opacity: 0.5;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-founder {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-portrait-frame {
+  position: relative;
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-captain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 43.38984375%;
+  height: 43.38984375%;
+  border: 0;
+  z-index: 1;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-captain[draggable="true"] {
+  cursor: grab;
 }
 
 body.game .application.ouw25 .ouw25-notes button.ouw25-founder-portrait {
@@ -712,6 +813,27 @@ body.game .application.ouw25 .ouw25-notes .ouw25-founder-details {
   flex: 1;
   min-width: 0;
   padding-block-start: 0.2rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-heading h4 {
+  flex: 1;
+  min-width: 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-founder-heading button {
+  flex: 0 0 auto;
+  width: auto;
+  height: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 0 0.35rem;
+  font-size: 0.66em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-founder-details p {
@@ -801,6 +923,7 @@ body.game .application.ouw25 .ouw25-notes :is(
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
   align-items: start;
+  padding-block-start: 20px;
 }
 
 .ouw25 .ouw25-cooperative-traits > fieldset {
@@ -1244,6 +1367,8 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
 
 .ouw25 .ouw25-pension > p {
   grid-column: 1 / -1;
+  font-family: var(--ouw25-font-accent);
+  font-size: 1.3em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-sidebar-card h3, .ouw25-total-debt > p) {
@@ -1306,6 +1431,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls {
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
   margin-block-start: 4px;
+}
+
+.ouw25 .ouw25-pension-controls + p {
+  margin-block-start: 1.220703125rem;
+}
+
+.ouw25 .ouw25-pension > p:first-of-type {
+  margin-block-end: 0.30704rem;
+}
+
+.ouw25 .ouw25-pension > p + p {
+  margin-block-start: 0.036rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button {
@@ -1456,6 +1593,30 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds:has(.ouw25-woun
   row-gap: 11.7px;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds .ouw25-wound-slots {
+  position: relative;
+  isolation: isolate;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-wound-label {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  color: #000;
+  font-family: var(--ouw25-font-accent);
+  font-size: 52.326px;
+  line-height: 1;
+  opacity: 0.5;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-wounds .ouw25-wound-slots > .ouw25-condition-check {
+  z-index: 1;
+}
+
 body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-wound-slots > .ouw25-condition-check {
   place-items: center;
   inline-size: 39.2px;
@@ -1541,6 +1702,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > .ouw25-bargain
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-merchant-tools > button > span {
+  translate: 0 -3px;
   color: #dfc58b;
   background: var(--ouw25-bargain-brass);
   background-clip: text;
@@ -1644,6 +1806,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-pair {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-wide-pair {
+  gap: 1.5rem;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-ship > .ouw25-ship-pair {
   grid-template-columns: minmax(0, 70%) minmax(0, 1fr);
   position: relative;
@@ -1675,10 +1841,16 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-heading > input {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition {
   position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: calc(70% + (30% - 150px) / 2);
-  inline-size: 150px;
+  inset-block-start: calc(4.875px - 1.4rem);
+  inset-inline-start: calc(85% - 85px);
+  inline-size: 170px;
+  padding-block-start: 2.4rem;
   isolation: auto;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition:has(.ouw25-ship-damage > label:nth-child(10)) {
+  inset-inline-start: calc(85% - (4 * 2.7rem + 3 * 0.25rem + 24px) / 2);
+  inline-size: calc(4 * 2.7rem + 3 * 0.25rem + 24px);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
@@ -1695,10 +1867,26 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage::before {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-condition > h4 {
-  color: var(--ouw25-color-surface);
-  text-shadow: 0 0 3px var(--ouw25-color-ink), 0 1px 2px var(--ouw25-color-ink);
+  display: grid;
+  position: absolute;
+  inset-block-start: 2.4rem;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  place-items: center;
+  width: fit-content;
+  min-height: 2rem;
+  padding-inline: 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: radial-gradient(circle at 35% 25%, #fff6df, #e6d8bc 55%, #b8a47f) padding-box,
+    linear-gradient(135deg, #70542d 0%, #dfc58b 26%, #98733e 54%, #e8d39e 77%, #6f512b 100%) border-box;
+  box-shadow: inset 0 1px 1px #fff8e9, 0 2px 0 #58432c, 0 3px 4px rgba(0, 0, 0, 0.35);
+  color: #69162b;
+  font-size: min(var(--font-size-14, 14px), 0.8rem);
+  font-weight: bold;
   text-align: center;
-  margin: 0 0 0.4rem;
+  margin: 0;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats {
@@ -1940,7 +2128,7 @@ body.game .application.ouw25 .ouw25-notes option {
   background-color: var(--ouw25-color-surface);
 }
 
-.ouw25 .ouw25-notes :is(input, select, textarea, button):focus-visible {
+.ouw25 .ouw25-notes button:focus-visible {
   outline: 2px solid var(--ouw25-color-accent-calm);
   outline-offset: 2px;
 }
@@ -2087,7 +2275,9 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
 }
 
 .ouw25 .ouw25-ship-damage {
+  --ouw25-ship-damage-frame: linear-gradient(165deg, #c9c5b8 0%, #949590 24%, #767978 50%, #afada4 72%, #6a6c6c 100%);
   display: grid;
+  box-sizing: border-box;
   grid-template-columns: repeat(3, 2.7rem);
   grid-template-rows: repeat(3, 2.7rem);
   align-content: start;
@@ -2095,6 +2285,14 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
   gap: 0.25rem;
   position: relative;
   isolation: auto;
+  padding: 16px 8px 8px;
+  border: 4px solid transparent;
+  border-radius: 0.35rem;
+  background: url("./images/felt3.webp") center / cover padding-box no-repeat,
+    url("./images/panel3.webp") center / 120px auto border-box repeat,
+    var(--ouw25-ship-damage-frame) border-box;
+  background-blend-mode: normal, soft-light, normal;
+  box-shadow: inset 0 0 8px 2px #000b, 0 8px 16px #000a, 0 3px 5px #000b;
 }
 
 .ouw25 .ouw25-ship-damage:has(> label:nth-child(10)) {
@@ -2104,9 +2302,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage > .ouw25-condition-check {
   display: inline-grid;
   grid-template-columns: none;
+  place-self: center;
   gap: 0;
-  width: 2.7rem;
-  height: 2.7rem;
+  width: 2.295rem;
+  height: 2.295rem;
   margin: 0;
   translate: 0 2px;
 }
@@ -2117,30 +2316,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-ch
   isolation: isolate;
   border: 0;
   border-radius: 0;
-  background: transparent;
-  clip-path: none;
-}
-
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::before,
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
+  background: rgba(0, 0, 0, 0.3);
   clip-path: var(--ouw25-octagon);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::before {
+  content: "";
+  position: absolute;
   inset: 0;
-  background: var(--ouw25-border-gradient);
-}
-
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > span::after {
-  inset: 1px;
-  background: var(--ouw25-color-surface);
+  background: var(--ouw25-ship-damage-frame);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='white' fill-rule='evenodd' d='M29.3 0H70.7L100 29.3V70.7L70.7 100H29.3L0 70.7V29.3ZM30.5 3H69.5L97 30.5V69.5L69.5 97H30.5L3 69.5V30.5Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  pointer-events: none;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check > input:checked + span {
-  font-size: 3em;
+  font-size: 2.55em;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-damage .ouw25-condition-check:has(input:focus-visible) {
@@ -2162,7 +2352,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
-  padding: 5px;
+  padding: 5px 7.8125px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card > p {
@@ -2318,27 +2508,164 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-actions {
   vertical-align: middle;
 }
 
+body.game .chat-message:has(.ouw25-chat-card) {
+  position: relative;
+  color: #370f00;
+  background: #f3efe3 url("./images/card_bgr2.webp") center top / 100% auto no-repeat;
+  border-color: #6f4a30;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(55, 15, 0, 0.25);
+}
+
+body.game .chat-message:has(.ouw25-chat-card):not(.deleting) {
+  padding-block-start: 38px;
+}
+
+body.game .chat-message:has(.ouw25-chat-card):not(.deleting)::before {
+  content: "";
+  position: absolute;
+  inset: 0 8px auto;
+  height: 30px;
+  background-image:
+    radial-gradient(circle at calc(50% + 0.5px) calc(50% + 0.5px), rgba(255, 247, 231, 0.3) 0 2.7px, transparent 3.45px),
+    radial-gradient(circle at 50% 50%, rgba(120, 90, 50, 0.3) 0 4.13335px, transparent 4.66665px);
+  background-size: 24px 20px;
+  background-position: left center;
+  background-repeat: repeat-x;
+  pointer-events: none;
+}
+
+body.game .chat-message.whisper:has(.ouw25-chat-card) {
+  border-color: var(--color-whisper-border);
+}
+
+body.game .chat-message.blind:has(.ouw25-chat-card) {
+  border-color: var(--color-blind-border);
+}
+
+body.game .chat-message:has(.ouw25-chat-card) .message-header {
+  color: #370f00;
+  font-family: "Alice", Georgia, serif;
+}
+
+body.game .chat-message:has(.ouw25-chat-card) .message-header .message-sender {
+  font-family: "Alice", Georgia, serif;
+}
+
+body.game .chat-message .message-header .flavor-text:has(.ouw25-chat-card) {
+  margin-top: 6px;
+}
+
+body.game .chat-message .message-content:has(.ouw25-chat-card) {
+  padding-top: 6px;
+  padding-inline: 4px;
+  padding-bottom: 4px;
+}
+
+body.game .chat-message:has(.message-header .ouw25-chat-card) .message-content:has(.dice-roll) {
+  padding-top: 12px;
+}
+
+body.game .chat-message:has(.ouw25-chat-card) .dice-roll :is(.dice-formula, .dice-total, .part-total, .dice-rolls .roll) {
+  font-family: "Alice", Georgia, serif;
+}
+
+body.game .chat-message:has(.ouw25-chat-card) .dice-roll .dice-formula {
+  font-size: 1.25em;
+}
+
+body.game .chat-message:has(.ouw25-chat-card) .dice-roll :is(.dice-formula, .dice-total) {
+  background: var(--ouw25-field-background);
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  box-shadow: none;
+}
+
+@media (forced-colors: active) {
+  body.game .chat-message:has(.ouw25-chat-card) .dice-roll :is(.dice-formula, .dice-total) {
+    border-image: none;
+    border-color: CanvasText;
+  }
+}
+
 .ouw25-chat-card {
   padding: 0.6rem;
   color: #370f00;
-  background: #f3efe3 url("./images/smallpaper5.webp") center / cover;
-  border: 1px solid #6f4a30;
-  border-radius: 0.35rem;
+  background: #f3efe3 url("./images/card_bgr.webp") center top / 100% auto no-repeat;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(55, 15, 0, 0.25);
   font-family: "PT Sans", Arial, sans-serif;
+  color-scheme: light;
+}
+
+body.game .ouw25-chat-card,
+body.game .ouw25-chat-card * {
+  text-shadow: none;
+}
+
+body.game .chat-message .ouw25-chat-card {
+  position: relative;
+}
+
+body.game .chat-message .ouw25-chat-card::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset-block-start: -6px;
+  inset-inline-end: 50px;
+  inline-size: 24.5px;
+  block-size: 50px;
+  background: url("./images/clipper_small.webp") center / 100% 100% no-repeat;
+  pointer-events: none;
 }
 
 .ouw25-chat-card header {
-  border-bottom: 1px solid #a48b72;
+  margin: -0.6rem -0.6rem 0.4rem;
+  padding: 0.73125rem 0.6rem 0.3rem;
+}
+
+.ouw25-chat-card header::after {
+  content: "";
+  display: block;
+  width: calc(100% + 1.2rem);
+  aspect-ratio: 512 / 51;
+  margin: 0.3rem -0.6rem -0.3rem;
+  background: url("./images/card_divider1.webp") center / 100% 100% no-repeat;
+  pointer-events: none;
 }
 
 .ouw25-chat-card h3 {
   margin: 0;
+  color: inherit;
   font-family: "Viaoda Libre", Georgia, serif;
+  font-size: calc(var(--font-h3-size, 1.75rem) * 0.646875);
   font-weight: bold;
+  text-align: center;
+}
+
+.ouw25-chat-card p {
+  font-size: 1.15em;
+  text-wrap: pretty;
 }
 
 .ouw25-chat-card header p {
-  margin: 0.2rem 0 0.4rem;
+  margin: 0.2rem 0 0;
+}
+
+.ouw25-chat-card .ouw25-voyage-card-intro {
+  padding-bottom: 0.4rem;
+  font-size: 1.035em;
+  font-style: italic;
+  border-bottom: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 0 0 1;
+}
+
+@media (forced-colors: active) {
+  .ouw25-chat-card .ouw25-voyage-card-intro {
+    border-image: none;
+    border-bottom-color: CanvasText;
+  }
 }
 
 .ouw25-chat-card dl {
@@ -2459,8 +2786,54 @@ body.game .application.ouw25 .ouw25-notes .ouw25-record-search button[data-searc
   font-style: italic;
 }
 
+.ouw25-bargain-card p {
+  font-size: 1.035em;
+}
+
+.ouw25-bargain-card details > dl {
+  font-size: 0.9em;
+}
+
 .ouw25-check-card details {
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+}
+
+.ouw25-check-card details > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4em;
+  list-style: none;
+  cursor: pointer;
+  font-family: "Alice", Georgia, serif;
+  font-size: 1.25em;
+  font-weight: bold;
+  border-bottom: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 0 0 1;
+}
+
+/* Bargain cards are in message content; rolled cards inherit the smaller flavor-text size. */
+.ouw25-bargain-card details > summary {
+  font-size: calc(var(--font-size-12, 12px) * 1.25);
+}
+
+.ouw25-check-card details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ouw25-check-card details > summary::after {
+  content: "▸";
+}
+
+.ouw25-check-card details[open] > summary::after {
+  content: "▾";
+}
+
+@media (forced-colors: active) {
+  .ouw25-check-card details > summary {
+    border-image: none;
+    border-bottom-color: CanvasText;
+  }
 }
 
 .ouw25-check-assistant {
@@ -2610,11 +2983,6 @@ body.game .application.ouw25 .dialog-content .ouw25-bargain select option {
   color: var(--ouw25-bargain-ink);
   background: var(--ouw25-bargain-ivory);
   font-family: "Iosevka Charon Mono", monospace;
-}
-
-body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type="checkbox"]), select, textarea):focus-visible {
-  outline: 2px solid #ffecad;
-  outline-offset: 2px;
 }
 
 body.game .application.ouw25 .dialog-content .ouw25-bargain :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select) {
@@ -3265,11 +3633,6 @@ body.game .application.ouw25.ouw25-unluck-dialog .dialog-content .ouw25-unluck :
   border: 1px solid #554331;
   border-radius: 0.2rem;
   box-shadow: inset 0 2px 4px #38281980, inset 0 -1px 0 #fff7db;
-}
-
-body.game .application.ouw25.ouw25-unluck-dialog .dialog-content .ouw25-unluck :is(input, select, textarea):focus-visible {
-  outline: 2px solid #fff1bd;
-  outline-offset: 2px;
 }
 
 body.game .application.ouw25.ouw25-unluck-dialog .ouw25-unluck .ouw25-unluck-counts,
@@ -4457,7 +4820,7 @@ body.game .application.ouw25 .ouw25-notes p:is([role="status"], [role="alert"]):
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p:is([role="status"], [role="alert"]) {
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 60%, transparent), 2px 3px 6px rgba(55, 15, 0, 0.2);
+  box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
 }
 
 body.game .application.ouw25 .ouw25-notes :is(
@@ -4507,8 +4870,39 @@ body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-clipped-he
   }
 }
 
+body.game .application:is(.ouw25, .ouw25-journal) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea
+):focus,
+body.game .application.ouw25:is(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .dialog-content :is(.ouw25-bargain, .ouw25-unluck) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea
+):focus {
+  border: 2px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  body.game .application:is(.ouw25, .ouw25-journal) :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    select,
+    textarea
+  ):focus,
+  body.game .application.ouw25:is(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .dialog-content :is(.ouw25-bargain, .ouw25-unluck) :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    select,
+    textarea
+  ):focus {
+    border-image: none;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
 body.game .application.ouw25-journal {
-  --ouw25-journal-teal: #22393a;
   color-scheme: light;
   --background: var(--ouw25-color-paper);
   --font-h1: var(--ouw25-font-heading);
@@ -4517,11 +4911,10 @@ body.game .application.ouw25-journal {
   --font-h4: var(--ouw25-font-heading);
   --font-h5: var(--ouw25-font-heading);
   --font-h6: var(--ouw25-font-heading);
-  background: var(--ouw25-journal-teal) url("./images/panel1.webp") center / cover;
 }
 
 body.game .application.ouw25-journal .journal-sidebar {
-  background: transparent;
+  background: url("./images/leather.webp") center / auto 100% no-repeat;
   box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.35);
 }
 
@@ -4532,6 +4925,21 @@ body.game .application.ouw25-journal .journal-sidebar .toc li.page > .page-headi
 body.game .application.ouw25-journal .journal-sidebar .toc li.page.active > .page-heading {
   background: linear-gradient(90deg, rgba(223, 197, 139, 0.28), transparent);
   box-shadow: inset 3px 0 #dfc58b;
+}
+
+body.game .application.ouw25-journal .journal-sidebar .toc li.page.active {
+  border-image: var(--ouw25-border-gradient) 1 0;
+}
+
+body.game .application.ouw25-journal .journal-sidebar .toc li.page.active + li.page:not(.active) {
+  border-top-color: transparent;
+}
+
+@media (forced-colors: active) {
+  body.game .application.ouw25-journal .journal-sidebar .toc li.page.active {
+    border-image: none;
+    border-color: Highlight;
+  }
 }
 
 body.game .application.ouw25-journal .journal-entry-content {
@@ -4548,7 +4956,7 @@ body.game .application.ouw25-journal .journal-header {
   isolation: isolate;
 }
 
-body.game .application.ouw25-journal .journal-header::before {
+body.game .application.ouw25-journal:not(.journal-entry-page) .journal-header::before {
   content: "";
   position: absolute;
   z-index: -1;

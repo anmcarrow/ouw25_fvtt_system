@@ -70,6 +70,7 @@ test("the built package registers models and an editable notes sheet for its dec
   } };
 
   await import(new URL(manifest.esmodules[0], dist));
+  const captainUpdateHook = hooks.get("updateActor");
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   assert.deepEqual(Object.keys(CONFIG.Item.dataModels), Object.keys(manifest.documentTypes.Item));
@@ -163,6 +164,38 @@ test("the built package registers models and an editable notes sheet for its dec
     const explicitChange = { img: "new-portrait.webp", prototypeToken: { texture: { src: "chosen-token.webp" } } };
     await actor._preUpdate(explicitChange, {}, {});
     assert.equal(explicitChange.prototypeToken.texture.src, "chosen-token.webp");
+  }
+  {
+    const saved = { user: game.user, users: game.users, ui: globalThis.ui };
+    const warnings = [];
+    globalThis.ui = { notifications: { warn: message => warnings.push(message) } };
+    game.user = { isGM: false };
+    game.users = { activeGM: {} };
+    const actor = new CONFIG.Actor.documentClass();
+    actor.type = "merchant";
+    actor.prototypeToken = { texture: { src: "custom-token.webp" } };
+    actor.system = { past: "veteran", merit: "strong", flaw: "greedy", pastLocked: false };
+    actor.items = [];
+    assert.equal(await actor._preUpdate({ system: { past: "artist" } }, {}, {}), false);
+    assert.equal(warnings.pop(), "OUW25.Past.Locked");
+    actor.system = { past: "veteran", merit: "strong", flaw: "unset", pastLocked: true };
+    assert.equal(await actor._preUpdate({ system: { past: "artist" } }, {}, {}), false);
+    actor.system.pastLocked = false;
+    game.users.activeGM = null;
+    assert.equal(await actor._preUpdate({ system: { past: "slave" } }, {}, {}), false);
+    assert.equal(warnings.pop(), "OUW25.Founders.GmRequired");
+    const pair = { system: { flaw: "greedy" } };
+    await actor._preUpdate(pair, {}, {});
+    assert.equal(pair.system.pastLocked, true);
+    actor.system.flaw = "greedy";
+    actor.isOwner = true;
+    actor.update = async changes => { actor.system.pastLocked = changes["system.pastLocked"]; };
+    const item = { type: "trait", parent: actor };
+    assert.equal(hooks.get("preDeleteItem")(item), false);
+    assert.equal(actor.system.pastLocked, true);
+    assert.equal(hooks.get("preDeleteItem")(item), undefined);
+    Object.assign(game, { user: saved.user, users: saved.users });
+    globalThis.ui = saved.ui;
   }
   {
     let migrated = false;
@@ -398,7 +431,7 @@ test("the built package registers models and an editable notes sheet for its dec
         })), specialtyConflict: false,
         specialtyRestriction: null, specialtyFormula: "1d4", pasts: MERCHANT_PASTS.map(value => ({
           value, label: `OUW25.Past.${value}`, selected: value === "unset"
-        })), showFragile: false, fragile: false, luck: 0, luckNumberScale: 1, canSpend: false, canAdd: true, wounds: [
+        })), pastLocked: true, showFragile: false, fragile: false, luck: 0, luckNumberScale: 1, canSpend: false, canAdd: true, wounds: [
           { slot: 1, marked: true, lethal: false }, { slot: 2, marked: false, lethal: false },
           { slot: 3, marked: false, lethal: true }
         ] } : null
@@ -503,6 +536,9 @@ test("the built package registers models and an editable notes sheet for its dec
       globalThis.ui = { notifications: { warn: message => warnings.push(message) } };
       globalThis.game = { i18n: { localize: key => key } };
       const submit = system => sheet._processSubmitData(null, null, { system });
+      assert.deepEqual(await submit({ past: "savage" }), {});
+      assert.equal(warnings.pop(), "OUW25.Past.Locked");
+      sheet.actor.system.merit = "unset";
       assert.deepEqual(await submit({ past: "savage", specialty: "navigator" }), {});
       assert.equal(warnings.pop(), "OUW25.Specialty.Restriction.savage");
       assert.deepEqual(await submit({ past: "hard_worker", specialty: "navigator" }), {
@@ -511,6 +547,7 @@ test("the built package registers models and an editable notes sheet for its dec
       assert.deepEqual(await submit({ past: "hard_worker", specialty: "medic" }), {
         system: { past: "hard_worker", specialty: "medic" }
       });
+      sheet.actor.system.merit = "strong";
       for (const [past, fragile, threshold] of [
         ["hard_worker", false, 4], ["artist", false, 2], ["deprived", false, 3],
         ["deprived", true, 2], ["veteran", true, 3], ["hard_worker", true, 4]
@@ -736,8 +773,12 @@ test("the built package registers models and an editable notes sheet for its dec
   memberSheet.render = () => { renders++; };
   const memberSystem = { ...shipSystem, founders: [] };
   memberSheet.actor = {
-    type: "cooperative", system: memberSystem, items: [],
-    async update(changes) { memberSystem.founders = changes["system.founders"]; }
+    uuid: "Actor.cooperative", name: "Company", type: "cooperative", system: memberSystem, items: [],
+    testUserPermission: () => true,
+    async update(changes) {
+      if ("system.founders" in changes) memberSystem.founders = changes["system.founders"];
+      if ("system.captain" in changes) memberSystem.captain = changes["system.captain"];
+    }
   };
   game.user = { id: "viewer" };
   let permission = "OBSERVER";
@@ -778,6 +819,68 @@ test("the built package registers models and an editable notes sheet for its dec
   await memberSheet._onDropActor(inside, merchant);
   await memberSheet._onDropActor(inside, merchant);
   assert.deepEqual(memberSystem.founders, [merchant.uuid]);
+  assert.equal(memberSystem.captain, merchant.uuid);
+  const second = { ...merchant, uuid: "Actor.merchant2", name: "Second",
+    system: { ...merchant.system, past: "slave" }, testUserPermission: () => true };
+  globalThis.fromUuid = async uuid => uuid === merchant.uuid ? merchant : uuid === second.uuid ? second : null;
+  await memberSheet._onDropActor(inside, second);
+  assert.equal(memberSystem.captain, merchant.uuid);
+  const setCaptain = uuid => Sheet.DEFAULT_OPTIONS.actions.setCaptain.call(memberSheet, null, { dataset: { uuid } });
+  await setCaptain(second.uuid);
+  assert.equal(warnings.pop(), "OUW25.Founders.Ineligible");
+  assert.equal(memberSystem.captain, merchant.uuid);
+  second.system.past = "artist";
+  game.users = [game.user];
+  game.settings = { get: () => "public" };
+  const captainMessages = [];
+  foundry.documents.ChatMessage = { getSpeaker: () => ({}), applyMode() {}, async create(message) { captainMessages.push(message); } };
+  foundry.applications.handlebars = { renderTemplate: async (_path, data) => JSON.stringify(data) };
+  foundry.applications.api.DialogV2.confirm = async () => false;
+  await setCaptain(second.uuid);
+  assert.equal(memberSystem.captain, merchant.uuid);
+  assert.equal(captainMessages.length, 0);
+  foundry.applications.api.DialogV2.confirm = async () => true;
+  await setCaptain(second.uuid);
+  assert.equal(memberSystem.captain, second.uuid);
+  assert.equal(captainMessages.length, 1);
+  await setCaptain(merchant.uuid);
+  assert.equal(memberSystem.captain, merchant.uuid);
+  const originalActors = game.actors;
+  game.actors = [memberSheet.actor, merchant, second];
+  game.user.isActiveGM = true;
+  merchant.system.past = "slave";
+  captainUpdateHook(merchant, { system: { past: "slave" } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(memberSystem.captain, second.uuid);
+  merchant.system.past = "veteran";
+  game.user.isActiveGM = false;
+  game.actors = originalActors;
+  await setCaptain(merchant.uuid);
+  const dragHandlers = {};
+  memberSheet._element = {
+    querySelector: () => null, querySelectorAll: () => [],
+    addEventListener(type, handler) { dragHandlers[type] = handler; }
+  };
+  await memberSheet._onRender({}, {});
+  const dragData = new Map();
+  const dataTransfer = {
+    setData(type, value) { dragData.set(type, value); },
+    getData(type) { return dragData.get(type); },
+    get types() { return [...dragData.keys()]; }
+  };
+  dragHandlers.dragstart({ target: { closest: () => ({ dataset: { captainUuid: merchant.uuid } }) },
+    dataTransfer, stopPropagation() {} });
+  let prevented = false;
+  const dropTarget = { dataset: { founderUuid: second.uuid } };
+  await dragHandlers.drop({ target: { closest: () => dropTarget }, dataTransfer,
+    preventDefault() { prevented = true; }, stopPropagation() {} });
+  assert.equal(prevented, true);
+  assert.equal(memberSystem.captain, second.uuid);
+  await dragHandlers.drop({ target: { closest: () => ({ dataset: { founderUuid: merchant.uuid } }) }, dataTransfer,
+    preventDefault() {}, stopPropagation() {} });
+  assert.equal(memberSystem.captain, second.uuid);
+  await setCaptain(merchant.uuid);
+  await Sheet.DEFAULT_OPTIONS.actions.removeFounder.call(memberSheet, null, { dataset: { uuid: second.uuid } });
   let memberContext = await memberSheet._prepareContext({});
   assert.deepEqual(memberContext.cooperative.founders[0].stats, {
     wounds: [], specialty: "OUW25.Specialty.mechanic", past: "OUW25.Past.veteran", money: 24,
@@ -809,19 +912,24 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.equal(memberContext.cooperative.founders[0].stats, undefined);
   permission = "NONE";
   memberContext = await memberSheet._prepareContext({});
-  assert.deepEqual(memberContext.cooperative.founders[0], { uuid: merchant.uuid });
+  assert.deepEqual(memberContext.cooperative.founders[0], { uuid: merchant.uuid, isCaptain: true });
   await Sheet.DEFAULT_OPTIONS.actions.openFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
   assert.equal(opened, 1);
   memberSheet.isEditable = false;
   await Sheet.DEFAULT_OPTIONS.actions.removeFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
   assert.equal(memberSystem.founders.length, 1);
   memberSheet.isEditable = true;
+  game.user.isGM = true;
+  game.users = [game.user];
+  game.settings = { get: () => "public" };
+  foundry.documents.ChatMessage = { getSpeaker: () => ({}), applyMode() {}, async create() {} };
+  foundry.applications.handlebars = { renderTemplate: async () => "" };
   await Sheet.DEFAULT_OPTIONS.actions.removeFounder.call(memberSheet, null, { dataset: { uuid: merchant.uuid } });
   assert.deepEqual(memberSystem.founders, []);
   hooks.get("deleteActor")(merchant);
   assert.equal(renders, 2);
   await memberSheet._onClose({});
-  assert.deepEqual([...hooks.keys()], ["renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
+  assert.deepEqual([...hooks.keys()], ["preUpdateItem", "preDeleteItem", "renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
 
   const placeSheet = new Sheet();
   placeSheet.isEditable = true;
@@ -885,6 +993,33 @@ test("the built package registers models and an editable notes sheet for its dec
   assert.equal(checkCard.state, "OUW25.CheckCard.Applied");
   assert.equal(chatMessage.rolls.length, 1);
 
+  {
+    const originalLocalize = game.i18n.localize;
+    const labels = {
+      "OUW25.PersonalAction.Moves.tale.label": "Story price · d6 × 1,000",
+      "OUW25.PersonalAction.Moves.favor.label": "A comrade's favor · d6"
+    };
+    game.i18n.localize = key => labels[key] ?? key;
+    const PersonalRoll = foundry.dice.Roll;
+    foundry.dice.Roll = class {
+      async evaluate() { this.total = 1; return this; }
+    };
+    const personalSheet = new Sheet();
+    personalSheet.isEditable = true;
+    personalSheet.actor = { name: "Merchant", type: "merchant", system: { hiring: "tale", past: "veteran" } };
+    for (const [source, profile, move, expected] of [
+      ["hiring", "tale", "tale", "Story price"],
+      ["past", "veteran", "favor", "A comrade's favor"]
+    ]) {
+      await Sheet.DEFAULT_OPTIONS.actions.rollPersonalAction.call(personalSheet, null, {
+        disabled: false, dataset: { source, profile, move }
+      });
+      assert.equal(checkCard.title, expected);
+    }
+    foundry.dice.Roll = PersonalRoll;
+    game.i18n.localize = originalLocalize;
+  }
+
   Object.assign(shipSystem, {
     shipName: "Ship", crewCount: 10, forcedMode: false, illuminationMode: false,
     fuelStock: 10, provisionsStock: 10, unrest: 25, travelSectors: 0, travelWatches: 0,
@@ -900,11 +1035,7 @@ test("the built package registers models and an editable notes sheet for its dec
   const messages = [];
   foundry.documents.ChatMessage.create = async message => messages.push(message);
   const voyageButton = { disabled: false, closest: () => ({ elements: { namedItem: () => null } }) };
-  foundry.applications.api.DialogV2.confirm = async () => false;
-  await Sheet.DEFAULT_OPTIONS.actions.travelSector.call(shipSheet, null, voyageButton);
-  assert.equal(messages.length, 0);
-  assert.equal(shipSystem.fuelStock, 10);
-  foundry.applications.api.DialogV2.confirm = async () => true;
+  foundry.applications.api.DialogV2.confirm = async () => assert.fail("sector actions must not ask for confirmation");
   await Sheet.DEFAULT_OPTIONS.actions.travelSector.call(shipSheet, null, voyageButton);
   assert.equal(shipSystem.fuelStock, 9);
   assert.equal(messages[0].content, "voyage card");
@@ -912,6 +1043,160 @@ test("the built package registers models and an editable notes sheet for its dec
   await Sheet.DEFAULT_OPTIONS.actions.undoSector.call(shipSheet, null, voyageButton);
   assert.equal(shipSystem.fuelStock, 10);
   assert.equal(messages.length, 2);
+  foundry.applications.api.DialogV2.confirm = async () => true;
+
+  {
+    const saved = {
+      fromUuid: globalThis.fromUuid, input: foundry.applications.api.DialogV2.input,
+      confirm: foundry.applications.api.DialogV2.confirm, roll: foundry.dice.Roll,
+      render: foundry.applications.handlebars.renderTemplate, isGM: game.user.isGM
+    };
+    const owner = game.user.id;
+    const founder = (id, specialty, owned) => ({
+      uuid: `Actor.${id}`, type: "merchant", name: id, items: [],
+      system: { specialty, past: "artist" },
+      testUserPermission: (user, level) => level === "OWNER" ? owned.has(user.id) : true
+    });
+    const captainOwners = new Set([owner]);
+    const mechanicOwners = new Set([owner]);
+    const medicOwners = new Set([owner]);
+    const captain = founder("captain", "unset", captainOwners);
+    const mechanic = founder("mechanic", "mechanic", mechanicOwners);
+    const medic = founder("medic", "medic", medicOwners);
+    const other = founder("other", "unset", new Set());
+    const actors = [other, captain, mechanic, medic];
+    const resolveFounder = async uuid => actors.find(actor => actor.uuid === uuid) ?? null;
+    globalThis.fromUuid = resolveFounder;
+    game.user.isGM = false;
+    Object.assign(shipSystem, { founders: actors.map(actor => actor.uuid), captain: other.uuid });
+    let dialogs = 0;
+    foundry.applications.api.DialogV2.confirm = async () => assert.fail("sector actions must not ask for confirmation");
+    foundry.applications.api.DialogV2.input = async () => { dialogs++; return { additionalDice: 0, complications: 0 }; };
+    foundry.applications.handlebars.renderTemplate = async (_path, data) => { checkCard = data; return "card"; };
+    const act = name => Sheet.DEFAULT_OPTIONS.actions[name].call(shipSheet, null, voyageButton);
+    const originalFuel = shipSystem.fuelStock;
+    await act("travelSector");
+    assert.equal(dialogs, 0);
+    assert.equal(shipSystem.fuelStock, originalFuel);
+    shipSystem.captain = null;
+    await act("travelSector");
+    assert.equal(dialogs, 0);
+    shipSystem.captain = captain.uuid;
+    let context = await shipSheet._prepareContext({});
+    assert.deepEqual(context.ship.access, { captain: true, mechanic: true, medic: true });
+    assert.equal(context.ship.canTravel, true);
+    captainOwners.clear();
+    context = await shipSheet._prepareContext({});
+    assert.equal(context.ship.canTravel, false);
+    await act("travelSector");
+    assert.equal(dialogs, 0);
+    captainOwners.add(owner);
+    globalThis.fromUuid = async uuid => {
+      shipSystem.captain = other.uuid;
+      return resolveFounder(uuid);
+    };
+    await act("travelSector");
+    assert.equal(shipSystem.fuelStock, originalFuel);
+    globalThis.fromUuid = resolveFounder;
+    shipSystem.captain = captain.uuid;
+    await act("travelSector");
+    assert.equal(shipSystem.fuelStock, originalFuel - 1);
+    globalThis.fromUuid = async uuid => {
+      shipSystem.founders = shipSystem.founders.filter(uuid => uuid !== captain.uuid);
+      return resolveFounder(uuid);
+    };
+    await act("undoSector");
+    assert.equal(shipSystem.fuelStock, originalFuel - 1);
+    globalThis.fromUuid = resolveFounder;
+    shipSystem.founders.push(captain.uuid);
+    await act("undoSector");
+    assert.equal(shipSystem.fuelStock, originalFuel);
+
+    mechanicOwners.clear();
+    context = await shipSheet._prepareContext({});
+    assert.equal(context.ship.forcedDisabled, true);
+    const beforeDialogs = dialogs;
+    await act("toggleForcedMode");
+    assert.equal(dialogs, beforeDialogs);
+    assert.equal(shipSystem.forcedMode, false);
+    mechanicOwners.add(owner);
+    foundry.applications.api.DialogV2.input = async () => {
+      mechanicOwners.clear();
+      return { additionalDice: 0, complications: 0 };
+    };
+    await act("toggleForcedMode");
+    assert.equal(shipSystem.forcedMode, false);
+    assert.equal(voyageButton.disabled, true);
+    mechanicOwners.add(owner);
+    foundry.applications.api.DialogV2.input = async () => ({ additionalDice: 0, complications: 0 });
+    foundry.dice.Roll = class {
+      async evaluate() {
+        mechanic.system.specialty = "unset";
+        this.dice = [{ results: [6, 4, 2, 1].map(result => ({ active: true, result })) }];
+        return this;
+      }
+    };
+    await act("toggleForcedMode");
+    assert.equal(shipSystem.forcedMode, false);
+    assert.equal(checkCard.state, "OUW25.CheckCard.NotApplied");
+    mechanic.system.specialty = "mechanic";
+    foundry.dice.Roll = saved.roll;
+    await act("toggleForcedMode");
+    assert.equal(shipSystem.forcedMode, true);
+    mechanicOwners.clear();
+    context = await shipSheet._prepareContext({});
+    assert.equal(context.ship.forcedDisabled, false);
+    await act("toggleForcedMode");
+    assert.equal(shipSystem.forcedMode, false);
+
+    medicOwners.clear();
+    context = await shipSheet._prepareContext({});
+    assert.equal(context.ship.access.medic, false);
+    const beforeTherapy = shipSystem.unrest;
+    await act("psychotherapy");
+    assert.equal(shipSystem.unrest, beforeTherapy);
+    medicOwners.add(owner);
+    foundry.applications.api.DialogV2.input = async () => {
+      medic.system.specialty = "unset";
+      return { additionalDice: 0, complications: 0 };
+    };
+    await act("psychotherapy");
+    assert.equal(shipSystem.unrest, beforeTherapy);
+    assert.equal(voyageButton.disabled, true);
+    medic.system.specialty = "medic";
+    foundry.applications.api.DialogV2.input = async () => ({ additionalDice: 0, complications: 0 });
+    foundry.dice.Roll = class {
+      async evaluate() {
+        medicOwners.clear();
+        this.total = 4;
+        this.dice = [{ results: [6, 4, 2, 1].map(result => ({ active: true, result })) }];
+        return this;
+      }
+    };
+    await act("psychotherapy");
+    assert.equal(shipSystem.unrest, beforeTherapy);
+    assert.equal(checkCard.state, "OUW25.CheckCard.NotApplied");
+    medicOwners.add(owner);
+    foundry.dice.Roll = class {
+      async evaluate() {
+        this.total = 4;
+        this.dice = [{ results: [6, 4, 2, 1].map(result => ({ active: true, result })) }];
+        return this;
+      }
+    };
+    await act("psychotherapy");
+    assert.ok(shipSystem.unrest < beforeTherapy);
+    game.user.isGM = true;
+    shipSystem.captain = null;
+    shipSystem.founders = [];
+    context = await shipSheet._prepareContext({});
+    assert.deepEqual(context.ship.access, { captain: true, mechanic: true, medic: true });
+    Object.assign(foundry.applications.api.DialogV2, { input: saved.input, confirm: saved.confirm });
+    foundry.dice.Roll = saved.roll;
+    foundry.applications.handlebars.renderTemplate = saved.render;
+    globalThis.fromUuid = saved.fromUuid;
+    game.user.isGM = saved.isGM;
+  }
 
   const checkSheet = new Sheet();
   checkSheet.isEditable = true;
@@ -953,6 +1238,8 @@ test("voyage cards report actual deltas and never widen message recipients", asy
   };
   const card = voyageCardData(actor, before, after, true);
   assert.equal(card.title, "OUW25.Voyage.UndoSector");
+  assert.equal(card.undo, true);
+  assert.equal(voyageCardData(actor, before, after, false).undo, false);
   assert.deepEqual(card.fields.map(field => field.delta), [1, 1, -1, 0, 0]);
   const users = [{ id: "gm", isGM: true }, { id: "observer" }, { id: "stranger" }];
   const publicMessage = {};
@@ -1713,10 +2000,59 @@ test("English bargain text uses ampersands", async () => {
   assert.equal(BargainCalc.PriceSummary, "Complications cancelled: {neutralized}; advantages spent: {spent}, remaining: {remaining}.");
 });
 
+test("bargain cards list enemy names without locations while preserving their records", async () => {
+  const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
+  const { calculateBargain } = await import(new URL("module/bargain.mjs", dist));
+  const previous = { game: globalThis.game, foundry: globalThis.foundry, ui: globalThis.ui };
+  const records = [];
+  const actor = {
+    id: "leader", uuid: "Actor.leader", name: "Leader", type: "merchant", documentName: "Actor",
+    system: { pocketMoney: 0 }, items: [], testUserPermission: () => true,
+    async createEmbeddedDocuments(_type, items) { records.push(...items); return items; }
+  };
+  const values = {
+    advantages: 0, helperAdvantages: 0, complications: 0, traits: 0, captainTraits: 0,
+    time: 0, unrest: 0, cash: 0, budget: 0, loan: 0, enemies: 2, friends: 0, friendIds: [],
+    enemyRecords: [{ name: "First", location: "Port" }, { name: "Second", location: "" }],
+    goal: "", enemyDescription: "", creditorName: "", creditorLocation: "", existingDebt: ""
+  };
+  let card;
+  globalThis.game = {
+    actors: new Map([[actor.id, actor]]), user: { id: "user" }, users: [{ id: "user" }],
+    settings: { get: () => "public" }, i18n: { localize: key => key, format: key => key }
+  };
+  globalThis.ui = { notifications: { warn: message => assert.fail(message), error: message => assert.fail(message) } };
+  globalThis.foundry = {
+    applications: {
+      handlebars: { renderTemplate: async (path, data) => {
+        if (path.endsWith("check-card.hbs")) card = data;
+        return "";
+      } },
+      api: { DialogV2: { input: async () => ({ values, result: calculateBargain(values) }) } }
+    },
+    documents: { ChatMessage: { getSpeaker: () => ({}), applyMode() {}, create: async () => {} } }
+  };
+  try {
+    await openBargain(actor);
+    assert.equal(card.bargainCard, true);
+    assert.equal(card.details.find(row => row.label === "OUW25.BargainCalc.NewEnemies").value, "First, Second");
+    assert.deepEqual(records.map(record => [record.name, record.system.location]), [["First", "Port"], ["Second", ""]]);
+    values.enemies = 0;
+    values.enemyRecords = [];
+    await openBargain(actor);
+    assert.equal(card.details.find(row => row.label === "OUW25.BargainCalc.NewEnemies").value, "—");
+  } finally {
+    globalThis.game = previous.game;
+    globalThis.foundry = previous.foundry;
+    globalThis.ui = previous.ui;
+  }
+});
+
 test("bargain dialog orders payment fields and validates contact and partial outcome choices", async () => {
   const { openBargain } = await import(new URL("module/bargain-dialog.mjs", dist));
   const previous = { game: globalThis.game, foundry: globalThis.foundry, document: globalThis.document, ui: globalThis.ui,
-    getComputedStyle: globalThis.getComputedStyle, ResizeObserver: globalThis.ResizeObserver, random: Math.random };
+    getComputedStyle: globalThis.getComputedStyle, ResizeObserver: globalThis.ResizeObserver, fromUuid: globalThis.fromUuid,
+    random: Math.random };
   const actor = { id: "a", uuid: "Actor.a", name: "Merchant", documentName: "Actor", type: "merchant",
     img: "portrait.webp", prototypeToken: { texture: { src: "token.webp" } },
     system: { pocketMoney: 0 }, items: Object.assign([], { get() {} }), testUserPermission: () => true };
@@ -1730,7 +2066,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     partial, consequence, inflation: { checked: false }, knowOpponent: { checked: false }, goal: { value: "" }, custom: { value: "" },
     existingDebt, creditorLocation: { value: "" }, time: { value: "2" },
     cash: { value: "0" }, budget: { value: "0" }, unrest: { value: "0" },
-    traits: { value: "0" }, advantages: { value: "0" }, complications: { value: "0" }, enemyDescription: { value: "" }
+    traits: { value: "0" }, captainTraits: { value: "0" }, advantages: { value: "0" }, complications: { value: "0" }, enemyDescription: { value: "" }
   };
   fields.namedItem = name => fields[name];
   let selectedFriends = [];
@@ -1796,6 +2132,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     i18n: { localize: key => key, format: (key, values) => { formatted.set(key, values); return key; } }
   };
   let warning, incomingDraftTest = false;
+  const pendingCaptains = [];
   globalThis.ui = { notifications: { warn: value => { warning = value; } } };
   globalThis.foundry = { documents: { Actor: { fromDropData: async () => helper } }, applications: {
     ux: { TextEditor: { implementation: { getDragEventData: () => ({ type: "Actor" }) } } },
@@ -1810,6 +2147,13 @@ test("bargain dialog orders payment fields and validates contact and partial out
       const dialog = { element: root, setPosition() { positions++; } };
       config.render(null, dialog);
       if (incomingDraftTest) {
+        fields.captainTraits.value = "0";
+        const manualInput = new Event("input");
+        Object.defineProperty(manualInput, "target", { value: fields.captainTraits });
+        form.dispatchEvent(manualInput);
+        for (const resolve of pendingCaptains.splice(0)) resolve(helper);
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(fields.captainTraits.value, "0");
         assert.equal(fields.goal.value, "Transferred goal");
         assert.equal(fields.enemyDescription.value, "Rival");
         assert.equal(fields.advantages.value, "3");
@@ -2001,6 +2345,11 @@ test("bargain dialog orders payment fields and validates contact and partial out
     incomingDraftTest = true;
     game.actors.set(cooperative.id, cooperative);
     game.actors.set(helper.id, helper);
+    helper.system.merit = "strong";
+    helper.system.flaw = "greedy";
+    helper.system.past = "artist";
+    cooperative.system.founders = [helper.uuid];
+    globalThis.fromUuid = () => new Promise(resolve => pendingCaptains.push(resolve));
     await openBargain(actor, { leader: actor, cooperative, helpers: [helper], goal: "Transferred goal", opponent: "Rival",
       knowOpponent: true, advantages: "3", complications: "2" });
   } finally {
@@ -2010,6 +2359,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
     globalThis.ui = previous.ui;
     globalThis.getComputedStyle = previous.getComputedStyle;
     globalThis.ResizeObserver = previous.ResizeObserver;
+    globalThis.fromUuid = previous.fromUuid;
     Math.random = previous.random;
   }
 });
@@ -2210,6 +2560,7 @@ test("every third added merchant merit creates an unused random flaw", async () 
         batches.push(records);
         for (const record of records) items.push({ ...record, id: `item-${items.length}` });
       },
+      async update(changes) { if ("system.pastLocked" in changes) this.system.pastLocked = changes["system.pastLocked"]; },
       async updateEmbeddedDocuments(_type, records) { batches.push(records); }
     };
     const add = kind => Sheet.DEFAULT_OPTIONS.actions.editTrait.call(sheet, null, { dataset: { creation: kind } });
@@ -2598,6 +2949,9 @@ test("check stays open for repeated rolls and clears only spent draft resources"
     await dialog.options.buttons[0].callback(null, { form });
     assert.equal(rollFormula, "7d6");
     assert.equal(lastCard.details.find(row => row.label === "OUW25.BargainCalc.Advantages").value, 3);
+    for (const label of ["OUW25.BargainCalc.CardDrawback", "OUW25.Unluck.CardLuck", "OUW25.Unluck.CardDonation", "OUW25.Unluck.CardWounds"]) {
+      assert.ok(lastCard.details.some(row => row.label === label));
+    }
     selectors["[data-helpers]"].children[0].children[0].dispatchEvent(new Event("click"));
     assert.equal(selectors["[data-helper-bonus]"].hidden, true);
     assert.equal(selectors["[data-dice-count]"].textContent, 6);

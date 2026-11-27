@@ -8,6 +8,7 @@ export function voyageCardData(actor, before, after, undo) {
     title: `OUW25.Voyage.${undo ? "UndoSector" : "TravelSector"}`,
     actorName: actor.name,
     shipName: actor.system.shipName,
+    undo,
     fields: FIELDS.map(([field, label]) => ({
       label: `OUW25.Voyage.Card${label}`,
       before: before[field],

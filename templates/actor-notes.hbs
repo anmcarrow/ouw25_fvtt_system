@@ -105,6 +105,7 @@
         </div>
         <div class="ouw25-merchant-wounds">
           <div class="ouw25-wound-slots" data-count="{{condition.wounds.length}}">
+            <span class="ouw25-wound-label" aria-hidden="true">{{localize "OUW25.Condition.WoundsTitle"}}</span>
             {{#each condition.wounds}}
               <label class="ouw25-condition-check" data-tooltip="{{#if lethal}}{{localize "OUW25.Tooltip.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Tooltip.Wound" slot=slot}}{{/if}}">
                 <input type="checkbox" name="system.wound{{slot}}" aria-label="{{#if lethal}}{{localize "OUW25.Condition.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Condition.Wound" slot=slot}}{{/if}}" data-tooltip="{{#if lethal}}{{localize "OUW25.Tooltip.LethalWound" slot=slot}}{{else}}{{localize "OUW25.Tooltip.Wound" slot=slot}}{{/if}}" {{checked marked}} {{#unless ../editable}}disabled{{/unless}}>
@@ -192,15 +193,21 @@
           {{#if cooperative.founders}}
             <ul>
               {{#each cooperative.founders}}
-                <li class="ouw25-founder">
+                <li class="ouw25-founder" data-founder-uuid="{{uuid}}">
                   {{#if canView}}
                     <div class="ouw25-founder-card">
-                      <button type="button" class="ouw25-founder-portrait" data-action="openFounder" data-uuid="{{uuid}}" aria-label="{{name}}{{#if stats.wounds}}, {{localize "OUW25.Founders.Wounds" count=stats.wounds.length}}{{/if}}" data-tooltip="{{name}}">
-                        <img src="{{img}}" alt="">
-                        {{#if stats.wounds}}<span class="ouw25-founder-wounds" aria-hidden="true">{{#each stats.wounds}}<span>{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}</span>{{/each}}</span>{{/if}}
-                      </button>
+                      <div class="ouw25-founder-portrait-frame">
+                        <button type="button" class="ouw25-founder-portrait" data-action="openFounder" data-uuid="{{uuid}}" aria-label="{{name}}{{#if stats.wounds}}, {{localize "OUW25.Founders.Wounds" count=stats.wounds.length}}{{/if}}" data-tooltip="{{name}}">
+                          <img src="{{img}}" alt="">
+                          {{#if stats.wounds}}<span class="ouw25-founder-wounds" aria-hidden="true">{{#each stats.wounds}}<span>{{#if lethal}}&#x1F480;{{else}}&#x1FA78;{{/if}}</span>{{/each}}</span>{{/if}}
+                        </button>
+                        {{#if isCaptain}}<img class="ouw25-founder-captain" src="systems/ouw25/styles/images/capn_point.webp" alt="{{localize "OUW25.Founders.Captain"}}" data-tooltip="{{#if @root.editable}}{{localize "OUW25.Founders.CaptainDrag"}}{{else}}{{localize "OUW25.Founders.Captain"}}{{/if}}" data-captain-uuid="{{uuid}}" draggable="{{#if @root.editable}}true{{else}}false{{/if}}">{{/if}}
+                      </div>
                       <div class="ouw25-founder-details">
-                        <h4>{{name}}</h4>
+                        <div class="ouw25-founder-heading">
+                          <h4>{{name}}</h4>
+                          {{#if @root.editable}}{{#unless isCaptain}}<button type="button" data-action="setCaptain" data-uuid="{{uuid}}" data-tooltip="{{localize "OUW25.Founders.Assign"}}">{{localize "OUW25.Founders.Assign"}}</button>{{/unless}}{{/if}}
+                        </div>
                         {{#if stats}}
                           <p><strong>{{localize stats.specialty}}, {{localize stats.past}}.</strong></p>
                           <p class="ouw25-founder-summary">
@@ -228,7 +235,7 @@
           {{else}}
             <p>{{localize "OUW25.Founders.Empty"}}</p>
           {{/if}}
-          {{#if editable}}<p>{{localize "OUW25.Founders.DropHint"}}</p>{{/if}}
+          {{#if editable}}<p class="ouw25-founder-drop-hint">{{localize "OUW25.Founders.DropHint"}}</p>{{/if}}
         </fieldset>
       </div>
     </div>
@@ -543,12 +550,17 @@
           <button type="button" data-action="toggleIlluminationMode" aria-pressed="{{#if ship.illuminationMode}}true{{else}}false{{/if}}" {{#unless editable}}disabled{{/unless}}>{{localize "OUW25.Voyage.IlluminationMode"}}</button>
           {{#if editable}}
             <button type="button" data-action="resetVoyage">{{localize "OUW25.Voyage.ResetCounters"}}</button>
-            <button type="button" data-action="psychotherapy">{{localize "OUW25.Voyage.Psychotherapy"}}</button>
+            <button type="button" data-action="psychotherapy" {{#unless ship.access.medic}}disabled{{/unless}}>{{localize "OUW25.Voyage.Psychotherapy"}}</button>
             <button type="button" data-action="increaseUnrest">{{localize "OUW25.Voyage.IncreaseUnrest"}}</button>
           {{/if}}
         </div>
         <p class="ouw25-voyage-summary">{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}} {{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
         <div class="ouw25-voyage-statuses">
+          {{#if editable}}
+            {{#unless ship.access.captain}}<p>{{localize "OUW25.Voyage.RequireCaptain"}}</p>{{/unless}}
+            {{#unless ship.access.mechanic}}{{#unless ship.forcedMode}}<p>{{localize "OUW25.Voyage.RequireMechanic"}}</p>{{/unless}}{{/unless}}
+            {{#unless ship.access.medic}}<p>{{localize "OUW25.Voyage.RequireMedic"}}</p>{{/unless}}
+          {{/if}}
           {{#unless ship.forcedMode}}<p>{{localize "OUW25.Voyage.ForcedOff"}}</p>{{/unless}}
           {{#if ship.voyage.crewOverCapacity}}<p role="status">{{localize "OUW25.Voyage.CrewOverCapacity"}}</p>{{/if}}
           {{#if ship.illuminationMode}}<p>{{localize "OUW25.Voyage.IlluminationUnrest"}}</p>{{/if}}
@@ -561,10 +573,10 @@
           {{#if ship.hold.overloaded}}<p role="status">{{localize "OUW25.Ship.Overloaded"}}</p>{{/if}}
         </div>
       </fieldset>
-      <div class="ouw25-ship-pair">
+      <div class="ouw25-ship-pair ouw25-ship-wide-pair">
         {{#each ship.qualities}}{{> ouw25-ship-list list=this}}{{/each}}
       </div>
-      <div class="ouw25-ship-pair">
+      <div class="ouw25-ship-pair ouw25-ship-wide-pair">
         <div class="ouw25-sheet-column">
           {{> ouw25-ship-list list=ship.mounts}}
           {{> ouw25-ship-list list=ship.gear}}
@@ -779,12 +791,12 @@
     <fieldset>
       {{> ouw25-block-heading heading="OUW25.Past.Title"}}
       <div class="ouw25-choice-row">
-        <select class="ouw25-choice-heading" name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" data-tooltip="{{localize "OUW25.Tooltip.Past"}}" {{#unless editable}}disabled{{/unless}}>
+        <select class="ouw25-choice-heading" name="system.past" aria-label="{{localize "OUW25.Past.Title"}}" data-tooltip="{{#if condition.pastLocked}}{{localize "OUW25.Past.Locked"}}{{else}}{{localize "OUW25.Tooltip.Past"}}{{/if}}" {{#if condition.pastLocked}}disabled{{else}}{{#unless editable}}disabled{{/unless}}{{/if}}>
           {{#each condition.pasts}}
             <option value="{{value}}" {{#if selected}}selected{{/if}}>{{localize label}}</option>
           {{/each}}
         </select>
-        {{#if editable}}{{> ouw25-roll-icon creation="past" label="OUW25.Creation.RollPast"}}{{/if}}
+        {{#if editable}}{{#unless condition.pastLocked}}{{> ouw25-roll-icon creation="past" label="OUW25.Creation.RollPast"}}{{/unless}}{{/if}}
       </div>
       {{#if pastMoves}}
       <div class="ouw25-profile-details">

@@ -4,6 +4,7 @@ import { canonicalPortName, locationChoices } from "./ports.mjs";
 import { MERCHANT_TRAITS } from "./traits.mjs";
 import { registerCollisionWindow, transferCollision } from "./collision-transfer.mjs";
 import { openUnluck } from "./unluck-dialog.mjs";
+import { resolveCaptain } from "./captain.mjs";
 
 const pending = new Set();
 const MAX_ENEMIES = 20;
@@ -122,6 +123,12 @@ function traitCount(actor) {
   const primary = ["merit", "flaw"].filter(kind => MERCHANT_TRAITS[kind].includes(actor.system[kind])).length;
   return primary + actor.items.filter(item => item.type === "trait"
     && Object.values(MERCHANT_TRAITS).some(codes => codes.includes(item.system.code))).length;
+}
+
+export async function captainTraitCount(cooperative) {
+  if (!cooperative) return null;
+  const { actor } = await resolveCaptain(cooperative);
+  return actor ? traitCount(actor) : null;
 }
 
 export function participant(actor) {
@@ -310,13 +317,15 @@ export async function openBargain(actor, draft = null) {
   let cooperativeManual = false;
   const helpers = new Map();
   const snapshot = { cash: leader.system.pocketMoney, budget: cooperative?.system.budget, unrest: cooperative?.system.unrest };
-  let scrollbar, unregister = () => {};
+  let scrollbar, unregister = () => {}, captainHooks = [], captainRevision = 0, captainInputRevision = 0, captainUuid = null;
   const friends = actor.items.filter(item => item.type === "relationship" && item.system.direction === "friend")
     .map(item => ({ id: item.id, name: item.name }));
-  const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
-    name, label: `OUW25.BargainCalc.${key}`, value: ["traits", "captainTraits"].includes(name) ? traitCount(actor) : 0
-  }));
   try {
+    const captainTraits = await captainTraitCount(cooperative);
+    const paymentFields = PAYMENT_FIELDS.map(([name, key]) => ({
+      name, label: `OUW25.BargainCalc.${key}`,
+      value: name === "traits" ? traitCount(actor) : name === "captainTraits" ? captainTraits ?? 0 : 0
+    }));
     const content = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/bargain.hbs", {
       actor, paymentFields, friends, maxEnemies: MAX_ENEMIES,
       enemySlots: Array.from({ length: MAX_ENEMIES }, (_, index) => ({ number: index + 1 })),
@@ -410,6 +419,7 @@ export async function openBargain(actor, draft = null) {
           }
           showCooperative();
           refreshLimits();
+          refreshCaptain();
         };
         const option = (value, label, debt) => {
           const element = document.createElement("option");
@@ -524,6 +534,39 @@ export async function openBargain(actor, draft = null) {
           }
           scrollbar.sync();
         };
+        const refreshCaptain = async () => {
+          const revision = ++captainRevision;
+          const inputRevision = captainInputRevision;
+          const selected = cooperative;
+          const field = form.elements.captainTraits;
+          field.value = "0";
+          const warning = root.querySelector("[data-captain-warning]");
+          if (warning) warning.hidden = false;
+          const result = selected ? await resolveCaptain(selected) : { uuid: null, actor: null };
+          const count = result.actor ? traitCount(result.actor) : null;
+          if (revision !== captainRevision || selected !== cooperative) return;
+          captainUuid = result.uuid;
+          if (inputRevision === captainInputRevision) field.value = String(count ?? 0);
+          if (warning) warning.hidden = count !== null;
+          update();
+        };
+        for (const [event, hook] of captainHooks) Hooks.off(event, hook);
+        captainHooks = [];
+        if (globalThis.Hooks?.on) {
+          for (const event of ["updateActor", "createItem", "updateItem", "deleteItem"]) {
+            const hook = Hooks.on(event, (document, changes = {}) => {
+              const uuid = event === "updateActor" ? document.uuid : document.parent?.uuid;
+              if (event === "updateActor" && uuid === cooperative?.uuid
+                && (changes.system?.founders || "captain" in (changes.system ?? {})
+                  || "system.founders" in changes || "system.captain" in changes)) refreshCaptain();
+              else if (event === "updateActor" && uuid === captainUuid
+                && (["merit", "flaw", "past"].some(field => field in (changes.system ?? {})
+                  || `system.${field}` in changes))) refreshCaptain();
+              else if (event !== "updateActor" && uuid === captainUuid && document.type === "trait") refreshCaptain();
+            });
+            captainHooks.push([event, hook]);
+          }
+        }
         const selectLeader = selected => {
           leader = selected;
           if (helpers.delete(selected.uuid)) {
@@ -602,7 +645,10 @@ export async function openBargain(actor, draft = null) {
           update();
           name.focus();
         });
-        form.addEventListener("input", update);
+        form.addEventListener("input", event => {
+          if (event.target === form.elements.captainTraits) captainInputRevision++;
+          update();
+        });
         form.addEventListener("change", update);
         for (const zone of root.querySelectorAll("[data-drop]")) {
           zone.addEventListener("dragover", event => event.preventDefault());
@@ -627,6 +673,7 @@ export async function openBargain(actor, draft = null) {
         }
         if (draft) { receive(draft); draft = null; }
         else update();
+        refreshCaptain();
         const style = getComputedStyle(scrollArea);
         const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
         const height = root.offsetHeight - scrollArea.clientHeight + content.offsetHeight + padding;
@@ -701,17 +748,17 @@ export async function openBargain(actor, draft = null) {
       ["Complications", values.complications], ["Advantages", Number(values.advantages) + values.helperAdvantages],
       ["Neutralized", `${result.neutralized} (${result.spentAdvantages})`],
       ["AdvantagePoints", result.contributions.advantages],
-      ["PartialConsequence", consequence],
+      ["CardDrawback", consequence],
       ["Price", result.price], ["Paid", result.paid], ["Excess", result.excess],
       ["Cash", moneyPayment.cash], ["Budget", moneyPayment.budget], ["Time", values.time], ["Unrest", Number(values.unrest) * UNREST_PER_POINT],
       ["Loan", `${values.loan} ${values.existingDebt ? leader.items.get(values.existingDebt)?.name ?? "" : values.creditorName} ${values.creditorLocation}`],
-      ["Enemies", values.enemyRecords.map(enemy => `${enemy.name}${enemy.location ? ` (${enemy.location})` : ""}`).join(", ") || "—"],
+      ["NewEnemies", values.enemyRecords.map(enemy => enemy.name).join(", ") || "—"],
       ["Friends", chosenFriends || "—"]
     ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));
     try {
       const { ChatMessage } = foundry.documents;
       const card = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/check-card.hbs", {
-        actorName: actor.name, title: game.i18n.localize("OUW25.Bargain.Title"),
+        actorName: actor.name, title: game.i18n.localize("OUW25.Bargain.Title"), bargainCard: true,
         result: game.i18n.localize("OUW25.BargainCalc.Manual"), details: rows
       });
       const message = { speaker: ChatMessage.getSpeaker({ actor }), content: card };
@@ -726,6 +773,8 @@ export async function openBargain(actor, draft = null) {
       ui.notifications.error(game.i18n.localize("OUW25.BargainCalc.ChatFailed"));
     }
   } finally {
+    captainRevision++;
+    for (const [event, hook] of captainHooks) Hooks.off(event, hook);
     unregister();
     scrollbar?.destroy();
     pending.delete(actor.uuid);

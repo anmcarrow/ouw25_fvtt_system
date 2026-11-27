@@ -1,8 +1,8 @@
 <article class="ouw25-chat-card">
   <header>
     <h3>{{localize title}}</h3>
-    <p>{{actorName}} · {{shipName}}</p>
   </header>
+  <p class="ouw25-voyage-card-intro">{{#if undo}}{{localize "OUW25.Voyage.CardUndoIntro"}}{{else}}{{localize "OUW25.Voyage.CardTravelIntro" shipName=shipName}}{{/if}}</p>
   <dl>
     {{#each fields}}
       <div>

@@ -422,13 +422,13 @@ export async function openUnluck(actor, draft = null, title = null) {
         ["Opponent", values.opponent], ["Leader", roller.name],
         ["Helpers", participants.map(item => item.name).join(", ") || "—"],
         ["Cooperative", payer?.name || "—"],
-        ["PartialConsequence", consequence], ["Complications", calculation.deduction],
+        ["CardDrawback", consequence], ["Complications", calculation.deduction],
         ["Advantages", Number(values.advantages) + values.helperAdvantages]
       ].map(([label, value]) => ({ label: `OUW25.BargainCalc.${label}`, value }));
       details.push({ label: "OUW25.Collision.Dice", value: calculation.diceCount },
-        { label: "OUW25.Unluck.Luck", value: calculation.luck },
-        { label: "OUW25.Unluck.Donation", value: calculation.donation },
-        { label: "OUW25.Unluck.Wounds", value: values.woundSlots.join(", ") || "—" });
+        { label: "OUW25.Unluck.CardLuck", value: calculation.luck },
+        { label: "OUW25.Unluck.CardDonation", value: calculation.donation },
+        { label: "OUW25.Unluck.CardWounds", value: values.woundSlots.join(", ") || "—" });
       try {
         const { ChatMessage } = foundry.documents;
         const flavor = await foundry.applications.handlebars.renderTemplate("systems/ouw25/templates/check-card.hbs", {

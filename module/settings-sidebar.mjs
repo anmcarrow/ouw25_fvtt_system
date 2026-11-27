@@ -24,10 +24,12 @@ export function renderSystemInfo(html) {
 
   const links = document.createElement("ul");
   links.className = "ouw25-system-links";
+  const repository = (game.system.url || "https://github.com/anmcarrow/ouw25_fvtt_system").replace(/\/+$/, "");
   for (const [label, url] of [
-    ["ReleaseNotes", game.system.changelog],
-    ["Issues", game.system.bugs],
-    ["Wiki", game.system.flags?.ouw25?.wiki]
+    ["ReleaseNotes", game.system.changelog || `${repository}/releases`],
+    ["Issues", game.system.bugs || `${repository}/issues`],
+    ["Telegram", "https://t.me/onulteriorwaves"],
+    ["Wiki", game.system.flags?.ouw25?.wiki || "https://wiki.ukrytoemore.ru/"]
   ]) {
     if (!url) continue;
     const item = document.createElement("li");

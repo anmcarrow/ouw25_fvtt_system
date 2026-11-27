@@ -39,16 +39,19 @@
 .ouw25-settings-info .ouw25-system-badge > img {
   width: 72px;
   height: 72px;
+  margin-block: 0.125rem;
   border: 0;
   object-fit: contain;
 }
 
 .ouw25-settings-info .ouw25-system-title {
+  font-family: var(--ouw25-font-heading, "Viaoda Libre", Georgia, "Times New Roman", serif);
   font-weight: bold;
 }
 
 .ouw25-settings-info .ouw25-system-badge > .value {
   position: relative;
+  font-family: "Alice", Georgia, serif;
 }
 
 .ouw25-settings-info .notification-pip {
@@ -62,6 +65,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.25rem 0.75rem;
+  font-size: 0.7em;
   list-style: none;
   margin: 0.5rem 0;
   padding: 0;

@@ -88,10 +88,25 @@ test("settings sidebar retains Foundry's update control and links to package res
     assert.equal(badge.children[0].src, "systems/ouw25/styles/images/system_logo.webp");
     assert.equal(badge.children[0].alt, manifest.title);
     const links = section.querySelector(".ouw25-system-links").children.map(item => item.children[0]);
-    assert.deepEqual(links.map(link => link.href), [manifest.changelog, manifest.bugs, "https://wiki.ukrytoemore.ru/"]);
+    assert.deepEqual(links.map(link => link.href), [manifest.changelog, manifest.bugs, "https://t.me/onulteriorwaves", "https://wiki.ukrytoemore.ru/"]);
     assert.ok(links.every(link => link.target === "_blank" && link.rel === "noopener noreferrer"));
     renderSystemInfo(root);
     assert.equal(root.children.filter(child => child.className === "ouw25-settings-info").length, 1);
+  }
+  game.system = { title: manifest.title, url: `${manifest.url}/`, flags: { hotReload: {} } };
+  const { root } = settingsFixture(false);
+  renderSystemInfo(root);
+  assert.deepEqual(
+    root.querySelector(".ouw25-system-links").children.map(item => item.children[0].href),
+    [manifest.changelog, manifest.bugs, "https://t.me/onulteriorwaves", "https://wiki.ukrytoemore.ru/"]
+  );
+  for (const language of ["en", "ru"]) {
+    const data = JSON.parse(await readFile(new URL(`../dist/ouw25/lang/${language}.json`, import.meta.url), "utf8"));
+    game.i18n.localize = key => key.split(".").reduce((value, part) => value?.[part], data) ?? key;
+    const localized = settingsFixture(false).root;
+    renderSystemInfo(localized);
+    assert.deepEqual(localized.querySelector(".ouw25-system-links").children.map(item => item.children[0].textContent),
+      ["[NOTES]", "[ISSUES]", "[TELEGRAM]", "[WIKI]"]);
   }
   assert.doesNotThrow(() => renderSystemInfo(new Element(null, "root")));
 });

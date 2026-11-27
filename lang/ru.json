@@ -9,9 +9,10 @@
   "OUW25": {
     "ActorSheet": "Бланк описания персонажа «Благословенного прилива»",
     "SystemInfo": {
-      "ReleaseNotes": "История версий",
-      "Issues": "Сообщить об ошибке",
-      "Wiki": "Вики"
+      "ReleaseNotes": "[NOTES]",
+      "Issues": "[ISSUES]",
+      "Telegram": "[TELEGRAM]",
+      "Wiki": "[WIKI]"
     },
     "TokenMigrationError": "Не удалось обновить стандартные изображения токенов. Система повторит попытку при следующем входе ведущего в мир.",
     "Notes": "Заметки",

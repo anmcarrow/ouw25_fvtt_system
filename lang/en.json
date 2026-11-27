@@ -9,9 +9,10 @@
   "OUW25": {
     "ActorSheet": "Blessed Tide Sheet",
     "SystemInfo": {
-      "ReleaseNotes": "Release notes",
-      "Issues": "Issue tracker",
-      "Wiki": "Wiki"
+      "ReleaseNotes": "[NOTES]",
+      "Issues": "[ISSUES]",
+      "Telegram": "[TELEGRAM]",
+      "Wiki": "[WIKI]"
     },
     "TokenMigrationError": "Couldn't update default token images. The system will retry when a GM next opens the world.",
     "Notes": "Notes",

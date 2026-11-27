@@ -1,0 +1,20 @@
+name: ouw25-staging
+
+services:
+  foundry:
+    image: ghcr.io/felddy/foundryvtt:14.370
+    hostname: ouw25-staging
+    ports:
+      - "127.0.0.1:31000:30000"
+    environment:
+      CONTAINER_PRESERVE_CONFIG: "true"
+      FOUNDRY_RELEASE_URL: "${FOUNDRY_RELEASE_URL:-}"
+      FOUNDRY_IP_DISCOVERY: "false"
+      FOUNDRY_UPNP: "false"
+      FOUNDRY_HOT_RELOAD: "false"
+    volumes:
+      - foundry-data:/data
+    restart: unless-stopped
+
+volumes:
+  foundry-data:

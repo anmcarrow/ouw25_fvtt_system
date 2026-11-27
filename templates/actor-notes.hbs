@@ -350,7 +350,7 @@
           {{/each}}
         </ul>
       {{/if}}
-      {{#if showSpace}}<p>{{localize "OUW25.Ship.CompartmentSpace" volume=@root.ship.compartmentSpace}}</p>{{/if}}
+      {{#if showSpace}}<p class="ouw25-compartment-summary">{{localize "OUW25.Ship.CompartmentSpace" volume=@root.ship.compartmentSpace}}</p>{{/if}}
       {{#if @root.editable}}
         <div class="ouw25-profile-details">
           <button type="button" data-action="editShipEntry" data-kind="{{list.kind}}" {{#unless list.canAdd}}disabled{{/unless}}>{{localize list.add}}</button>
@@ -547,7 +547,7 @@
             </button>
           {{/if}}
           <input type="checkbox" name="system.illuminationMode" {{checked ship.illuminationMode}} {{#unless editable}}disabled{{/unless}} hidden>
-          <button type="button" data-action="toggleIlluminationMode" aria-pressed="{{#if ship.illuminationMode}}true{{else}}false{{/if}}" {{#unless editable}}disabled{{/unless}}>{{localize "OUW25.Voyage.IlluminationMode"}}</button>
+          <button type="button" data-action="toggleIlluminationMode" aria-pressed="{{#if ship.illuminationMode}}true{{else}}false{{/if}}" {{#unless editable}}disabled{{/unless}}>{{#if ship.illuminationMode}}{{localize "OUW25.Voyage.DisableIllumination"}}{{else}}{{localize "OUW25.Voyage.EnableIllumination"}}{{/if}}</button>
           {{#if editable}}
             <button type="button" data-action="resetVoyage">{{localize "OUW25.Voyage.ResetCounters"}}</button>
             <button type="button" data-action="psychotherapy" {{#unless ship.access.medic}}disabled{{/unless}}>{{localize "OUW25.Voyage.Psychotherapy"}}</button>

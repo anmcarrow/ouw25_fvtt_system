@@ -22,6 +22,10 @@ import { openUnluck, renderLuckMarks } from "./unluck-dialog.mjs";
 import { installTooltipDelay } from "./tooltip-delay.mjs";
 import { renderSystemInfo } from "./settings-sidebar.mjs";
 import { renderBrandedPause } from "./pause.mjs";
+import { initializeStarterScene } from "./starter-scene.mjs";
+import { registerDiceTheme } from "./dice-theme.mjs";
+import { defaultTokenName, queueTokenNameSync, stageTokenNameUpdate, syncPendingTokenNames } from "./token-names.mjs";
+import { configureTokenNameplates } from "./token-nameplate.mjs";
 import { findEligibleCaptain, firstEligibleCaptain, founderActor, hasTraitPair, isPastLocked, publishCaptainChange, reconcileCaptain, resolveCaptain } from "./captain.mjs";
 
 const SYSTEM_ID = "ouw25";
@@ -30,7 +34,6 @@ export function luckNumberScale(luck) {
 }
 
 const DEFAULT_ACTOR_IMAGE = "icons/svg/mystery-man.svg";
-const DEFAULT_COOPERATIVE_NAME = "W'ell Inc.";
 const DEFAULT_MERCHANT_NAME = "Brrg Caddck";
 const DEFAULT_ACTOR_TOKENS = {
   merchant: "systems/ouw25/styles/images/pc_token.webp",
@@ -82,7 +85,7 @@ const CREATION_ROLLS = new Map([
   ["dream", { key: "Dream", formula: "1d10", resolve: dreamFromRoll, labels: "OUW25.Identity.Dreams", storeLabel: true }],
   ["hiring", { key: "Hiring", formula: "1d11", resolve: hiringFromRoll, labels: "OUW25.Identity.Hiring" }],
   ["name", { key: "Name", formula: "2d15", actorName: true,
-    resolve: (_total, _past, roll) => merchantNameFromRolls(...roll.dice[0].results.map(die => die.result)) }]
+    resolve: (_total, _past, roll) => merchantNameFromRolls(...roll.dice[0].results.map(die => die.result), game.i18n.lang) }]
 ]);
 for (const kind of Object.keys(MERCHANT_TRAITS)) {
   CREATION_ROLLS.set(kind, {
@@ -98,6 +101,14 @@ function hasLegacyTokenArtwork(type, prototypeToken) {
 }
 
 class Ouw25Actor extends foundry.documents.Actor {
+  _initializeSource(source, options) {
+    const emptyShipTokenName = source.type === "cooperative" && source.system?.shipName === "";
+    const initialized = super._initializeSource(source, options);
+    // Foundry replaces an empty prototype name with the actor name during initialization.
+    if (emptyShipTokenName) initialized.prototypeToken.name = "";
+    return initialized;
+  }
+
   static getDefaultArtwork(actorData = {}) {
     const img = Object.hasOwn(DEFAULT_ACTOR_ARTWORK, actorData.type)
       ? DEFAULT_ACTOR_ARTWORK[actorData.type] : null;
@@ -117,6 +128,8 @@ class Ouw25Actor extends foundry.documents.Actor {
     }
     if (!Object.hasOwn(data.prototypeToken ?? {}, "displayName")) updates.displayName = CONST.TOKEN_DISPLAY_MODES.ALWAYS;
     if (!Object.hasOwn(data.prototypeToken ?? {}, "lockRotation")) updates.lockRotation = true;
+    const tokenName = defaultTokenName(this);
+    if (!Object.hasOwn(data.prototypeToken ?? {}, "name") && typeof tokenName === "string") updates.name = tokenName;
     if (Object.keys(updates).length) this.prototypeToken.updateSource(updates);
   }
 
@@ -154,6 +167,7 @@ class Ouw25Actor extends foundry.documents.Actor {
       if (!Object.keys(changed.prototypeToken.texture).length) delete changed.prototypeToken.texture;
       if (!Object.keys(changed.prototypeToken).length) delete changed.prototypeToken;
     }
+    stageTokenNameUpdate(this, changed);
   }
 
   async getTokenDocument(data = {}, options = {}) {
@@ -197,7 +211,7 @@ class Ouw25Actor extends foundry.documents.Actor {
 
     const type = types.includes(result.type) ? result.type : defaultType;
     const name = String(result.name ?? "").trim() || (type === "cooperative"
-      ? DEFAULT_COOPERATIVE_NAME : DEFAULT_MERCHANT_NAME);
+      ? game.i18n.localize("OUW25.Cooperative.DefaultName") : DEFAULT_MERCHANT_NAME);
     const actorData = { ...data, name, type };
     const options = { ...createOptions, renderSheet: createOptions.renderSheet ?? true };
     delete options.types;
@@ -308,7 +322,7 @@ class CooperativeModel extends NotesModel {
       captain: new DocumentUUIDField({ type: "Actor", nullable: true, initial: null }),
       reputation: new StringField({ initial: "unset", choices: COOPERATIVE_REPUTATIONS }),
       memory: new StringField({ initial: "unset", choices: COOPERATIVE_MEMORIES }),
-      shipName: new StringField({ initial: "Бежетка" }),
+      shipName: new StringField({ initial: () => game.i18n.localize("OUW25.Ship.DefaultName") }),
       cargoLoad: counterField(), fuelStock: resourceField(10), provisionsStock: resourceField(10),
       holdBonus: new NumberField({
         required: true, nullable: false, initial: 0, integer: true, choices: HOLD_BONUSES
@@ -1525,6 +1539,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     if (!input || input.disabled) return;
     input.click();
     target.setAttribute("aria-pressed", String(input.checked));
+    target.textContent = game.i18n.localize(`OUW25.Voyage.${input.checked ? "DisableIllumination" : "EnableIllumination"}`);
   }
 
   static async toggleForcedMode(event, target) {
@@ -1967,7 +1982,10 @@ function guardTraitChange(item) {
   return false;
 }
 
+Hooks.once("diceSoNiceReady", registerDiceTheme);
+
 Hooks.once("init", () => {
+  configureTokenNameplates();
   Hooks.on("renderSettings", (_app, html) => renderSystemInfo(html));
   Hooks.on("renderGamePause", (_app, html) => renderBrandedPause(html));
   Hooks.on("preUpdateItem", guardTraitChange);
@@ -1976,6 +1994,11 @@ Hooks.once("init", () => {
   Hooks.on("updateItem", (item, _changes, _options, userId) => lockPastAfterTrait(item, userId));
   Hooks.on("updateActor", (actor, changes) => {
     if (!game.user?.isActiveGM) return;
+    if (changes.flags?.[SYSTEM_ID]?.tokenNamePending !== undefined
+      || changes[`flags.${SYSTEM_ID}.tokenNamePending`] !== undefined
+      || (actor.type === "merchant" && changes.name !== undefined)
+      || (actor.type === "cooperative"
+        && (changes.system?.shipName !== undefined || changes["system.shipName"] !== undefined))) queueTokenNameSync(actor);
     if (actor.type === "cooperative" && (changes.system?.founders || "captain" in (changes.system ?? {})
       || "system.founders" in changes || "system.captain" in changes)) {
       queueCaptainReconciliation(actor);
@@ -1987,6 +2010,9 @@ Hooks.once("init", () => {
       }
     }
   });
+  Hooks.on("updateUser", syncPendingTokenNames);
+  Hooks.on("deleteUser", syncPendingTokenNames);
+  Hooks.on("userConnected", syncPendingTokenNames);
   for (const event of ["renderJournalEntrySheet", "renderJournalEntryPageSheet"]) {
     Hooks.on(event, (application, element) => styleSystemJournal(application, element));
   }
@@ -2020,8 +2046,10 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", async () => {
+  initializeStarterScene();
   if (game.tooltip && globalThis.document) installTooltipDelay(game.tooltip, document);
   if (!game.user.isActiveGM) return;
+  syncPendingTokenNames();
   for (const actor of game.actors) {
     if (actor.type === "merchant" && actor.system && !actor.system.pastLocked && hasTraitPair(actor)) {
       try { await actor.update({ "system.pastLocked": true }); }

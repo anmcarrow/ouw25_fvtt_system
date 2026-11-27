@@ -24,6 +24,7 @@ if [[ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$branch")" ]]; then
 fi
 
 npm test
+npm run package
 
 version="$(REPOSITORY="$repository" node --input-type=module <<'NODE'
 import { readFile, writeFile } from "node:fs/promises";

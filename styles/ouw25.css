@@ -83,7 +83,7 @@ body.game .chat-message:has(.ouw25-chat-card) {
   --ouw25-color-accent-calm: #133e61;
   --ouw25-color-paper: #f3efe3;
   --ouw25-color-surface: #fff8ee;
-  --ouw25-dialog-button-color: #915450;
+  --ouw25-default-button-gradient: linear-gradient(to bottom, #625b75, #483b74);
   --ouw25-font-heading: "Viaoda Libre", Georgia, "Times New Roman", serif;
   --ouw25-font-body: "PT Sans", Arial, sans-serif;
   --ouw25-font-input: "LXGW WenKai Mono TC", "Courier New", monospace;
@@ -93,6 +93,12 @@ body.game .chat-message:has(.ouw25-chat-card) {
   --ouw25-checkbox-background: color-mix(in srgb, var(--ouw25-color-accent) 70%, transparent);
   --ouw25-checkbox-disabled-background: color-mix(in srgb, var(--ouw25-color-paper) 70%, transparent);
   --color-select-option-bg: var(--ouw25-color-surface);
+}
+
+.ouw25,
+.application.ouw25-journal,
+.application.journal-entry,
+body.game .chat-message:has(.ouw25-chat-card) {
   --ouw25-border-gradient: linear-gradient(
     to right,
     rgba(237, 205, 121, 0.7) 0%,
@@ -111,6 +117,11 @@ body.game .application.ouw25:has(.ouw25-merchant-heading):not(.minimizing, .mini
   max-inline-size: 1280px;
 }
 
+body.game .application.ouw25:has(.ouw25-sheet-heading):not(:has(.ouw25-merchant-heading), .minimizing, .minimized) {
+  min-inline-size: 1024px;
+  max-inline-size: 1024px;
+}
+
 body.game .application.ouw25:has(.ouw25-notes):not(.minimizing, .minimized, .maximizing) {
   min-block-size: 60vh;
 }
@@ -127,8 +138,9 @@ body.game .application.ouw25:has(.ouw25-merchant-heading) > .window-content {
   --ouw25-greenbar: #e5ecdd;
   --ouw25-paper-rule: rgba(19, 62, 97, 0.2);
   --ouw25-sheet-vignette: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(160, 110, 60, 0.16) 100%);
+  --ouw25-ship-damage-frame: linear-gradient(165deg, #c9c5b8 0%, #949590 24%, #767978 50%, #afada4 72%, #6a6c6c 100%);
   --ouw25-tray-lip: linear-gradient(to top, #4f4d49 0, #7b7872 1px, #b8b4aa 2px, #e3dfd4 4px, #c9c5ba 6px, #9d9a92 8px, #6e6c66 9px, #3e3c39 10px);
-  --ouw25-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #80665b, 0 3px 4px #51413b66;
+  --ouw25-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #493972, 0 3px 4px #51413b66;
 }
 
 .ouw25 .ouw25-notes {
@@ -155,6 +167,10 @@ body.game .application.ouw25:has(.ouw25-merchant-heading) > .window-content {
   min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+.ouw25 .ouw25-notes:not(:has(.ouw25-merchant-heading)) {
+  --ouw25-tray-lip: linear-gradient(to top, color-mix(in srgb, #6a6c6c 75%, black) 0, #767978 1px, #afada4 2px, color-mix(in srgb, #c9c5b8 75%, white) 4px, #c9c5b8 6px, #949590 8px, #6a6c6c 9px, color-mix(in srgb, #6a6c6c 55%, black) 10px);
 }
 
 .ouw25 .ouw25-notes:has(.ouw25-merchant-heading) {
@@ -308,7 +324,8 @@ body.game .application.ouw25 .form-footer button {
 }
 
 body.game .application.ouw25 .ouw25-notes button:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"], [data-sort-column])) {
-  background: linear-gradient(160deg, var(--ouw25-button-color, var(--ouw25-dialog-button-color)), color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-dialog-button-color)) 90%, #705e60) 48%, color-mix(in srgb, var(--ouw25-button-color, var(--ouw25-dialog-button-color)) 75%, #705e60));
+  --ouw25-button-custom-gradient: linear-gradient(160deg, var(--ouw25-button-color), color-mix(in srgb, var(--ouw25-button-color) 90%, #705e60) 48%, color-mix(in srgb, var(--ouw25-button-color) 75%, #705e60));
+  background: var(--ouw25-button-custom-gradient, var(--ouw25-default-button-gradient));
   box-shadow: var(--ouw25-button-bevel);
   text-shadow: 0 1px 2px #60413e;
 }
@@ -319,7 +336,7 @@ body.game .application.ouw25 .ouw25-notes button:hover:not(:disabled):not(:where
 }
 
 body.game .application.ouw25 .ouw25-notes button:active:not(:disabled):not(:where(.ouw25-roll-icon, .ouw25-trait-icon, .ouw25-portrait, [data-action="tab"], [data-sort-column])) {
-  box-shadow: inset 0 2px 4px #674b4299, 0 1px 0 #80665b;
+  box-shadow: inset 0 2px 4px #674b4299, 0 1px 0 #493972;
 }
 
 body.game .application.ouw25 .dialog-content button:hover:not(:disabled),
@@ -364,26 +381,23 @@ body.game .application.ouw25 .dialog-content .form-group {
   margin-block: 0.5rem;
 }
 
+body.game .application:is(.ouw25, .ouw25-journal) > .window-header {
+  background: #211d2a url("./images/frame1.webp") center / 100% 100% no-repeat;
+}
+
+body.game .application:is(.journal-entry, .journal-entry-page) > .window-header {
+  background: #211d2a url("./images/frame2.webp") center / 100% 100% no-repeat;
+}
+
 body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) {
-  --ouw25-dialog-button-gradient: linear-gradient(160deg, var(--ouw25-dialog-button-color), color-mix(in srgb, var(--ouw25-dialog-button-color) 90%, #705e60) 48%, color-mix(in srgb, var(--ouw25-dialog-button-color) 75%, #705e60));
-  --ouw25-dialog-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #80665b, 0 3px 4px #51413b66;
+  --ouw25-folder-ink: #8a6a3a;
+  --ouw25-dialog-button-gradient: var(--ouw25-default-button-gradient);
+  --ouw25-dialog-button-bevel: inset 0 1px 1px #fff0d299, inset 0 -2px 3px #674b4266, 0 2px 0 #493972, 0 3px 4px #51413b66;
 }
 
 body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-header {
-  background: var(--ouw25-color-paper) url("./images/header_strip1.webp") center / 100% 100% no-repeat;
+  background: #355253 url("./images/panel1.webp") center / cover no-repeat;
   border-bottom: 1px solid #a48b72;
-  color: var(--ouw25-color-ink);
-}
-
-body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-header .window-title {
-  color: var(--ouw25-color-ink);
-  font-family: var(--ouw25-font-heading);
-}
-
-body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-header button.header-control {
-  --button-text-color: var(--ouw25-color-ink);
-  --button-hover-text-color: var(--ouw25-color-ink);
-  color: var(--ouw25-color-ink);
 }
 
 body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .window-content {
@@ -394,8 +408,28 @@ body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dia
   background: transparent;
 }
 
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .dialog-content label {
+  font-family: "Alice", Georgia, serif;
+  font-weight: 700;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .form-footer {
+  justify-content: center;
+}
+
 body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button {
-  border-radius: 0.65rem;
+  flex: 0 1 auto;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  height: 1.8em;
+  min-height: 1.8em;
+  border-radius: 1rem;
+  font-size: calc(var(--font-size-14) * 0.9);
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:is(.standard-form button, .dialog-buttons button) {
+  height: calc(var(--button-size) * 0.81);
+  min-height: calc(var(--button-size) * 0.81);
 }
 
 body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:not(:disabled) {
@@ -410,7 +444,7 @@ body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dia
 }
 
 body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:active:not(:disabled) {
-  box-shadow: inset 0 2px 4px #674b4299, 0 1px 0 #80665b;
+  box-shadow: inset 0 2px 4px #674b4299, 0 1px 0 #493972;
 }
 
 body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) :is(.dialog-content, .form-footer) button:focus-visible {
@@ -461,6 +495,18 @@ body.game .application.ouw25 .dialog-content :is(input:not([type="checkbox"]):no
   background: var(--ouw25-color-surface);
   border: 1px solid var(--ouw25-color-accent);
   border-image: none;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .dialog-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+  --input-background-color: var(--ouw25-field-background);
+  --input-border-color: transparent;
+  background-color: var(--ouw25-field-background);
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+}
+
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .dialog-content :is(input:not([type="checkbox"])[readonly], textarea[readonly], select:disabled) {
+  background-color: color-mix(in srgb, var(--ouw25-color-paper) 88%, #8a7250);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-hold-status {
@@ -534,16 +580,13 @@ body.game .application.ouw25 :is(.ouw25-notes, .ouw25-unluck) .ouw25-condition-c
   position: absolute;
   inset-block-start: 0;
   inset-inline: calc(-1rem - var(--ouw25-perforation-width)) -1rem;
+  inset-inline-end: auto;
+  inline-size: calc(min(1120px, 100vw) - 2rem - 2px);
   aspect-ratio: 1524 / 85;
   z-index: -1;
   translate: 0 5px;
   background: url("./images/header_strip1.webp") center / 100% 100% no-repeat;
   pointer-events: none;
-}
-
-.ouw25 .ouw25-sheet-heading.ouw25-merchant-heading::before {
-  inset-inline-end: auto;
-  inline-size: calc(min(1120px, 100vw) - 2rem - 2px);
 }
 
 .ouw25 .ouw25-sheet-heading h2 {
@@ -1318,6 +1361,8 @@ body.game .application.ouw25 .ouw25-notes :is(.ouw25-trait-actions, .ouw25-recor
 }
 
 .ouw25 .ouw25-merchant-layout :is(.ouw25-profile-details, .ouw25-trait-description, .ouw25-trait-name),
+.ouw25 .ouw25-ship-layout .ouw25-ship-list > .ouw25-profile-details,
+.ouw25 .ouw25-ship-layout .ouw25-ship-list > .ouw25-compartment-summary,
 .ouw25 .ouw25-ship-layout :is(.ouw25-trait-description, .ouw25-trait-name),
 .ouw25 .ouw25-cooperative-layout .ouw25-trait-description {
   margin-inline-start: calc(24px - var(--ouw25-fieldset-border) - var(--ouw25-fieldset-padding));
@@ -1423,8 +1468,9 @@ body.game .application.ouw25 .ouw25-notes textarea[name="system.dream"] {
 .ouw25 .ouw25-merchant-sidebar > .ouw25-pension {
   --ouw25-card-paper: url("./images/smallpaper3.webp");
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   position: relative;
+  padding-block-start: 30px;
 }
 
 .ouw25 .ouw25-pension:not(:has(.ouw25-pension-controls)) {
@@ -1481,15 +1527,16 @@ body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar :is(.ouw25-tot
   gap: 0.5rem;
 }
 
-.ouw25 .ouw25-pension-heading > h3 {
+body.game .application.ouw25 .ouw25-notes .ouw25-merchant-sidebar .ouw25-pension-heading > h3 {
   flex: 1;
   min-inline-size: 0;
+  line-height: 0.756rem;
 }
 
 .ouw25 .ouw25-pension-heading > h3 > span {
   color: var(--ouw25-color-accent-calm);
   font-size: 1.5em;
-  line-height: 1;
+  line-height: inherit;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls {
@@ -1500,7 +1547,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls {
 }
 
 .ouw25 .ouw25-pension-controls + p {
-  margin-block-start: 1.220703125rem;
+  margin-block-start: 0.6103515625rem;
 }
 
 .ouw25 .ouw25-pension > p:first-of-type {
@@ -1540,6 +1587,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button:not(:
   --ouw25-bargain-brass: linear-gradient(135deg, #70542d 0%, #dfc58b 26%, #98733e 54%, #e8d39e 77%, #6f512b 100%);
   justify-self: center;
   margin: 0;
+}
+
+.ouw25 .ouw25-pension-reference > summary {
+  translate: 0 -10px;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-pocket-money .ouw25-rolled-input > input {
@@ -1984,6 +2035,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div > span {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats :is(strong, output) {
+  color: #522d1d;
   font-family: var(--ouw25-font-accent);
   font-size: 1.725rem;
   font-weight: 700;
@@ -2006,11 +2058,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats strong > span.ouw25-
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
-  grid-template-columns: repeat(5, max-content);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
-  justify-content: space-between;
-  column-gap: 0;
-  inline-size: calc(70% - 10px);
+  column-gap: 0.375rem;
+  inline-size: calc(70% - 15px);
   margin-block-start: 2em;
   overflow-x: auto;
 }
@@ -2018,6 +2069,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources > label {
   grid-template-columns: minmax(0, 1fr);
   gap: 0.35em;
+  min-inline-size: 0;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship :is(input:read-only, select:disabled) {
@@ -2026,25 +2078,23 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship :is(input:read-only, selec
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources :is(label > input, .ouw25-ship-resource-value > input) {
   box-sizing: border-box;
-  inline-size: calc(8ch + 2.5rem);
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: calc(8ch + 2.5rem);
   margin-block: 0;
   box-shadow: inset 0 1px 3px rgba(55, 15, 0, 0.18), inset 0 -1px 0 rgba(255, 255, 255, 0.7);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 9fr) max-content minmax(0, 1fr);
   align-items: center;
-  gap: 0.35rem;
   min-inline-size: 0;
   white-space: nowrap;
 }
 
-body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > input {
-  min-inline-size: 0;
-  flex: none;
-}
-
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value > span {
+  margin-inline-start: 0.35rem;
   font-family: var(--ouw25-font-accent);
   font-size: 1.5em;
 }
@@ -2264,8 +2314,16 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions {
   margin-block: 0.25rem 0.65rem;
 }
 
-body.game .application.ouw25 .ouw25-notes fieldset.ouw25-voyage {
-  padding-block-end: 1.25rem;
+body.game .application.ouw25 .ouw25-notes fieldset.ouw25-voyage:has(> legend.ouw25-header-clip.ouw25-clipped-heading) {
+  padding: 1.25rem 1rem;
+  background-image: url("./images/smallpaper9.webp");
+  background-position: center top;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+}
+
+body.game .application.ouw25 .ouw25-notes fieldset.ouw25-voyage > legend.ouw25-clipped-heading {
+  margin-inline-start: -0.85rem;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button {
@@ -2277,8 +2335,14 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button {
   white-space: nowrap;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="resetVoyage"] {
+  margin-inline-end: 0.5rem;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-summary {
   margin-block-start: 1rem;
+  margin-inline-start: 5px;
+  font-variant: small-caps;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses {
@@ -2290,6 +2354,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses {
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p:is([role="status"], [role="alert"]) {
+  color: #9d344d;
   font-weight: 700;
 }
 
@@ -2305,15 +2370,19 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
 .ouw25-voyage-actions > [data-action="toggleForcedMode"] { --ouw25-button-color: #805d54; }
 .ouw25-voyage-actions > [data-action="toggleIlluminationMode"] { --ouw25-button-color: #77673f; }
 .ouw25-voyage-actions > [data-action="travelSector"] { --ouw25-button-color: #546e7a; }
-.ouw25-voyage-actions > [data-action="undoSector"] { --ouw25-button-color: #77624e; }
+.ouw25-voyage-actions > [data-action="undoSector"],
 .ouw25-voyage-actions > [data-action="resetVoyage"] { --ouw25-button-color: #725c78; }
 .ouw25-voyage-actions > [data-action="psychotherapy"] { --ouw25-button-color: #526f62; }
-.ouw25-voyage-actions > [data-action="increaseUnrest"] { --ouw25-button-color: #8a6546; }
+.ouw25-voyage-actions > [data-action="increaseUnrest"] { --ouw25-button-color: #6467a0; }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button:disabled {
   background: var(--ouw25-button-color);
   color: #fff8ee;
   opacity: 0.6;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > :is([data-action="toggleForcedMode"], [data-action="toggleIlluminationMode"])[aria-pressed="true"] {
+  zoom: 1.15;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="toggleForcedMode"][aria-pressed="true"] {
@@ -2323,7 +2392,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="toggleIlluminationMode"][aria-pressed="true"] {
   --ouw25-button-color: #536b37;
-  box-shadow: var(--ouw25-button-bevel), 0 0 8px 3px rgba(0, 220, 235, 0.45), 0 0 18px 6px rgba(0, 220, 235, 0.2);
+  box-shadow: var(--ouw25-button-bevel), 0 0 8px 3px rgba(71, 211, 183, 0.45), 0 0 18px 6px rgba(71, 211, 183, 0.2);
 }
 
 .ouw25 .ouw25-notes textarea {
@@ -2341,7 +2410,6 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
 }
 
 .ouw25 .ouw25-ship-damage {
-  --ouw25-ship-damage-frame: linear-gradient(165deg, #c9c5b8 0%, #949590 24%, #767978 50%, #afada4 72%, #6a6c6c 100%);
   display: grid;
   box-sizing: border-box;
   grid-template-columns: repeat(3, 2.7rem);
@@ -2415,6 +2483,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card {
   padding: calc(0.8rem + 10px);
+  padding-block-start: calc(0.28rem + 3.5px);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
@@ -2423,7 +2492,12 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card > p {
   margin: 0.5rem 0;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-equipment-card > p,
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-list > .ouw25-compartment-summary {
   font-size: 0.8em;
+  font-variant: small-caps;
 }
 
 .ouw25 .ouw25-debt-table caption {
@@ -4860,6 +4934,11 @@ body.game .application.ouw25 .ouw25-notes :is(
   input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
   select,
   textarea:not([name="system.notes"])
+),
+body.game .application.ouw25.dialog:not(.ouw25-bargain-dialog, .ouw25-unluck-dialog) .dialog-content :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea
 ) {
   background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--ouw25-folder-ink) 20%, transparent) 0 2px, transparent 2px 5px);
   background-size: 100% 1px;
@@ -4918,6 +4997,10 @@ body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-header-cli
   background: var(--ouw25-color-surface) url("./images/smallpaper7.webp") center top / 100% auto repeat-y;
   background-origin: border-box;
   box-shadow: 2px 3px 6px rgba(55, 15, 0, 0.2);
+}
+
+body.game .application.ouw25 .ouw25-notes fieldset.ouw25-traits:has(> legend.ouw25-header-clip.ouw25-clipped-heading) {
+  padding-block-start: 0.5rem;
 }
 
 body.game .application.ouw25 .ouw25-notes fieldset:has(> legend.ouw25-clipped-heading) > legend.ouw25-clipped-heading {
@@ -4984,13 +5067,35 @@ body.game .application.ouw25-journal .journal-sidebar {
   box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.35);
 }
 
+body.game .application.ouw25-journal .journal-sidebar search input::placeholder {
+  color: rgba(255, 248, 238, 0.6);
+  opacity: 1;
+}
+
+body.game .application.ouw25-journal .journal-sidebar .action-buttons button {
+  border: 1px solid transparent;
+  border-image: var(--ouw25-border-gradient) 1;
+}
+
 body.game .application.ouw25-journal .journal-sidebar .toc li.page > .page-heading {
   font-family: "Alice", Georgia, serif;
 }
 
+body.game .application.journal-entry .journal-sidebar .toc .page-heading :is(.page-number, .page-index) {
+  color: #edcd79;
+}
+
+@supports (background-clip: text) {
+  body.game .application.journal-entry .journal-sidebar .toc .page-heading :is(.page-number, .page-index) {
+    background-image: var(--ouw25-border-gradient);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
 body.game .application.ouw25-journal .journal-sidebar .toc li.page.active > .page-heading {
-  background: linear-gradient(90deg, rgba(223, 197, 139, 0.28), transparent);
-  box-shadow: inset 3px 0 #dfc58b;
+  background: transparent;
+  box-shadow: none;
 }
 
 body.game .application.ouw25-journal .journal-sidebar .toc li.page.active {
@@ -5002,9 +5107,24 @@ body.game .application.ouw25-journal .journal-sidebar .toc li.page.active + li.p
 }
 
 @media (forced-colors: active) {
+  body.game .application.journal-entry .journal-sidebar .toc .page-heading :is(.page-number, .page-index) {
+    background-image: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+  }
+
   body.game .application.ouw25-journal .journal-sidebar .toc li.page.active {
     border-image: none;
     border-color: Highlight;
+  }
+
+  body.game .application.ouw25-journal .journal-sidebar .action-buttons button {
+    border-image: none;
+    border-color: ButtonText;
+  }
+
+  body.game .application.ouw25-journal .journal-sidebar .action-buttons button:disabled {
+    border-color: GrayText;
   }
 }
 
@@ -5022,13 +5142,18 @@ body.game .application.ouw25-journal .journal-header {
   isolation: isolate;
 }
 
+body.game .application.ouw25-journal:not(.journal-entry-page) .journal-header {
+  margin-block-end: 1rem;
+  padding-block: 12.5px;
+}
+
 body.game .application.ouw25-journal:not(.journal-entry-page) .journal-header::before {
   content: "";
   position: absolute;
   z-index: -1;
   inset-block: 0;
   inset-inline: -1rem;
-  background: url("./images/header_strip1.webp") left center / 100% 100% no-repeat;
+  background: url("./images/header_strip2.webp") center / auto 100% no-repeat;
   pointer-events: none;
 }
 
@@ -5045,10 +5170,10 @@ body.game .application.ouw25-journal.journal-entry-page .journal-header :is(.tit
 body.game .application.ouw25-journal .journal-entry-page {
   color: var(--ouw25-color-ink);
   font-family: var(--ouw25-font-body);
-  padding: 0.75rem 1rem;
-  background: var(--ouw25-surface-translucent);
-  border: 1px solid transparent;
-  border-image: var(--ouw25-border-gradient) 1;
+  padding: 0.091875rem 1rem 0.75rem;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 body.game .application.ouw25-journal .journal-entry-page :is(h1, h2, h3, h4, h5, h6) {
@@ -5062,10 +5187,34 @@ body.game .application.ouw25-journal .journal-entry-page :is(h1, h2) {
 }
 
 body.game .application.ouw25-journal .journal-entry-page :is(h1, h2, h3):first-child {
-  background: linear-gradient(to bottom, var(--ouw25-folder-light), var(--ouw25-folder-dark));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ouw25-folder-ink) 45%, transparent);
-  margin-inline: -0.35rem;
-  padding-inline: 0.35rem;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  border-image: var(--ouw25-border-gradient) 0 0 1;
+}
+
+body.game .application.ouw25-journal .journal-entry-page h1:first-child {
+  font-size: calc(var(--font-h1-size, 2em) * 0.85);
+}
+
+body.game .application.ouw25-journal .journal-entry-page h2:first-child {
+  font-size: calc(var(--font-h2-size, 1.5em) * 0.85);
+}
+
+body.game .application.ouw25-journal .journal-entry-page h3:first-child {
+  font-size: calc(var(--font-h3-size, 1.25em) * 0.85);
+}
+
+body.game .application.journal-entry .journal-entry-pages .journal-entry-page p {
+  font-size: 1.25em;
+}
+
+body.game .application.journal-entry .journal-entry-pages .journal-entry-page img:not(.content-link img) {
+  box-sizing: border-box;
+  max-width: calc(100% - 1.3rem);
+  margin: 0.65rem;
+  box-shadow: 3px 4px 8px rgba(35, 18, 8, 0.55);
 }
 
 body.game .application.ouw25-journal .journal-entry-page blockquote {

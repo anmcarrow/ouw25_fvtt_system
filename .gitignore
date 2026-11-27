@@ -1,4 +1,14 @@
 /dist/
 /node_modules/
-/.env
+.env
+.env.*
 .DS_Store
+.coverage
+/coverage/
+/__pycache__/
+*.py[cod]
+/.pytest_cache/
+/.venv/
+/venv/
+npm-debug.log*
+*.log

@@ -2,11 +2,22 @@
   "id": "ouw25",
   "title": "Укрытое море: Благословенный прилив",
   "description": "Система для настольной ролевой игры «Укрытое море: Благословенный прилив»: листы Коммерсанта и Кооператива, инструменты проверок, драматический размен и управление рейсом. Ранняя сборка для Foundry VTT 14.",
-  "version": "0.1.115",
+  "version": "0.1.116",
   "compatibility": {
     "minimum": "14",
     "verified": "14.370",
     "maximum": "14"
+  },
+  "relationships": {
+    "recommends": [
+      {
+        "id": "dice-so-nice",
+        "type": "module",
+        "compatibility": {
+          "minimum": "6.4.5"
+        }
+      }
+    ]
   },
   "authors": [
     {
@@ -38,7 +49,7 @@
   "bugs": "https://github.com/anmcarrow/ouw25_fvtt_system/issues",
   "changelog": "https://github.com/anmcarrow/ouw25_fvtt_system/releases",
   "manifest": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/latest/download/system.json",
-  "download": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/download/v0.1.115/ouw25.zip",
+  "download": "https://github.com/anmcarrow/ouw25_fvtt_system/releases/download/v0.1.116/ouw25.zip",
   "flags": {
     "ouw25": {
       "wiki": "https://wiki.ukrytoemore.ru/"

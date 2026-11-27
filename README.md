@@ -4,6 +4,8 @@
 
 В Foundry откройте **Game Systems → Install System** и вставьте URL манифеста: `https://github.com/anmcarrow/ouw25_fvtt_system/releases/latest/download/system.json`. После установки создайте тестовый мир на системе «Укрытое море: Благословенный прилив».
 
+Для закрытой альфы используйте [памятку тестеру](ALPHA-TESTING.md).
+
 ## Локальная установка
 
 1. Выполнить `npm run build`. Сборка не требует внешних npm-зависимостей.

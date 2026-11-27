@@ -42,7 +42,8 @@ esac
   await writeFile(path.join(bin, "npm"), `#!/bin/sh
 case "$*" in
   test) test "\${FAIL_TESTS:-0}" != 1 ;;
-  "run package") mkdir -p dist/ouw25 && cp system.json dist/ouw25/system.json && : > dist/ouw25.zip ;;
+  "run package") test "\${FAIL_PACKAGE:-0}" != 1 || exit 1
+    mkdir -p dist/ouw25 && cp system.json dist/ouw25/system.json && : > dist/ouw25.zip ;;
   *) exit 1 ;;
 esac
 `, { mode: 0o755 });
@@ -58,6 +59,18 @@ test("a failed release test leaves the existing manifest and commit untouched", 
   await writeFile(path.join(repo, "system.json"), manifest);
   const before = git("rev-parse", "HEAD");
   const result = publish({ FAIL_TESTS: "1" });
+  assert.notEqual(result.status, 0);
+  assert.equal(await readFile(path.join(repo, "system.json"), "utf8"), manifest);
+  assert.equal(git("rev-parse", "HEAD"), before);
+  assert.equal(git("diff", "--cached", "--name-only"), "");
+});
+
+test("a failed package build leaves the manifest, index and commit untouched", async t => {
+  const { repo, git, publish } = await fixture(t);
+  const manifest = '{"version":"0.1.111","custom":"keep"}\n';
+  await writeFile(path.join(repo, "system.json"), manifest);
+  const before = git("rev-parse", "HEAD");
+  const result = publish({ FAIL_PACKAGE: "1" });
   assert.notEqual(result.status, 0);
   assert.equal(await readFile(path.join(repo, "system.json"), "utf8"), manifest);
   assert.equal(git("rev-parse", "HEAD"), before);

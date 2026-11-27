@@ -39,6 +39,10 @@ test("the built package registers models and an editable notes sheet for its dec
     },
     documents: {
       Actor: class {
+        _initializeSource(source) {
+          if (source.prototypeToken) source.prototypeToken.name ||= source.name;
+          return source;
+        }
         static getDefaultArtwork() { return { img: "icons/svg/mystery-man.svg" }; }
         async _preCreate(data) {
           if (this.veto) return false;
@@ -83,9 +87,22 @@ test("the built package registers models and an editable notes sheet for its dec
     assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type }), { img: image, texture: { src: token } });
   }
   assert.deepEqual(CONFIG.Actor.documentClass.getDefaultArtwork({ type: "base" }), { img: "icons/svg/mystery-man.svg" });
+  {
+    const actor = new CONFIG.Actor.documentClass();
+    const source = { type: "cooperative", name: "Company", system: { shipName: "" }, prototypeToken: { name: "" } };
+    assert.equal(actor._initializeSource(source).prototypeToken.name, "");
+    source.prototypeToken.name = "Company";
+    assert.equal(actor._initializeSource(source).prototypeToken.name, "");
+  }
   assert.equal(registeredSettings[0][1], "tokenDefaultsMigrated");
   assert.equal(registeredSettings[0][2].scope, "world");
-  assert.equal(CONFIG.Actor.dataModels.cooperative.defineSchema().shipName.options.initial, "Бежетка");
+  const shipNameInitial = CONFIG.Actor.dataModels.cooperative.defineSchema().shipName.options.initial;
+  for (const language of ["en", "ru"]) {
+    const translations = JSON.parse(await readFile(new URL(`lang/${language}.json`, dist)));
+    game.i18n.localize = key => key === "OUW25.Ship.DefaultName" ? translations.OUW25.Ship.DefaultName : key;
+    assert.equal(shipNameInitial(), language === "en" ? "Bezhetka" : "Бежетка");
+  }
+  game.i18n.localize = key => key;
   {
     let response;
     CONFIG.Actor.typeLabels = { merchant: "merchant-label", cooperative: "cooperative-label" };
@@ -93,16 +110,23 @@ test("the built package registers models and an editable notes sheet for its dec
     foundry.applications.handlebars = { renderTemplate: async () => "" };
     foundry.applications.api.DialogV2 = { input: async () => response };
     CONFIG.Actor.documentClass.create = async (data, options) => ({ data, options });
-    for (const [type, supplied, expected] of [
-      ["cooperative", "", "W'ell Inc."], ["cooperative", "My company", "My company"],
-      ["merchant", "", "Brrg Caddck"], ["merchant", "My merchant", "My merchant"]
-    ]) {
-      response = { type, name: supplied };
-      const created = await CONFIG.Actor.documentClass.createDialog();
-      assert.equal(created.data.name, expected);
-      assert.equal(created.data.type, type);
+    for (const [language, defaultName] of [["en", "Wellp Inc."], ["ru", "W'ell Inc."]]) {
+      const translations = JSON.parse(await readFile(new URL(`lang/${language}.json`, dist)));
+      game.i18n.localize = key => key === "OUW25.Cooperative.DefaultName" ? translations.OUW25.Cooperative.DefaultName : key;
+      for (const [type, supplied, expected] of [
+        ["cooperative", "", defaultName], ["cooperative", "My company", "My company"],
+        ["merchant", "", "Brrg Caddck"], ["merchant", "My merchant", "My merchant"]
+      ]) {
+        response = { type, name: supplied };
+        const created = await CONFIG.Actor.documentClass.createDialog();
+        assert.equal(created.data.name, expected);
+        assert.equal(created.data.type, type);
+      }
     }
+    game.i18n.localize = key => key;
   }
+  game.i18n.localize = label => label === "OUW25.Ship.Prefix" ? "HMS" : label;
+  game.i18n.format = (_key, { prefix, name }) => `${prefix} ${name}`;
   for (const [type, token, portrait] of [
     ["merchant", "systems/ouw25/styles/images/pc_token.webp", "systems/ouw25/styles/images/bugger_transp.webp"],
     ["cooperative", "systems/ouw25/styles/images/ship_token.webp", "systems/ouw25/styles/images/ship_logo.webp"]
@@ -110,6 +134,8 @@ test("the built package registers models and an editable notes sheet for its dec
     const makeActor = (src = "icons/svg/mystery-man.svg", randomImg = false) => {
       const actor = new CONFIG.Actor.documentClass();
       actor.type = type;
+      actor.name = "Actor name";
+      actor.system = type === "cooperative" ? { shipName: "Ship name" } : undefined;
       actor.img = "custom-portrait.webp";
       actor.prototypeToken = {
         randomImg, displayName: 0, lockRotation: false, texture: { src },
@@ -117,6 +143,7 @@ test("the built package registers models and an editable notes sheet for its dec
           Object.assign(this.texture, update.texture);
           if (Object.hasOwn(update, "displayName")) this.displayName = update.displayName;
           if (Object.hasOwn(update, "lockRotation")) this.lockRotation = update.lockRotation;
+          if (Object.hasOwn(update, "name")) this.name = update.name;
         }
       };
       return actor;
@@ -127,6 +154,7 @@ test("the built package registers models and an editable notes sheet for its dec
       assert.equal(actor.prototypeToken.texture.src, token);
       assert.equal(actor.prototypeToken.displayName, 50);
       assert.equal(actor.prototypeToken.lockRotation, true);
+      assert.equal(actor.prototypeToken.name, type === "merchant" ? "Actor name" : "HMS Ship name");
     }
     const custom = makeActor("custom-token.webp");
     await custom._preCreate({ prototypeToken: { texture: { src: "custom-token.webp" } } }, {}, {});
@@ -166,7 +194,20 @@ test("the built package registers models and an editable notes sheet for its dec
     const explicitChange = { img: "new-portrait.webp", prototypeToken: { texture: { src: "chosen-token.webp" } } };
     await actor._preUpdate(explicitChange, {}, {});
     assert.equal(explicitChange.prototypeToken.texture.src, "chosen-token.webp");
+    const rename = type === "merchant" ? { name: "New name" } : { system: { shipName: "New name" } };
+    await actor._preUpdate(rename, {}, {});
+    const expectedTokenName = type === "merchant" ? "New name" : "HMS New name";
+    assert.equal(rename.prototypeToken.name, expectedTokenName);
+    assert.equal(rename.flags.ouw25.tokenNamePending, expectedTokenName);
+    if (type === "cooperative") {
+      const companyRename = { name: "New company" };
+      await actor._preUpdate(companyRename, {}, {});
+      assert.equal(companyRename.prototypeToken, undefined);
+      assert.equal(companyRename.flags, undefined);
+    }
   }
+  game.i18n.localize = key => key;
+  game.i18n.format = key => key;
   {
     const saved = { user: game.user, users: game.users, ui: globalThis.ui };
     const warnings = [];
@@ -248,6 +289,32 @@ test("the built package registers models and an editable notes sheet for its dec
   const [[id, Sheet, options]] = registration;
   assert.equal(id, manifest.id);
   assert.deepEqual(options.types, types);
+  {
+    const saved = { dice: foundry.dice, chat: foundry.documents.ChatMessage, dialog: foundry.applications.api.DialogV2, lang: game.i18n.lang };
+    const sheet = new Sheet();
+    sheet.isEditable = true;
+    sheet.actor = { type: "merchant", name: "Original", system: { past: "unset" },
+      async update(data) { Object.assign(this, data); } };
+    foundry.applications.api.DialogV2 = { confirm: async () => true };
+    foundry.documents.ChatMessage = { getSpeaker: () => ({}) };
+    foundry.dice = { Roll: class {
+      constructor() { this.dice = [{ results: [{ result: 1 }, { result: 15 }] }]; }
+      async evaluate() { return this; }
+      async toMessage() {}
+    } };
+    try {
+      for (const [language, name] of [["en", "Abgeyl Brrlin"], ["ru", "Абгейл Бррлин"]]) {
+        game.i18n.lang = language;
+        await Sheet.DEFAULT_OPTIONS.actions.rollCreation.call(sheet, null, { dataset: { creation: "name" } });
+        assert.equal(sheet.actor.name, name);
+      }
+    } finally {
+      foundry.dice = saved.dice;
+      foundry.documents.ChatMessage = saved.chat;
+      foundry.applications.api.DialogV2 = saved.dialog;
+      game.i18n.lang = saved.lang;
+    }
+  }
 
   const templatePath = Sheet.PARTS.notes.template.replace(`systems/${id}/`, "");
   const template = await readFile(new URL(templatePath, dist), "utf8");
@@ -634,6 +701,7 @@ test("the built package registers models and an editable notes sheet for its dec
     await pendingIllumination;
     assert.equal(sheet.actor.system.illuminationMode, expected);
     assert.equal(toggle["aria-pressed"], String(expected));
+    assert.equal(toggle.textContent, `OUW25.Voyage.${expected ? "DisableIllumination" : "EnableIllumination"}`);
   }
   sheet.isEditable = false;
   Sheet.DEFAULT_OPTIONS.actions.toggleIlluminationMode.call(sheet, null, toggle);
@@ -931,7 +999,7 @@ test("the built package registers models and an editable notes sheet for its dec
   hooks.get("deleteActor")(merchant);
   assert.equal(renders, 2);
   await memberSheet._onClose({});
-  assert.deepEqual([...hooks.keys()], ["renderSettings", "renderGamePause", "preUpdateItem", "preDeleteItem", "renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
+  assert.deepEqual([...hooks.keys()], ["diceSoNiceReady", "renderSettings", "renderGamePause", "preUpdateItem", "preDeleteItem", "updateUser", "deleteUser", "userConnected", "renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
 
   const placeSheet = new Sheet();
   placeSheet.isEditable = true;
@@ -1657,6 +1725,12 @@ test("identity rolls use independent name indices and preserve the Roll20 table 
   const { dreamFromRoll, hiringFromRoll, merchantNameFromRolls } = await import(new URL("module/merchant.mjs", dist));
   assert.equal(merchantNameFromRolls(1, 15), "Абгейл Бррлин");
   assert.equal(merchantNameFromRolls(15, 1), "Афн Глоф");
+  assert.equal(merchantNameFromRolls(1, 15, "en"), "Abgeyl Brrlin");
+  assert.equal(merchantNameFromRolls(15, 1, "en"), "Afn Glof");
+  for (let result = 1; result <= 15; result++) {
+    assert.match(merchantNameFromRolls(result, result, "en"), /^[A-Za-z]+ [A-Za-z]+$/);
+    assert.match(merchantNameFromRolls(result, result, "ru"), /^[А-Яа-яЁё]+ [А-Яа-яЁё]+$/u);
+  }
   assert.throws(() => merchantNameFromRolls(1, 16), RangeError);
   assert.throws(() => dreamFromRoll(11), RangeError);
   assert.equal(hiringFromRoll(1), "dance");
@@ -1984,9 +2058,9 @@ test("English bargain text uses ampersands", async () => {
   const { KnowOpponent, ...otherTexts } = BargainCalc;
   assert.equal(KnowOpponent, "... and now you know them? (Y/N)");
   assert.equal(BargainCalc.Title, "Success Calculator");
-  assert.equal(BargainCalc.Open, "Helps you make a dramatic bargain");
+  assert.equal(BargainCalc.Open, "Helps you make a Drama Deal");
   assert.equal(Unluck.ToBargain, "Success Calculator");
-  assert.equal(Unluck.Open, "Helps you make an (un)luck check");
+  assert.equal(Unluck.Open, "Helps you make a Dare");
   assert.equal(Unluck.ToCheck, "(Un)lucky Gambler");
   assert.equal(Unluck.DonationMore, "Spend more!");
   assert.equal(Unluck.DonationLess, "Spend less!");
@@ -1994,8 +2068,8 @@ test("English bargain text uses ampersands", async () => {
   assert.equal(BargainCalc.Traits, "Leader's merits & flaws");
   assert.equal(BargainCalc.CaptainTraits, "Cap'n merits & flaws");
   assert.equal(BargainCalc.Time, "Time for prep (oct.)");
-  assert.equal(BargainCalc.Unrest, "Payment in unrest (pts.)");
-  assert.equal(BargainCalc.Budget, "From coop. budget (og.)");
+  assert.equal(BargainCalc.Unrest, "Payment in strain (pts.)");
+  assert.equal(BargainCalc.Budget, "From firm budget (og.)");
   assert.equal(BargainCalc.NoFriends, "There still no friends in your collection...");
   assert.equal(BargainCalc.NoNewEnemies, "Still no enemies here... Want some?");
   assert.equal(BargainCalc.SuccessCost, "Success cost: {full} pts.");
@@ -2397,14 +2471,16 @@ test("merchant tool names and hints are localized", async () => {
   for (const [language, labels] of Object.entries({
     en: {
       bargain: "Success Calculator",
-      bargainHint: "Helps you make a dramatic bargain",
+      bargainHint: "Helps you make a Drama Deal",
       check: "(Un)lucky Gambler",
-      checkHint: "Helps you make an (un)luck check"
+      checkWindow: "(Un)lucky Gambler – {name}",
+      checkHint: "Helps you make a Dare"
     },
     ru: {
-      bargain: "Калькулятор успеха",
+      bargain: "Рассчёт успеха",
       bargainHint: "Поможет произвести драматический торг",
-      check: "(Не)удачливый катала",
+      check: "Рисковый вброс",
+      checkWindow: "Рисковый катала – {name}",
       checkHint: "Поможет сделать проверку (не)удачи"
     }
   })) {
@@ -2412,11 +2488,30 @@ test("merchant tool names and hints are localized", async () => {
       JSON.parse(await readFile(new URL(`lang/${language}.json`, dist), "utf8"));
     assert.equal(BargainCalc.Title, labels.bargain);
     assert.equal(BargainCalc.Open, labels.bargainHint);
-    assert.ok(Unluck.WindowTitle.startsWith(`${labels.check} `));
+    assert.equal(Unluck.WindowTitle, labels.checkWindow);
     assert.equal(Unluck.ToCheck, labels.check);
     assert.equal(Unluck.ToBargain, labels.bargain);
     assert.equal(Unluck.Open, labels.checkHint);
   }
+});
+
+test("updated glossary terms are used in both languages", async () => {
+  const en = JSON.parse(await readFile(new URL("lang/en.json", dist), "utf8"));
+  const ru = JSON.parse(await readFile(new URL("lang/ru.json", dist), "utf8"));
+  assert.equal(en.TYPES.Actor.cooperative, "Firm");
+  assert.equal(en.OUW25.Past.slave, "Enslaved");
+  assert.equal(en.OUW25.Past.reconstructed, "Stitched");
+  assert.equal(en.OUW25.Trait.Names.sex_addiction, "Sex addiction");
+  assert.equal(en.OUW25.Finance.Leaves, "Vacations earned: {leaves}");
+  assert.equal(en.OUW25.Collision.Title, "Dare");
+  assert.equal(en.OUW25.Bargain.Title, "Drama Deal");
+  assert.equal(ru.OUW25.Ship.CargoLoad, "Груз, н/о, ст.");
+  assert.equal(ru.OUW25.BargainCalc.CardDrawback, "Осадочек");
+  assert.equal(ru.OUW25.BargainCalc.Friends, "(Не)нужные друзья");
+  assert.equal(ru.OUW25.BargainCalc.SacrificialFriends, "(Не)нужные друзья");
+  assert.equal(ru.OUW25.Unluck.Luck, "Расход удачи");
+  assert.equal(ru.OUW25.Unluck.WoundsHeading, "Саморазрушение");
+  assert.equal(ru.OUW25.Unluck.DonationHeading, "Деньги – в море!");
 });
 
 test("both collision dialogs describe the contact switch", async () => {

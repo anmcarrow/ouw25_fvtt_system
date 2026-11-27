@@ -17,14 +17,24 @@ const SURNAMES = [
   "Глоф", "Глох", "Нинбррн", "Эйк", "Манч", "Хим", "Акром", "Соррк",
   "Йббни", "Инвтн", "Лигор", "Пьерс", "Йлл", "Матон", "Бррлин"
 ];
+const EN_GIVEN_NAMES = [
+  "Abgeyl", "Apstam", "Krun", "Rrgina", "Urrn", "Alrrn", "Dills", "Knni",
+  "Pllis", "Pttr", "Gydrr", "Kedok", "Flett", "Rrtis", "Afn"
+];
+const EN_SURNAMES = [
+  "Glof", "Glokh", "Ninbrrn", "Eyk", "Manch", "Khim", "Akrom", "Sorrk",
+  "Ybbni", "Invtn", "Ligor", "Pyers", "Yll", "Maton", "Brrlin"
+];
 
 function validateFace(value, max) {
   if (!Number.isInteger(value) || value < 1 || value > max) throw new RangeError(`Invalid d${max} result`);
   return value;
 }
 
-export function merchantNameFromRolls(given, surname) {
-  return `${GIVEN_NAMES[validateFace(given, 15) - 1]} ${SURNAMES[validateFace(surname, 15) - 1]}`;
+export function merchantNameFromRolls(given, surname, language = "ru") {
+  const givenNames = language === "en" ? EN_GIVEN_NAMES : GIVEN_NAMES;
+  const surnames = language === "en" ? EN_SURNAMES : SURNAMES;
+  return `${givenNames[validateFace(given, 15) - 1]} ${surnames[validateFace(surname, 15) - 1]}`;
 }
 
 export function dreamFromRoll(total) {

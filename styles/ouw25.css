@@ -1592,7 +1592,8 @@ body.game .application.ouw25 .ouw25-notes .ouw25-pension-controls > button {
   inline-size: 100%;
   max-inline-size: 100%;
   block-size: auto;
-  min-block-size: 2rem;
+  min-block-size: calc(2rem - 2px);
+  align-self: start;
   padding-block: 0.25rem;
   line-height: 1.15;
   white-space: normal;
@@ -2047,11 +2048,26 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div {
   flex-direction: column;
   gap: 0.25rem;
   min-inline-size: 0;
-  padding: 0.35rem 0.45rem;
+  padding: 5px 0.45rem;
   border: 1px solid transparent;
   border-image: var(--ouw25-border-gradient) 1;
   background: linear-gradient(180deg, rgba(255, 248, 238, 0.56), rgba(112, 84, 45, 0.05));
   box-shadow: inset 0 1px 2px rgba(55, 15, 0, 0.12);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div:first-child {
+  box-sizing: border-box;
+  inline-size: calc(100% - 10px);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div:nth-child(2),
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div:nth-child(3) {
+  transform: translateX(-10px);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div:nth-child(3) {
+  box-sizing: border-box;
+  inline-size: calc(100% + 10px);
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats > div:last-child {
@@ -2086,6 +2102,18 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats strong > span.ouw25-
   font-size: 2.34375em;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats strong > span.ouw25-speed-warning {
+  color: var(--ouw25-color-warning);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats strong > span.ouw25-fuel-illuminated {
+  color: #27735F;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-stats strong > span.ouw25-fuel-forced {
+  color: #C13A28;
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
@@ -2112,6 +2140,35 @@ body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources :is(label > inpu
   max-inline-size: calc(8ch + 2.5rem);
   margin-block: 0;
   box-shadow: inset 0 1px 3px rgba(55, 15, 0, 0.18), inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources input[type="number"]:not([readonly]) {
+  appearance: auto;
+  -moz-appearance: auto;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources input[type="number"]:not([readonly])::-webkit-inner-spin-button,
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources input[type="number"]:not([readonly])::-webkit-outer-spin-button {
+  -webkit-appearance: auto;
+  height: calc(var(--input-height, 2rem) * 0.9);
+  margin-block-start: calc(var(--input-height, 2rem) * 0.05);
+  opacity: 1;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources input[type="number"]:not([readonly])::-webkit-inner-spin-button {
+  margin-inline-end: -4px;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources input:is(.ouw25-unrest-warning, .ouw25-crew-warning) {
+  color: var(--ouw25-color-warning);
+  font-size: 1.15em;
+  font-weight: bold;
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-ship-resources input:is(.ouw25-unrest-critical, .ouw25-crew-critical) {
+  color: var(--ouw25-color-danger);
+  font-size: 1.15em;
+  font-weight: bold;
 }
 
 body.game .application.ouw25 .ouw25-notes .ouw25-ship-resource-value {
@@ -2387,6 +2444,10 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p:is([role="s
   font-weight: 700;
 }
 
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p[role="alert"] {
+  color: var(--ouw25-color-danger);
+}
+
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   box-sizing: border-box;
   flex: 0 1 240px;
@@ -2396,13 +2457,21 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-statuses > p {
   font-size: 0.8em;
 }
 
-.ouw25-voyage-actions > [data-action="toggleForcedMode"] { --ouw25-button-color: #805d54; }
+.ouw25-voyage-actions > [data-action="toggleForcedMode"] { --ouw25-button-color: #B9645D; }
 .ouw25-voyage-actions > [data-action="toggleIlluminationMode"] { --ouw25-button-color: #77673f; }
 .ouw25-voyage-actions > [data-action="travelSector"] { --ouw25-button-color: #546e7a; }
 .ouw25-voyage-actions > [data-action="undoSector"],
 .ouw25-voyage-actions > [data-action="resetVoyage"] { --ouw25-button-color: #725c78; }
 .ouw25-voyage-actions > [data-action="psychotherapy"] { --ouw25-button-color: #526f62; }
 .ouw25-voyage-actions > [data-action="increaseUnrest"] { --ouw25-button-color: #6467a0; }
+
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="toggleForcedMode"][aria-pressed="false"]:not(:disabled) {
+  --ouw25-button-custom-gradient: linear-gradient(to bottom, #D25347, #B9645D);
+}
+
+body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="toggleIlluminationMode"][aria-pressed="false"]:not(:disabled) {
+  --ouw25-button-custom-gradient: linear-gradient(to bottom, #B9AE46, #599364);
+}
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > button:disabled {
   background: var(--ouw25-button-color);
@@ -2421,6 +2490,7 @@ body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="
 
 body.game .application.ouw25 .ouw25-notes .ouw25-voyage-actions > [data-action="toggleIlluminationMode"][aria-pressed="true"] {
   --ouw25-button-color: #536b37;
+  --ouw25-button-custom-gradient: linear-gradient(to bottom, #3BA988, #65A841);
   box-shadow: var(--ouw25-button-bevel), 0 0 8px 3px rgba(71, 211, 183, 0.45), 0 0 18px 6px rgba(71, 211, 183, 0.2);
 }
 

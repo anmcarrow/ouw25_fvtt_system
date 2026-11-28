@@ -7,6 +7,15 @@ const fontStyles = await readFile(new URL("../dist/ouw25/styles/fonts.css", impo
 const template = await readFile(new URL("../dist/ouw25/templates/actor-notes.hbs", import.meta.url), "utf8");
 const actorCreateTemplate = await readFile(new URL("../dist/ouw25/templates/actor-create.hbs", import.meta.url), "utf8");
 
+test("English reheat labels use the current terminology", async () => {
+  const { OUW25 } = JSON.parse(await readFile(new URL("../dist/ouw25/lang/en.json", import.meta.url), "utf8"));
+  for (const key of ["EnableForced", "DisableForced", "ForcedOn", "ForcedOff", "ForcedBlocked", "RequireMechanic"]) {
+    assert.match(OUW25.Voyage[key], /\breheat\b/i);
+    assert.doesNotMatch(OUW25.Voyage[key], /\bforced mode\b/i);
+  }
+  assert.match(OUW25.ShipQuality.Help.worn_engine, /\breheat\b/i);
+});
+
 test("system window headers use the bundled frame artwork", async () => {
   assert.match(styles, /body\.game \.application:is\(\.ouw25, \.ouw25-journal\) > \.window-header\s*\{[^}]*frame1\.webp/s);
   assert.match(styles, /body\.game \.application:is\(\.journal-entry, \.journal-entry-page\) > \.window-header\s*\{[^}]*frame2\.webp/s);
@@ -445,6 +454,12 @@ test("voyage status cards follow a single travel summary", () => {
   for (const key of ["ForcedBlocked", "FuelLow", "ProvisionsLow", "TravelInfo"]) {
     assert.match(voyage, new RegExp(`<div class="ouw25-voyage-statuses">[\\s\\S]*?OUW25\\.Voyage\\.${key}`));
   }
+  for (const [condition, role, key] of [
+    ["strainHigh", "status", "StrainHigh"], ["strainMax", "alert", "StrainMax"],
+    ["crewLow", "status", "CrewLow"], ["crewEmpty", "alert", "CrewEmpty"]
+  ]) {
+    assert.match(voyage, new RegExp(`ship\\.voyage\\.alerts\\.${condition}\\}\\}<p role="${role}">\\{\\{localize "OUW25\\.Voyage\\.Alert\\.${key}"`));
+  }
   assert.match(voyage, /\{\{#each ship\.voyage\.displayShortages\}\}<p role="status">/);
   assert.match(voyage, /\{\{#if ship\.hold\.overloaded\}\}<p role="status">\{\{localize "OUW25\.Ship\.Overloaded"\}\}/);
   assert.match(voyage, /\{\{#if ship\.hold\.overloaded\}\}<p role="status">[\s\S]*?\{\{\/if\}\}\s*<\/div>\s*$/);
@@ -455,7 +470,13 @@ test("voyage status cards follow a single travel summary", () => {
 
 test("equipment effects follow the compartment list", () => {
   assert.match(template, /\{\{> ouw25-ship-list list=ship\.compartments showSpace=true\}\}\s*<section class="ouw25-ship-equipment-card">\s*<p>\{\{#each ship\.equipmentEffects\}\}/);
-  assert.match(template, /<strong><span\{\{#if ship\.voyage\.forced\}\} class="ouw25-speed-forced"[^>]*>\{\{ship\.voyage\.speed\}\}<\/span><\/strong>/);
+  assert.match(template, /<strong><span\{\{#if ship\.voyage\.forced\}\} class="ouw25-speed-forced"[^>]*\{\{else\}\}\{\{#if ship\.voyage\.speedWarning\}\} class="ouw25-speed-warning"[^>]*>\{\{ship\.voyage\.speed\}\}<\/span><\/strong>/);
+});
+
+test("fuel consumption highlights reheat ahead of illumination", () => {
+  assert.match(template, /OUW25\.Ship\.FuelRate"\}\}<\/span><strong><span\{\{#if ship\.voyage\.forced\}\} class="ouw25-fuel-forced"\{\{else\}\}\{\{#if ship\.illuminationMode\}\} class="ouw25-fuel-illuminated"\{\{\/if\}\}\{\{\/if\}\}>\{\{ship\.voyage\.fuelPerSector\}\}/);
+  assert.match(styles, /span\.ouw25-fuel-illuminated\s*\{\s*color:\s*#27735F;/);
+  assert.match(styles, /span\.ouw25-fuel-forced\s*\{\s*color:\s*#C13A28;/);
 });
 
 test("clipped blocks use paper and shadows without visible borders", async () => {
@@ -566,13 +587,15 @@ test("cooperative attributes put founders on the left and other blocks above the
   assert.match(left, /<div class="ouw25-choice-row ouw25-identity">\s*<input type="text" name="name" aria-label="\{\{localize "OUW25\.Cooperative\.Name"\}\}" value="\{\{cooperative\.name\}\}" required \{\{#unless editable\}\}readonly\{\{\/unless\}\}>\s*<\/div>\s*<fieldset class="ouw25-founders">/);
   assert.match(left, /OUW25\.Founders\.Title/);
   assert.doesNotMatch(left, /OUW25\.Finance\.Budget|OUW25\.Cooperative\.(Reputation|Memory)\.Title|ouw25-journal/);
-  assert.match(right, /OUW25\.Finance\.Budget[\s\S]*<div class="ouw25-cooperative-traits">\s*<fieldset>[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*<\/fieldset>\s*<fieldset>[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*<\/fieldset>\s*<\/div>\s*<\/div>\s*\{\{> ouw25-journal\}\}\s*\{\{> ouw25-journal-index\}\}/);
+  assert.match(right, /OUW25\.Finance\.Budget[\s\S]*<div class="ouw25-cooperative-traits">\s*<fieldset>[\s\S]*OUW25\.Cooperative\.Reputation\.Title[\s\S]*<\/fieldset>\s*<fieldset>[\s\S]*OUW25\.Cooperative\.Memory\.Title[\s\S]*<\/fieldset>\s*<\/div>\s*<\/div>\s*\{\{> ouw25-journal\}\}/);
+  assert.doesNotMatch(attributes, /\{\{> ouw25-journal-index\}\}/);
   assert.doesNotMatch(right, /OUW25\.Founders\.Title/);
   assert.match(styles, /\.ouw25-sheet-column\.ouw25-cooperative-notes\s*\{\s*gap:\s*20px;/);
   assert.match(styles, /\.ouw25-cooperative-traits\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
   assert.match(styles, /\.ouw25-cooperative-traits\s*\{[^}]*padding-block-start:\s*20px;/s);
   assert.match(styles, /\.ouw25-cooperative-notes > textarea\[name="system\.notes"\]\s*\{[^}]*flex:\s*0 0 auto;[^}]*block-size:\s*10em;/s);
   assert.match(template, /\{\{#unless ship\}\}\{\{> ouw25-journal-index\}\}\{\{\/unless\}\}\s*<div class="ouw25-tab-stack">/);
+  assert.equal((template.match(/\{\{> ouw25-journal-index\}\}/g) ?? []).length, 1);
   assert.match(template, /\{\{#\*inline "ouw25-journal-index"\}\}\s*\{\{#if journalIndex\.length\}\}/);
 });
 
@@ -641,6 +664,13 @@ test("ship resource capacities accompany their inputs while retaining calculated
   assert.match(basics, /name="system\.unrest"[\s\S]*?OUW25\.Voyage\.UnrestCurrent" unrest=ship\.voyage\.unrest[\s\S]*?OUW25\.Voyage\.Capacity" capacity=25/);
   assert.doesNotMatch(basics, /<p>\{\{localize "OUW25\.Voyage\.(CrewSummary|UnrestCurrent)"/);
   assert.match(styles, /\.ouw25-ship-resources :is\(label > input, \.ouw25-ship-resource-value > input\)\s*\{[^}]*box-shadow:\s*inset 0 1px 3px/);
+  assert.match(styles, /\.ouw25-ship-resources input\[type="number"\]:not\(\[readonly\]\)\s*\{\s*appearance:\s*auto;\s*-moz-appearance:\s*auto;/);
+  assert.match(styles, /\.ouw25-ship-resources input\[type="number"\]:not\(\[readonly\]\)::-webkit-inner-spin-button,[\s\S]*?::-webkit-outer-spin-button\s*\{\s*-webkit-appearance:\s*auto;\s*height:\s*calc\(var\(--input-height, 2rem\) \* 0\.9\);\s*margin-block-start:\s*calc\(var\(--input-height, 2rem\) \* 0\.05\);\s*opacity:\s*1;/);
+  assert.match(styles, /\.ouw25-ship-resources input\[type="number"\]:not\(\[readonly\]\)::-webkit-inner-spin-button\s*\{\s*margin-inline-end:\s*-4px;/);
+  assert.match(styles, /\.ouw25-ship-resources input:is\(\.ouw25-unrest-warning, \.ouw25-crew-warning\)\s*\{\s*color:\s*var\(--ouw25-color-warning\);/);
+  assert.match(styles, /\.ouw25-ship-resources input:is\(\.ouw25-unrest-critical, \.ouw25-crew-critical\)\s*\{\s*color:\s*var\(--ouw25-color-danger\);/);
+  assert.match(styles, /input:is\(\.ouw25-unrest-warning, \.ouw25-crew-warning\)\s*\{[^}]*font-size:\s*1\.15em;/);
+  assert.match(styles, /input:is\(\.ouw25-unrest-critical, \.ouw25-crew-critical\)\s*\{[^}]*font-size:\s*1\.15em;/);
 });
 
 test("ship travel indicators use restrained paper-and-brass surfaces", () => {

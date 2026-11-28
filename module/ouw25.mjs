@@ -14,6 +14,7 @@ import { MERCHANT_TRAITS, traitFromRoll } from "./traits.mjs";
 import { personalActions, personalOutcome, provisionFormula } from "./personal-actions.mjs";
 import { discoveredPorts, PORT_COUNT } from "./ports.mjs";
 import { publishVoyageCard } from "./voyage-chat.mjs";
+import { publishVoyageAlerts, stageVoyageAlert, voyageAlertStates } from "./voyage-alerts.mjs";
 import { canOperateVoyage, hasVoyageRole } from "./voyage-access.mjs";
 import { filterRecordTable, setupGroupedRecordSorting, setupRecordSorting } from "./record-search.mjs";
 import { clearDeletedJournalLinks, findJournalBacklinks, journalIndexForActor, journalPresentation, journalTableKey, openRecordJournal, openJournalBacklink, styleSystemJournal } from "./record-journal.mjs";
@@ -510,6 +511,29 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+    const unrestInput = this.element.querySelector('input[name="system.unrest"]');
+    if (unrestInput) {
+      const updateUnrestColor = () => {
+        const value = unrestInput.valueAsNumber;
+        unrestInput.classList.toggle("ouw25-unrest-warning", value > 20 && value < 25);
+        unrestInput.classList.toggle("ouw25-unrest-critical", value === 25);
+      };
+      unrestInput.addEventListener("input", updateUnrestColor);
+      updateUnrestColor();
+    }
+    const crewInput = this.element.querySelector('input[name="system.crewCount"]');
+    const shipClassInput = this.element.querySelector('select[name="system.shipClass"]');
+    if (crewInput && shipClassInput) {
+      const updateCrewColor = () => {
+        const crew = crewInput.valueAsNumber;
+        const capacity = SHIP_CLASS_STATS[Number(shipClassInput.value)]?.crew;
+        crewInput.classList.toggle("ouw25-crew-warning", crew > 0 && crew * 2 < capacity);
+        crewInput.classList.toggle("ouw25-crew-critical", crew === 0);
+      };
+      crewInput.addEventListener("input", updateCrewColor);
+      shipClassInput.addEventListener("change", updateCrewColor);
+      updateCrewColor();
+    }
     this.#captainListeners?.abort();
     if (this.actor.type === "cooperative" && this.isEditable) {
       this.#captainListeners = new AbortController();
@@ -816,7 +840,7 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       journalIndex,
       autosaveStatus: game.i18n.localize(`OUW25.SaveStatus.${this.#autosaveStatus}`),
       autosaveStatusState: this.#autosaveStatus.toLowerCase(),
-      actorTypeLabel: `TYPES.Actor.${type}`,
+      actorTypeLabel: `OUW25.SheetHeading.${type}`,
       editable: this.isEditable,
       showCollision: this.isEditable && merchant,
       token: {
@@ -835,13 +859,18 @@ class Ouw25ActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         crewCount: system.crewCount, forcedMode: system.forcedMode,
         illuminationMode: system.illuminationMode, unrestInput: system.unrest,
         travelSectors: system.travelSectors, travelWatches: system.travelWatches,
-        travelStatus: ["EnableForced", "DisableForced"].some(key =>
-          (system.travelStatus ?? "").startsWith(`${game.i18n.localize(`OUW25.Voyage.${key}`)}:`)
+        // Hide previously saved check results under the old English titles too.
+        travelStatus: ["Enable forced mode", "Disable forced mode", ...["EnableForced", "DisableForced"].map(key =>
+          game.i18n.localize(`OUW25.Voyage.${key}`))].some(title =>
+          (system.travelStatus ?? "").startsWith(`${title}:`)
         ) ? "" : system.travelStatus,
         canTravel: this.isEditable && voyageAccess.captain && !voyage.travelBlocked,
         canUndoTransition: this.isEditable && voyageAccess.captain && Boolean(system.lastTransition),
         access: voyageAccess,
-        voyage: { ...voyage, displayShortages: voyage.shortages.filter(key => key !== "OUW25.Voyage.FuelShortage") },
+        voyage: { ...voyage, alerts: voyageAlertStates(system),
+          speedWarning: voyage.crewBand === "below-half" && !voyage.forced,
+          displayShortages: voyage.shortages.filter(key =>
+            !["OUW25.Voyage.FuelShortage", "OUW25.Voyage.NoCrew"].includes(key)) },
         forcedDisabled: !system.forcedMode && (voyage.wornEngine || !voyageAccess.mechanic),
         cargoLoad: system.cargoLoad, fuelStock: system.fuelStock, provisionsStock: system.provisionsStock,
         mounts: shipList("mount"), compartments: shipList("compartment"), gear: shipList("gear"),
@@ -1992,7 +2021,9 @@ Hooks.once("init", () => {
   Hooks.on("preDeleteItem", guardTraitChange);
   Hooks.on("createItem", (item, _options, userId) => lockPastAfterTrait(item, userId));
   Hooks.on("updateItem", (item, _changes, _options, userId) => lockPastAfterTrait(item, userId));
-  Hooks.on("updateActor", (actor, changes) => {
+  Hooks.on("preUpdateActor", stageVoyageAlert);
+  Hooks.on("updateActor", (actor, changes, options, userId) => {
+    publishVoyageAlerts(actor, options, userId);
     if (!game.user?.isActiveGM) return;
     if (changes.flags?.[SYSTEM_ID]?.tokenNamePending !== undefined
       || changes[`flags.${SYSTEM_ID}.tokenNamePending`] !== undefined

@@ -264,7 +264,6 @@
         </div>
       </div>
       {{> ouw25-journal}}
-      {{> ouw25-journal-index}}
     </div>
   {{/ouw25-tab}}
   {{#*inline "ouw25-ship-basics"}}
@@ -280,8 +279,8 @@
       {{> ouw25-ship-damage}}
       </div>
       <div class="ouw25-ship-stats">
-        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong><span{{#if ship.voyage.forced}} class="ouw25-speed-forced" data-tooltip-text="{{localize "OUW25.Voyage.ForcedOn"}}"{{/if}}>{{ship.voyage.speed}}</span></strong></div>
-        <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong><span>{{ship.voyage.fuelPerSector}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.Speed"}}</span><strong><span{{#if ship.voyage.forced}} class="ouw25-speed-forced" data-tooltip-text="{{localize "OUW25.Voyage.ForcedOn"}}"{{else}}{{#if ship.voyage.speedWarning}} class="ouw25-speed-warning"{{/if}}{{/if}}>{{ship.voyage.speed}}</span></strong></div>
+        <div><span>{{localize "OUW25.Ship.FuelRate"}}</span><strong><span{{#if ship.voyage.forced}} class="ouw25-fuel-forced"{{else}}{{#if ship.illuminationMode}} class="ouw25-fuel-illuminated"{{/if}}{{/if}}>{{ship.voyage.fuelPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.ProvisionsRate"}}</span><strong><span>{{ship.voyage.provisionsPerSector}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.FreeMountsLabel"}}</span><strong><span>{{ship.freeMounts}}</span></strong></div>
         <div><span>{{localize "OUW25.Ship.HoldLabel"}}</span><output class="ouw25-hold-status" aria-label="{{localize "OUW25.Ship.Hold" occupied=ship.hold.occupied capacity=ship.hold.capacity}}"><span{{#if ship.hold.nearFull}} class="ouw25-hold-warning"{{/if}}{{#if ship.hold.overloaded}} class="ouw25-hold-warning"{{/if}}>{{ship.hold.occupied}}</span> / <span>{{ship.hold.capacity}}</span></output></div>
@@ -556,6 +555,8 @@
         </div>
         <p class="ouw25-voyage-summary">{{localize "OUW25.Voyage.TravelCounters" sectors=ship.travelSectors watches=ship.travelWatches}} {{localize "OUW25.Voyage.TravelRates" speed=ship.voyage.speed fuel=ship.voyage.fuelPerSector provisions=ship.voyage.provisionsPerSector unrest=ship.voyage.unrestPerSector}}</p>
         <div class="ouw25-voyage-statuses">
+          {{#if ship.voyage.alerts.strainMax}}<p role="alert">{{localize "OUW25.Voyage.Alert.StrainMax"}}</p>{{else}}{{#if ship.voyage.alerts.strainHigh}}<p role="status">{{localize "OUW25.Voyage.Alert.StrainHigh"}}</p>{{/if}}{{/if}}
+          {{#if ship.voyage.alerts.crewEmpty}}<p role="alert">{{localize "OUW25.Voyage.Alert.CrewEmpty"}}</p>{{else}}{{#if ship.voyage.alerts.crewLow}}<p role="status">{{localize "OUW25.Voyage.Alert.CrewLow"}}</p>{{/if}}{{/if}}
           {{#if editable}}
             {{#unless ship.access.captain}}<p>{{localize "OUW25.Voyage.RequireCaptain"}}</p>{{/unless}}
             {{#unless ship.access.mechanic}}{{#unless ship.forcedMode}}<p>{{localize "OUW25.Voyage.RequireMechanic"}}</p>{{/unless}}{{/unless}}

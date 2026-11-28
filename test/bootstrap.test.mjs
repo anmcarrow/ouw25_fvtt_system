@@ -77,6 +77,26 @@ test("the built package registers models and an editable notes sheet for its dec
   const captainUpdateHook = hooks.get("updateActor");
   assert.equal(typeof hooks.get("renderSettings"), "function");
   assert.equal(typeof hooks.get("renderGamePause"), "function");
+  {
+    const previousUser = game.user;
+    const previousHandlebars = foundry.applications.handlebars;
+    const previousChat = foundry.documents.ChatMessage;
+    const messages = [];
+    game.user = { id: "operator", isActiveGM: false };
+    foundry.applications.handlebars = { renderTemplate: async (_path, data) => JSON.stringify(data) };
+    foundry.documents.ChatMessage = { getSpeaker: () => ({}), create: async message => messages.push(message) };
+    const actor = { type: "cooperative", uuid: "Actor.firm", system: { unrest: 20, crewCount: 5, shipClass: 0 } };
+    const options = {};
+    hooks.get("preUpdateActor")(actor, { system: { unrest: 21 } }, options, "operator");
+    actor.system.unrest = 21;
+    captainUpdateHook(actor, { system: { unrest: 21 } }, structuredClone(options), "operator");
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(messages.length, 1);
+    assert.deepEqual(JSON.parse(messages[0].content).crossings, [{ key: "OUW25.Voyage.Alert.strainHigh.entered" }]);
+    game.user = previousUser;
+    foundry.applications.handlebars = previousHandlebars;
+    foundry.documents.ChatMessage = previousChat;
+  }
   const { MERCHANT_PASTS, MERCHANT_SPECIALTIES } = await import(new URL("module/merchant.mjs", dist));
   assert.deepEqual(Object.keys(CONFIG.Actor.dataModels), types);
   assert.deepEqual(Object.keys(CONFIG.Item.dataModels), Object.keys(manifest.documentTypes.Item));
@@ -481,7 +501,7 @@ test("the built package registers models and an editable notes sheet for its dec
       }
       assert.deepEqual(context, {
         notes: "test note", journalIndex: [], autosaveStatus: "OUW25.SaveStatus.Saved", autosaveStatusState: "saved",
-        actorTypeLabel: `TYPES.Actor.${type}`, editable,
+        actorTypeLabel: `OUW25.SheetHeading.${type}`, editable,
         showCollision: editable && merchant,
         money: merchant ? { value: 12, field: "pocketMoney", label: "OUW25.Finance.PocketMoney" }
           : { value: 34, field: "budget", label: "OUW25.Finance.Budget" },
@@ -544,14 +564,29 @@ test("the built package registers models and an editable notes sheet for its dec
       assert.equal(cooperative.memory.choices.find(choice => choice.selected).value, "unset");
       assert.equal(cooperative.reputation.help, null);
       assert.equal(cooperative.memory.help, null);
+      const savedCrew = sheet.actor.system.crewCount;
+      const savedForced = sheet.actor.system.forcedMode;
+      const savedClass = sheet.actor.system.shipClass;
+      Object.assign(sheet.actor.system, { crewCount: 4, forcedMode: false, shipClass: 0 });
+      assert.equal((await sheet._prepareContext({})).ship.voyage.speedWarning, true);
+      sheet.actor.system.forcedMode = true;
+      assert.equal((await sheet._prepareContext({})).ship.voyage.speedWarning, false);
+      Object.assign(sheet.actor.system, { crewCount: 5, forcedMode: false });
+      assert.equal((await sheet._prepareContext({})).ship.voyage.speedWarning, false);
+      Object.assign(sheet.actor.system, { crewCount: savedCrew, forcedMode: savedForced, shipClass: savedClass });
       Object.assign(sheet.actor.system, { fuelStock: 0, crewCount: 0, provisionsStock: 0,
         travelStatus: "OUW25.Voyage.EnableForced: earlier check" });
       sheet.isEditable = true;
       const { ship } = await sheet._prepareContext({});
       assert.equal(ship.travelStatus, "");
+      for (const title of ["Enable forced mode", "Disable forced mode"]) {
+        sheet.actor.system.travelStatus = `${title}: earlier check`;
+        assert.equal((await sheet._prepareContext({})).ship.travelStatus, "");
+      }
       assert.equal(ship.canTravel, false);
       assert.ok(ship.voyage.shortages.includes("OUW25.Voyage.FuelShortage"));
-      assert.deepEqual(ship.voyage.displayShortages, ["OUW25.Voyage.NoCrew", "OUW25.Voyage.NoProvisions"]);
+      assert.deepEqual(ship.voyage.displayShortages, ["OUW25.Voyage.NoProvisions"]);
+      assert.equal(ship.voyage.alerts.crewEmpty, true);
       sheet.actor.system.travelStatus = "Travel completed";
       assert.equal((await sheet._prepareContext({})).ship.travelStatus, "Travel completed");
       Object.assign(sheet.actor.system, { mount1: "harpoon", mount2: "harpoon", mount3: "winch",
@@ -927,11 +962,52 @@ test("the built package registers models and an editable notes sheet for its dec
   game.actors = originalActors;
   await setCaptain(merchant.uuid);
   const dragHandlers = {};
+  const unrestClasses = new Set();
+  let onUnrestInput;
+  const unrestInput = {
+    valueAsNumber: 21,
+    classList: { toggle(name, enabled) { if (enabled) unrestClasses.add(name); else unrestClasses.delete(name); } },
+    addEventListener(type, handler) { if (type === "input") onUnrestInput = handler; }
+  };
+  const crewClasses = new Set();
+  let onCrewInput, onShipClassChange;
+  const crewInput = {
+    valueAsNumber: 4,
+    classList: { toggle(name, enabled) { if (enabled) crewClasses.add(name); else crewClasses.delete(name); } },
+    addEventListener(type, handler) { if (type === "input") onCrewInput = handler; }
+  };
+  const shipClassInput = {
+    value: "0",
+    addEventListener(type, handler) { if (type === "change") onShipClassChange = handler; }
+  };
   memberSheet._element = {
-    querySelector: () => null, querySelectorAll: () => [],
+    querySelector: selector => ({
+      'input[name="system.unrest"]': unrestInput, 'input[name="system.crewCount"]': crewInput,
+      'select[name="system.shipClass"]': shipClassInput
+    })[selector] ?? null, querySelectorAll: () => [],
     addEventListener(type, handler) { dragHandlers[type] = handler; }
   };
   await memberSheet._onRender({}, {});
+  assert.deepEqual([...unrestClasses], ["ouw25-unrest-warning"]);
+  for (const [value, expected] of [[20, []], [21, ["ouw25-unrest-warning"]], [24, ["ouw25-unrest-warning"]],
+    [25, ["ouw25-unrest-critical"]], [26, []], [NaN, []], [0, []]]) {
+    unrestInput.valueAsNumber = value;
+    onUnrestInput();
+    assert.deepEqual([...unrestClasses], expected);
+  }
+  assert.deepEqual([...crewClasses], ["ouw25-crew-warning"]);
+  for (const [value, expected] of [[5, []], [4, ["ouw25-crew-warning"]], [0, ["ouw25-crew-critical"]],
+    [NaN, []], [-1, []]]) {
+    crewInput.valueAsNumber = value;
+    onCrewInput();
+    assert.deepEqual([...crewClasses], expected);
+  }
+  crewInput.valueAsNumber = 6;
+  onCrewInput();
+  assert.deepEqual([...crewClasses], []);
+  shipClassInput.value = "1";
+  onShipClassChange();
+  assert.deepEqual([...crewClasses], ["ouw25-crew-warning"]);
   const dragData = new Map();
   const dataTransfer = {
     setData(type, value) { dragData.set(type, value); },
@@ -999,7 +1075,7 @@ test("the built package registers models and an editable notes sheet for its dec
   hooks.get("deleteActor")(merchant);
   assert.equal(renders, 2);
   await memberSheet._onClose({});
-  assert.deepEqual([...hooks.keys()], ["diceSoNiceReady", "renderSettings", "renderGamePause", "preUpdateItem", "preDeleteItem", "updateUser", "deleteUser", "userConnected", "renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
+  assert.deepEqual([...hooks.keys()], ["diceSoNiceReady", "renderSettings", "renderGamePause", "preUpdateItem", "preDeleteItem", "preUpdateActor", "updateUser", "deleteUser", "userConnected", "renderJournalEntrySheet", "renderJournalEntryPageSheet"]);
 
   const placeSheet = new Sheet();
   placeSheet.isEditable = true;
@@ -3268,6 +3344,55 @@ test("the mechanic's check toggles forced mode and only full failures mark damag
   assert.deepEqual(resolveForcedMode({ ...ship, ...full }, 0), { forcedMode: false, damageSlot: undefined });
   assert.throws(() => resolveForcedMode({ ...ship, flaw2: "worn_engine" }, 2), /ForcedBlocked/);
   assert.equal(resolveForcedMode({ ...ship, flaw2: "worn_engine", forcedMode: true }, 2).forcedMode, false);
+});
+
+test("voyage alerts report threshold crossings once in both directions", async () => {
+  const { voyageAlertCrossings, stageVoyageAlert, publishVoyageAlerts } =
+    await import(new URL("module/voyage-alerts.mjs", dist));
+  const base = { unrest: 20, crewCount: 5, shipClass: 0 };
+  const keys = (before, after) => voyageAlertCrossings(before, after).map(entry => entry.key);
+  assert.deepEqual(keys(base, { ...base, unrest: 25, crewCount: 0 }), [
+    "OUW25.Voyage.Alert.strainHigh.entered", "OUW25.Voyage.Alert.strainMax.entered",
+    "OUW25.Voyage.Alert.crewLow.entered", "OUW25.Voyage.Alert.crewEmpty.entered"
+  ]);
+  assert.deepEqual(keys({ ...base, unrest: 25, crewCount: 0 }, base), [
+    "OUW25.Voyage.Alert.strainHigh.left", "OUW25.Voyage.Alert.strainMax.left",
+    "OUW25.Voyage.Alert.crewLow.left", "OUW25.Voyage.Alert.crewEmpty.left"
+  ]);
+  assert.deepEqual(keys({ ...base, unrest: 21, crewCount: 4 }, { ...base, unrest: 24, crewCount: 3 }), []);
+  assert.deepEqual(keys(base, { ...base, shipClass: 1 }), ["OUW25.Voyage.Alert.crewLow.entered"]);
+  const previous = { game: globalThis.game, foundry: globalThis.foundry };
+  const messages = [];
+  globalThis.game = { user: { id: "operator" } };
+  globalThis.foundry = {
+    documents: { ChatMessage: { getSpeaker: () => ({}), create: async message => messages.push(message) } },
+    applications: { handlebars: { renderTemplate: async (_path, data) => JSON.stringify(data) } }
+  };
+  try {
+    const actor = { type: "cooperative", uuid: "Actor.firm", name: "Firm", system: { ...base } };
+    const options = {};
+    stageVoyageAlert(actor, { "system.unrest": 25 }, options);
+    actor.system.unrest = 25;
+    await publishVoyageAlerts(actor, options, "other");
+    assert.equal(messages.length, 0);
+    await publishVoyageAlerts(actor, options, "operator");
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].whisper, undefined);
+    assert.equal(JSON.parse(messages[0].content).crossings.length, 2);
+    await publishVoyageAlerts(actor, options, "operator");
+    assert.equal(messages.length, 1);
+    stageVoyageAlert(actor, { system: { unrest: 24 } }, options);
+    actor.system.unrest = 24;
+    await publishVoyageAlerts(actor, options, "operator");
+    assert.deepEqual(JSON.parse(messages[1].content).crossings.map(entry => entry.key),
+      ["OUW25.Voyage.Alert.strainMax.left"]);
+    stageVoyageAlert(actor, { system: { notes: "unrelated" } }, options);
+    await publishVoyageAlerts(actor, options, "operator");
+    assert.equal(messages.length, 2);
+  } finally {
+    globalThis.game = previous.game;
+    globalThis.foundry = previous.foundry;
+  }
 });
 
 test("voyage rates follow crew bands, modes, shortages, and ship flaws", async () => {

@@ -10,12 +10,15 @@ const JOURNAL_CLASSES = ["ouw25-journal", "ouw25-journal-cooperative", "ouw25-jo
 
 export function styleSystemJournal(application, element, resolve = uuid => fromUuidSync(uuid, { strict: false })) {
   const document = application.document;
+  if (!["JournalEntry", "JournalEntryPage"].includes(document?.documentName) || !element?.classList) return;
   const journal = document?.documentName === "JournalEntryPage" ? document.parent : document;
   const flags = journal?.flags?.[SYSTEM_ID];
-  if (!flags?.actorUuid || !flags.tableKey || !element?.classList) return;
   element.classList.remove(...JOURNAL_CLASSES, "theme-dark");
-  const tone = resolve(flags.actorUuid)?.type === "cooperative" ? "cooperative" : "merchant";
-  element.classList.add("ouw25-journal", `ouw25-journal-${tone}`, "themed", "theme-light");
+  element.classList.add("ouw25-journal", "themed", "theme-light");
+  if (flags?.actorUuid && flags.tableKey) {
+    const tone = resolve(flags.actorUuid)?.type === "cooperative" ? "cooperative" : "merchant";
+    element.classList.add(`ouw25-journal-${tone}`);
+  }
 }
 
 export function copyPageOwnership(source, journal, users) {

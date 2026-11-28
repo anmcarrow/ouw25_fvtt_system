@@ -2440,7 +2440,7 @@ test("bargain dialog orders payment fields and validates contact and partial out
   }
 });
 
-test("only system record journals receive the journal style classes, tinted by actor type", async () => {
+test("all journals receive the system style while record journals retain actor-specific colors", async () => {
   const { styleSystemJournal } = await import(new URL("module/record-journal.mjs", dist));
   const classes = new Set(["stale", "theme-dark"]);
   const element = { classList: { add: (...names) => names.forEach(name => classes.add(name)), remove: (...names) => names.forEach(name => classes.delete(name)) } };
@@ -2452,7 +2452,15 @@ test("only system record journals receive the journal style classes, tinted by a
   assert.deepEqual([...classes].sort(), ["ouw25-journal", "ouw25-journal-merchant", "stale", "theme-light", "themed"]);
   classes.clear();
   styleSystemJournal({ document: { documentName: "JournalEntry", flags: {} } }, element);
+  assert.deepEqual([...classes].sort(), ["ouw25-journal", "theme-light", "themed"]);
+  classes.clear();
   styleSystemJournal({ document: { documentName: "JournalEntry", flags: { ouw25: { actorUuid: "Actor.a" } } } }, element);
+  assert.deepEqual([...classes].sort(), ["ouw25-journal", "theme-light", "themed"]);
+  classes.clear();
+  styleSystemJournal({ document: { documentName: "JournalEntryPage", parent: { flags: {} } } }, element);
+  assert.deepEqual([...classes].sort(), ["ouw25-journal", "theme-light", "themed"]);
+  classes.clear();
+  styleSystemJournal({ document: { documentName: "Actor" } }, element);
   assert.equal(classes.size, 0);
 });
 

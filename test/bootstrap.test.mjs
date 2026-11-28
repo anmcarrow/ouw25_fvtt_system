@@ -2563,8 +2563,8 @@ test("merchant tool names and hints are localized", async () => {
     ru: {
       bargain: "Рассчёт успеха",
       bargainHint: "Поможет произвести драматический торг",
-      check: "Рисковые набросы",
-      checkWindow: "Рисковые набросы – {name}",
+      check: "Рисковые слоты",
+      checkWindow: "Рисковые слоты – {name}",
       checkHint: "Поможет сделать проверку (не)удачи"
     }
   })) {
